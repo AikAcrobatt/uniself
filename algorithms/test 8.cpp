@@ -11,7 +11,7 @@
 
 
 namespace unsf {
-	UNS_ENUM_DECLARATOR(TEST, char,
+	UNS_ENUM_DECLARATOR(test, int,
 		el0 = 0,
 		el1 = 1,
 		el2 = 2
@@ -19,7 +19,7 @@ namespace unsf {
 
 };
 
-#define ENUM_NAME_TEST unsf::TEST
+#define ENUM_NAME_TEST unsf::test
 UNS_ENUM_STRING_CAST_DECLARATOR(ENUM_NAME_TEST);
 
 
@@ -27,13 +27,12 @@ int main()
 {
 	std::cout << "START" << std::endl;
 
-	std::array<int, 10> C;
-	for (int i = 0; i < 10; i++) C[i] = i;
+	unsf::test v = unsf::test::el1;
 
-	uns::containers::sequential::Replace(C, 7, 2);
-
-	for (auto c : C)
-		std::cout << c << std::endl;
+	if(v == unsf::test::el1)
+		std::cout << "A" << std::endl;
+	else
+		std::cout << "B" << std::endl;
 
 
 	std::cout << "FINISH" << std::endl;
