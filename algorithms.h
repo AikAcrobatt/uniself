@@ -5,8 +5,7 @@
 
 #include "better_enums/enum.h"
 
-namespace uns
-{
+namespace uns {
 
 	//ФУНКЦИЯ УНИВЕРСАЛЬНОГО СТРОКОВОГО КАСТА
 	template<class out_t, class in_t>
@@ -301,7 +300,11 @@ namespace uns
 //РАБОТА С ПЕРЕЧИСЛЕНИЯМИ
 //макрос-декларатор для better_enum-перечислений
 #define UNS_ENUM_DECLARATOR(ENUM_NAME, SPECIFICATION_TYPE, ...)																	\
-	BETTER_ENUM(ENUM_NAME, SPECIFICATION_TYPE, __VA_ARGS__)																		\
+	BETTER_ENUM(ENUM_NAME, SPECIFICATION_TYPE, __VA_ARGS__);																	\
+	bool operator==(const ENUM_NAME& a, const ENUM_NAME::_enumerated& b) { return a == static_cast<ENUM_NAME>(b); };			\
+	bool operator==(const ENUM_NAME::_enumerated& a, const ENUM_NAME& b) { return static_cast<ENUM_NAME>(a) == b; };			\
+	bool operator!=(const ENUM_NAME& a, const ENUM_NAME::_enumerated& b) { return !(a == static_cast<ENUM_NAME>(b)); };			\
+	bool operator!=(const ENUM_NAME::_enumerated& a, const ENUM_NAME& b) { return !(static_cast<ENUM_NAME>(a) == b); };		
 
 	//макрос-декларатор специализаций функции string_cast для better_enum-перечислений
 	//!!!!!!!!!!!!!use it global-scope only!!!!!!!!!!!!
@@ -341,68 +344,63 @@ namespace uns
 
 
 //АЛГОРИТМЫ РАБОТЫ С КОНТЕНЕРАМИ
-namespace uns {
+namespace uns::containers::sequential {
+
 	//операции над векторами
-	namespace containers {
-
-		namespace sequential {
-
-			//операция сдвига всех элементов в контейнере
-				//(пока поддерживаются только vector и array)
-			template<class container_t>
-			void Move(container_t& container, int move_to_right) {
-				int size = static_cast<int>(container.size());
-				int seeker = 0;
-				if (move_to_right > 0) {
-					for (seeker = size - 1; seeker >= move_to_right; seeker--) {
-						if (seeker >= 0 && seeker < size && seeker - move_to_right >= 0 && seeker - move_to_right < size)
-							container[seeker] = container[seeker - move_to_right];
-					};
-				}
-				else if (move_to_right < 0) {
-					for (seeker = 0; seeker < size + move_to_right; seeker++) {
-						if (seeker >= 0 && seeker < size && seeker - move_to_right >= 0 && seeker - move_to_right < size)
-							container[seeker] = container[seeker - move_to_right];
-					};
-				};
+	//операция сдвига всех элементов в контейнере
+		//(пока поддерживаются только vector и array)
+	template<class container_t>
+	void Move(container_t& container, int move_to_right) {
+		int size = static_cast<int>(container.size());
+		int seeker = 0;
+		if (move_to_right > 0) {
+			for (seeker = size - 1; seeker >= move_to_right; seeker--) {
+				if (seeker >= 0 && seeker < size && seeker - move_to_right >= 0 && seeker - move_to_right < size)
+					container[seeker] = container[seeker - move_to_right];
 			};
-			template<class container_t, class content_t>
-			void Move(container_t& container, int move_to_right, const content_t& filler_elementh) {
-				uns::containers::sequential::Move(container, move_to_right);
-				int size = static_cast<int>(container.size());
-				int seeker = 0;
-				if (move_to_right > 0) {
-					for (seeker = move_to_right - 1; seeker >= 0; seeker--) {
-						if (seeker >= 0 && seeker < size)
-							container[seeker] = filler_elementh;
-					};
-				}
-				else if (move_to_right < 0) {
-					for (seeker = size + move_to_right; seeker < size; seeker++) {
-						if (seeker >= 0 && seeker < size)
-							container[seeker] = filler_elementh;
-					};
-				};
+		}
+		else if (move_to_right < 0) {
+			for (seeker = 0; seeker < size + move_to_right; seeker++) {
+				if (seeker >= 0 && seeker < size && seeker - move_to_right >= 0 && seeker - move_to_right < size)
+					container[seeker] = container[seeker - move_to_right];
 			};
-
-
-			//операция перемещения элемента в контейнере без изменения размера контейнера и без потери данных
-				//(пока поддерживаются только vector и array)
-			template<class container_t>
-			void Replace(container_t& container, typename container_t::size_type num_of_el, typename container_t::size_type new_place) {
-				if (num_of_el >= container.size()) return;
-				if (new_place >= container.size()) return;
-
-				typename container_t::value_type el = container[num_of_el];
-				typename container_t::size_type seeker = 0;
-				for (seeker = num_of_el; seeker < new_place; seeker++)
-					container[seeker] = container[seeker + 1];
-				for (seeker = num_of_el; seeker > new_place; seeker--)
-					container[seeker] = container[seeker - 1];
-				container[new_place] = el;
-			};
-
 		};
-
 	};
+	template<class container_t, class content_t>
+	void Move(container_t& container, int move_to_right, const content_t& filler_elementh) {
+		uns::containers::sequential::Move(container, move_to_right);
+		int size = static_cast<int>(container.size());
+		int seeker = 0;
+		if (move_to_right > 0) {
+			for (seeker = move_to_right - 1; seeker >= 0; seeker--) {
+				if (seeker >= 0 && seeker < size)
+					container[seeker] = filler_elementh;
+			};
+		}
+		else if (move_to_right < 0) {
+			for (seeker = size + move_to_right; seeker < size; seeker++) {
+				if (seeker >= 0 && seeker < size)
+					container[seeker] = filler_elementh;
+			};
+		};
+	};
+
+
+	//операция перемещения элемента в контейнере без изменения размера контейнера и без потери данных
+		//(пока поддерживаются только vector и array)
+	template<class container_t>
+	void Replace(container_t& container, typename container_t::size_type num_of_el, typename container_t::size_type new_place) {
+		if (num_of_el >= container.size()) return;
+		if (new_place >= container.size()) return;
+
+		typename container_t::value_type el = container[num_of_el];
+		typename container_t::size_type seeker = 0;
+		for (seeker = num_of_el; seeker < new_place; seeker++)
+			container[seeker] = container[seeker + 1];
+		for (seeker = num_of_el; seeker > new_place; seeker--)
+			container[seeker] = container[seeker - 1];
+		container[new_place] = el;
+	};
+
+
 };

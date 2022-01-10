@@ -302,7 +302,9 @@ namespace uns {
 #define UNS_ENUM_DECLARATOR(ENUM_NAME, SPECIFICATION_TYPE, ...)																	\
 	BETTER_ENUM(ENUM_NAME, SPECIFICATION_TYPE, __VA_ARGS__);																	\
 	bool operator==(const ENUM_NAME& a, const ENUM_NAME::_enumerated& b) { return a == static_cast<ENUM_NAME>(b); };			\
-	bool operator==(const ENUM_NAME::_enumerated& a, const ENUM_NAME& b) { return static_cast<ENUM_NAME>(a) == b; };					
+	bool operator==(const ENUM_NAME::_enumerated& a, const ENUM_NAME& b) { return static_cast<ENUM_NAME>(a) == b; };			\
+	bool operator!=(const ENUM_NAME& a, const ENUM_NAME::_enumerated& b) { return !(a == static_cast<ENUM_NAME>(b)); };			\
+	bool operator!=(const ENUM_NAME::_enumerated& a, const ENUM_NAME& b) { return !(static_cast<ENUM_NAME>(a) == b); };		
 
 	//макрос-декларатор специализаций функции string_cast для better_enum-перечислений
 	//!!!!!!!!!!!!!use it global-scope only!!!!!!!!!!!!
