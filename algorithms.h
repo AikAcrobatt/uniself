@@ -29,7 +29,10 @@ namespace uns {
 	};
 	template<>
 	std::string string_cast<std::string, std::wstring>(const std::wstring& obj) {
+#pragma warning(disable : 4244)
+#pragma warning(push)
 		return std::string(obj.cbegin(), obj.cend());
+#pragma warning(pop)
 	};
 	template<>
 	std::wstring string_cast<std::wstring, std::wstring>(const std::wstring& obj) {
