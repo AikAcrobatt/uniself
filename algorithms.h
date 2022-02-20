@@ -7,15 +7,27 @@
 
 namespace uns {
 
+	template<typename...type>
+	struct is_unlikely {
+		inline constexpr static bool value = false;
+	};
+
+
 	//ÔÓÍÊÖÈß ÓÍÈÂÅĞÑÀËÜÍÎÃÎ ÑÒĞÎÊÎÂÎÃÎ ÊÀÑÒÀ
 	template<class out_t, class in_t>
 	out_t string_cast(const in_t& obj) {
-		static_assert(false, "A Uniself string_cast function does not support current types");
+		static_assert(
+			uns::is_unlikely<out_t, in_t>::value,
+			"A Uniself string_cast function does not support current types"
+			);
 		return out_t();
 	};
 	template<class out_t, class in_t>
 	out_t string_cast(const in_t* obj) {
-		static_assert(false, "A Uniself string_cast function does not support current types");
+		static_assert(
+			uns::is_unlikely<out_t, in_t>::value,
+			"A Uniself string_cast function does not support current types"
+			);
 		return out_t();
 	};
 	//ïğåîáğàçîâàíèå ñòğîê ê ñòğîêàì

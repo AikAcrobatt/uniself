@@ -29,10 +29,7 @@ int main()
 
 	unsf::test v = unsf::test::el1;
 
-	if(v == unsf::test::el1)
-		std::cout << "A" << std::endl;
-	else
-		std::cout << "B" << std::endl;
+	std::cout << uns::string_cast<std::string>(v) << std::endl;
 
 
 	std::cout << "FINISH" << std::endl;

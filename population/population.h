@@ -45,7 +45,7 @@ namespace uns::population {
 		index_t index = 0;
 	public:
 		order_element() = delete;
-		order_element(unit_t& unit, order_t* order, index_t idx) : unit_ptr(&unit), order_ptr(order), index(idx) {};
+		order_element(unit_t* unit, order_t* order, index_t idx) : unit_ptr(unit), order_ptr(order), index(idx) {};
 		order_element(const std::shared_ptr<unit_t>& unit, order_t* order, index_t idx) : unit_ptr(unit), order_ptr(order), index(idx) {};
 
 		order_element(const order_element& copying_obj) : unit_ptr(copying_obj.unit_ptr), order_ptr(copying_obj.order_ptr), index(copying_obj.index) {};
@@ -65,7 +65,7 @@ namespace uns::population {
 		const order_t& Order() const { return *order_ptr; };
 		order_t& Order() { return *order_ptr; };
 
-		const index_t& Index() const { 
+		index_t Index() const { 
 			return index;
 		};
 		index_t& Index() { 
@@ -105,17 +105,17 @@ namespace uns::population {
 
 		iterator_t end() { return global.end(); };
 
-		linear_order_interface::size_t Size() const { return global.size(); };
+		typename linear_container::size_type Size() const { return global.size(); };	//заменить везде на size_type
 
-		auto operator[](typename typename linear_container::size_type index) const { return global[index]; };
-		auto& operator[](typename typename linear_container::size_type index) { return global[index]; };
+		auto operator[](typename linear_container::size_type index) const { return global[index]; };
+		auto& operator[](typename linear_container::size_type index) { return global[index]; };
 
 		void Clear() {
 			global.clear();
 		};
 
 		void Push(const std::shared_ptr<unit_t>& unit_to_add) {
-			global.push_back(element_t(unit_to_add, dynamic_cast<order_t*>(this), global.size()));
+			global.push_back(element_t(unit_to_add, reinterpret_cast<order_t*>(this), global.size()));
 		};
 
 		void Pop(const iterator_t& iter) {
@@ -161,7 +161,7 @@ namespace uns::population {
 			index = static_cast<typename base_t::size_t>(base_t::global.size() * base_t::distribution(base_t::engine));
 
 			if (index >= base_t::global.size()) index = base_t::global.size() - 1;
-			return (base_t::global.begin() + index);
+			return base_t::global.begin() + index;
 		};
 	};
 
@@ -272,7 +272,7 @@ namespace uns::population {
 			while (element.Unit().StilPregnant()) {
 				new_born = breed_manager.Breed(element);
 				if(new_born != nullptr)
-					pregnancy.push_back();
+					pregnancy.push_back(new_born);
 			};
 		};
 
