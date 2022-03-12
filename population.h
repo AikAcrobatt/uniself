@@ -208,7 +208,7 @@ namespace uns::population {
 			return (base_t::global.begin() + index);
 		};
 
-		virtual void Sort() override {
+		virtual void Sort() {
 			std::sort(base_t::global.begin(), base_t::global.end(), predicate);
 			base_t::Indexate();
 		};

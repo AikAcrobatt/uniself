@@ -5,22 +5,15 @@
 namespace uns
 {
 	
-	using flow = long double;
-	using flow_time_period = std::chrono::seconds;
 
-	//функции, позвол€ющие получить врем€, прошедшее с момента запуска машины, в разных форматах
-	namespace from_start
-	{
-		template<class time_period>
-		time_period Duration() {
-			return (std::chrono::duration_cast<time_period>(std::chrono::steady_clock::now().time_since_epoch()));
-		};
+	/*класс общего времени
+	uns::flow
 
-		template<class time_period = flow_time_period, typename number_t = flow>
-		number_t Count() {
-			return (static_cast<number_t>(std::chrono::steady_clock::now().time_since_epoch().count()) / static_cast<number_t>(time_period(1) / std::chrono::steady_clock::duration(1)));
-		};
-	};
+		uns::flow <-> std::chrono::time_point
+		uns::flow <-> std::chrono::duration
+		uns::flow <-> long double
+
+	*/
 
 
 	//класс таймера
@@ -30,20 +23,21 @@ namespace uns
 		std::chrono::steady_clock::time_point creation_time;
 	public:
 		timer() : creation_time(std::chrono::steady_clock::now()) {};
-		timer(const timer& copying_obj) : creation_time(copying_obj.creation_time) {};
-		timer& operator=(const timer& copying_obj) { creation_time = copying_obj.creation_time; return *this; };
-		timer(timer&& moving_obj) noexcept : creation_time(std::move(moving_obj.creation_time)) {};
-		timer& operator=(timer&& moving_obj) noexcept { creation_time = std::move(moving_obj.creation_time); return *this; };
-		~timer() {};
+		timer(const timer&)  noexcept = default;
+		timer& operator=(const timer&) noexcept = default;
+		timer(timer&&) noexcept = default;
+		timer& operator=(timer&&)  noexcept = default;
+		~timer() noexcept = default;
 
-		template<typename time_period = std::chrono::milliseconds>
-		time_period Check() {
+		template<typename time_period = std::chrono::steady_clock::duration>
+		time_period Check() const noexcept {
 			return std::chrono::duration_cast<time_period>(std::chrono::steady_clock::now() - creation_time);
 		};
 
-		template<class time_period = flow_time_period, typename number_t = flow>
-		number_t Count() {
-			return (static_cast<number_t>(Check<std::chrono::steady_clock::duration>().count()) / static_cast<number_t>(time_period(1) / std::chrono::steady_clock::duration(1)));
+		template<class time_period = std::chrono::seconds>
+		long double Count() const noexcept {
+			using minimal_duration = std::chrono::steady_clock::duration;
+			return (static_cast<long double>(Check<minimal_duration>().count()) / static_cast<long double>(time_period(1) / minimal_duration(1)));
 		};
 	};
 	

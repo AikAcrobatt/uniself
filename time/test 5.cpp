@@ -15,7 +15,7 @@ int main() {
 	uns::timer t;
 
 	auto check = t.Count<std::chrono::seconds>();
-	while (check < 0.0011) {
+	while (check < 0.0011001) {
 		check = t.Count<std::chrono::seconds>();
 	};
 
