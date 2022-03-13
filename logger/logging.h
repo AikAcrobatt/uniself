@@ -9,8 +9,7 @@
 #include <atomic>
 #include <chrono>
 #include <limits>
-//#include <list>
-//#include <future>
+#include <future>
 
 #include "uniself/algorithms.h"
 #include "uniself/strings.h"
@@ -43,9 +42,10 @@ UNS_ENUM_STRING_CAST_DECLARATOR(uns::message_status);
 
 namespace uns::log {
 
+    template<typename string_type>
     class message {
     public:
-        using string_t = std::wstring;
+        using string_t = string_type;
         using time_t = std::chrono::system_clock::time_point;
     protected:
         time_t moment = time_t();
@@ -174,14 +174,18 @@ namespace uns::log {
     };
 
 
+    template<typename string_type>
     class thread_message_queue {
     public:
-        using string_t = std::wstring;
+        using string_t = string_type;
     protected:
 
+        template<typename string_type>
         class node {
         public:
-            uns::log::message message;
+            using string_t = string_type;
+
+            uns::log::message<string_t> message;
             node* prev = nullptr;
             node* next = nullptr;
 
@@ -197,11 +201,11 @@ namespace uns::log {
             ~node() {};
         };
 
-        node* begin = nullptr;
-        node* end = nullptr;
+        node<string_t>* begin = nullptr;
+        node<string_t>* end = nullptr;
         size_t size = 0;
     public:
-        thread_message_queue() : end(new node) {
+        thread_message_queue() : end(new node<string_t>) {
             begin = end;
         };
         thread_message_queue(const thread_message_queue& obj) {
@@ -269,7 +273,7 @@ namespace uns::log {
 
         void Push(const uns::log::message& message) {
             if (begin != nullptr) {
-                begin->prev = new node;
+                begin->prev = new node<string_t>;
                 size++;
                 begin->prev->next = begin;
                 begin->prev->message = message;
@@ -310,7 +314,7 @@ namespace uns::log {
                 && queue.end != nullptr
                 && queue.end->prev != nullptr
                 && begin != nullptr
-                ) {
+            ) {
                 begin->prev = queue.end->prev;
                 begin->prev->next = begin;
                 begin = queue.begin;
@@ -330,10 +334,13 @@ namespace uns::log {
 
 namespace uns {
 
+    template<typename string_type>
     class logger {
     public:
+        using string_t = string_type;
+        using fstream_t = std::basic_fstream<string_t::value_type>;
         using time_period = std::chrono::milliseconds;
-        using time_t = std::chrono::system_clock::time_point;//TODO возможно имеет смысл в самом логгере завязаться на steady_clock
+        using time_t = std::chrono::steady_clock::time_point;
     protected:
 
         //настройки механизма логирования, относящиеся к файловой системе
@@ -348,10 +355,10 @@ namespace uns {
         static time_period central_thread_periodicity;   //не меняется во время работы системы
 
         //переменные механизма логирования, относящиеся к центральному потоку или общие
-        static std::thread central_thread;
+        static std::future<void> central_thread;
         static std::atomic<bool> proceeding;
         static std::recursive_mutex mutex;
-        static std::wfstream errfile;
+        static fstream_t errfile;
         static size_t errfile_size;
         static std::thread::id central_id;
         static size_t subsystem_flags;
@@ -359,12 +366,12 @@ namespace uns {
         static size_t fileopen_num_of_tryes;
 
         //переменные центрального потока
-        static uns::log::thread_message_queue central_buffer;
+        static uns::log::thread_message_queue<string_t> central_buffer;
         static time_period forced_push_timeout;
         static time_t last_push_moment;
 
         //переменные клиентских потоков
-        thread_local static std::unique_ptr<uns::log::thread_message_queue> client_buffer;
+        thread_local static std::unique_ptr<uns::log::thread_message_queue<string_t>> client_buffer;
     protected:
         static std::string CreateErrFileName(const std::string file_extention) {
             return uns::string_cast<std::string>(std::chrono::system_clock::now().time_since_epoch().count()) //TODO сделать, чтобы было нормальное время
@@ -426,7 +433,8 @@ namespace uns {
                 return true;      //центральный поток можно запустить одновременно только один
             else {
                 try {
-                    central_thread = std::thread(//TODO переделать на std::future
+                    central_thread = std::async(
+                        std::launch::async,
                         [] {
                             //это и есть центральный поток
                             {
@@ -434,7 +442,7 @@ namespace uns {
                                 if(uns::logger::central_id == std::thread::id()) {
                                     uns::logger::central_id = std::this_thread::get_id();
                                     uns::logger::proceeding = true;
-                                    uns::logger::last_push_moment = std::chrono::system_clock::now();
+                                    uns::logger::last_push_moment = std::chrono::steady_clock::now();
                                 }
                                 else {
                                     uns::logger::ToLog(__FUNCTION__, __LINE__, uns::subsystem::logging, uns::message_status::warning);
@@ -476,11 +484,11 @@ namespace uns {
             if(std::this_thread::get_id() == central_id) {
                 if(
                     (central_buffer.Size() >= central_buffer_optimal_size
-                        || std::chrono::system_clock::now() > last_push_moment + forced_push_timeout
+                        || std::chrono::steady_clock::now() > last_push_moment + forced_push_timeout
                         || !proceeding_instruction)
                     && ErrFileIsValid()
                 ) {
-                    std::wstring central_buffer_text = L""; //TODO завязаться на тип чара из файлового потока
+                    auto central_buffer_text = string_t(); //TODO завязаться на тип чара из файлового потока
                     size_t central_buffer_previous_size = 0;
 
                     ToLog(__FUNCTION__, __LINE__, uns::subsystem::logging, uns::message_status::info);
@@ -490,7 +498,7 @@ namespace uns {
                         central_buffer_text = central_buffer.Text();
                         central_buffer_previous_size = central_buffer.Size();
                         central_buffer.Clear();
-                        last_push_moment = std::chrono::system_clock::now();
+                        last_push_moment = std::chrono::steady_clock::now();
                     };
 
                     errfile << central_buffer_text;
@@ -534,15 +542,15 @@ namespace uns {
 
         static void Finish() {  // процедура завершения логирования
             Stop();
-            if(central_thread.joinable()) {
-                central_thread.join();
+            if(central_thread.valid()) {
+                central_thread.get();
                 
                 std::lock_guard lock(mutex);
                 central_id = std::thread::id();
             };
         };
 
-        static void ToLogDelayed(const uns::log::message& message) {
+        static void ToLogDelayed(const uns::log::message<string_t>& message) {
             Check();
             if((message.Subsystems() & subsystem_flags) != 0 && message.Status() >= verbosity) {
                 client_buffer->Push(message);
@@ -575,7 +583,7 @@ namespace uns {
                 mutex.unlock();
             };
         };
-        static void ToLogTry(const uns::log::message& message) {
+        static void ToLogTry(const uns::log::message<string_t>& message) {
             ToLogDelayed(message);
             ToLogTry();
         };
@@ -603,7 +611,7 @@ namespace uns {
             std::lock_guard lock(mutex);
             central_buffer.MergeWith(*client_buffer);
         };
-        static void ToLogImmediate(const uns::log::message& message) {
+        static void ToLogImmediate(const uns::log::message<string_t>& message) {
             ToLogDelayed(message);
             ToLogImmediate();
         };
@@ -633,7 +641,7 @@ namespace uns {
             else if(client_buffer->Size() >= client_buffer_optimal_size)
                 ToLogTry();
         };
-        static void ToLog(const uns::log::message& message) {
+        static void ToLog(const uns::log::message<string_t>& message) {
             ToLogDelayed(message);
             ToLog();
         };
@@ -657,37 +665,39 @@ namespace uns {
             ToLog(Message(std::string(), 0, uns::subsystem::all, uns::message_status::all, message));
         };
 
-        static uns::log::message Message(
+        static uns::log::message<string_t> Message(
             const std::string function_name,
             const size_t line_number,
             const size_t subsystems,
             const uns::message_status message_status = uns::message_status::issue,
             const std::string message = ""
         ) {
-            return uns::log::message(
+            return uns::log::message<string_t>(
                 std::chrono::system_clock::now(),
                 std::this_thread::get_id(),
-                uns::string_cast<std::wstring>(function_name),
+                uns::string_cast<string_t>(function_name),
                 line_number,
                 subsystems,
                 message_status,
-                uns::string_cast<std::wstring>(message)
+                uns::string_cast<string_t>(message)
             );
         };
 
         template<typename string_t>
         static void ReportToEmergencyErrorFile(const std::string function_name, const size_t line_number, const string_t& str) {
+            static const auto newline = uns::string_cast<string_t>("\n");
+
             for(size_t num_of_try = 0; num_of_try < fileopen_num_of_tryes; num_of_try++) {
-                std::wfstream emergency_errfile((folder / emergency_errfile_name).c_str());
+                fstream_t emergency_errfile((folder / emergency_errfile_name).c_str());
                 if(!emergency_errfile.bad() && !emergency_errfile.fail() && emergency_errfile.is_open()) {
                     uns::log::message message = Message(
                         function_name,
                         line_number,
                         uns::subsystem::logging,
                         uns::message_status::alert,
-                        uns::string_cast<std::wstring>(str)
+                        uns::string_cast<string_t>(str)
                     );
-                    emergency_errfile << message.String() + L"\n";
+                    emergency_errfile << message.String() + newline;
                     break;
                 };
             };
@@ -695,26 +705,26 @@ namespace uns {
 
     };
 
-    std::filesystem::path uns::logger::folder;
-    std::string uns::logger::emergency_errfile_name;
-    size_t uns::logger::central_buffer_optimal_size = 100;
-    size_t uns::logger::errfile_optimal_size = 50;
-    size_t uns::logger::client_buffer_optimal_size = 10;
-    size_t uns::logger::client_buffer_maximal_size = 20;
-    uns::logger::time_period uns::logger::central_thread_periodicity = std::chrono::milliseconds(10);
-    std::thread uns::logger::central_thread;
-    std::atomic<bool> uns::logger::proceeding = false;
-    std::recursive_mutex uns::logger::mutex;
-    std::wfstream uns::logger::errfile;
-    size_t uns::logger::errfile_size = 0;
-    size_t uns::logger::fileopen_num_of_tryes = 3;
-    std::thread::id uns::logger::central_id;
-    size_t uns::logger::subsystem_flags = uns::subsystem::none;
-    uns::message_status uns::logger::verbosity = uns::message_status::issue;
-    uns::log::thread_message_queue uns::logger::central_buffer;
-    uns::logger::time_period uns::logger::forced_push_timeout = std::chrono::milliseconds(10000);
-    uns::logger::time_t uns::logger::last_push_moment = uns::logger::time_t();
-    thread_local std::unique_ptr<uns::log::thread_message_queue> uns::logger::client_buffer = nullptr;
+    template<typename string_type> std::filesystem::path uns::logger<string_type>::folder;
+    template<typename string_type> std::string uns::logger<string_type>::emergency_errfile_name;
+    template<typename string_type> size_t uns::logger<string_type>::central_buffer_optimal_size = 100;
+    template<typename string_type> size_t uns::logger<string_type>::errfile_optimal_size = 50;
+    template<typename string_type> size_t uns::logger<string_type>::client_buffer_optimal_size = 10;
+    template<typename string_type> size_t uns::logger<string_type>::client_buffer_maximal_size = 20;
+    template<typename string_type> uns::logger<string_type>::time_period uns::logger<string_type>::central_thread_periodicity = std::chrono::milliseconds(10);
+    template<typename string_type> std::future<void> uns::logger<string_type>::central_thread;
+    template<typename string_type> std::atomic<bool> uns::logger<string_type>::proceeding = false;
+    template<typename string_type> std::recursive_mutex uns::logger<string_type>::mutex;
+    template<typename string_type> uns::logger<string_type>::fstream_t uns::logger<string_type>::errfile;
+    template<typename string_type> size_t uns::logger<string_type>::errfile_size = 0;
+    template<typename string_type> size_t uns::logger<string_type>::fileopen_num_of_tryes = 3;
+    template<typename string_type> std::thread::id uns::logger<string_type>::central_id;
+    template<typename string_type> size_t uns::logger<string_type>::subsystem_flags = uns::subsystem::none;
+    template<typename string_type> uns::message_status uns::logger<string_type>::verbosity = uns::message_status::issue;
+    template<typename string_type> uns::log::thread_message_queue<string_type> uns::logger<string_type>::central_buffer;
+    template<typename string_type> uns::logger<string_type>::time_period uns::logger<string_type>::forced_push_timeout = std::chrono::milliseconds(10000);
+    template<typename string_type> uns::logger<string_type>::time_t uns::logger<string_type>::last_push_moment = uns::logger<string_type>::time_t();
+    template<typename string_type> thread_local std::unique_ptr<uns::log::thread_message_queue<string_type>> uns::logger<string_type>::client_buffer = nullptr;
 
 };
 
