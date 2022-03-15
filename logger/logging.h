@@ -16,14 +16,20 @@
 #include "uniself/time.h"
 
 
-#ifndef UNS_TIME_TO_STRING_CONVERTION_DEFINED
 
+template<typename string_t>
+string_t TimeToString(const std::chrono::system_clock::time_point& moment);
+
+/*
+* It's supposed to be realized as:
+* 
 template<typename string_t>
 string_t TimeToString(const std::chrono::system_clock::time_point& moment) {
     return uns::string_cast<string_t>(moment.time_since_epoch().count());
 };
+* or smth more complicated
+*/
 
-#endif
 
 
 namespace uns {
