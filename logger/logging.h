@@ -15,6 +15,17 @@
 #include "uniself/strings.h"
 #include "uniself/time.h"
 
+
+#ifndef UNS_TIME_TO_STRING_CONVERTION_DEFINED
+
+template<typename string_t>
+string_t TimeToString(const std::chrono::system_clock::time_point& moment) {
+    return uns::string_cast<string_t>(moment.time_since_epoch().count());
+};
+
+#endif
+
+
 namespace uns {
 
 #pragma warning(disable : 26812)
@@ -147,7 +158,7 @@ namespace uns::log {
             static const string_t round_bracket_cl = uns::string_cast<string_t>(")");
             static const string_t dash = uns::string_cast<string_t>("-");
 
-            res += uns::string_cast<string_t>(moment.time_since_epoch().count()) + space + colon + colon;   //TODO сделать, чтобы было нормальное время
+            res += TimeToString<string_t>(moment) + space + colon + colon;
             res += space + uns::string_cast<string_t>(hasher(thread_id)) + space + colon + colon;
             res += space + double_quote + uns::string_cast<string_t>(msg) + double_quote;
             res += space + at + space + uns::string_cast<string_t>(subsystem_flags);
@@ -373,9 +384,9 @@ namespace uns {
         //переменные клиентских потоков
         thread_local static std::unique_ptr<uns::log::thread_message_queue<string_t>> client_buffer;
     protected:
-        static std::string CreateErrFileName(const std::string file_extention) {
-            return uns::string_cast<std::string>(std::chrono::system_clock::now().time_since_epoch().count()) //TODO сделать, чтобы было нормальное время
-                + "." + file_extention;
+        static string_t CreateErrFileName(const string_t file_extention) {
+            return TimeToString<string_t>(std::chrono::system_clock::now())
+                + uns::string_cast<string_t>(".") + file_extention;
         };
 
         static bool ErrFileIsValid() {
@@ -488,7 +499,7 @@ namespace uns {
                         || !proceeding_instruction)
                     && ErrFileIsValid()
                 ) {
-                    auto central_buffer_text = string_t(); //TODO завязаться на тип чара из файлового потока
+                    auto central_buffer_text = string_t();
                     size_t central_buffer_previous_size = 0;
 
                     ToLog(__FUNCTION__, __LINE__, uns::subsystem::logging, uns::message_status::info);
@@ -513,7 +524,7 @@ namespace uns {
                     if(!errfile.is_open() || !ErrFileIsValid()) {
                         try {
                             for(size_t num_of_try = 0; num_of_try < fileopen_num_of_tryes; num_of_try++) {
-                                errfile.open((folder / CreateErrFileName("txt")).c_str(), std::ios::app | std::ios::binary | std::ios::out);
+                                errfile.open((folder / CreateErrFileName<string_t>(uns::string_cast<string_t>("txt"))).c_str(), std::ios::app | std::ios::binary | std::ios::out);
                                 if(ErrFileIsValid())
                                     break;
                             };
@@ -556,23 +567,26 @@ namespace uns {
                 client_buffer->Push(message);
             };
         };
+        template<typename message_t, typename func_t = string_t>
         static void ToLogDelayed(
-            const std::string function_name,
+            const func_t function_name,
             const size_t line_number,
             const size_t subsystems,
             const uns::message_status message_status = uns::message_status::issue,
-            const std::string message = std::string()
+            const message_t message = message_t()
         ) {
             ToLogDelayed(Message(function_name, line_number, subsystems, message_status, message));
         };
+        template<typename message_t>
         static void ToLogDelayed(
             const size_t subsystems,
             const uns::message_status message_status = uns::message_status::issue,
-            const std::string message = std::string()
+            const message_t message = message_t()
         ) {
             ToLogDelayed(Message(std::string(), 0, subsystems, message_status, message));
         };
-        static void ToLogDelayed(const std::string message = std::string()) {
+        template<typename message_t>
+        static void ToLogDelayed(const message_t message) {
             ToLogDelayed(Message(std::string(), 0, uns::subsystem::all, uns::message_status::all, message));
         };
 
@@ -587,23 +601,26 @@ namespace uns {
             ToLogDelayed(message);
             ToLogTry();
         };
+        template<typename message_t, typename func_t = string_t>
         static void ToLogTry(
-            const std::string function_name,
+            const func_t function_name,
             const size_t line_number,
             const size_t subsystems,
             const uns::message_status message_status = uns::message_status::issue,
-            const std::string message = ""
+            const message_t message = message_t()
         ) {
             ToLogTry(Message(function_name, line_number, subsystems, message_status, message));
         };
+        template<typename message_t>
         static void ToLogTry(
             const size_t subsystems,
             const uns::message_status message_status = uns::message_status::issue,
-            const std::string message = std::string()
+            const message_t message = message_t()
         ) {
             ToLogTry(Message(std::string(), 0, subsystems, message_status, message));
         };
-        static void ToLogTry(const std::string message) {
+        template<typename message_t>
+        static void ToLogTry(const message_t message) {
             ToLogTry(Message(std::string(), 0, uns::subsystem::all, uns::message_status::all, message));
         };
 
@@ -615,23 +632,26 @@ namespace uns {
             ToLogDelayed(message);
             ToLogImmediate();
         };
+        template<typename message_t, typename func_t = string_t>
         static void ToLogImmediate(
-            const std::string function_name,
+            const func_t function_name,
             const size_t line_number,
             const size_t subsystems,
             const uns::message_status message_status = uns::message_status::issue,
-            const std::string message = ""
+            const message_t message = message_t()
         ) {
             ToLogImmediate(Message(function_name, line_number, subsystems, message_status, message));
         };
+        template<typename message_t>
         static void ToLogImmediate(
             const size_t subsystems,
             const uns::message_status message_status = uns::message_status::issue,
-            const std::string message = std::string()
+            const message_t message = message_t()
         ) {
             ToLogImmediate(Message(std::string(), 0, subsystems, message_status, message));
         };
-        static void ToLogImmediate(const std::string message) {
+        template<typename message_t>
+        static void ToLogImmediate(const message_t message) {
             ToLogImmediate(Message(std::string(), 0, uns::subsystem::all, uns::message_status::all, message));
         };
 
@@ -645,32 +665,36 @@ namespace uns {
             ToLogDelayed(message);
             ToLog();
         };
+        template<typename message_t, typename func_t = string_t>
         static void ToLog(
-            const std::string function_name,
+            const func_t function_name,
             const size_t line_number,
             const size_t subsystems,
             const uns::message_status message_status = uns::message_status::issue,
-            const std::string message = ""
+            const message_t message = message_t()
         ) {
             ToLog(Message(function_name, line_number, subsystems, message_status, message));
         };
+        template<typename message_t>
         static void ToLog(
             const size_t subsystems,
             const uns::message_status message_status = uns::message_status::issue,
-            const std::string message = std::string()
+            const message_t message = message_t()
         ) {
             ToLog(Message(std::string(), 0, subsystems, message_status, message));
         };
-        static void ToLog(const std::string message) {
+        template<typename message_t>
+        static void ToLog(const message_t message) {
             ToLog(Message(std::string(), 0, uns::subsystem::all, uns::message_status::all, message));
         };
 
+        template<typename message_t, typename func_t = string_t>
         static uns::log::message<string_t> Message(
-            const std::string function_name,
+            const func_t function_name,
             const size_t line_number,
             const size_t subsystems,
             const uns::message_status message_status = uns::message_status::issue,
-            const std::string message = ""
+            const message_t message = ""
         ) {
             return uns::log::message<string_t>(
                 std::chrono::system_clock::now(),
@@ -683,8 +707,8 @@ namespace uns {
             );
         };
 
-        template<typename string_t>
-        static void ReportToEmergencyErrorFile(const std::string function_name, const size_t line_number, const string_t& str) {
+        template<typename message_t, typename func_t = string_t>
+        static void ReportToEmergencyErrorFile(const func_t function_name, const size_t line_number, const message_t& str) {
             static const auto newline = uns::string_cast<string_t>("\n");
 
             for(size_t num_of_try = 0; num_of_try < fileopen_num_of_tryes; num_of_try++) {
