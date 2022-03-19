@@ -3,9 +3,43 @@
 
 #include <iostream>
 
+#include "uniself/algorithms.h"
+#include "logging.h"
+
+using namespace std::chrono_literals;
+
+template<typename string_t>
+string_t TimeToString(const std::chrono::system_clock::time_point& moment) {
+    return uns::string_cast<string_t>(moment.time_since_epoch().count());
+};
+
+using logger = uns::logger<std::wstring>;
+
 int main() {
     std::cout << "START" << std::endl;
 
+    uns::logger<std::wstring>::Setup(
+        "D:/Документы/Test",
+        "EmerLog",
+        10,
+        20,
+        10,
+        20,
+        1ms,
+        uns::subsystem::all,
+        uns::urgency::none
+    );
+
+    logger::Start();
+
+    std::this_thread::sleep_for(10ms);
+
+    for (int i = 0; i < 10; i++) {
+        logger::ToLog(__FUNCTION__, __LINE__, 10, uns::urgency::low, uns::string_cast<std::string>(i));
+    };
+    logger::ToLogImmediate(__FUNCTION__, __LINE__, 10, uns::urgency::low, "");
+
+    logger::Finish();
 
     std::cout << "FINISH" << std::endl;
 };

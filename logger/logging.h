@@ -2,19 +2,20 @@
 
 #include <iostream>
 #include <fstream>
+#include <future>
 #include <thread>
-#include <filesystem>
-#include <exception>
 #include <mutex>
+#include <exception>
+#include <filesystem>
 #include <atomic>
 #include <chrono>
 #include <limits>
-#include <future>
 
 #include "uniself/algorithms.h"
 #include "uniself/strings.h"
-#include "uniself/time.h"
 
+
+#define UNS_MODULENAME "logging.h"
 
 
 template<typename string_t>
@@ -41,12 +42,12 @@ namespace uns {
         all = std::numeric_limits<int>::max()
     );
 
-    UNS_ENUM_DECLARATOR(message_status, int,
-        all = -1,
-        info = 0,
-        warning = 1,
-        issue = 2,
-        alert = 3
+    UNS_ENUM_DECLARATOR(urgency, int,
+        none = -1,
+        low = 0,
+        aver = 1,
+        very = 2,
+        high = 3
     );
 #pragma warning(default : 26812)
 
@@ -54,7 +55,7 @@ namespace uns {
 
 UNS_ENUM_STRING_CAST_DECLARATOR(uns::subsystem);
 
-UNS_ENUM_STRING_CAST_DECLARATOR(uns::message_status);
+UNS_ENUM_STRING_CAST_DECLARATOR(uns::urgency);
 
 
 namespace uns::log {
@@ -67,41 +68,42 @@ namespace uns::log {
     protected:
         time_t moment = time_t();
         std::thread::id thread_id = std::thread::id();
-        string_t function_name = uns::string_cast<string_t>("unknown_function");
-        bool function_name_is_empty = false;
+        string_t module_name = uns::string_cast<string_t>("unknown");
+        bool module_name_is_empty = false;
         size_t line_number = 0;
         bool line_number_is_empty = false;
         size_t subsystem_flags = 0;
-        uns::message_status verbal_type = uns::message_status::issue;
+        uns::urgency verbal_type = uns::urgency::very;
         string_t msg = string_t();
         std::hash<std::thread::id> hasher;
     public:
         message() noexcept {};
+        template<typename module_name_t>
         message(
             time_t moment_,
             std::thread::id thread_id_,
-            string_t function,
+            module_name_t module_,
             size_t line,
             size_t subsyst,
-            uns::message_status message_status,
+            uns::urgency urgency,
             string_t message_ = string_t()
         ) noexcept :
             moment(moment_),
             thread_id(thread_id_),
-            function_name(function),
+            module_name(uns::string_cast<string_t>(module_)),
             line_number(line),
             subsystem_flags(subsyst),
-            verbal_type(message_status),
+            verbal_type(urgency),
             msg(message_)
         {
-            function_name_is_empty = (function_name.empty());
+            module_name_is_empty = (module_name.empty());
             line_number_is_empty = (line_number == 0);
         };
         message(const message& obj) {
             moment = obj.moment;
             thread_id = obj.thread_id;
-            function_name = obj.function_name;
-            function_name_is_empty = obj.function_name_is_empty;
+            module_name = obj.module_name;
+            module_name_is_empty = obj.module_name_is_empty;
             line_number = obj.line_number;
             line_number_is_empty = obj.line_number_is_empty;
             subsystem_flags = obj.subsystem_flags;
@@ -112,8 +114,8 @@ namespace uns::log {
             if (this != &obj) {
                 moment = obj.moment;
                 thread_id = obj.thread_id;
-                function_name = obj.function_name;
-                function_name_is_empty = obj.function_name_is_empty;
+                module_name = obj.module_name;
+                module_name_is_empty = obj.module_name_is_empty;
                 line_number = obj.line_number;
                 line_number_is_empty = obj.line_number_is_empty;
                 subsystem_flags = obj.subsystem_flags;
@@ -126,8 +128,8 @@ namespace uns::log {
         message(message&& obj) noexcept {
             moment = std::move(obj.moment);
             thread_id = std::move(obj.thread_id);
-            function_name = std::move(obj.function_name);
-            function_name_is_empty = std::move(obj.function_name_is_empty);
+            module_name = std::move(obj.module_name);
+            module_name_is_empty = std::move(obj.module_name_is_empty);
             line_number = std::move(obj.line_number);
             line_number_is_empty = std::move(obj.line_number_is_empty);
             subsystem_flags = std::move(obj.subsystem_flags);
@@ -138,8 +140,8 @@ namespace uns::log {
             if (this != &obj) {
                 moment = std::move(obj.moment);
                 thread_id = std::move(obj.thread_id);
-                function_name = std::move(obj.function_name);
-                function_name_is_empty = std::move(obj.function_name_is_empty);
+                module_name = std::move(obj.module_name);
+                module_name_is_empty = std::move(obj.module_name_is_empty);
                 line_number = std::move(obj.line_number);
                 line_number_is_empty = std::move(obj.line_number_is_empty);
                 subsystem_flags = std::move(obj.subsystem_flags);
@@ -168,7 +170,7 @@ namespace uns::log {
             res += space + uns::string_cast<string_t>(hasher(thread_id)) + space + colon + colon;
             res += space + double_quote + uns::string_cast<string_t>(msg) + double_quote;
             res += space + at + space + uns::string_cast<string_t>(subsystem_flags);
-            if (!function_name_is_empty) res += space + in + space + uns::string_cast<string_t>(function_name);
+            if (!module_name_is_empty) res += space + in + space + uns::string_cast<string_t>(module_name);
             if (!line_number_is_empty) res += round_bracket_op + uns::string_cast<string_t>(line_number) + round_bracket_cl;
             res += space + dash + space + uns::string_cast<string_t>(verbal_type);
 
@@ -179,13 +181,13 @@ namespace uns::log {
 
         std::thread::id ThreadId() const noexcept { return thread_id; };
 
-        string_t FunctionName() const noexcept { return function_name; };
+        string_t FunctionName() const noexcept { return module_name; };
 
         size_t Line() const noexcept { return line_number; };
 
         size_t Subsystems() const noexcept { return subsystem_flags; };
 
-        uns::message_status Status() const noexcept { return verbal_type; };
+        uns::urgency Status() const noexcept { return verbal_type; };
 
         string_t Message() const noexcept { return msg; };
     };
@@ -195,14 +197,15 @@ namespace uns::log {
     class thread_message_queue {
     public:
         using string_t = string_type;
+        using message_t = uns::log::message<string_t>;
     protected:
 
-        template<typename string_type>
+        template<typename message_type>
         class node {
         public:
-            using string_t = string_type;
+            using message_t = message_type;
 
-            uns::log::message<string_t> message;
+            message_t message;
             node* prev = nullptr;
             node* next = nullptr;
 
@@ -218,21 +221,25 @@ namespace uns::log {
             ~node() {};
         };
 
-        node<string_t>* begin = nullptr;
-        node<string_t>* end = nullptr;
+        node<message_t>* begin = nullptr;
+        node<message_t>* end = nullptr;     //All the time while the queue is existing, its end should be not nullptr
         size_t size = 0;
     public:
-        thread_message_queue() : end(new node<string_t>) {
+        thread_message_queue() {
+            end = new node<message_t>;
             begin = end;
         };
         thread_message_queue(const thread_message_queue& obj) {
+            end = new node<message_t>;
+            begin = end;
+
             *this = obj;
         };
         thread_message_queue& operator=(const thread_message_queue& obj) {
             if (this == &obj) return *this;
 
             Clear();
-
+            
             if (obj.begin == nullptr || obj.end == nullptr) return *this;
 
             for (auto iter = obj.end->prev; iter != obj.begin->prev && iter != nullptr; iter = iter->prev) {
@@ -242,6 +249,9 @@ namespace uns::log {
             return *this;
         };
         thread_message_queue(thread_message_queue&& obj) noexcept {
+            end = new node<message_t>;
+            begin = end;
+
             *this = std::move(obj);
         };
         thread_message_queue& operator=(thread_message_queue&& obj) noexcept {
@@ -251,9 +261,15 @@ namespace uns::log {
 
             if (obj.begin == nullptr || obj.end == nullptr) return *this;
 
+            if (end != nullptr)
+                delete end;
+
             end = obj.end;
             begin = obj.begin;
             size = obj.size;
+
+            obj.begin = obj.end = new node<message_t>;
+            obj.size = 0;
 
             return *this;
         };
@@ -283,14 +299,16 @@ namespace uns::log {
                 iter = begin;
             };
 
-            end->prev = nullptr;
-            end->next = nullptr;
+            if (end != nullptr) {
+                end->prev = nullptr;
+                end->next = nullptr;
+            };
             size = 0;
         };
 
-        void Push(const uns::log::message& message) {
+        void Push(const message_t& message) {
             if (begin != nullptr) {
-                begin->prev = new node<string_t>;
+                begin->prev = new node<message_t>;
                 size++;
                 begin->prev->next = begin;
                 begin->prev->message = message;
@@ -298,7 +316,7 @@ namespace uns::log {
             };
         };
 
-        bool Top(uns::log::message& return_message) const {
+        bool Top(message_t& return_message) const {
             if (begin != end && end != nullptr && end->prev != nullptr) {
                 return_message = end->prev->message;
                 return true;
@@ -351,13 +369,13 @@ namespace uns::log {
 
 namespace uns {
 
-    template<typename string_type>
+    template<typename string_type, typename time_period = std::chrono::milliseconds>
     class logger {
     public:
         using string_t = string_type;
-        using fstream_t = std::basic_fstream<string_t::value_type>;
-        using time_period = std::chrono::milliseconds;
+        using fstream_t = std::basic_fstream<typename string_t::value_type>;
         using time_t = std::chrono::steady_clock::time_point;
+        using period_t = time_period;
     protected:
 
         //настройки механизма логирования, относящиеся к файловой системе
@@ -374,12 +392,14 @@ namespace uns {
         //переменные механизма логирования, относящиеся к центральному потоку или общие
         static std::future<void> central_thread;
         static std::atomic<bool> proceeding;
+        static std::recursive_mutex proc_mtx;
+        static bool proceeding_;
         static std::recursive_mutex mutex;
         static fstream_t errfile;
         static size_t errfile_size;
         static std::thread::id central_id;
         static size_t subsystem_flags;
-        static uns::message_status verbosity;
+        static uns::urgency verbosity;
         static size_t fileopen_num_of_tryes;
 
         //переменные центрального потока
@@ -408,7 +428,7 @@ namespace uns {
             const size_t client_buffer_maximal_size_,                                  //размер (количество сообщений) клиентского буфера, при достижении которого клиентский поток встает в очередь на запись в «центрлаьный» буфер
             const time_period central_thread_periodicity_,                             //периодичность запуска «центрального» потока (в миллисекундах)
             const size_t subsystem_flags_ = uns::subsystem::none,                      //флаги подсистем
-            const uns::message_status verbosity_level = uns::message_status::issue,    //уровень болтливости
+            const uns::urgency verbosity_level = uns::urgency::very,    //уровень болтливости
             const time_period forced_push_timeout_ = std::chrono::milliseconds(10000), //интервал времени, раз в который центральный буффер будет выгружаться в лог-файл
             const size_t fileopen_num_of_tryes_ = 3                                    //количество попыток отведенное на открытие лог-файла, после его истечения логгер остановится
         ) {
@@ -442,7 +462,7 @@ namespace uns {
         static bool Start() {//false - означает, что возникли ошибки при попытке запуска, true - означает, что ошибок не было, даже если запуск логгера не произведен
             bool central_thread_launched = false;
             {
-                std::lock_guard lock(uns::logger::mutex);
+                std::lock_guard lock(mutex);
                 central_thread_launched = (central_id != std::thread::id());
             };
 
@@ -455,35 +475,40 @@ namespace uns {
                         [] {
                             //это и есть центральный поток
                             {
-                                std::lock_guard lock(uns::logger::mutex);
-                                if(uns::logger::central_id == std::thread::id()) {
-                                    uns::logger::central_id = std::this_thread::get_id();
-                                    uns::logger::proceeding = true;
-                                    uns::logger::last_push_moment = std::chrono::steady_clock::now();
+                                std::lock_guard lock(mutex);
+                                if(central_id == std::thread::id()) {
+                                    central_id = std::this_thread::get_id();
+                                    proceeding = true;
+                                    last_push_moment = std::chrono::steady_clock::now();
                                 }
                                 else {
-                                    uns::logger::ToLog(__FUNCTION__, __LINE__, uns::subsystem::logging, uns::message_status::warning);
+                                    ToLog(UNS_MODULENAME, __LINE__, uns::subsystem::logging, uns::urgency::high, "");
                                     return;
                                 };
                             };
 
-                            uns::logger::ToLog(__FUNCTION__, __LINE__, uns::subsystem::logging, uns::message_status::info);
+                            ToLog(UNS_MODULENAME, __LINE__, uns::subsystem::logging, uns::urgency::high, "START");
 
-                            while(Proceed()) {
-                                std::this_thread::sleep_for(uns::logger::central_thread_periodicity);
-                            };
+                            Process();
+                            do {
+                                std::this_thread::sleep_for(central_thread_periodicity);
+
+                                if(!proceeding)
+                                    ToLogImmediate(UNS_MODULENAME, __LINE__, uns::subsystem::logging, uns::urgency::high, "FINISH");
+                            }
+                            while (Process());
 
                             {
-                                std::lock_guard lock(uns::logger::mutex);
-                                if(uns::logger::central_id == std::this_thread::get_id()) {
-                                    uns::logger::central_id = std::thread::id();
+                                std::lock_guard lock(mutex);
+                                if (central_id == std::this_thread::get_id()) {
+                                    central_id = std::thread::id();
                                 };
                             };
                         }
                     );
                 }
                 catch(std::exception& e) {
-                    ReportToEmergencyErrorFile(__FUNCTION__, __LINE__, e.what());
+                    ReportToEmergencyErrorFile(UNS_MODULENAME, __LINE__, e.what());
                     return false;
                 };
             };
@@ -492,33 +517,34 @@ namespace uns {
         };
     protected:
         static void Check() {
-            if(client_buffer == nullptr) client_buffer = std::make_unique<uns::log::thread_message_queue>();
+            if(client_buffer == nullptr) client_buffer = std::make_unique<uns::log::thread_message_queue<string_t>>();
         };
 
-        static bool Proceed() {//true - если центральный поток может продолжать выполнение
+        static bool Process() {//true - если центральный поток может продолжать выполнение
             const bool proceeding_instruction = proceeding;
             bool result = proceeding_instruction;
             if(std::this_thread::get_id() == central_id) {
                 if(
                     (central_buffer.Size() >= central_buffer_optimal_size
                         || std::chrono::steady_clock::now() > last_push_moment + forced_push_timeout
-                        || !proceeding_instruction)
+                        || !proceeding_instruction
+                    )
                     && ErrFileIsValid()
                 ) {
-                    auto central_buffer_text = string_t();
+                    auto central_buffer_copy = uns::log::thread_message_queue<string_t>();
                     size_t central_buffer_previous_size = 0;
 
-                    ToLog(__FUNCTION__, __LINE__, uns::subsystem::logging, uns::message_status::info);
+                    ToLog(UNS_MODULENAME, __LINE__, uns::subsystem::logging, uns::urgency::low, "PROCESS");
 
                     {
                         std::lock_guard lock(mutex);
-                        central_buffer_text = central_buffer.Text();
                         central_buffer_previous_size = central_buffer.Size();
-                        central_buffer.Clear();
+                        central_buffer_copy = std::move(central_buffer);
+                        central_buffer = uns::log::thread_message_queue<string_t>();
                         last_push_moment = std::chrono::steady_clock::now();
                     };
 
-                    errfile << central_buffer_text;
+                    errfile << central_buffer_copy.Text();
                     errfile_size += central_buffer_previous_size;
                 };
 
@@ -530,17 +556,17 @@ namespace uns {
                     if(!errfile.is_open() || !ErrFileIsValid()) {
                         try {
                             for(size_t num_of_try = 0; num_of_try < fileopen_num_of_tryes; num_of_try++) {
-                                errfile.open((folder / CreateErrFileName<string_t>(uns::string_cast<string_t>("txt"))).c_str(), std::ios::app | std::ios::binary | std::ios::out);
+                                errfile = fstream_t((folder / CreateErrFileName(uns::string_cast<string_t>("txt"))).c_str(), std::ios::app | std::ios::binary | std::ios::out);
                                 if(ErrFileIsValid())
                                     break;
                             };
                         }
                         catch(std::exception& e) {
-                            ReportToEmergencyErrorFile(__FUNCTION__, __LINE__, e.what());
+                            ReportToEmergencyErrorFile(UNS_MODULENAME, __LINE__, e.what());
                             result = false;
                         };
                         if(!ErrFileIsValid()) {
-                            ReportToEmergencyErrorFile(__FUNCTION__, __LINE__, "ErrFile is invalid\n");
+                            ReportToEmergencyErrorFile(UNS_MODULENAME, __LINE__, "ErrFile is invalid\n");
                             result = false;
                         };
 
@@ -559,11 +585,8 @@ namespace uns {
 
         static void Finish() {  // процедура завершения логирования
             Stop();
-            if(central_thread.valid()) {
+            if (central_thread.valid()) {
                 central_thread.get();
-                
-                std::lock_guard lock(mutex);
-                central_id = std::thread::id();
             };
         };
 
@@ -575,25 +598,25 @@ namespace uns {
         };
         template<typename message_t, typename func_t = string_t>
         static void ToLogDelayed(
-            const func_t function_name,
+            const func_t module_name,
             const size_t line_number,
             const size_t subsystems,
-            const uns::message_status message_status = uns::message_status::issue,
+            const uns::urgency urgency = uns::urgency::very,
             const message_t message = message_t()
         ) {
-            ToLogDelayed(Message(function_name, line_number, subsystems, message_status, message));
+            ToLogDelayed(Message(module_name, line_number, subsystems, urgency, message));
         };
         template<typename message_t>
         static void ToLogDelayed(
             const size_t subsystems,
-            const uns::message_status message_status = uns::message_status::issue,
+            const uns::urgency urgency = uns::urgency::very,
             const message_t message = message_t()
         ) {
-            ToLogDelayed(Message(std::string(), 0, subsystems, message_status, message));
+            ToLogDelayed(Message(std::string(), 0, subsystems, urgency, message));
         };
         template<typename message_t>
         static void ToLogDelayed(const message_t message) {
-            ToLogDelayed(Message(std::string(), 0, uns::subsystem::all, uns::message_status::all, message));
+            ToLogDelayed(Message(std::string(), 0, uns::subsystem::all, uns::urgency::all, message));
         };
 
 
@@ -609,25 +632,25 @@ namespace uns {
         };
         template<typename message_t, typename func_t = string_t>
         static void ToLogTry(
-            const func_t function_name,
+            const func_t module_name,
             const size_t line_number,
             const size_t subsystems,
-            const uns::message_status message_status = uns::message_status::issue,
+            const uns::urgency urgency = uns::urgency::very,
             const message_t message = message_t()
         ) {
-            ToLogTry(Message(function_name, line_number, subsystems, message_status, message));
+            ToLogTry(Message(module_name, line_number, subsystems, urgency, message));
         };
         template<typename message_t>
         static void ToLogTry(
             const size_t subsystems,
-            const uns::message_status message_status = uns::message_status::issue,
+            const uns::urgency urgency = uns::urgency::very,
             const message_t message = message_t()
         ) {
-            ToLogTry(Message(std::string(), 0, subsystems, message_status, message));
+            ToLogTry(Message(std::string(), 0, subsystems, urgency, message));
         };
         template<typename message_t>
         static void ToLogTry(const message_t message) {
-            ToLogTry(Message(std::string(), 0, uns::subsystem::all, uns::message_status::all, message));
+            ToLogTry(Message(std::string(), 0, uns::subsystem::all, uns::urgency::all, message));
         };
 
         static void ToLogImmediate() {
@@ -640,25 +663,25 @@ namespace uns {
         };
         template<typename message_t, typename func_t = string_t>
         static void ToLogImmediate(
-            const func_t function_name,
+            const func_t module_name,
             const size_t line_number,
             const size_t subsystems,
-            const uns::message_status message_status = uns::message_status::issue,
+            const uns::urgency urgency = uns::urgency::very,
             const message_t message = message_t()
         ) {
-            ToLogImmediate(Message(function_name, line_number, subsystems, message_status, message));
+            ToLogImmediate(Message(module_name, line_number, subsystems, urgency, message));
         };
         template<typename message_t>
         static void ToLogImmediate(
             const size_t subsystems,
-            const uns::message_status message_status = uns::message_status::issue,
+            const uns::urgency urgency = uns::urgency::very,
             const message_t message = message_t()
         ) {
-            ToLogImmediate(Message(std::string(), 0, subsystems, message_status, message));
+            ToLogImmediate(Message(std::string(), 0, subsystems, urgency, message));
         };
         template<typename message_t>
         static void ToLogImmediate(const message_t message) {
-            ToLogImmediate(Message(std::string(), 0, uns::subsystem::all, uns::message_status::all, message));
+            ToLogImmediate(Message(std::string(), 0, uns::subsystem::all, uns::urgency::all, message));
         };
 
         static void ToLog() {
@@ -673,58 +696,58 @@ namespace uns {
         };
         template<typename message_t, typename func_t = string_t>
         static void ToLog(
-            const func_t function_name,
+            const func_t module_name,
             const size_t line_number,
             const size_t subsystems,
-            const uns::message_status message_status = uns::message_status::issue,
+            const uns::urgency urgency = uns::urgency::very,
             const message_t message = message_t()
         ) {
-            ToLog(Message(function_name, line_number, subsystems, message_status, message));
+            ToLog(Message(module_name, line_number, subsystems, urgency, message));
         };
         template<typename message_t>
         static void ToLog(
             const size_t subsystems,
-            const uns::message_status message_status = uns::message_status::issue,
+            const uns::urgency urgency = uns::urgency::very,
             const message_t message = message_t()
         ) {
-            ToLog(Message(std::string(), 0, subsystems, message_status, message));
+            ToLog(Message(std::string(), 0, subsystems, urgency, message));
         };
         template<typename message_t>
         static void ToLog(const message_t message) {
-            ToLog(Message(std::string(), 0, uns::subsystem::all, uns::message_status::all, message));
+            ToLog(Message(std::string(), 0, uns::subsystem::all, uns::urgency::all, message));
         };
 
         template<typename message_t, typename func_t = string_t>
         static uns::log::message<string_t> Message(
-            const func_t function_name,
+            const func_t module_name,
             const size_t line_number,
             const size_t subsystems,
-            const uns::message_status message_status = uns::message_status::issue,
+            const uns::urgency urgency = uns::urgency::very,
             const message_t message = ""
         ) {
             return uns::log::message<string_t>(
                 std::chrono::system_clock::now(),
                 std::this_thread::get_id(),
-                uns::string_cast<string_t>(function_name),
+                uns::string_cast<string_t>(module_name),
                 line_number,
                 subsystems,
-                message_status,
+                urgency,
                 uns::string_cast<string_t>(message)
             );
         };
 
         template<typename message_t, typename func_t = string_t>
-        static void ReportToEmergencyErrorFile(const func_t function_name, const size_t line_number, const message_t& str) {
+        static void ReportToEmergencyErrorFile(const func_t module_name, const size_t line_number, const message_t& str) {
             static const auto newline = uns::string_cast<string_t>("\n");
 
             for(size_t num_of_try = 0; num_of_try < fileopen_num_of_tryes; num_of_try++) {
                 fstream_t emergency_errfile((folder / emergency_errfile_name).c_str());
                 if(!emergency_errfile.bad() && !emergency_errfile.fail() && emergency_errfile.is_open()) {
                     uns::log::message message = Message(
-                        function_name,
+                        module_name,
                         line_number,
                         uns::subsystem::logging,
-                        uns::message_status::alert,
+                        uns::urgency::high,
                         uns::string_cast<string_t>(str)
                     );
                     emergency_errfile << message.String() + newline;
@@ -735,31 +758,33 @@ namespace uns {
 
     };
 
-    template<typename string_type> std::filesystem::path uns::logger<string_type>::folder;
-    template<typename string_type> std::string uns::logger<string_type>::emergency_errfile_name;
-    template<typename string_type> size_t uns::logger<string_type>::central_buffer_optimal_size = 100;
-    template<typename string_type> size_t uns::logger<string_type>::errfile_optimal_size = 50;
-    template<typename string_type> size_t uns::logger<string_type>::client_buffer_optimal_size = 10;
-    template<typename string_type> size_t uns::logger<string_type>::client_buffer_maximal_size = 20;
-    template<typename string_type> uns::logger<string_type>::time_period uns::logger<string_type>::central_thread_periodicity = std::chrono::milliseconds(10);
-    template<typename string_type> std::future<void> uns::logger<string_type>::central_thread;
-    template<typename string_type> std::atomic<bool> uns::logger<string_type>::proceeding = false;
-    template<typename string_type> std::recursive_mutex uns::logger<string_type>::mutex;
-    template<typename string_type> uns::logger<string_type>::fstream_t uns::logger<string_type>::errfile;
-    template<typename string_type> size_t uns::logger<string_type>::errfile_size = 0;
-    template<typename string_type> size_t uns::logger<string_type>::fileopen_num_of_tryes = 3;
-    template<typename string_type> std::thread::id uns::logger<string_type>::central_id;
-    template<typename string_type> size_t uns::logger<string_type>::subsystem_flags = uns::subsystem::none;
-    template<typename string_type> uns::message_status uns::logger<string_type>::verbosity = uns::message_status::issue;
-    template<typename string_type> uns::log::thread_message_queue<string_type> uns::logger<string_type>::central_buffer;
-    template<typename string_type> uns::logger<string_type>::time_period uns::logger<string_type>::forced_push_timeout = std::chrono::milliseconds(10000);
-    template<typename string_type> uns::logger<string_type>::time_t uns::logger<string_type>::last_push_moment = uns::logger<string_type>::time_t();
-    template<typename string_type> thread_local std::unique_ptr<uns::log::thread_message_queue<string_type>> uns::logger<string_type>::client_buffer = nullptr;
+    template<typename string_type, typename time_period> typename std::filesystem::path uns::logger<string_type, time_period>::folder;
+    template<typename string_type, typename time_period> std::string uns::logger<string_type, time_period>::emergency_errfile_name;
+    template<typename string_type, typename time_period> size_t uns::logger<string_type, time_period>::central_buffer_optimal_size = 100;
+    template<typename string_type, typename time_period> size_t uns::logger<string_type, time_period>::errfile_optimal_size = 50;
+    template<typename string_type, typename time_period> size_t uns::logger<string_type, time_period>::client_buffer_optimal_size = 10;
+    template<typename string_type, typename time_period> size_t uns::logger<string_type, time_period>::client_buffer_maximal_size = 20;
+    template<typename string_type, typename time_period> typename uns::logger<string_type, time_period>::period_t uns::logger<string_type, time_period>::central_thread_periodicity = typename uns::logger<string_type, time_period>::period_t(10);
+    template<typename string_type, typename time_period> std::future<void> uns::logger<string_type, time_period>::central_thread;
+    template<typename string_type, typename time_period> std::atomic<bool> uns::logger<string_type, time_period>::proceeding = false;
+    template<typename string_type, typename time_period> std::recursive_mutex uns::logger<string_type, time_period>::mutex;
+    template<typename string_type, typename time_period> typename uns::logger<string_type, time_period>::fstream_t uns::logger<string_type, time_period>::errfile;
+    template<typename string_type, typename time_period> size_t uns::logger<string_type, time_period>::errfile_size = 0;
+    template<typename string_type, typename time_period> size_t uns::logger<string_type, time_period>::fileopen_num_of_tryes = 3;
+    template<typename string_type, typename time_period> typename std::thread::id uns::logger<string_type, time_period>::central_id;
+    template<typename string_type, typename time_period> size_t uns::logger<string_type, time_period>::subsystem_flags = uns::subsystem::none;
+    template<typename string_type, typename time_period> uns::urgency uns::logger<string_type, time_period>::verbosity = uns::urgency::very;
+    template<typename string_type, typename time_period> uns::log::thread_message_queue<string_type> uns::logger<string_type, time_period>::central_buffer;
+    template<typename string_type, typename time_period> typename uns::logger<string_type, time_period>::period_t uns::logger<string_type, time_period>::forced_push_timeout = typename uns::logger<string_type, time_period>::period_t(10000);
+    template<typename string_type, typename time_period> typename uns::logger<string_type, time_period>::time_t uns::logger<string_type, time_period>::last_push_moment = uns::logger<string_type, time_period>::time_t();
+    template<typename string_type, typename time_period> thread_local std::unique_ptr<uns::log::thread_message_queue<string_type>> uns::logger<string_type, time_period>::client_buffer = nullptr;
+    template<typename string_type, typename time_period> std::recursive_mutex uns::logger<string_type, time_period>::proc_mtx;
+    template<typename string_type, typename time_period> bool uns::logger<string_type, time_period>::proceeding_ = true;
 
 };
 
 
-
+#undef UNS_MODULENAME
 
 
 
