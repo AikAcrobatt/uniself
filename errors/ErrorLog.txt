@@ -1,3 +1,0 @@
-Test 16.cpp :: C:\Users\locke\source\repos\uniself\errors\test 16.cpp_16 [testing]
-Test 16.cpp::C:\Users\locke\source\repos\uniself\errors\test 16.cpp_20[testing]
-Test 16.cpp::C:\Users\locke\source\repos\uniself\errors\test 16.cpp_22[testing]
