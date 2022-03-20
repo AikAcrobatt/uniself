@@ -13,6 +13,7 @@
 
 #include "uniself/algorithms.h"
 #include "uniself/strings.h"
+#include "uniself/exceptions.h"
 
 
 #define UNS_MODULENAME "logging.h"
@@ -372,6 +373,8 @@ namespace uns {
     template<typename string_type, typename time_period = std::chrono::milliseconds>
     class logger {
     public:
+        UNS_EXCEPTION_DECLARE(exception, uns::exceptions::basic);
+
         using string_t = string_type;
         using fstream_t = std::basic_fstream<typename string_t::value_type>;
         using time_t = std::chrono::steady_clock::time_point;
@@ -455,7 +458,7 @@ namespace uns {
                 };
 
                 if(!directory_created)
-                    throw std::exception("Fail to create log directory");      //TODO написать собственную библиотеку исключений
+                    throw uns::logger::exception("Fail to create log directory");
             };
         };
 
