@@ -5,7 +5,6 @@
 #include <future>
 #include <thread>
 #include <mutex>
-#include <exception>
 #include <filesystem>
 #include <atomic>
 #include <chrono>
@@ -13,6 +12,7 @@
 
 #include "uniself/algorithms.h"
 #include "uniself/strings.h"
+#include "uniself/exceptions.h"
 
 
 #define UNS_MODULENAME "logging.h"
@@ -372,6 +372,8 @@ namespace uns {
     template<typename string_type, typename time_period = std::chrono::milliseconds>
     class logger {
     public:
+        UNS_EXCEPTION_DECLARE(exception, uns::exceptions::basic);
+
         using string_t = string_type;
         using fstream_t = std::basic_fstream<typename string_t::value_type>;
         using time_t = std::chrono::steady_clock::time_point;
@@ -392,6 +394,7 @@ namespace uns {
         //переменные механизма логирования, относящиеся к центральному потоку или общие
         static std::future<void> central_thread;
         static std::atomic<bool> proceeding;
+        static std::atomic<bool> to_flush;
         static std::recursive_mutex proc_mtx;
         static bool proceeding_;
         static std::recursive_mutex mutex;
@@ -455,7 +458,7 @@ namespace uns {
                 };
 
                 if(!directory_created)
-                    throw std::exception("Fail to create log directory");      //TODO написать собственную библиотеку исключений
+                    throw exception("Fail to create log directory");
             };
         };
 
@@ -521,12 +524,14 @@ namespace uns {
         };
 
         static bool Process() {//true - если центральный поток может продолжать выполнение
-            const bool proceeding_instruction = proceeding;
+            const bool proceeding_instruction = proceeding; 
+            const bool order_to_flush = to_flush;
             bool result = proceeding_instruction;
             if(std::this_thread::get_id() == central_id) {
                 if(
                     (central_buffer.Size() >= central_buffer_optimal_size
                         || std::chrono::steady_clock::now() > last_push_moment + forced_push_timeout
+                        || order_to_flush
                         || !proceeding_instruction
                     )
                     && ErrFileIsValid()
@@ -542,9 +547,12 @@ namespace uns {
                         central_buffer_copy = std::move(central_buffer);
                         central_buffer = uns::log::thread_message_queue<string_t>();
                         last_push_moment = std::chrono::steady_clock::now();
+
+                        if(order_to_flush) to_flush = false;
                     };
 
                     errfile << central_buffer_copy.Text();
+                    errfile.flush();
                     errfile_size += central_buffer_previous_size;
                 };
 
@@ -588,6 +596,10 @@ namespace uns {
             if (central_thread.valid()) {
                 central_thread.get();
             };
+        };
+
+        static void Flush() {
+            to_flush = true;
         };
 
         static void ToLogDelayed(const uns::log::message<string_t>& message) {
@@ -767,6 +779,7 @@ namespace uns {
     template<typename string_type, typename time_period> typename uns::logger<string_type, time_period>::period_t uns::logger<string_type, time_period>::central_thread_periodicity = typename uns::logger<string_type, time_period>::period_t(10);
     template<typename string_type, typename time_period> std::future<void> uns::logger<string_type, time_period>::central_thread;
     template<typename string_type, typename time_period> std::atomic<bool> uns::logger<string_type, time_period>::proceeding = false;
+    template<typename string_type, typename time_period> std::atomic<bool> uns::logger<string_type, time_period>::to_flush = false;
     template<typename string_type, typename time_period> std::recursive_mutex uns::logger<string_type, time_period>::mutex;
     template<typename string_type, typename time_period> typename uns::logger<string_type, time_period>::fstream_t uns::logger<string_type, time_period>::errfile;
     template<typename string_type, typename time_period> size_t uns::logger<string_type, time_period>::errfile_size = 0;

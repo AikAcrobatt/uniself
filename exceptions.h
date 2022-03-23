@@ -21,7 +21,7 @@ namespace uns::exceptions {
 	};
 };
 
-#define UNS_EXCEPTION_DECLARE(issue_name, exception_parent_full_name)                       \
+#define UNS_EXCEPTION_DECLARE(issue_name, exception_parent_full_name)                   \
 class issue_name : public exception_parent_full_name {									\
 public:                                                                                 \
 	using base_t = typename exception_parent_full_name;									\
