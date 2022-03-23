@@ -8,9 +8,9 @@
 
 #include "exceptions.h"
 
-UNS_ISSUE_DECLARE(issue, uns::exceptions::basic);
+UNS_EXCEPTION_DECLARE(issue, uns::exceptions::basic);
 
-UNS_ISSUE_DECLARE(issue2, issue);
+UNS_EXCEPTION_DECLARE(issue2, issue);
 
 int main() {
 	std::cout << "START" << std::endl;

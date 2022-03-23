@@ -21,10 +21,10 @@ int main() {
     uns::logger<std::wstring>::Setup(
         "D:/Документы/Test",
         "EmerLog",
+        1000,
+        2000,
+        5,
         10,
-        20,
-        10,
-        20,
         1ms,
         uns::subsystem::all,
         uns::urgency::none
@@ -32,12 +32,14 @@ int main() {
 
     logger::Start();
 
-    std::this_thread::sleep_for(10ms);
+    std::this_thread::sleep_for(1s);
 
     for (int i = 0; i < 10; i++) {
         logger::ToLog(__FUNCTION__, __LINE__, 10, uns::urgency::low, uns::string_cast<std::string>(i));
     };
     logger::ToLogImmediate(__FUNCTION__, __LINE__, 10, uns::urgency::low, "");
+
+    logger::Flush();
 
     logger::Finish();
 
