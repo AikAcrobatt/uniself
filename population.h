@@ -17,15 +17,13 @@ namespace uns::population {
 		using points_t = points_type;
 		using health_t = health_type;
 
-		virtual void SetPoints(const points_t& points_gain) { /*pregnancy += points_gain;*/ };
+		virtual void AddPoints(const points_t& points_gain) { /*pregnancy += points_gain;*/ };
 
 		virtual void Damage(const health_t health_decrease) { /*health -= health_decrease;*/ };
 
 		virtual bool IsAlive() const { return false; /*return uns::math::More(health, 0.0F);*/ };
 
-		//virtual bool IsPregnant() const { return false; /*return uns::math::More(pregnancy, 0.0F);*/ };
-
-		virtual bool StilPregnant() { return false; /*return uns::math::More(pregnancy--, 0.0F);*/ };
+		virtual bool IsPregnant() const { return false; /*return uns::math::More(pregnancy, 0.0F);*/ };
 
 		virtual void Condition() {};
 	};
@@ -45,17 +43,40 @@ namespace uns::population {
 		index_t index = 0;
 	public:
 		order_element() = delete;
-		order_element(unit_t& unit, order_t* order, index_t idx) : unit_ptr(&unit), order_ptr(order), index(idx) {};
-		order_element(const std::shared_ptr<unit_t>& unit, order_t* order, index_t idx) : unit_ptr(unit), order_ptr(order), index(idx) {};
+		order_element(const std::shared_ptr<unit_t>& unit, order_t& order, index_t idx) : 
+			unit_ptr(unit), 
+			order_ptr(&order), 
+			index(idx) 
+		{};
+		order_element(const order_element& obj) : 
+			unit_ptr(obj.unit_ptr),
+			order_ptr(obj.order_ptr),
+			index(obj.index)
+		{};
+		order_element& operator=(const order_element& obj) {
+			if (this == &obj) return *this;
 
-		order_element(const order_element& copying_obj) : unit_ptr(copying_obj.unit_ptr), order_ptr(copying_obj.order_ptr), index(copying_obj.index) {};
-		order_element& operator=(const order_element& copying_obj) { unit_ptr = copying_obj.unit_ptr; order_ptr = copying_obj.order_ptr; index = copying_obj.index; return *this; };
-		order_element(order_element&& moving_obj) : unit_ptr(std::move(moving_obj.unit_ptr)), order_ptr(moving_obj.order_ptr), index(std::move(moving_obj.index)) {};
-		order_element& operator=(order_element&& moving_obj) { unit_ptr = std::move(moving_obj.unit_ptr); order_ptr = moving_obj.order_ptr; index = std::move(moving_obj.index); return *this; };
+			unit_ptr = obj.unit_ptr;
+			order_ptr = obj.order_ptr;
+			index = obj.index;
+			return *this; 
+		};
+		order_element(order_element&& obj) : 
+			unit_ptr(std::move(obj.unit_ptr)), 
+			order_ptr(obj.order_ptr), 
+			index(std::move(obj.index)) 
+		{};
+		order_element& operator=(order_element&& obj) {
+			if (this == &obj) return *this;
+
+			unit_ptr = std::move(obj.unit_ptr);
+			order_ptr = obj.order_ptr;
+			index = std::move(obj.index);
+			return *this; 
+		};
+		~order_element() {};
 
 		operator unit_t& () { return *unit_ptr; };
-
-		~order_element() {};
 
 		bool operator==(const std::shared_ptr<unit_t>& unit) const { return (unit == unit_ptr); };
 
@@ -88,46 +109,71 @@ namespace uns::population {
 		using size_t = typename linear_container::size_type;
 		using unit_type = unit_t;
 	protected:
-		linear_container global;
+		linear_container container;
 		std::mt19937 engine;
 		std::uniform_real_distribution<float> distribution;
 	public:
-		linear_order_interface(int seed = 0) : engine(seed), distribution(0.0F, 1.0F) {};
+		linear_order_interface(int seed = 0) : 
+			engine(seed), 
+			distribution(0.0F, 1.0F) 
+		{};
+		linear_order_interface(const linear_order_interface& obj) : 
+			container(obj.container), 
+			engine(obj.engine), 
+			distribution(obj.distribution) 
+		{};
+		linear_order_interface& operator=(const linear_order_interface& obj) {
+			if (this == &obj) return *this;
 
-		linear_order_interface(const linear_order_interface& copying_obj) : global(copying_obj.global), engine(copying_obj.engine), distribution(copying_obj.distribution) {};
-		linear_order_interface& operator=(const linear_order_interface& copying_obj) { global = copying_obj.global; engine = copying_obj.engine; distribution = copying_obj.distribution; return *this; };
-		linear_order_interface(linear_order_interface&& moving_obj) : global(std::move(moving_obj.global)), engine(std::move(moving_obj.engine)), distribution(std::move(moving_obj.distribution)) {};
-		linear_order_interface& operator=(linear_order_interface&& moving_obj) { global = std::move(moving_obj.global); engine = std::move(moving_obj.engine); distribution = std::move(moving_obj.distribution); return *this; };
+			container = obj.container; 
+			engine = obj.engine; 
+			distribution = obj.distribution; 
+			return *this; 
+		};
+		linear_order_interface(linear_order_interface&& obj) : 
+			container(std::move(obj.container)), 
+			engine(std::move(obj.engine)), 
+			distribution(std::move(obj.distribution)) 
+		{};
+		linear_order_interface& operator=(linear_order_interface&& obj) {
+			if (this == &obj) return *this;
 
+			container = std::move(obj.container); 
+			engine = std::move(obj.engine); 
+			distribution = std::move(obj.distribution); 
+			return *this; 
+		};
 		~linear_order_interface() noexcept {};
 
-		iterator_t begin() { return global.begin(); };
+		const iterator_t begin() const { return container.begin(); };
+		iterator_t begin() { return container.begin(); };
 
-		iterator_t end() { return global.end(); };
+		const iterator_t end() const { return container.end(); };
+		iterator_t end() { return container.end(); };
 
-		linear_order_interface::size_t Size() const { return global.size(); };
+		size_t Size() const { return container.size(); };
 
-		auto operator[](typename typename linear_container::size_type index) const { return global[index]; };
-		auto& operator[](typename typename linear_container::size_type index) { return global[index]; };
+		auto operator[](size_t index) const { return container[index]; };
+		auto& operator[](size_t index) { return container[index]; };
 
 		void Clear() {
-			global.clear();
+			container.clear();
 		};
 
 		void Push(const std::shared_ptr<unit_t>& unit_to_add) {
-			global.push_back(element_t(unit_to_add, dynamic_cast<order_t*>(this), global.size()));
+			container.push_back(element_t{ unit_to_add, *static_cast<order_t*>(this), container.size() });
 		};
 
 		void Pop(const iterator_t& iter) {
-			global.erase(iter);
+			container.erase(iter);
 		};
-		void Pop(const typename linear_container::size_type& index) {
-			global.erase(global.begin() + index);
+		void Pop(const size_t& index) {
+			container.erase(container.begin() + index);
 		};
 
 		void Indexate() {
-			typename linear_container::size_type index = 0;
-			for (auto& unit : global)
+			size_t index = 0;
+			for (auto& unit : container)
 				unit.Index() = index++;
 		};
 
@@ -146,22 +192,42 @@ namespace uns::population {
 		using unit_type = unit_t;
 	public:
 		unordered_order(int seed = 0) : base_t(seed) {};
+		unordered_order(const unordered_order& obj) : 
+			base_t::container(obj.container), 
+			base_t::engine(obj.engine), 
+			base_t::distribution(obj.distribution)
+		{};
+		unordered_order& operator=(const unordered_order& obj) {
+			if (this == &obj) return *this;
 
-		unordered_order(const unordered_order& copying_obj) : base_t::global(copying_obj.global), base_t::engine(copying_obj.engine), base_t::distribution(copying_obj.distribution) {};
-		unordered_order& operator=(const unordered_order& copying_obj) { base_t::global = copying_obj.global; base_t::engine = copying_obj.engine; base_t::distribution = copying_obj.distribution; return *this; };
-		unordered_order(unordered_order&& moving_obj) : base_t::global(std::move(moving_obj.global)), base_t::engine(std::move(moving_obj.engine)), base_t::distribution(std::move(moving_obj.distribution)) {};
-		unordered_order& operator=(unordered_order&& moving_obj) { base_t::global = std::move(moving_obj.global); base_t::engine = std::move(moving_obj.engine); base_t::distribution = std::move(moving_obj.distribution); return *this; };
+			base_t::container = obj.container; 
+			base_t::engine = obj.engine; 
+			base_t::distribution = obj.distribution; 
+			return *this; 
+		};
+		unordered_order(unordered_order&& obj) : 
+			base_t::container(std::move(obj.container)), 
+			base_t::engine(std::move(obj.engine)), 
+			base_t::distribution(std::move(obj.distribution)) 
+		{};
+		unordered_order& operator=(unordered_order&& obj) {
+			if (this == &obj) return *this;
 
+			base_t::container = std::move(obj.container); 
+			base_t::engine = std::move(obj.engine); 
+			base_t::distribution = std::move(obj.distribution); 
+			return *this; 
+		};
 		~unordered_order() noexcept {};
 
 		iterator_t Pick() {
 			typename base_t::size_t index = 0;
-			if (!(base_t::global.size() > 0)) return base_t::global.begin();
+			if (!(base_t::container.size() > 0)) return base_t::container.begin();
 
-			index = static_cast<typename base_t::size_t>(base_t::global.size() * base_t::distribution(base_t::engine));
+			index = static_cast<typename base_t::size_t>(base_t::container.size() * base_t::distribution(base_t::engine));
+			if (index >= base_t::container.size()) index = base_t::container.size() - 1;
 
-			if (index >= base_t::global.size()) index = base_t::global.size() - 1;
-			return (base_t::global.begin() + index);
+			return (base_t::container.begin() + index);
 		};
 	};
 
@@ -178,38 +244,58 @@ namespace uns::population {
 		using unit_type = unit_t;
 	public:
 		ordered_order(int seed = 0) : base_t(seed) {};
+		ordered_order(const ordered_order& obj) : 
+			base_t::container(obj.container), 
+			base_t::engine(obj.engine), 
+			base_t::distribution(obj.distribution) 
+		{};
+		ordered_order& operator=(const ordered_order& obj) {
+			if (this == &obj) return *this;
 
-		ordered_order(const ordered_order& copying_obj) : base_t::global(copying_obj.global), base_t::engine(copying_obj.engine), base_t::distribution(copying_obj.distribution) {};
-		ordered_order& operator=(const ordered_order& copying_obj) { base_t::global = copying_obj.global; base_t::engine = copying_obj.engine; base_t::distribution = copying_obj.distribution; return *this; };
-		ordered_order(ordered_order&& moving_obj) : base_t::global(std::move(moving_obj.global)), base_t::engine(std::move(moving_obj.engine)), base_t::distribution(std::move(moving_obj.distribution)) {};
-		ordered_order& operator=(ordered_order&& moving_obj) { base_t::global = std::move(moving_obj.global); base_t::engine = std::move(moving_obj.engine); base_t::distribution = std::move(moving_obj.distribution); return *this; };
+			base_t::container = obj.container; 
+			base_t::engine = obj.engine; 
+			base_t::distribution = obj.distribution; 
+			return *this; 
+		};
+		ordered_order(ordered_order&& obj) : 
+			base_t::container(std::move(obj.container)), 
+			base_t::engine(std::move(obj.engine)), 
+			base_t::distribution(std::move(obj.distribution)) 
+		{};
+		ordered_order& operator=(ordered_order&& obj) {
+			if (this == &obj) return *this;
 
+			base_t::container = std::move(obj.container); 
+			base_t::engine = std::move(obj.engine); 
+			base_t::distribution = std::move(obj.distribution); 
+			return *this; 
+		};
 		~ordered_order() noexcept {};
 
 		iterator_t PickLess(const element_t& elem) {
-			typename base_t::size_t index = 0;
-			if (!(base_t::global.size() - 1 - elem.Index() > 0)) return base_t::global.begin();
+			size_t index = 0;
+			if (!(base_t::container.size() - 1 - elem.Index() > 0)) return base_t::container.begin();
 
-			index = static_cast<typename base_t::size_t>(
-				(base_t::global.size() - elem.Index() - 1) * base_t::distribution(base_t::engine)
+			index = static_cast<size_t>(
+				(base_t::container.size() - elem.Index() - 1) * base_t::distribution(base_t::engine)
 			) + elem.Index() + 1;
 
-			if (index >= base_t::global.size()) index = base_t::global.size() - 1;
-			return (base_t::global.begin() + index);
+			if (index >= base_t::container.size()) index = base_t::container.size() - 1;
+			return (base_t::container.begin() + index);
 		};
 
 		iterator_t PickMore(const element_t& elem) {
-			typename base_t::size_t index = 0;
-			if (!(elem.Index() > 1)) return base_t::global.begin();
+			size_t index = 0;
+			if (!(elem.Index() > 1)) return base_t::container.begin();
 
-			index = static_cast<typename base_t::size_t>(elem.Index() * base_t::distribution(base_t::engine));
+			index = static_cast<size_t>(elem.Index() * base_t::distribution(base_t::engine));
 
 			if (index >= elem.Index()) index = elem.Index() - 1;
-			return (base_t::global.begin() + index);
+			return (base_t::container.begin() + index);
 		};
 
 		virtual void Sort() {
-			std::sort(base_t::global.begin(), base_t::global.end(), predicate);
+			std::sort(base_t::container.begin(), base_t::container.end(), predicate);
 			base_t::Indexate();
 		};
 	};
@@ -228,7 +314,10 @@ namespace uns::population {
 	class breed_manager_interface {
 	public:
 		using unit_t = typename order_element_t::unit_type;
-		virtual std::shared_ptr<unit_t> Breed(order_element_t& order_element) { return std::shared_ptr<unit_t>(new unit_t()); };
+		virtual std::vector<std::shared_ptr<unit_t>> Breed(order_element_t& order_element) { 
+			order_element.Unit().AddPoints(typename unit_t::points_t(-1));
+			return { std::shared_ptr<unit_t>(new unit_t()) };
+		};
 	};
 
 
@@ -255,24 +344,27 @@ namespace uns::population {
 		using unit_t = typename order_t::unit_type;
 		using index_t = typename order_t::size_t;
 		using order_elemnt_t = typename order_t::element_t;
+		using points_t = typename unit_t::points_t;
+		using health_t = typename unit_t::health_t;
 	public:
 		order_t units;
-		std::deque<std::shared_ptr<unit_t>> pregnancy;
+		std::deque<std::shared_ptr<unit_t>> birth_queue;
 		ration_source_t ration_source;
-	protected:
 		breed_manager_t breed_manager;
 		fatal_act_operator_t fatal_act;
 		number_control_t barrier;
-		typename unit_t::health_t life_decrease = 0.0F;
+		health_t life_decrease = 0.0F;
 	public:
-		basic_machine(int random_seed, typename unit_t::health_t life_decrement) : units(random_seed), life_decrease(life_decrement) {};
+		basic_machine(int random_seed, health_t life_decrement) : units(random_seed), life_decrease(life_decrement) {};
 	protected:
 		void Breed(order_elemnt_t& element) {
-			std::shared_ptr<unit_t> new_born = nullptr;
-			while (element.Unit().StilPregnant()) {
-				new_born = breed_manager.Breed(element);
-				if(new_born != nullptr)
-					pregnancy.push_back();
+			while (element.Unit().IsPregnant()) {
+				auto descendants = breed_manager.Breed(element);
+				for (auto descendant : descendants) {
+					if (descendant == nullptr) continue;
+
+					birth_queue.push_back(descendant);
+				};
 			};
 		};
 
@@ -294,22 +386,15 @@ namespace uns::population {
 				units.Push(living);
 		};
 
-		virtual void SetPoints(order_elemnt_t& element) {
-			element.Unit().SetPoints(typename unit_t::points_t(1));
-		};
-
 		virtual void CustomCondition() { units.Indexate(); };
-
-		virtual void CustomCondition(order_elemnt_t& elem) {};
+		virtual void CustomCondition(order_elemnt_t& elem) { elem.Unit().Condition(); };
 	public:
 		void Condition() {
 			CustomCondition();
 
 			for (auto& element : units) {
-				element.Unit().Condition();
 				CustomCondition(element);
 				ration_source.Feed(element);
-				SetPoints(element);
 				Breed(element);
 				LifeControl(element);
 				fatal_act(element);
