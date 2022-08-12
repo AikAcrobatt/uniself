@@ -36,21 +36,23 @@ namespace uns {
 				};
 			}
 			else if constexpr(std::is_integral<out_t>::value && !std::is_same<out_t, bool>::value) {
-				auto pos_hex = 0;
-				auto pos_bin = 0;
-				auto is_hex = (pos_hex = str.substr(0, 2) == "0x") || (pos_hex = str.substr(0, 2) == "0X");
-				auto is_bin = (pos_bin = str.substr(0, 2) == "0b") || (pos_bin = str.substr(0, 2) == "0B");
+				auto pos_hex = str.find("0x"); if(!(pos_hex >= 0 && pos_hex < str.size())) pos_hex = str.find("0X");
+				auto pos_bin = str.find("0b"); if(!(pos_bin >= 0 && pos_bin < str.size())) pos_bin = str.find("0B");
+				auto pos_minus = str.find("-");
+				auto is_hex = (pos_hex >= 0 && pos_hex < str.size());
+				auto is_bin = (pos_bin >= 0 && pos_bin < str.size());
+				auto is_negative = (pos_minus >= 0 && pos_minus == (is_bin ? pos_bin : pos_hex) - 1 && pos_minus != std::string_view::npos);
 
 				if(is_hex) {
 					pos_hex += 2;
-					is_hex = (pos_hex < str.size() - 1);
+					is_hex = (pos_hex < str.size());
 				}
 				else
 					pos_hex = 0;
 
 				if(is_bin) {
 					pos_bin += 2;
-					is_bin = (pos_bin < str.size() - 1);
+					is_bin = (pos_bin < str.size());
 				}
 				else
 					pos_bin = 0;
@@ -74,7 +76,7 @@ namespace uns {
 
 					auto conv = std::from_chars(begin, end, val, 16);
 					if(conv.ec == std::errc())
-						return val;
+						return val * (is_negative ? -1 : 1);
 					else
 						is_bin = true;
 				};
@@ -86,7 +88,7 @@ namespace uns {
 
 					auto conv = std::from_chars(begin, end, val, 2);
 					if(conv.ec == std::errc())
-						return val;
+						return val * (is_negative ? -1 : 1);
 				};
 
 			}
