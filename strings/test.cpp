@@ -31,6 +31,14 @@ BOOST_AUTO_TEST_SUITE(string_cast_testing_bool)
         BOOST_TEST(out_val != uns::string_cast<bool>(static_cast<const char*>(in_str)));
     };
 
+    BOOST_DATA_TEST_CASE(string_cast_bool_to_stdstring_correct,
+        boost::unit_test::data::make({ true, false })
+        ^ boost::unit_test::data::make({ "true", "false" }),
+        in_str, out_val
+    ) {
+        BOOST_TEST(out_val == uns::string_cast<std::string>(in_str));
+    };
+
 BOOST_AUTO_TEST_SUITE_END();
 
 
@@ -52,6 +60,18 @@ BOOST_AUTO_TEST_SUITE(string_cast_testing_integers)
             in_str, out_val
         ) {
             BOOST_TEST(out_val != uns::string_cast<int>(static_cast<std::string>(in_str)));
+        };
+
+        BOOST_DATA_TEST_CASE(string_cast_int_to_stdstring_correct,
+            boost::unit_test::data::make({ 0, 1, 10423, -88, 789, 22304568, -4444 })
+            ^ boost::unit_test::data::make({ "0", "1", "10423", "-88", "789", "22304568", "-4444" }),
+            in_str, out_val
+        ) {
+            auto returned = std::string();
+            BOOST_TEST(
+                out_val == (returned = uns::string_cast<std::string>(in_str)),
+                std::string("out_val = ") + static_cast<std::string>(out_val) + "; in_str = " + std::to_string(in_str) + "; returned = " + returned
+            );
         };
 
     BOOST_AUTO_TEST_SUITE_END();
