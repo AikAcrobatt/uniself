@@ -162,18 +162,19 @@ namespace uns {
 	};
 	template<std::constructible_from<std::string> out_t, std::floating_point in_t>
 	out_t string_cast(const in_t& obj) {
-		auto res = std::string(25, "\0");
-		const char* begin = res.data();
-		const char* end = &begin[res.size()];
+		auto str = std::string("\0", 25);
+		char* begin = str.data();
+		char* end = &begin[str.size()];
 
-			auto conv = std::to_chars(begin, end, obj, std::chars_format::fixed, 16);
+			auto conv = std::to_chars(begin, end, obj, std::chars_format::general);
 			if(conv.ec == std::errc()) {
+				auto res = std::string(str.data(), conv.ptr);
 				return res;
 			}
 			else
-				res.clear();
+				str.clear();
 
-		return res;
+		return str;
 	};
 
 
