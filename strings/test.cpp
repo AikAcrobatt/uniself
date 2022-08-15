@@ -14,6 +14,18 @@
 
 BOOST_AUTO_TEST_SUITE(string_cast_testing)
 
+    BOOST_AUTO_TEST_SUITE(u8_strings)
+
+        BOOST_DATA_TEST_CASE(backward_identical_cast,
+            boost::unit_test::data::make({ "ABCD efgh !@#% АБВГдеёжзик_" }),
+            the_val
+        ) {
+            //direct testing results are very significant while testing at file ostreams
+            BOOST_TEST(the_val == uns::string_cast<std::string>(uns::string_cast<std::u8string>(the_val)));
+        };
+
+    BOOST_AUTO_TEST_SUITE_END();
+
     BOOST_AUTO_TEST_SUITE(bools)
 
         BOOST_DATA_TEST_CASE(stdstring_to_bool_correct,

@@ -11,28 +11,136 @@
 
 namespace uns {
 
+	template<std::constructible_from<std::u32string> out_t>
+	out_t string_cast(const std::u8string_view& str) {
+		auto res = std::u32string();
+
+		return res;
+	};
+	template<std::constructible_from<std::u8string> out_t>
+	out_t string_cast(const std::u32string_view& str) {
+		auto res = std::u8string(); 
+
+		return res;
+	};
+
+	template<std::constructible_from<std::string> out_t>
+	out_t string_cast(const std::u8string_view& str) {
+		auto res = std::string(); res.reserve(str.size());
+
+		for(const auto& sym : str)
+			res += static_cast<std::string::value_type>(sym);
+
+		return res;
+	};
+	template<std::constructible_from<std::u8string> out_t>
+	out_t string_cast(const std::string_view& str) {
+		auto res = std::u8string(); res.reserve(str.size());
+
+		for(const auto& sym : str)
+			res += static_cast<std::u8string::value_type>(sym);
+
+		return res;
+	};
+
+	template<std::constructible_from<std::wstring> out_t>
+	out_t string_cast(const std::u16string_view& str) {
+		if constexpr(sizeof(std::wstring::value_type) == sizeof(std::u16string::value_type)) {
+			auto res = std::wstring(); res.reserve(str.size());
+
+			for(const auto& sym : str)
+				res += static_cast<std::wstring::value_type>(sym);
+
+			return res;
+		}
+		else if constexpr(sizeof(std::wstring::value_type) == sizeof(std::u32string::value_type)) {
+			auto val = uns::string_cast<std::u32string>(str);
+			auto res = std::wstring(); res.reserve(val.size());
+
+			for(const auto& sym : val)
+				res += static_cast<std::wstring::value_type>(sym);
+
+			return res;
+		}
+		else {
+			return out_t();
+		};
+	};
+	template<std::constructible_from<std::u16string> out_t>
+	out_t string_cast(const std::wstring_view& str) {
+		if constexpr(sizeof(std::wstring::value_type) == sizeof(std::u16string::value_type)) {
+			auto res = std::u16string(); res.reserve(str.size());
+
+			for(const auto& sym : str)
+				res += static_cast<std::u16string::value_type>(sym);
+
+			return res;
+		}
+		else if constexpr(sizeof(std::wstring::value_type) == sizeof(std::u32string::value_type)) {
+			auto res = std::u32string(); res.reserve(str.size());
+
+			for(const auto& sym : str)
+				res += static_cast<std::u32string::value_type>(sym);
+
+			return uns::string_cast<std::u16string>(res);
+		}
+		else {
+			return out_t();
+		};
+	};
+	template<std::constructible_from<std::wstring> out_t>
+	out_t string_cast(const std::u32string_view& str) {
+		if constexpr(sizeof(std::wstring::value_type) == sizeof(std::u16string::value_type)) {
+			auto val = uns::string_cast<std::u16string>(str);
+			auto res = std::wstring(); res.reserve(val.size());
+
+			for(const auto& sym : val)
+				res += static_cast<std::wstring::value_type>(sym);
+
+			return res;
+		}
+		else if constexpr(sizeof(std::wstring::value_type) == sizeof(std::u32string::value_type)) {
+			auto res = std::wstring(); res.reserve(str.size());
+
+			for(const auto& sym : str)
+				res += static_cast<std::wstring::value_type>(sym);
+
+			return res;
+		}
+		else {
+			return out_t();
+		};
+	};
+	template<std::constructible_from<std::u32string> out_t>
+	out_t string_cast(const std::wstring_view& str) {
+		if constexpr(sizeof(std::wstring::value_type) == sizeof(std::u16string::value_type)) {
+			auto res = std::u16string(); res.reserve(str.size());
+
+			for(const auto& sym : str)
+				res += static_cast<std::u16string::value_type>(sym);
+
+			return uns::string_cast<std::u32string>(res);
+		}
+		else if constexpr(sizeof(std::wstring::value_type) == sizeof(std::u32string::value_type)) {
+			auto res = std::u32string(); res.reserve(str.size());
+
+			for(const auto& sym : str)
+				res += static_cast<std::u32string::value_type>(sym);
+
+			return res;
+		}
+		else {
+			return out_t();
+		};
+	};
+
 	template<std::constructible_from<std::string> out_t>
 	out_t string_cast(const std::string_view& str) {
 		return static_cast<std::string>(str);
 	};
 	template<std::constructible_from<std::wstring> out_t>
 	out_t string_cast(const std::string_view& str) {
-		auto res = std::wstring(str.size() * (sizeof(wchar_t) / sizeof(char)), L'\0');
-
-		if(auto locale = std::locale(); std::has_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(locale)) {
-			auto& facet = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(locale);
-
-			auto state = std::mbstate_t();
-			const char* from;
-			wchar_t* to;
-			facet.in(state, &str[0], &str[str.size()], from, &res[0], &res[res.size()], to);
-			res.resize(to - &res[0]);
-
-			return res;
-		};
-
-		res.clear();
-		return res;
+		return uns::string_cast<std::wstring>(uns::string_cast<std::u16string>(uns::string_cast<std::u8string>(str)));
 	};
 	template<std::same_as<bool> out_t>
 	out_t string_cast(const std::string_view& str) {
