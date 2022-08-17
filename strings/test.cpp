@@ -6,6 +6,7 @@
 
 #include "strings.h"
 
+/*
 #define BOOST_TEST_MODULE uns::strings::test
 #include "boost/test/included/unit_test.hpp"
 #include <boost/test/data/test_case.hpp>
@@ -208,4 +209,19 @@ BOOST_AUTO_TEST_SUITE(string_cast_testing)
 
     BOOST_AUTO_TEST_SUITE_END();
 
-BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END();*/
+
+#include <locale>
+#include "uns_strings.h"
+
+
+int main() {
+    std::cout << "START" << "\n";
+
+    auto str = uns::string(u8"Это некий текст на русском Яя проба яя! я");
+
+    std::locale::global(std::locale(".utf-8"));
+    std::wcout << static_cast<std::wstring>(str) << "\n";
+
+    std::cout << "FINISH" << "\n";
+};
