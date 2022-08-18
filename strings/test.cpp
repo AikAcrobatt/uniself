@@ -212,16 +212,23 @@ BOOST_AUTO_TEST_SUITE(string_cast_testing)
 BOOST_AUTO_TEST_SUITE_END();*/
 
 #include <locale>
+#include <fstream>
 #include "uns_strings.h"
 
 
 int main() {
     std::cout << "START" << "\n";
 
-    auto str = uns::string(u8"Это некий текст на русском Яя проба яя! я");
+    //auto str = uns::string(u8"Это некий текст на русском Яя проба яя! я");
+    auto str = uns::string(u8"zß水🍌");
+
+    auto str2 = uns::string(std::string(str.begin(), str.end()));
+
+    str2 = u8"Это некий текст на русском Яя проба яя! я";
 
     std::locale::global(std::locale(".utf-8"));
-    std::wcout << static_cast<std::wstring>(str) << "\n";
+    auto file = std::wfstream("G:/Visual Studio/2022/repos/test6.txt", std::ios::out);
+    file << str2 << L"\n";
 
     std::cout << "FINISH" << "\n";
 };

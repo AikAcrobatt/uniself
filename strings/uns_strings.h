@@ -1,10 +1,7 @@
 #pragma once
 
 #include <string>
-#include <charconv>
 #include <type_traits>
-#include <codecvt>
-#include <locale>
 #include <concepts>
 
 
@@ -14,35 +11,41 @@ namespace uns {
 	class string : public std::string {
 	public:
 
-		string(const std::string_view& str) {
-			*this = str;
-		};
-		string(const std::wstring_view& str) {
+		constexpr string() noexcept : std::string() {};
+		constexpr string(const std::string_view& str) noexcept : std::string(str) {};
+		constexpr string(const std::wstring_view& str) noexcept : std::string() {
 			auto t_u32str = std::u32string();
 			auto t_u8str = std::u8string();
 			convert(t_u32str, str);
 			convert(t_u8str, t_u32str);
 			convert(*this, t_u8str);
 		};
-		string(const std::u8string_view& str) {
+		constexpr string(const std::u8string_view& str) noexcept : std::string() {
 			convert(*this, str);
 		};
-		string(const std::u16string_view& str) {
+		constexpr string(const std::u16string_view& str) noexcept : std::string() {
 			auto t_u32str = std::u32string();
 			auto t_u8str = std::u8string();
 			convert(t_u32str, str);
 			convert(t_u8str, t_u32str);
 			convert(*this, t_u8str);
 		};
-		string(const std::u32string_view& str) {
+		constexpr string(const std::u32string_view& str) noexcept : std::string() {
 			auto t_u8str = std::u8string();
 			convert(t_u8str, str);
 			convert(*this, t_u8str);
 		};
+		constexpr string(const uns::string& str) noexcept {
+			std::string::operator=(static_cast<const std::string&>(str));
+		};
+		constexpr string(uns::string&& str) noexcept {
+			std::string::operator=(std::move(static_cast<std::string&&>(str)));
+		};
+		~string() = default;
 
-		operator const std::string& () const& { return dynamic_cast<const std::string&>(*this); };
-		operator std::string& ()& { return dynamic_cast<std::string&>(*this); };
-		operator std::wstring() const {
+		constexpr operator const std::string& () const& noexcept { return dynamic_cast<const std::string&>(*this); };
+		constexpr operator std::string& () & noexcept { return dynamic_cast<std::string&>(*this); };
+		constexpr operator std::wstring() const {
 			auto t_u32str = std::u32string();
 			auto t_u8str = std::u8string();
 			auto t_wstr = std::wstring();
@@ -51,12 +54,12 @@ namespace uns {
 			convert(t_wstr, t_u32str);
 			return t_wstr;
 		};
-		operator std::u8string() const {
+		constexpr operator std::u8string() const {
 			auto t_u8str = std::u8string();
 			convert(t_u8str, *this);
 			return t_u8str;
 		};
-		operator std::u16string() const {
+		constexpr operator std::u16string() const {
 			auto t_u32str = std::u32string();
 			auto t_u8str = std::u8string();
 			auto t_u16str = std::u16string();
@@ -65,7 +68,7 @@ namespace uns {
 			convert(t_u16str, t_u32str);
 			return t_u16str;
 		};
-		operator std::u32string() const {
+		constexpr operator std::u32string() const {
 			auto t_u32str = std::u32string();
 			auto t_u8str = std::u8string();
 			convert(t_u8str, *this);
@@ -73,10 +76,34 @@ namespace uns {
 			return t_u32str;
 		};
 
+		constexpr uns::string& operator=(const uns::string& str) noexcept {
+			std::string::operator=(static_cast<const std::string&>(str));
+			return *this;
+		};
+		constexpr uns::string& operator=(uns::string&& str) noexcept {
+			std::string::operator=(std::move(static_cast<std::string&&>(str)));
+			return *this;
+		};
+		template<typename basic_string_view_like_t>
+			requires std::constructible_from<uns::string, basic_string_view_like_t>
+		constexpr uns::string& operator=(basic_string_view_like_t&& str) {
+			return *this = static_cast<uns::string>(std::forward<basic_string_view_like_t>(str));
+		};
+		template<typename valid_char_t, typename valid_char_traits_t = std::char_traits<valid_char_t>, typename valid_char_alloc_t = std::allocator<valid_char_t>>
+			requires std::constructible_from<uns::string, std::basic_string<valid_char_t, valid_char_traits_t, valid_char_alloc_t>>
+		constexpr uns::string& operator=(const valid_char_t* c_str) {
+			return *this = static_cast<uns::string>(std::basic_string<valid_char_t, valid_char_traits_t, valid_char_alloc_t>(c_str));
+		};
+		template<typename valid_char_t, typename valid_char_traits_t = std::char_traits<valid_char_t>, typename valid_char_alloc_t = std::allocator<valid_char_t>>
+			requires std::constructible_from<uns::string, std::basic_string<valid_char_t, valid_char_traits_t, valid_char_alloc_t>>
+		constexpr uns::string& operator=(std::initializer_list<valid_char_t> char_list) {
+			return *this = std::basic_string<valid_char_t, valid_char_traits_t, valid_char_alloc_t>(char_list.begin(), char_list.end());
+		};
 
 	protected:
-		static void convert(std::u32string& to, const std::u8string_view& from) {
-			auto res = std::u32string(); res.reserve(from.size());
+		static constexpr void convert(std::u32string& to, const std::u8string_view& from) {
+			to.clear();
+			to.reserve(from.size());
 
 			char32_t symbol = 0x0;
 
@@ -85,7 +112,7 @@ namespace uns {
 			for(const auto& val : from) {
 				if((val & 0x80) == 0) {
 					if(!is_start) {
-						res += symbol;
+						to += symbol;
 						symbol = 0;
 					};
 					degree = 1;
@@ -93,7 +120,7 @@ namespace uns {
 				}
 				else if((val & 0xE0) == 0xC0) {
 					if(!is_start) {
-						res += symbol;
+						to += symbol;
 						symbol = 0;
 					};
 					degree = 2;
@@ -101,7 +128,7 @@ namespace uns {
 				}
 				else if((val & 0xF0) == 0xE0) {
 					if(!is_start) {
-						res += symbol;
+						to += symbol;
 						symbol = 0;
 					};
 					degree = 3;
@@ -109,7 +136,7 @@ namespace uns {
 				}
 				else if((val & 0xF8) == 0xF0) {
 					if(!is_start) {
-						res += symbol;
+						to += symbol;
 						symbol = 0;
 					};
 					degree = 4;
@@ -122,13 +149,13 @@ namespace uns {
 				if(is_start)
 					is_start = false;
 			};
-			if(symbol != 0)
-				res += symbol;
 
-			to = std::u32string(res.begin(), res.end());
+			if(symbol != 0)
+				to += symbol;
 		};
-		static void convert(std::u32string& to, const std::u16string_view& from) {
-			auto res = std::u32string(); res.reserve(from.size());
+		static constexpr void convert(std::u32string& to, const std::u16string_view& from) {
+			to.clear();
+			to.reserve(from.size());
 
 			char32_t symbol = 0x0;
 
@@ -136,7 +163,7 @@ namespace uns {
 			for(const auto& val : from) {
 				if(val >= 0xD800 && val <= 0xDBFF) {
 					if(!is_start) {
-						res += symbol;
+						to += symbol;
 						symbol = 0;
 					};
 					symbol = (static_cast<char32_t>(val - 0xD800) << 10);
@@ -147,7 +174,7 @@ namespace uns {
 				}
 				else {
 					if(!is_start) {
-						res += symbol;
+						to += symbol;
 						symbol = 0;
 					};
 					symbol = static_cast<char32_t>(val);
@@ -156,23 +183,18 @@ namespace uns {
 				if(is_start)
 					is_start = false;
 			};
-			if(symbol != 0)
-				res += symbol;
 
-			res.shrink_to_fit();
-			to = std::u32string(res.begin(), res.end());
+			if(symbol != 0)
+				to += symbol;
 		};
-		static void convert(std::u32string& to, const std::wstring_view& from) {
+		static constexpr void convert(std::u32string& to, const std::wstring_view& from) {
 			if constexpr(sizeof(std::wstring_view::value_type) == sizeof(std::u32string::value_type)) {
-				using out_t = std::u32string;
 				to.clear();
 				to.reserve(from.size());
 
 				for(auto liter : from) {
-					to += static_cast<out_t::value_type>(liter);
+					to += static_cast<std::u32string::value_type>(liter);
 				};
-
-				to.shrink_to_fit();
 			}
 			else if constexpr(sizeof(std::wstring_view::value_type) == sizeof(std::u16string::value_type)) {
 				auto t_u16str = std::u16string();
@@ -180,55 +202,47 @@ namespace uns {
 				convert(to, t_u16str);
 			};
 		};
-		static void convert(std::u8string& to, const std::string_view& from) {
-			using out_t = std::u8string;
+		static constexpr void convert(std::u8string& to, const std::string_view& from) {
 			to.clear();
 			to.reserve(from.size());
 
 			for(auto liter : from) {
-				to += static_cast<out_t::value_type>(liter);
+				to += static_cast<std::u8string::value_type>(liter);
 			};
-
-			to.shrink_to_fit();
 		};
-		static void convert(std::u8string& to, const std::u32string_view& from) {
-			auto res = std::u8string(); res.reserve(from.size() * (sizeof(std::u32string::value_type) / sizeof(std::u8string::value_type)));
-
+		static constexpr void convert(std::u8string& to, const std::u32string_view& from) {
+			to.clear();
+			to.reserve(from.size() * (sizeof(std::u32string_view::value_type) / sizeof(std::u8string_view::value_type)));
+			
 			for(const auto& val : from) {
 				if(val < 0x80) {
-					res += static_cast<char8_t>(val);
+					to += static_cast<char8_t>(val);
 				}
 				else if(val < 0x800) {
-					res += 0xC0 + static_cast<char8_t>(val / 0x40);
-					res += 0x80 + static_cast<char8_t>(val % 0x40);
+					to += 0xC0 + static_cast<char8_t>(val / 0x40);
+					to += 0x80 + static_cast<char8_t>(val % 0x40);
 				}
 				else if(val < 0x10000) {
-					res += 0xE0 + static_cast<char8_t>(val / 0x1000);
-					res += 0x80 + static_cast<char8_t>((val % 0x1000) / 0x40);
-					res += 0x80 + static_cast<char8_t>(val % 0x40);
+					to += 0xE0 + static_cast<char8_t>(val / 0x1000);
+					to += 0x80 + static_cast<char8_t>((val % 0x1000) / 0x40);
+					to += 0x80 + static_cast<char8_t>(val % 0x40);
 				}
 				else if(val >= 0x10000 && val < 0x110000) {
-					res += 0xF0 + static_cast<char8_t>(val / 0x40000);
-					res += 0x80 + static_cast<char8_t>((val % 0x40000) / 0x1000);
-					res += 0x80 + static_cast<char8_t>((val % 0x1000) / 0x40);
-					res += 0x80 + static_cast<char8_t>(val % 0x40);
+					to += 0xF0 + static_cast<char8_t>(val / 0x40000);
+					to += 0x80 + static_cast<char8_t>((val % 0x40000) / 0x1000);
+					to += 0x80 + static_cast<char8_t>((val % 0x1000) / 0x40);
+					to += 0x80 + static_cast<char8_t>(val % 0x40);
 				};
 			};
-
-			res.shrink_to_fit();
-			to = res;
 		};
-		static void convert(std::u16string& to, const std::wstring_view& from) {
+		static constexpr void convert(std::u16string& to, const std::wstring_view& from) {
 			if constexpr(sizeof(std::wstring_view::value_type) == sizeof(std::u16string::value_type)) {
-				using out_t = std::u16string;
 				to.clear();
 				to.reserve(from.size());
 
 				for(auto liter : from) {
-					to += static_cast<out_t::value_type>(liter);
+					to += static_cast<std::wstring::value_type>(liter);
 				};
-
-				to.shrink_to_fit();
 			}
 			else if constexpr(sizeof(std::wstring_view::value_type) == sizeof(std::u32string::value_type)) {
 				auto t_u32str = std::u32string();
@@ -236,44 +250,36 @@ namespace uns {
 				convert(to, t_u32str);
 			};
 		};
-		static void convert(std::u16string& to, const std::u32string_view& from) {
-			auto res = std::u16string(); res.reserve(from.size() * (sizeof(std::u32string::value_type) / sizeof(std::u16string::value_type)));
+		static constexpr void convert(std::u16string& to, const std::u32string_view& from) {
+			to.clear();
+			to.reserve(from.size() * (sizeof(std::u32string::value_type) / sizeof(std::u16string::value_type)));
 
 			for(const auto& val : from) {
 				if(val < 0xFFFF && !(val >= 0xD800&& val <= 0xDFFF)) {
-					res += static_cast<char16_t>(val);
+					to += static_cast<char16_t>(val);
 				}
 				else if(val >= 0x10000 && val < 0x10FFFF) {
-					res += 0xD800 + static_cast<char16_t>((val - 0x10000) / 0x0400);
-					res += 0xDC00 + static_cast<char16_t>((val - 0x10000) % 0x0400);
+					to += 0xD800 + static_cast<char16_t>((val - 0x10000) / 0x0400);
+					to += 0xDC00 + static_cast<char16_t>((val - 0x10000) % 0x0400);
 				};
 			};
-
-			res.shrink_to_fit();
-			to = res;
 		};
-		static void convert(std::string& to, const std::u8string_view& from) {
-			using out_t = std::string;
+		static constexpr void convert(std::string& to, const std::u8string_view& from) {
 			to.clear();
 			to.reserve(from.size());
 
 			for(auto liter : from) {
-				to += static_cast<out_t::value_type>(liter);
+				to += static_cast<std::string::value_type>(liter);
 			};
-
-			to.shrink_to_fit();
 		};
-		static void convert(std::wstring& to, const std::u16string_view& from) {
+		static constexpr void convert(std::wstring& to, const std::u16string_view& from) {
 			if constexpr(sizeof(std::wstring_view::value_type) == sizeof(std::u16string::value_type)) {
-				using out_t = std::wstring;
 				to.clear();
 				to.reserve(from.size());
 
 				for(auto liter : from) {
-					to += static_cast<out_t::value_type>(liter);
+					to += static_cast<std::wstring::value_type>(liter);
 				};
-
-				to.shrink_to_fit();
 			}
 			else if constexpr(sizeof(std::wstring_view::value_type) == sizeof(std::u32string::value_type)) {
 				auto t_u32str = std::u32string();
@@ -281,17 +287,14 @@ namespace uns {
 				convert(to, t_u32str);
 			};
 		};
-		static void convert(std::wstring& to, const std::u32string_view& from) {
+		static constexpr void convert(std::wstring& to, const std::u32string_view& from) {
 			if constexpr(sizeof(std::wstring_view::value_type) == sizeof(std::u32string::value_type)) {
-				using out_t = std::wstring;
 				to.clear();
 				to.reserve(from.size());
 
 				for(auto liter : from) {
-					to += static_cast<out_t::value_type>(liter);
+					to += static_cast<std::wstring::value_type>(liter);
 				};
-
-				to.shrink_to_fit();
 			}
 			else if constexpr(sizeof(std::wstring_view::value_type) == sizeof(std::u16string::value_type)) {
 				auto t_u16str = std::u16string();
@@ -303,6 +306,33 @@ namespace uns {
 
 
 	};
+
+	template<typename ostream_t>
+	ostream_t& operator<<(ostream_t& os, const uns::string& str) {
+		if constexpr(std::is_same<ostream_t, std::basic_ostream<char>>::value) {
+			return operator<<(os, static_cast<std::string>(str));
+		}
+		else if constexpr(std::is_same<ostream_t, std::basic_ostream<wchar_t>>::value) {
+			return operator<<(os, static_cast<std::wstring>(str));
+		}
+		else {
+			return ostream_t();
+		};
+	};
+
+
+	template<typename istream_t>
+	istream_t& operator>>(istream_t& is, uns::string& str) {
+		if constexpr(std::is_same<istream_t, std::basic_ostream<char>>::value) {
+			return operator>>(is, static_cast<std::string>(str));
+		}
+		else if constexpr(std::is_same<istream_t, std::basic_ostream<wchar_t>>::value) {
+			return operator>>(is, static_cast<std::wstring>(str));
+		};
+
+		return istream_t();
+	};
+
 
 	/*
 	template<std::constructible_from<uns::string> out_t>
