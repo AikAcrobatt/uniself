@@ -308,11 +308,11 @@ namespace uns {
 	};
 
 	template<typename ostream_t>
-	ostream_t& operator<<(ostream_t& os, const uns::string& str) {
-		if constexpr(std::is_same<ostream_t, std::basic_ostream<char>>::value) {
+	auto& operator<<(ostream_t& os, const uns::string& str) {
+		if constexpr(std::is_base_of<std::basic_ostream<char>,ostream_t >::value) {
 			return operator<<(os, static_cast<std::string>(str));
 		}
-		else if constexpr(std::is_same<ostream_t, std::basic_ostream<wchar_t>>::value) {
+		else if constexpr(std::is_base_of<std::basic_ostream<wchar_t>, ostream_t>::value) {
 			return operator<<(os, static_cast<std::wstring>(str));
 		}
 		else {
@@ -322,15 +322,16 @@ namespace uns {
 
 
 	template<typename istream_t>
-	istream_t& operator>>(istream_t& is, uns::string& str) {
-		if constexpr(std::is_same<istream_t, std::basic_ostream<char>>::value) {
+	auto& operator>>(istream_t& is, uns::string& str) {
+		if constexpr(std::is_base_of<std::basic_ostream<char>, istream_t >::value) {
 			return operator>>(is, static_cast<std::string>(str));
 		}
-		else if constexpr(std::is_same<istream_t, std::basic_ostream<wchar_t>>::value) {
+		else if constexpr(std::is_base_of<std::basic_ostream<wchar_t>, istream_t>::value) {
 			return operator>>(is, static_cast<std::wstring>(str));
+		}
+		else {
+			return istream_t();
 		};
-
-		return istream_t();
 	};
 
 

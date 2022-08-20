@@ -216,6 +216,11 @@ BOOST_AUTO_TEST_SUITE_END();*/
 #include "uns_strings.h"
 
 
+void func(const std::string_view& view) {
+    std::cout << view << "\n";
+};
+
+
 int main() {
     std::cout << "START" << "\n";
 
@@ -227,8 +232,10 @@ int main() {
     str2 = u8"Это некий текст на русском Яя проба яя! я";
 
     std::locale::global(std::locale(".utf-8"));
-    auto file = std::wfstream("G:/Visual Studio/2022/repos/test6.txt", std::ios::out);
-    file << str2 << L"\n";
+    auto file = std::fstream("G:/Visual Studio/2022/repos/test7.txt", std::ios::out);
+    std::cout << str2 << "\n";
+
+    func(str2);
 
     std::cout << "FINISH" << "\n";
 };
