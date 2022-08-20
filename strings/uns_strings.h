@@ -8,43 +8,92 @@
 
 namespace uns {
 
+	class string_view : public std::string_view {
+	public:
+		using base_type = std::string_view;
+
+		constexpr string_view() noexcept : base_type() {};
+		constexpr string_view(const std::string_view& view) noexcept : base_type(view) {};
+		template<typename iter_t, typename end_t> constexpr string_view(iter_t first, end_t last) : base_type(first, last) {};
+		constexpr string_view(const uns::string_view& view) noexcept : base_type(static_cast<const base_type&>(view)) {};
+		constexpr string_view(uns::string_view&& view) noexcept : base_type(std::move(static_cast<base_type&&>(view))) {};
+		constexpr uns::string_view& operator=(const uns::string_view& view) noexcept {
+			if(this == &view) return *this;
+			base_type::operator=(static_cast<const base_type&>(view));
+			return *this;
+		};
+		constexpr uns::string_view& operator=(uns::string_view&& view) noexcept {
+			if(this == &view) return *this;
+			base_type::operator=(std::move(static_cast<base_type&&>(view)));
+			return *this;
+		};
+		~string_view() = default;
+	
+		constexpr operator const std::string_view& () const& noexcept { return dynamic_cast<const base_type&>(*this); };
+		constexpr operator std::string_view& () & noexcept { return dynamic_cast<base_type&>(*this); };
+	};
+
+
 	class string : public std::string {
 	public:
+		using base_type = std::string;
 
-		constexpr string() noexcept : std::string() {};
-		constexpr string(const std::string_view& str) noexcept : std::string(str) {};
-		constexpr string(const std::wstring_view& str) noexcept : std::string() {
+		constexpr string() noexcept : base_type() {};
+		constexpr string(const uns::string_view& str) noexcept : base_type(static_cast<std::string_view>(str)) {};
+		constexpr string(const std::string_view& str) noexcept : base_type(str) {};
+		constexpr string(const std::wstring_view& str) noexcept : base_type() {
 			auto t_u32str = std::u32string();
 			auto t_u8str = std::u8string();
 			convert(t_u32str, str);
 			convert(t_u8str, t_u32str);
 			convert(*this, t_u8str);
 		};
-		constexpr string(const std::u8string_view& str) noexcept : std::string() {
+		constexpr string(const std::u8string_view& str) noexcept : base_type() {
 			convert(*this, str);
 		};
-		constexpr string(const std::u16string_view& str) noexcept : std::string() {
+		constexpr string(const std::u16string_view& str) noexcept : base_type() {
 			auto t_u32str = std::u32string();
 			auto t_u8str = std::u8string();
 			convert(t_u32str, str);
 			convert(t_u8str, t_u32str);
 			convert(*this, t_u8str);
 		};
-		constexpr string(const std::u32string_view& str) noexcept : std::string() {
+		constexpr string(const std::u32string_view& str) noexcept : base_type() {
 			auto t_u8str = std::u8string();
 			convert(t_u8str, str);
 			convert(*this, t_u8str);
 		};
-		constexpr string(const uns::string& str) noexcept {
-			std::string::operator=(static_cast<const std::string&>(str));
+		constexpr string(const uns::string& str) noexcept : base_type(static_cast<const base_type&>(str)) {};
+		constexpr string(uns::string&& str) noexcept : base_type(std::move(static_cast<base_type&&>(str))) {};
+		constexpr uns::string& operator=(const uns::string& str) noexcept {
+			if(this == &str) return *this;
+			base_type::operator=(static_cast<const base_type&>(str));
+			return *this;
 		};
-		constexpr string(uns::string&& str) noexcept {
-			std::string::operator=(std::move(static_cast<std::string&&>(str)));
+		constexpr uns::string& operator=(uns::string&& str) noexcept {
+			if(this == &str) return *this;
+			base_type::operator=(std::move(static_cast<base_type&&>(str)));
+			return *this;
+		};
+		template<typename basic_string_view_like_t>
+			requires std::constructible_from<uns::string, basic_string_view_like_t>
+		constexpr uns::string& operator=(basic_string_view_like_t&& str) {
+			return *this = static_cast<uns::string>(std::forward<basic_string_view_like_t>(str));
+		};
+		template<typename valid_char_t, typename valid_char_traits_t = std::char_traits<valid_char_t>, typename valid_char_alloc_t = std::allocator<valid_char_t>>
+			requires std::constructible_from<uns::string, std::basic_string<valid_char_t, valid_char_traits_t, valid_char_alloc_t>>
+		constexpr uns::string& operator=(const valid_char_t* c_str) {
+			return *this = static_cast<uns::string>(std::basic_string<valid_char_t, valid_char_traits_t, valid_char_alloc_t>(c_str));
+		};
+		template<typename valid_char_t, typename valid_char_traits_t = std::char_traits<valid_char_t>, typename valid_char_alloc_t = std::allocator<valid_char_t>>
+			requires std::constructible_from<uns::string, std::basic_string<valid_char_t, valid_char_traits_t, valid_char_alloc_t>>
+		constexpr uns::string& operator=(std::initializer_list<valid_char_t> char_list) {
+			return *this = std::basic_string<valid_char_t, valid_char_traits_t, valid_char_alloc_t>(char_list.begin(), char_list.end());
 		};
 		~string() = default;
 
-		constexpr operator const std::string& () const& noexcept { return dynamic_cast<const std::string&>(*this); };
-		constexpr operator std::string& () & noexcept { return dynamic_cast<std::string&>(*this); };
+		constexpr operator const std::string& () const& noexcept { return dynamic_cast<const base_type&>(*this); };
+		constexpr operator std::string& () & noexcept { return dynamic_cast<base_type&>(*this); };
 		constexpr operator std::wstring() const {
 			auto t_u32str = std::u32string();
 			auto t_u8str = std::u8string();
@@ -75,31 +124,7 @@ namespace uns {
 			convert(t_u32str, t_u8str);
 			return t_u32str;
 		};
-
-		constexpr uns::string& operator=(const uns::string& str) noexcept {
-			std::string::operator=(static_cast<const std::string&>(str));
-			return *this;
-		};
-		constexpr uns::string& operator=(uns::string&& str) noexcept {
-			std::string::operator=(std::move(static_cast<std::string&&>(str)));
-			return *this;
-		};
-		template<typename basic_string_view_like_t>
-			requires std::constructible_from<uns::string, basic_string_view_like_t>
-		constexpr uns::string& operator=(basic_string_view_like_t&& str) {
-			return *this = static_cast<uns::string>(std::forward<basic_string_view_like_t>(str));
-		};
-		template<typename valid_char_t, typename valid_char_traits_t = std::char_traits<valid_char_t>, typename valid_char_alloc_t = std::allocator<valid_char_t>>
-			requires std::constructible_from<uns::string, std::basic_string<valid_char_t, valid_char_traits_t, valid_char_alloc_t>>
-		constexpr uns::string& operator=(const valid_char_t* c_str) {
-			return *this = static_cast<uns::string>(std::basic_string<valid_char_t, valid_char_traits_t, valid_char_alloc_t>(c_str));
-		};
-		template<typename valid_char_t, typename valid_char_traits_t = std::char_traits<valid_char_t>, typename valid_char_alloc_t = std::allocator<valid_char_t>>
-			requires std::constructible_from<uns::string, std::basic_string<valid_char_t, valid_char_traits_t, valid_char_alloc_t>>
-		constexpr uns::string& operator=(std::initializer_list<valid_char_t> char_list) {
-			return *this = std::basic_string<valid_char_t, valid_char_traits_t, valid_char_alloc_t>(char_list.begin(), char_list.end());
-		};
-
+		constexpr operator const uns::string_view& () const& noexcept { return dynamic_cast<const base_type&>(*this).operator std::string_view(); };
 	protected:
 		static constexpr void convert(std::u32string& to, const std::u8string_view& from) {
 			to.clear();
@@ -302,8 +327,6 @@ namespace uns {
 				convert(to, t_u16str);
 			};
 		};
-
-
 
 	};
 
