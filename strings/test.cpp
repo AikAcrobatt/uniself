@@ -211,9 +211,6 @@ BOOST_AUTO_TEST_SUITE(string_cast_testing)
 
 BOOST_AUTO_TEST_SUITE_END();*/
 
-#include <locale>
-#include <fstream>
-#include "uns_strings.h"
 
 
 void func(const std::string_view& view) {
@@ -231,9 +228,11 @@ int main() {
 
     str2 = u8"Это некий текст на русском Яя проба яя! я";
 
+    str2 += u8" Here it comes!";
+    str2 = str2 + u8"Ещо раз ЫЫЫ";
+
     std::locale::global(std::locale(".utf-8"));
-    auto file = std::fstream("G:/Visual Studio/2022/repos/test7.txt", std::ios::out);
-    std::cout << str2 << "\n";
+    std::cout << std::boolalpha << (str2 == u8"Hey hey!!") << "\n";
 
     func(str2);
 
