@@ -357,46 +357,21 @@ namespace uns::string {
 		return out_t::_from_string(uns::string::u8_cast<std::string>(obj));
 	};
 
+
+};
 	//IOSTREAMS FOR UTF-8 STRINGS
 	template<typename ostream_t>
-	auto& operator<<(ostream_t& os, const std::u8string_view& str) {
+	ostream_t& operator<<(ostream_t& os, const std::u8string_view& str) {
 		if constexpr(std::is_base_of<std::basic_ostream<char>, ostream_t>::value) {
 			return operator<<(os, uns::string::u8_cast<std::string>(str));
 		}
 		else if constexpr(std::is_base_of<std::basic_ostream<wchar_t>, ostream_t>::value) {
 			return operator<<(os, uns::string::u8_cast<std::wstring>(str));
-		}
-		else {
-			return ostream_t();
-		};
-	};
-	template<typename ostream_t>
-	auto& operator<<(ostream_t& os, const char8_t* cstr) {
-		if constexpr(std::is_base_of<std::basic_ostream<char>, ostream_t>::value) {
-			return operator<<(os, uns::string::u8_cast<std::string>(cstr));
-		}
-		else if constexpr(std::is_base_of<std::basic_ostream<wchar_t>, ostream_t>::value) {
-			return operator<<(os, uns::string::u8_cast<std::wstring>(cstr));
-		}
-		else {
-			return ostream_t();
-		};
-	};
-	template<typename ostream_t>
-	auto& operator<<(ostream_t& os, const std::u8string str) {
-		if constexpr(std::is_base_of<std::basic_ostream<char>, ostream_t>::value) {
-			return operator<<(os, uns::string::u8_cast<std::string>(str));
-		}
-		else if constexpr(std::is_base_of<std::basic_ostream<wchar_t>, ostream_t>::value) {
-			return operator<<(os, uns::string::u8_cast<std::wstring>(str));
-		}
-		else {
-			return ostream_t();
 		};
 	};
 
 	template<typename istream_t>
-	auto& operator>>(istream_t& is, std::u8string& str) {
+	istream_t& operator>>(istream_t& is, std::u8string& str) {
 		if constexpr(std::is_base_of<std::basic_ostream<char>, istream_t>::value) {
 			auto val = std::string();
 			auto& res = operator>>(is, val);
@@ -408,12 +383,7 @@ namespace uns::string {
 			auto& res = operator>>(is, val);
 			str = uns::string::u8_cast<std::u8string>(val);
 			return res;
-		}
-		else {
-			return istream_t();
 		};
 	};
 	
 	
-
-};
