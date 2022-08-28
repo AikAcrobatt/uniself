@@ -7,6 +7,34 @@
 
 #include "uniself/benum.h"
 
+
+namespace uns::test {
+
+	class u8string : public std::u8string {
+	public:
+		template<typename ostream_t>
+		friend constexpr ostream_t& operator<<(ostream_t& os, const uns::test::u8string& str) {
+			if constexpr(std::is_base_of<std::basic_ostream<char>, ostream_t>::value) {
+				return operator<<(os, reinterpret_cast<const char*>(str.c_str()));
+			};
+		};
+
+		constexpr operator const std::u8string& () const& noexcept { return dynamic_cast<const std::u8string&>(*this); };
+		constexpr operator std::u8string& () & noexcept { return dynamic_cast<std::u8string&>(*this); };
+		constexpr operator std::u8string_view() const noexcept { return dynamic_cast<const std::u8string&>(*this).operator std::u8string_view(); };
+	};
+
+	constexpr uns::test::u8string make_u8(const char8_t* cstr) noexcept {
+		auto res = uns::test::u8string(cstr);
+		return uns::test::u8string(cstr);
+	};
+	constexpr uns::test::u8string make_u8(const std::u8string& str) noexcept {
+		auto res = uns::test::u8string(str);
+		return static_cast<uns::test::u8string>(str);
+	};
+};
+
+
 namespace uns::string {
 
 	//STRING CAST FUNCTIONS
@@ -317,34 +345,26 @@ namespace uns::string {
 		}
 		else
 			res_size += 1;
-		auto res = std::u8string(u8"\0", res_size);
+		auto res = std::string(64, '\0');
 
-		char* begin = reinterpret_cast<char*>(res.data());
-		char* end = &begin[res.size()];
+		auto* begin = &(*res.begin());
+		auto* end = &res.back();
 
 		auto conv = std::to_chars(begin, end, obj, 10);
-		if(conv.ec == std::errc()) {
-			return res;
-		}
-		else
-			res.clear();
+			return std::u8string(reinterpret_cast<const char8_t*>(res.c_str()));
 
-		return res;
+		return std::u8string();
 	};
 	template<std::constructible_from<std::u8string> out_t, std::floating_point in_t>
 	out_t u8_cast(const in_t& obj) {
-		auto res = std::u8string(u8"\0", 25);
-		char* begin = reinterpret_cast<char*>(res.data());
-		char* end = &begin[res.size()];
+		auto res = std::string(64, '\0');
+		auto* begin = &(*res.begin());
+		auto* end = &res.back();
 
-			auto conv = std::to_chars(begin, end, obj, std::chars_format::general);
-			if(conv.ec == std::errc()) {
-				return res;
-			}
-			else
-				res.clear();
+		auto conv = std::to_chars(begin, end, obj, std::chars_format::general);
+			return std::u8string(reinterpret_cast<const char8_t*>(res.c_str()));
 
-		return res;
+		return std::u8string();
 	};
 
 	//convertions of benum types with std::u8string
