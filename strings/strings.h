@@ -446,7 +446,7 @@ namespace uns::string {
 		if(val >= 0) {
 			auto conv = std::to_chars(begin, end, val, 2);
 			if(conv.ec == std::errc()) {
-				res = "0x" + res;
+				res = "0b" + res;
 				return std::u8string(reinterpret_cast<const char8_t*>(res.c_str()));
 			}
 			else
@@ -455,7 +455,7 @@ namespace uns::string {
 		else {
 			auto conv = std::to_chars(begin, end, -val, 2);
 			if(conv.ec == std::errc()) {
-				res = "-0x" + res;
+				res = "-0b" + res;
 				return std::u8string(reinterpret_cast<const char8_t*>(res.c_str()));
 			}
 			else
