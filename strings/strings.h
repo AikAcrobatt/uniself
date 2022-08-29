@@ -4,6 +4,7 @@
 #include <charconv>
 #include <type_traits>
 #include <concepts>
+#include <exception>
 
 #include "uniself/benum.h"
 
@@ -64,6 +65,9 @@ namespace uns::string {
 		}
 		else if constexpr(sizeof(std::wstring_view::value_type) == sizeof(std::u16string::value_type)) {
 			return std::wstring(reinterpret_cast<const wchar_t*>(uns::string::u32_cast<std::u16string>(from).c_str()));
+		}
+		else {
+			throw std::runtime_error("Size of std::wstring_view::value_type is neither 16 bit, nor 32 bit");
 		};
 
 		return std::wstring();
@@ -113,6 +117,9 @@ namespace uns::string {
 		}
 		else if constexpr(sizeof(std::wstring_view::value_type) == sizeof(std::u16string::value_type)) {
 			return uns::string::u32_cast<std::u32string>(std::u16string(reinterpret_cast<const char16_t*>(from.data())));
+		}
+		else {
+			throw std::runtime_error("Size of std::wstring_view::value_type is neither 16 bit, nor 32 bit");
 		};
 	};
 
@@ -236,7 +243,12 @@ namespace uns::string {
 	//convertions of numeric (spreadly) types with std::u8string
 	template<std::same_as<bool> out_t>
 	out_t u8_cast(const std::u8string_view& str) {
-		return (str == u8"true" || str == u8"1" || str == u8"True" || str == u8"TRUE");
+		if(str == u8"true" || str == u8"1" || str == u8"True" || str == u8"TRUE")
+			return true;
+		else if(str == u8"false" || str == u8"0" || str == u8"False" || str == u8"FALSE")
+			return false;
+		else
+			throw std::runtime_error("An input string can't be converted to bool");
 	};
 	template<typename out_t>
 		requires (std::is_integral<out_t>::value && !std::is_same<out_t, bool>::value)
@@ -294,6 +306,8 @@ namespace uns::string {
 			auto conv = std::from_chars(begin, end, res, 2);
 			if(conv.ec == std::errc())
 				return res * (is_negative ? -1 : 1);
+			else
+				throw std::runtime_error("An input string can't be converted to integer with base neither decimal, nor hexadecimal and even binary");
 		};
 
 		return out_t(0);
@@ -316,7 +330,7 @@ namespace uns::string {
 				return res;
 		};
 
-		return res;
+		throw std::runtime_error("An input string can't be converted to floating point");
 	};
 
 	template<std::constructible_from<std::u8string> out_t, std::same_as<bool> in_t>
@@ -329,31 +343,16 @@ namespace uns::string {
 	template<std::constructible_from<std::u8string> out_t, typename in_t>
 		requires (std::is_integral<in_t>::value && !std::is_same<in_t, bool>::value)
 	out_t u8_cast(const in_t& obj) {
-		auto res_size = static_cast<std::string::size_type>(0);
-		auto val = obj;
-
-		if(obj < 0) {
-			res_size += 1;
-			val = -val;
-		};
-
-		if(obj != 0) {
-			while(val > 0) {
-				val /= 10;
-				res_size += 1;
-			};
-		}
-		else
-			res_size += 1;
 		auto res = std::string(64, '\0');
 
 		auto* begin = &(*res.begin());
 		auto* end = &res.back();
 
 		auto conv = std::to_chars(begin, end, obj, 10);
+		if(conv.ec == std::errc())
 			return std::u8string(reinterpret_cast<const char8_t*>(res.c_str()));
-
-		return std::u8string();
+		else
+			throw std::runtime_error("An input value can't be converted to string");
 	};
 	template<std::constructible_from<std::u8string> out_t, std::floating_point in_t>
 	out_t u8_cast(const in_t& obj) {
@@ -362,9 +361,10 @@ namespace uns::string {
 		auto* end = &res.back();
 
 		auto conv = std::to_chars(begin, end, obj, std::chars_format::general);
+		if(conv.ec == std::errc())
 			return std::u8string(reinterpret_cast<const char8_t*>(res.c_str()));
-
-		return std::u8string();
+		else
+			throw std::runtime_error("An input value can't be converted to string");
 	};
 
 	//convertions of benum types with std::u8string
@@ -377,33 +377,92 @@ namespace uns::string {
 		return out_t::_from_string(uns::string::u8_cast<std::string>(obj).c_str());
 	};
 
+};
+
+
+//IOSTREAMS FOR UTF-8 STRINGS
+template<typename ostream_t>
+ostream_t& operator<<(ostream_t& os, const std::u8string_view& str) {
+	if constexpr(std::is_base_of<std::basic_ostream<char>, ostream_t>::value) {
+		return operator<<(os, uns::string::u8_cast<std::string>(str));
+	}
+	else if constexpr(std::is_base_of<std::basic_ostream<wchar_t>, ostream_t>::value) {
+		return operator<<(os, uns::string::u8_cast<std::wstring>(str));
+	};
+};
+
+template<typename istream_t>
+istream_t& operator>>(istream_t& is, std::u8string& str) {
+	if constexpr(std::is_base_of<std::basic_ostream<char>, istream_t>::value) {
+		auto val = std::string();
+		auto& res = operator>>(is, val);
+		str = uns::string::u8_cast<std::u8string>(val);
+		return res;
+	}
+	else if constexpr(std::is_base_of<std::basic_ostream<wchar_t>, istream_t>::value) {
+		auto val = std::wstring();
+		auto& res = operator>>(is, val);
+		str = uns::string::u8_cast<std::u8string>(val);
+		return res;
+	};
+};
+	
+
+namespace uns::string {
+
+	std::u8string hex_cast(long long int val) {
+		auto res = std::string(64, '\0');
+
+		auto* begin = &(*res.begin());
+		auto* end = &res.back();
+
+		if(val >= 0) {
+			auto conv = std::to_chars(begin, end, val, 16);
+			if(conv.ec == std::errc()) {
+				res = "0x" + res;
+				return std::u8string(reinterpret_cast<const char8_t*>(res.c_str()));
+			}
+			else
+				throw std::runtime_error("An input value can't be converted to string");
+		}
+		else {
+			auto conv = std::to_chars(begin, end, -val, 16);
+			if(conv.ec == std::errc()) {
+				res = "-0x" + res;
+				return std::u8string(reinterpret_cast<const char8_t*>(res.c_str()));
+			}
+			else
+				throw std::runtime_error("An input value can't be converted to string");
+		};
+	};
+
+
+	std::u8string bin_cast(long long int val) {
+		auto res = std::string(128, '\0');
+
+		auto* begin = &(*res.begin());
+		auto* end = &res.back();
+
+		if(val >= 0) {
+			auto conv = std::to_chars(begin, end, val, 2);
+			if(conv.ec == std::errc()) {
+				res = "0x" + res;
+				return std::u8string(reinterpret_cast<const char8_t*>(res.c_str()));
+			}
+			else
+				throw std::runtime_error("An input value can't be converted to string");
+		}
+		else {
+			auto conv = std::to_chars(begin, end, -val, 2);
+			if(conv.ec == std::errc()) {
+				res = "-0x" + res;
+				return std::u8string(reinterpret_cast<const char8_t*>(res.c_str()));
+			}
+			else
+				throw std::runtime_error("An input value can't be converted to string");
+		};
+
+		return std::u8string();
+	};
 
 };
-	//IOSTREAMS FOR UTF-8 STRINGS
-	template<typename ostream_t>
-	ostream_t& operator<<(ostream_t& os, const std::u8string_view& str) {
-		if constexpr(std::is_base_of<std::basic_ostream<char>, ostream_t>::value) {
-			return operator<<(os, uns::string::u8_cast<std::string>(str));
-		}
-		else if constexpr(std::is_base_of<std::basic_ostream<wchar_t>, ostream_t>::value) {
-			return operator<<(os, uns::string::u8_cast<std::wstring>(str));
-		};
-	};
-
-	template<typename istream_t>
-	istream_t& operator>>(istream_t& is, std::u8string& str) {
-		if constexpr(std::is_base_of<std::basic_ostream<char>, istream_t>::value) {
-			auto val = std::string();
-			auto& res = operator>>(is, val);
-			str = uns::string::u8_cast<std::u8string>(val);
-			return res;
-		}
-		else if constexpr(std::is_base_of<std::basic_ostream<wchar_t>, istream_t>::value) {
-			auto val = std::wstring();
-			auto& res = operator>>(is, val);
-			str = uns::string::u8_cast<std::u8string>(val);
-			return res;
-		};
-	};
-	
-	

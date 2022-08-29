@@ -7,7 +7,7 @@
 
 #include "strings.h"
 
-#define BOOST_TEST_MODULE uns::strings::test
+#define BOOST_TEST_MODULE uns_strings_test
 #include "boost/test/included/unit_test.hpp"
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/data/monomorphic.hpp>
@@ -19,6 +19,7 @@ UNS_BENUM_DECLARATOR(benum_test, int,
     t2 = 10,
     t3
 );
+
 
 BOOST_AUTO_TEST_SUITE(u8_cast_testing)
 
@@ -54,12 +55,7 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
                     uns::test::make_u8(u8"false"),
                     uns::test::make_u8(u8"False"),
                     uns::test::make_u8(u8"FALSE"),
-                    uns::test::make_u8(u8"0"),
-                    uns::test::make_u8(u8"fa lse"),
-                    uns::test::make_u8(u8"_false"),
-                    uns::test::make_u8(u8" false "),
-                    uns::test::make_u8(u8"FalSe"),
-                    uns::test::make_u8(u8"fal")
+                    uns::test::make_u8(u8"0")
                 }
             )
             ^ boost::unit_test::data::make(
@@ -71,11 +67,6 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
                     false, 
                     false, 
                     false, 
-                    false, 
-                    false, 
-                    false, 
-                    false, 
-                    false,
                     false
                 }
             ),
@@ -101,7 +92,7 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
             ),
             in_str, out_val
         ) {
-            BOOST_TEST(out_val != uns::string::u8_cast<bool>(in_str));
+            BOOST_CHECK_THROW(out_val != uns::string::u8_cast<bool>(in_str), std::runtime_error);
         };
 
         BOOST_DATA_TEST_CASE(bool_to_std_u8string_correct,
@@ -163,14 +154,12 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
                         uns::test::make_u8(u8"22304568 "),
                         uns::test::make_u8(u8"-4444 "),
                         uns::test::make_u8(u8"0"),
-                        uns::test::make_u8(u8" 0"),
                         uns::test::make_u8(u8"1 "),
                         uns::test::make_u8(u8"10_423"),
                         uns::test::make_u8(u8"8-8"),
                         uns::test::make_u8(u8"7J9"),
                         uns::test::make_u8(u8"2230 4568 "),
-                        uns::test::make_u8(u8"-44 44 "),
-                        uns::test::make_u8(u8" ")
+                        uns::test::make_u8(u8"-44 44 ")
                     }
                 )
                 ^ boost::unit_test::data::make(
@@ -182,15 +171,13 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
                         789, 
                         22304568,
                         -4444, 
-                        0, 
                         0,
                         1, 
                         10, 
                         8, 
                         7, 
                         2230,
-                        -44, 
-                        0 
+                        -44
                     }
                 ),
                 in_str, out_val
@@ -202,18 +189,20 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
                 boost::unit_test::data::make(
                     { 
                         uns::test::make_u8(u8"T1"),
-                        uns::test::make_u8(u8"yhi")
+                        uns::test::make_u8(u8"yhi"),
+                        uns::test::make_u8(u8" ")
                     }
                 )
                 ^ boost::unit_test::data::make(
                     {
                         1, 
-                        1 
+                        1,
+                        0
                     }
                 ),
                 in_str, out_val
             ) {
-                BOOST_TEST(out_val != uns::string::u8_cast<int>(uns::string::u8_cast<std::u8string>(in_str)));
+                BOOST_CHECK_THROW(out_val != uns::string::u8_cast<int>(uns::string::u8_cast<std::u8string>(in_str)), std::runtime_error);
             };
 
             BOOST_DATA_TEST_CASE(dec_to_std_u8string_correct,
@@ -297,7 +286,9 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
                         uns::test::make_u8(u8"C0"),
                         uns::test::make_u8(u8"A5"),
                         uns::test::make_u8(u8"0xA1"),
-                        uns::test::make_u8(u8"-FF")
+                        uns::test::make_u8(u8"-FF"),
+                        uns::test::make_u8(u8"0x 3"),
+                        uns::test::make_u8(u8"0xK")
                     }
                 )
                 ^ boost::unit_test::data::make(
@@ -314,7 +305,9 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
                         0xC0,
                         0xA5,
                         0xA1,
-                        -0xFF 
+                        -0xFF,
+                        0x0,
+                        0x0
                     }
                 ),
                 in_str, out_val
@@ -325,24 +318,58 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
             BOOST_DATA_TEST_CASE(std_u8string_to_hex_incorrect,
                 boost::unit_test::data::make(
                     { 
-                        uns::test::make_u8(u8"0x 3"),
-                        uns::test::make_u8(u8"X12"),
-                        uns::test::make_u8(u8"1A"),
-                        uns::test::make_u8(u8"0xK")
+                        uns::test::make_u8(u8"X12")
                     }
                 )
                 ^ boost::unit_test::data::make(
                     { 
-                        3, 
-                        18,  
-                        26,   
-                        27  
+                        18  
                     }
                 ),
                 in_str, out_val
             ) {
-                BOOST_TEST(out_val != uns::string::u8_cast<int>(uns::string::u8_cast<std::u8string>(in_str)));
+                BOOST_CHECK_THROW(out_val != uns::string::u8_cast<int>(uns::string::u8_cast<std::u8string>(in_str)), std::runtime_error);
             };
+            /*
+            BOOST_DATA_TEST_CASE(hex_to_std_u8string_correct,
+                boost::unit_test::data::make(
+                    {
+                        0x3,
+                        0x12,
+                        0x1A,
+                        -0x1B,
+                        0x1C,
+                        -0x1D,
+                        0x1E,
+                        0x1F,
+                        0xA8,
+                        0xC0,
+                        0xA5,
+                        0xA1,
+                        -0xFF
+                    }
+                )
+                ^ boost::unit_test::data::make(
+                    {
+                        uns::test::make_u8(u8"0x3"),
+                        uns::test::make_u8(u8"0x12"),
+                        uns::test::make_u8(u8"0x1A"),
+                        uns::test::make_u8(u8"0x-1B"),
+                        uns::test::make_u8(u8"0x1C"),
+                        uns::test::make_u8(u8"-0x1D "),
+                        uns::test::make_u8(u8"0x1E "),
+                        uns::test::make_u8(u8" 0x1F"),
+                        uns::test::make_u8(u8"A8"),
+                        uns::test::make_u8(u8"C0"),
+                        uns::test::make_u8(u8"A5"),
+                        uns::test::make_u8(u8"0xA1"),
+                        uns::test::make_u8(u8"-FF")
+                    }
+                ),
+                in_val, out_str
+            ) {
+                BOOST_TEST(out_str == uns::string::u8_cast<int>(uns::string::u8_cast<std::u8string>(in_val)));
+            };*/
 
         BOOST_AUTO_TEST_SUITE_END();
 
@@ -355,7 +382,8 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
                         uns::test::make_u8(u8"0B10010"),
                         uns::test::make_u8(u8"0b-111"),
                         uns::test::make_u8(u8" 0b1000"),
-                        uns::test::make_u8(u8" -0b1000")
+                        uns::test::make_u8(u8" -0b1000 "),
+                        uns::test::make_u8(u8"- 0b1")
                     }
                 )
                 ^ boost::unit_test::data::make(
@@ -364,7 +392,8 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
                         0b10010,   
                         -0b111,     
                         0b1000,     
-                        -0b1000 
+                        -0b1000,
+                        0b1
                     }
                 ),
                 in_str, out_val
@@ -372,26 +401,22 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
                 BOOST_TEST(out_val == uns::string::u8_cast<int>(uns::string::u8_cast<std::u8string>(in_str)));
             };
 
-            BOOST_DATA_TEST_CASE(stdstring_to_bin_incorrect,
+            BOOST_DATA_TEST_CASE(std_u8string_to_bin_incorrect,
                 boost::unit_test::data::make(
                     { 
                         uns::test::make_u8(u8"0b 11"),
-                        uns::test::make_u8(u8"B10"),
-                        uns::test::make_u8(u8"- 0b1"),
                         uns::test::make_u8(u8"0b2")
                     }
                 )
                 ^ boost::unit_test::data::make(
                     {
-                        3,
-                        2,    
-                        -1,    
+                        3,   
                         2 
                     }
                 ),
                 in_str, out_val
             ) {
-                BOOST_TEST(out_val != uns::string::u8_cast<int>(uns::string::u8_cast<std::u8string>(in_str)));
+                BOOST_CHECK_THROW(out_val != uns::string::u8_cast<int>(uns::string::u8_cast<std::u8string>(in_str)), std::runtime_error);
             };
 
         BOOST_AUTO_TEST_SUITE_END();
@@ -413,7 +438,8 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
                         uns::test::make_u8(u8"10.01234567890123456"),
                         uns::test::make_u8(u8".7"),
                         uns::test::make_u8(u8"452"),
-                        uns::test::make_u8(u8"1744.")
+                        uns::test::make_u8(u8"1744."),
+                        uns::test::make_u8(u8"12. 54")
                     }
                 )
                 ^ boost::unit_test::data::make(
@@ -426,7 +452,8 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
                         10.012345678901234,  
                         0.7,  
                         452.0, 
-                        1744.0 
+                        1744.0,
+                        12.0
                     }
                 ),
                 in_str, out_val
@@ -437,19 +464,19 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
             BOOST_DATA_TEST_CASE(std_u8string_to_dbl_incorrect,
                 boost::unit_test::data::make(
                     {
-                        uns::test::make_u8(u8"1. 012"),
+                        uns::test::make_u8(u8"O12.77"),
                         uns::test::make_u8(u8"- 8.8")
                     }
                 )
                 ^ boost::unit_test::data::make(
                     { 
-                        1.012, 
+                        12.77, 
                         -8.8 
                     }
                 ),
                 in_str, out_val
             ) {
-                BOOST_TEST(out_val != uns::string::u8_cast<double>(uns::string::u8_cast<std::u8string>(in_str)));
+                BOOST_CHECK_THROW(out_val != uns::string::u8_cast<double>(uns::string::u8_cast<std::u8string>(in_str)), std::runtime_error);
             };
             
             BOOST_DATA_TEST_CASE(dbl_to_std_u8string_correct,
