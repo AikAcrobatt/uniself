@@ -21,13 +21,29 @@ namespace uns {
 	template<typename benum_t>
 	concept benum = requires(benum_t enum_obj) {
 		benum_t::_values();
+	}
+	&& requires(benum_t enum_obj) {
 		benum_t::_values().begin();
+	}
+	&& requires(benum_t enum_obj) {
 		benum_t::_values().end();
+	}
+	&& requires(benum_t enum_obj) {
 		benum_t::_values().size();
+	}
+	&& requires(benum_t enum_obj) {
 		benum_t::_enumerated;
+	}
+	&& requires(benum_t enum_obj) {
 		{ enum_obj } -> std::convertible_to<typename benum_t::_enumerated>;
-		benum_t::_value_iterator;		
+	}
+	&& requires(benum_t enum_obj) {
+		benum_t::_value_iterator;
+	}
+	&& requires(benum_t enum_obj) {
 		enum_obj._to_string();
+	}
+	&& requires(benum_t enum_obj) {
 		benum_t::_from_string("...");
 	};
 

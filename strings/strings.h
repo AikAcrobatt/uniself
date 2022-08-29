@@ -374,7 +374,7 @@ namespace uns::string {
 	};
 	template<uns::benum out_t>
 	out_t u8_cast(const std::u8string_view& obj) {
-		return out_t::_from_string(uns::string::u8_cast<std::string>(obj));
+		return out_t::_from_string(uns::string::u8_cast<std::string>(obj).c_str());
 	};
 
 
