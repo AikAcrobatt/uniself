@@ -11,10 +11,10 @@
 
 namespace uns::test {
 
-	class u8string : public std::u8string {
+	class u8string_wrapper : public std::u8string {
 	public:
 		template<typename ostream_t>
-		friend constexpr ostream_t& operator<<(ostream_t& os, const uns::test::u8string& str) {
+		friend constexpr ostream_t& operator<<(ostream_t& os, const u8string_wrapper& str) {
 			if constexpr(std::is_base_of<std::basic_ostream<char>, ostream_t>::value) {
 				return operator<<(os, reinterpret_cast<const char*>(str.c_str()));
 			};
@@ -25,18 +25,23 @@ namespace uns::test {
 		constexpr operator std::u8string_view() const noexcept { return dynamic_cast<const std::u8string&>(*this).operator std::u8string_view(); };
 	};
 
-	constexpr uns::test::u8string make_u8(const char8_t* cstr) noexcept {
-		auto res = uns::test::u8string(cstr);
-		return uns::test::u8string(cstr);
+	constexpr uns::test::u8string_wrapper make_u8(const char8_t* cstr) noexcept {
+		auto res = uns::test::u8string_wrapper(cstr);
+		return uns::test::u8string_wrapper(cstr);
 	};
-	constexpr uns::test::u8string make_u8(const std::u8string& str) noexcept {
-		auto res = uns::test::u8string(str);
-		return static_cast<uns::test::u8string>(str);
+	constexpr uns::test::u8string_wrapper make_u8(const std::u8string& str) noexcept {
+		auto res = uns::test::u8string_wrapper(str);
+		return static_cast<uns::test::u8string_wrapper>(str);
 	};
 };
 
 
 namespace uns::string {
+
+	//SPECIFIC STRING CONCEPTS
+	//defines types that can be dealed with as like they are of std::basic_string type
+	template<typename string_t>
+	concept std_basic = std::derived_from<string_t, std::basic_string<typename string_t::value_type>>;
 
 	//STRING CAST FUNCTIONS
 	//convertions of std::u32string
@@ -69,8 +74,6 @@ namespace uns::string {
 		else {
 			throw std::runtime_error("Size of std::wstring_view::value_type is neither 16 bit, nor 32 bit");
 		};
-
-		return std::wstring();
 	};
 	template<std::constructible_from<std::u32string> out_t>
 	out_t u32_cast(const std::u16string_view& from) {
@@ -410,6 +413,8 @@ istream_t& operator>>(istream_t& is, std::u8string& str) {
 
 namespace uns::string {
 
+	//CAST FUNCTIONS FOR NUMERICS TO FORMATTED STRING
+	//cast of integer to string contain it's hexadecimal representation
 	std::u8string hex_cast(long long int val) {
 		auto res = std::string(64, '\0');
 
@@ -436,7 +441,7 @@ namespace uns::string {
 		};
 	};
 
-
+	//cast of integer to string contain it's binary representation
 	std::u8string bin_cast(long long int val) {
 		auto res = std::string(128, '\0');
 
@@ -461,8 +466,50 @@ namespace uns::string {
 			else
 				throw std::runtime_error("An input value can't be converted to string");
 		};
-
-		return std::u8string();
 	};
+
+
+	//STRINGS OPERATIONS
+	//positioning a seeker in the string relatively some mark symbols in it
+	template<uns::string::std_basic string_t>
+	bool seeker_positioning(
+		const string_t&																target_string,					//target string
+		typename string_t::iterator&												seeker,							//positioning seeker
+		typename string_t::iterator													first_mark,						//first mark at the target string, relatively to what the seeker should be positioned
+		typename string_t::iterator													last_mark,						// last mark at the target string, relatively to what the seeker should be positioned
+		bool																		from_begin,						//if true, this flag indicates that seekers new position must be done relative to the first mark of positioning, false - if relative to the last mark
+		typename std::iterator_traits<typename string_t::iterator>::difference_type	relative_position,				//this value indicates of how mutch symbols the seeker should be moved from first/last mark respectively (from first mark to the end of target string, from last mark - to the beginning)
+		typename string_t::iterator													right_border_beg,				//position of the first symbol of the right border, that serves as the limit of seeker positioning from the right
+		typename string_t::iterator													right_border_end				//position of the last symbol of the right border
+	) noexcept {
+		auto new_seeker_position = seeker;
+
+		if(first_mark == target_string.end()) { return false; };
+		if(right_border_beg != target_string.end() && first_mark > right_border_beg) return false;
+
+		if(!from_begin) {
+			if(last_mark == target_string.end() || first_mark > last_mark) last_mark = first_mark;
+			if(last_mark - target_string.begin() < relative_position) return false;
+
+			new_seeker_position = last_mark - relative_position;
+		}
+		else {
+			if(target_string.end() - first_mark <= relative_position) return false;
+			new_seeker_position = first_mark + relative_position;
+		};
+
+		if(right_border_end == target_string.end() || new_seeker_position <= right_border_end) {
+			seeker = new_seeker_position;
+			return true;
+		}
+		else return false;
+	};
+
+
+
+
+
+
+
 
 };
