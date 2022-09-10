@@ -594,13 +594,13 @@ namespace uns::string {
 		const string_t&																sample,							//a sample to seek within the target
 		const unused_t&																found_sample					//an unused parameter to deliver template compatibility with a collection-of-samples case (so it can be of any type and value)
 	) noexcept {
-		if(seeker == target.cend() || sample->empty()) return target.cend();
+		if(seeker == target.cend() || sample.empty()) return target.cend();
 		const auto seeker_pos = seeker - target.cbegin();
 		auto res_pos = target.cend() - target.cbegin();
 
 		if(!sample.empty()) {
 			if(
-				auto sample_pos = target.find(*sample, seeker_pos);
+				auto sample_pos = target.find(sample, seeker_pos);
 				sample_pos >= seeker_pos
 				&& sample_pos != string_t::npos
 				&& sample_pos < res_pos
