@@ -3,6 +3,7 @@
 #pragma warning(disable: 4668; disable: 4365)
 #include <iostream>
 #include <exception>
+#include <vector>
 #pragma warning(default: 4668; default: 4365)
 
 #include "strings.h"
@@ -745,3 +746,95 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
 
 BOOST_AUTO_TEST_SUITE_END();
 
+BOOST_AUTO_TEST_SUITE(string_seeker_methods)
+    
+    BOOST_AUTO_TEST_SUITE(find)
+
+        BOOST_DATA_TEST_CASE(correct_1,
+            boost::unit_test::data::make(
+                {
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10,
+                    11,
+                    12,
+                    13,
+                    14,
+                    15,
+                    16
+                }
+            )
+            ^ boost::unit_test::data::make(
+                {
+                    4,
+                    4,
+                    4,
+                    4,
+                    4,
+                    10,
+                    10,
+                    10,
+                    10,
+                    10,
+                    10,
+                    17,
+                    17,
+                    17,
+                    17,
+                    17,
+                    17
+                }
+            )
+            ^ boost::unit_test::data::make(
+                {
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    2,
+                    2,
+                    2,
+                    2,
+                    2,
+                    2
+                }
+            ),
+            seeker_shift, result_shift, found_sample_shift
+        ) {
+            auto target = uns::test::make_u8(u8"0123456789ABCГEF");  //a cyrillic symbol at a pos 13
+            auto sample_4 = uns::test::make_u8(u8"45");
+            auto sample_A = uns::test::make_u8(u8"ABCГ");
+            auto samples = std::vector<uns::test::u8string_wrapper>{ sample_4, sample_A };
+            auto found_sample = samples.cend();
+            /*
+            auto seeker_shift = 2;
+            auto result_shift = 4;
+            auto found_sample_shift = 0;*/
+
+            BOOST_TEST(
+                 result_shift == uns::string::find(target, target.cbegin() + seeker_shift, samples, found_sample) - target.cbegin()
+            );
+
+            BOOST_TEST(
+                 found_sample_shift == found_sample - samples.cbegin()
+            );
+        };
+
+    BOOST_AUTO_TEST_SUITE_END();
+
+BOOST_AUTO_TEST_SUITE_END();

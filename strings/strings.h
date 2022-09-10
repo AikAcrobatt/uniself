@@ -47,11 +47,9 @@ namespace uns::test {
 	};
 
 	constexpr uns::test::u8string_wrapper make_u8(const char8_t* cstr) noexcept {
-		auto res = uns::test::u8string_wrapper(cstr);
 		return uns::test::u8string_wrapper(cstr);
 	};
 	constexpr uns::test::u8string_wrapper make_u8(const std::u8string& str) noexcept {
-		auto res = uns::test::u8string_wrapper(str);
 		return static_cast<uns::test::u8string_wrapper>(str);
 	};
 };
@@ -564,7 +562,7 @@ namespace uns::string {
 		const auto seeker_pos = seeker - target.cbegin();
 		auto res_pos = target.cend() - target.cbegin();
 
-		for(const auto sample = samples.cbegin(); sample != samples.cend(); sample++) {
+		for(auto sample = samples.cbegin(); sample != samples.cend(); ++sample) {
 			if(sample->empty()) continue;
 			if(
 				auto sample_pos = target.find(*sample, seeker_pos);
@@ -600,13 +598,15 @@ namespace uns::string {
 		const auto seeker_pos = seeker - target.cbegin();
 		auto res_pos = target.cend() - target.cbegin();
 
-		if(
-			auto sample_pos = target.find(*sample, seeker_pos);
-			sample_pos >= seeker_pos
-			&& sample_pos != string_t::npos
-			&& sample_pos < res_pos
-		) {
-			res_pos = sample_pos;
+		if(!sample.empty()) {
+			if(
+				auto sample_pos = target.find(*sample, seeker_pos);
+				sample_pos >= seeker_pos
+				&& sample_pos != string_t::npos
+				&& sample_pos < res_pos
+			) {
+				res_pos = sample_pos;
+			};
 		};
 
 		return target.cbegin() + res_pos;
