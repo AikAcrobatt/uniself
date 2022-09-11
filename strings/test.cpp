@@ -4,6 +4,7 @@
 #include <iostream>
 #include <exception>
 #include <vector>
+#include <list>
 #pragma warning(default: 4668; default: 4365)
 
 #include "strings.h"
@@ -753,13 +754,15 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
         BOOST_DATA_TEST_CASE(correct_1,
             boost::unit_test::data::xrange(17)
             ^ (boost::unit_test::data::make(std::vector<int>(5, 4)) + std::vector<int>(6, 10) + std::vector<int>(6, 17))
-            ^ (boost::unit_test::data::make(std::vector<int>(5, 0)) + std::vector<int>(6, 1) + std::vector<int>(6, 2)),
+            ^ (boost::unit_test::data::make(std::vector<int>(5, 0)) + std::vector<int>(6, 1) + std::vector<int>(6, 3)),
             seeker_shift, result_shift, found_sample_shift
         ) {
             auto target = uns::test::make_u8(u8"0123456789ABCГEF");  //a cyrillic symbol at a pos 13
-            auto sample_4 = uns::test::make_u8(u8"45");
-            auto sample_A = uns::test::make_u8(u8"ABCГ");
-            auto samples = std::vector<uns::test::u8string_wrapper>{ sample_4, sample_A };
+            auto samples = std::vector<uns::test::u8string_wrapper>{
+                uns::test::make_u8(u8"45"), 
+                uns::test::make_u8(u8"ABCГ"),
+                uns::test::make_u8(u8"46Г")     //there is no such a sample in the target string at all
+            };
             auto found_sample = samples.cend();
 
             BOOST_TEST(
@@ -768,6 +771,77 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
 
             BOOST_TEST(
                  found_sample_shift == found_sample - samples.cbegin()
+            );
+        };
+
+        BOOST_DATA_TEST_CASE(incorrect_0,
+            boost::unit_test::data::xrange(17),
+            seeker_shift
+        ) {
+            auto target = uns::test::make_u8(u8"0123456789ABCГEF");  //a cyrillic symbol at a pos 13
+            auto samples = std::vector<uns::test::u8string_wrapper>{ 
+                uns::test::make_u8(u8"Should not be found"),
+                uns::test::make_u8(u8"This too")
+            };
+            auto found_sample = samples.cend();
+
+            BOOST_TEST(
+                static_cast<int>(target.cend() - target.cbegin()) == uns::string::find(target, target.cbegin() + seeker_shift, samples, found_sample) - target.cbegin()
+            );
+
+            BOOST_TEST(
+                static_cast<int>(samples.cend() - samples.cbegin()) == found_sample - samples.cbegin()
+            );
+        };
+
+        BOOST_DATA_TEST_CASE(incorrect_1,
+            boost::unit_test::data::xrange(17),
+            seeker_shift
+        ) {
+            auto target = uns::test::make_u8(u8"0123456789ABCГEF");  //a cyrillic symbol at a pos 13
+            auto samples = std::vector<uns::test::u8string_wrapper>{ uns::test::make_u8(u8"") };
+            auto found_sample = samples.cend();
+
+            BOOST_TEST(
+                static_cast<int>(target.cend() - target.cbegin()) == uns::string::find(target, target.cbegin() + seeker_shift, samples, found_sample) - target.cbegin()
+            );
+
+            BOOST_TEST(
+                static_cast<int>(samples.cend() - samples.cbegin()) == found_sample - samples.cbegin()
+            );
+        };
+
+        BOOST_AUTO_TEST_CASE(incorrect_2) {
+            auto target = uns::test::make_u8(u8"");  //a cyrillic symbol at a pos 13
+            auto samples = std::vector<uns::test::u8string_wrapper>{
+                uns::test::make_u8(u8"45"),
+                uns::test::make_u8(u8"ABCГ"),
+                uns::test::make_u8(u8"46Г")
+            };
+            auto found_sample = samples.cend();
+
+            BOOST_TEST(
+                static_cast<int>(target.cend() - target.cbegin()) == uns::string::find(target, target.cbegin(), samples, found_sample) - target.cbegin()
+            );
+
+            BOOST_TEST(
+                static_cast<int>(samples.cend() - samples.cbegin()) == found_sample - samples.cbegin()
+            );
+        };
+
+        BOOST_AUTO_TEST_CASE(incorrect_3) {
+            auto target = uns::test::make_u8(u8"");
+            auto samples = std::vector<uns::test::u8string_wrapper>{
+                uns::test::make_u8(u8"")
+            };
+            auto found_sample = samples.cend();
+
+            BOOST_TEST(
+                static_cast<int>(target.cend() - target.cbegin()) == uns::string::find(target, target.cbegin(), samples, found_sample) - target.cbegin()
+            );
+
+            BOOST_TEST(
+                static_cast<int>(samples.cend() - samples.cbegin()) == found_sample - samples.cbegin()
             );
         };
 
@@ -783,6 +857,192 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
                 result_shift == uns::string::find(target, target.cbegin() + seeker_shift, sample) - target.cbegin()
             );
         };
+
+        BOOST_DATA_TEST_CASE(incorrect_4,
+            boost::unit_test::data::xrange(48),
+            seeker_shift
+        ) {
+            auto target = uns::test::make_u8(u8"Это большая русская строка");
+            auto sample = uns::test::make_u8(u8"нет такой буквы в этом слове!");
+
+            BOOST_TEST(
+                static_cast<int>(target.cend() - target.cbegin()) == uns::string::find(target, target.cbegin() + seeker_shift, sample) - target.cbegin()
+            );
+        };
+
+        BOOST_DATA_TEST_CASE(incorrect_5,
+            boost::unit_test::data::xrange(48),
+            seeker_shift
+        ) {
+            auto target = uns::test::make_u8(u8"Это большая русская строка");
+            auto sample = uns::test::make_u8(u8"");
+
+            BOOST_TEST(
+                static_cast<int>(target.cend() - target.cbegin()) == uns::string::find(target, target.cbegin() + seeker_shift, sample) - target.cbegin()
+            );
+        };
+
+        BOOST_AUTO_TEST_CASE(incorrect_6) {
+            auto target = uns::test::make_u8(u8"");
+            auto sample = uns::test::make_u8(u8" ру");
+
+            BOOST_TEST(
+                static_cast<int>(target.cend() - target.cbegin()) == uns::string::find(target, target.cbegin(), sample) - target.cbegin()
+            );
+        };
+
+        BOOST_AUTO_TEST_CASE(incorrect_7) {
+            auto target = uns::test::make_u8(u8"");
+            auto sample = uns::test::make_u8(u8"");
+
+            BOOST_TEST(
+                static_cast<int>(target.cend() - target.cbegin()) == uns::string::find(target, target.cbegin(), sample) - target.cbegin()
+            );
+        };
+
+    BOOST_AUTO_TEST_SUITE_END();
+
+    BOOST_AUTO_TEST_SUITE(seeker_set)
+
+        BOOST_DATA_TEST_CASE(correct_1,
+            boost::unit_test::data::xrange(100, ( boost::unit_test::data::step = 10 ))
+            * boost::unit_test::data::xrange(100, ( boost::unit_test::data::step = 5 ))
+            * boost::unit_test::data::xrange(100, ( boost::unit_test::data::step = 5 )),
+            seeker_shift, pos_rborder_beg, pos_rborder_end
+        ) {
+            auto target = std::u8string(u8"start:some_key1 = some_val1; некий_ключ2 = некое_значение2; some_key3 = some_val3; xvx");
+            auto samples = std::vector<uns::test::u8string_wrapper>{
+                uns::test::make_u8(u8"some_key1"),
+                uns::test::make_u8(u8"некий_ключ2"),
+                uns::test::make_u8(u8"some_key3")
+            };
+
+            auto pos_of_some_key1 = uns::string::find(target, target.begin(), u8"some_key1");
+            auto pos_of_some_key2 = uns::string::find(target, target.begin(), u8"некий_ключ2");
+            auto pos_of_some_key3 = uns::string::find(target, target.begin(), u8"some_key3");
+            auto pos_of_some_val1 = uns::string::find(target, target.begin(), u8"some_val1");
+            auto pos_of_some_val2 = uns::string::find(target, target.begin(), u8"некое_значение2");
+            auto pos_of_some_val3 = uns::string::find(target, target.begin(), u8"some_val3");
+
+            auto seeker = target.cbegin() + seeker_shift;
+
+            auto seeking_result1 =
+                (target.cbegin() + seeker_shift <= pos_of_some_key1)
+                && (pos_of_some_key1 + samples[0].size() + 3 <= target.cbegin() + pos_rborder_end)
+                && (pos_of_some_key1 <= target.cbegin() + pos_rborder_beg);
+            auto seeking_result2 = 
+                (target.cbegin() + seeker_shift > pos_of_some_key1)
+                && (target.cbegin() + seeker_shift <= pos_of_some_key2)
+                && (pos_of_some_key2 + samples[1].size() + 3 <= target.cbegin() + pos_rborder_end)
+                && (pos_of_some_key2 <= target.cbegin() + pos_rborder_beg);
+            auto seeking_result3 =
+                (target.cbegin() + seeker_shift > pos_of_some_key1)
+                && (target.cbegin() + seeker_shift > pos_of_some_key2)
+                && (target.cbegin() + seeker_shift <= pos_of_some_key3)
+                && (pos_of_some_key3 + samples[2].size() + 3 <= target.cbegin() + pos_rborder_end)
+                && (pos_of_some_key3 <= target.cbegin() + pos_rborder_beg);
+
+
+            BOOST_TEST(
+                (seeking_result1 || seeking_result2 || seeking_result3) == uns::string::seeker_set(target, seeker, samples, false, -4, target.begin() + pos_rborder_beg, target.begin() + pos_rborder_end)
+            );
+
+            BOOST_TEST(
+                (
+                    seeking_result1
+                    ? (pos_of_some_key1 + samples[0].size() + 3) - target.begin()
+                    : (
+                        seeking_result2
+                        ? (pos_of_some_key2 + samples[1].size() + 3) - target.begin()
+                        : (
+                            seeking_result3
+                            ? (pos_of_some_key3 + samples[2].size() + 3) - target.begin()
+                            : seeker_shift
+                        )
+                    )
+                ) == seeker - target.begin()
+            );
+        };
+
+        BOOST_DATA_TEST_CASE(correct_2,
+            boost::unit_test::data::xrange(100, (boost::unit_test::data::step = 10))
+            * boost::unit_test::data::make(
+                {
+                    uns::test::make_u8(u8"some_key1"),
+                    uns::test::make_u8(u8"некий_ключ2"),
+                    uns::test::make_u8(u8"some_key3"),
+                    uns::test::make_u8(u8"unpresented_key4")
+                }
+            )
+            * boost::unit_test::data::xrange(100, (boost::unit_test::data::step = 5))
+            * boost::unit_test::data::xrange(100, (boost::unit_test::data::step = 5)),
+            seeker_shift, sample, pos_rborder_beg, pos_rborder_end
+        ) {
+            auto target = std::u8string(u8"start:some_key1 = some_val1; некий_ключ2 = некое_значение2; some_key3 = some_val3; xvx");
+
+            auto pos_of_sample = uns::string::find(target, target.begin(), sample);
+
+            auto seeker = target.cbegin() + seeker_shift;
+
+            auto seeking_result =
+                (target.cbegin() + seeker_shift <= pos_of_sample)
+                && (pos_of_sample <= target.cbegin() + pos_rborder_beg)
+                && (pos_of_sample + sample.size() + 3 <= target.cbegin() + pos_rborder_end);
+
+            BOOST_TEST(
+                seeking_result == uns::string::seeker_set(target, seeker, sample, false, -4, target.begin() + pos_rborder_beg, target.begin() + pos_rborder_end)
+            );
+
+            BOOST_TEST(
+                (
+                    seeking_result
+                    ? (pos_of_sample + sample.size() + 3) - target.begin()
+                    : seeker_shift
+                ) == seeker - target.begin()
+            );
+        };
+
+    /*
+
+        BOOST_DATA_TEST_CASE(correct_1,
+            boost::unit_test::data::xrange(100)
+            ^ (boost::unit_test::data::make(std::vector<bool>(30, true)) + std::vector<bool>(70, false)),
+            seeker_shift, seeking_result
+        ) {
+            auto target = std::u8string(u8"start:some_key1 = some_val1; некий_ключ2 = некое_значение2; some_key3 = some_val3;");
+            auto samples = std::list<uns::test::u8string_wrapper>{
+                uns::test::make_u8(u8"some_key1"),
+                uns::test::make_u8(u8"некий_ключ2"),
+                uns::test::make_u8(u8"some_key3")
+            };
+
+            auto pos_of_some_key1 = uns::string::find(target, target.begin(), u8"some_key1");
+            auto pos_of_some_key2 = uns::string::find(target, target.begin(), u8"некий_ключ2");
+            auto pos_of_some_key3 = uns::string::find(target, target.begin(), u8"some_key3");
+            auto pos_of_3rd_eq = uns::string::find(target, uns::string::find(target, target.begin(), u8"some_key3"), u8"=");
+            auto pos_of_some_val1 = uns::string::find(target, target.begin(), u8"some_val1");
+            auto pos_of_some_val2 = uns::string::find(target, target.begin(), u8"некое_значение2");
+
+            auto seeker = target.cbegin() + seeker_shift;
+
+            BOOST_TEST(
+                seeking_result == uns::string::seeker_set(target, seeker, samples, false, -4, pos_of_3rd_eq, pos_of_3rd_eq)
+            );
+            
+            BOOST_TEST(
+                (
+                    seeking_result 
+                    ? (
+                        target.begin() + seeker_shift <= pos_of_some_key1
+                        ? pos_of_some_val1 - target.begin()
+                        : pos_of_some_val2 - target.begin()
+                    )
+                    : seeker_shift
+                ) == seeker - target.begin()
+            );
+        };*/
+
+
 
     BOOST_AUTO_TEST_SUITE_END();
 
