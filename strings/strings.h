@@ -731,7 +731,7 @@ namespace uns::string {
 		auto right_border_beg = uns::string::find(target, seeker, right_border);
 
 		if(right_border_beg != target.cend())
-			return uns::string::seeker_set(target, seeker, samples, from_begin, relative_position, right_border_beg, right_border_beg + right_border->size());
+			return uns::string::seeker_set(target, seeker, samples, from_begin, relative_position, right_border_beg, right_border_beg + right_border.size());
 		else
 			return uns::string::seeker_set(target, seeker, samples, from_begin, relative_position);
 	};
@@ -746,8 +746,8 @@ namespace uns::string {
 	) noexcept {
 		auto right_border_beg = uns::string::find(target, seeker, right_border);
 
-		if(right_border_beg != target.end())
-			return uns::string::seeker_set(target, seeker, sample, from_begin, relative_position, right_border_beg, right_border_beg + right_border->size());
+		if(right_border_beg != target.cend())
+			return uns::string::seeker_set(target, seeker, sample, from_begin, relative_position, right_border_beg, right_border_beg + right_border.size());
 		else
 			return uns::string::seeker_set(target, seeker, sample, from_begin, relative_position);
 	};

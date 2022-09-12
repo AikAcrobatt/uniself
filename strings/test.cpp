@@ -1002,47 +1002,325 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
             );
         };
 
-    /*
-
-        BOOST_DATA_TEST_CASE(correct_1,
-            boost::unit_test::data::xrange(100)
-            ^ (boost::unit_test::data::make(std::vector<bool>(30, true)) + std::vector<bool>(70, false)),
-            seeker_shift, seeking_result
-        ) {
-            auto target = std::u8string(u8"start:some_key1 = some_val1; некий_ключ2 = некое_значение2; some_key3 = some_val3;");
-            auto samples = std::list<uns::test::u8string_wrapper>{
-                uns::test::make_u8(u8"some_key1"),
-                uns::test::make_u8(u8"некий_ключ2"),
-                uns::test::make_u8(u8"some_key3")
+        BOOST_AUTO_TEST_CASE(correct_3) {
+            auto target = std::string("start:some_key1 = some_val1; некий_ключ2 = некое_значение2; some_key3 = some_val3; xvx");
+            auto samples = std::list<std::string>{
+                "some_key1",
+                "некий_ключ2",
+                "some_key3"
             };
 
-            auto pos_of_some_key1 = uns::string::find(target, target.begin(), u8"some_key1");
-            auto pos_of_some_key2 = uns::string::find(target, target.begin(), u8"некий_ключ2");
-            auto pos_of_some_key3 = uns::string::find(target, target.begin(), u8"some_key3");
-            auto pos_of_3rd_eq = uns::string::find(target, uns::string::find(target, target.begin(), u8"some_key3"), u8"=");
-            auto pos_of_some_val1 = uns::string::find(target, target.begin(), u8"some_val1");
-            auto pos_of_some_val2 = uns::string::find(target, target.begin(), u8"некое_значение2");
+            auto pos_of_sample1 = uns::string::find(target, target.begin(), "some_key1");
+            auto seeker = target.begin();
+
+            BOOST_TEST(
+                true == uns::string::seeker_set(target, seeker, samples, true, 3)
+            );
+
+            BOOST_TEST(
+                (pos_of_sample1 - target.begin() + 3) == seeker - target.begin()
+            );
+        };
+
+        BOOST_AUTO_TEST_CASE(correct_4) {
+            auto target = std::wstring(L"start:some_key1 = some_val1; некий_ключ2 = некое_значение2; some_key3 = some_val3; xvx");
+
+            auto pos_of_sample1 = uns::string::find(target, target.begin(), L"some_key1");
+            auto seeker = target.begin();
+
+            BOOST_TEST(
+                true == uns::string::seeker_set(target, seeker, L"some_key1", true, 3)
+            );
+
+            BOOST_TEST(
+                (pos_of_sample1 - target.begin() + 3) == seeker - target.begin()
+            );
+        };
+
+        BOOST_AUTO_TEST_CASE(correct_5) {
+            auto target = std::string("start:some_key1 = some_val1; некий_ключ2 = некое_значение2; some_key3 = some_val3; xvx");
+            auto samples = std::list<std::string>{
+                "some_key1",
+                "некий_ключ2",
+                "some_key3"
+            };
+            auto borders = std::list<std::string>{
+                "some_val1",
+                "некое_значение2",
+                "some_val3"
+            };
+
+            auto pos_of_sample = uns::string::find(target, target.begin(), samples);
+            auto seeker = target.begin();
+
+            BOOST_TEST(
+                true == uns::string::seeker_set(target, seeker, samples, true, 3, borders)
+            );
+
+            BOOST_TEST(
+                (pos_of_sample - target.begin() + 3) == seeker - target.begin()
+            );
+        };
+
+        BOOST_AUTO_TEST_CASE(correct_6) {
+            auto target = std::string("start:some_key1 = some_val1; некий_ключ2 = некое_значение2; some_key3 = some_val3; xvx");
+            auto sample = std::string("некий_ключ2");
+            auto borders = std::list<std::string>{
+                "некое_значение2",
+                "some_val3"
+            };
+
+            auto pos_of_sample = uns::string::find(target, target.begin(), sample);
+            auto seeker = target.begin();
+
+            BOOST_TEST(
+                true == uns::string::seeker_set(target, seeker, sample, true, 3, borders)
+            );
+
+            BOOST_TEST(
+                (pos_of_sample - target.begin() + 3) == seeker - target.begin()
+            );
+        };
+
+        BOOST_AUTO_TEST_CASE(correct_7) {
+            auto target = std::string("start:some_key1 = some_val1; некий_ключ2 = некое_значение2; some_key3 = some_val3; xvx");
+            auto samples = std::list<std::string>{
+                "some_key1",
+                "некий_ключ2",
+                "some_key3"
+            };
+            auto border = std::string{ "some_val1" };
+
+            auto pos_of_sample = uns::string::find(target, target.begin(), samples);
+            auto seeker = target.begin();
+
+            BOOST_TEST(
+                true == uns::string::seeker_set(target, seeker, samples, true, 3, border)
+            );
+
+            BOOST_TEST(
+                (pos_of_sample - target.begin() + 3) == seeker - target.begin()
+            );
+        };
+
+        BOOST_AUTO_TEST_CASE(correct_8) {
+            auto target = std::string("start:some_key1 = some_val1; некий_ключ2 = некое_значение2; some_key3 = some_val3; xvx");
+            auto sample = std::string("некий_ключ2");
+            auto border = std::string{ "некое_значение2" };
+
+            auto pos_of_sample = uns::string::find(target, target.begin(), sample);
+            auto seeker = target.begin();
+
+            BOOST_TEST(
+                true == uns::string::seeker_set(target, seeker, sample, true, 3, border)
+            );
+
+            BOOST_TEST(
+                (pos_of_sample - target.begin() + 3) == seeker - target.begin()
+            );
+        };
+
+    BOOST_AUTO_TEST_SUITE_END();
+
+    BOOST_AUTO_TEST_SUITE(seeker_read)
+
+        BOOST_DATA_TEST_CASE(correct_1,
+            boost::unit_test::data::xrange(35, (boost::unit_test::data::step = 5))
+            * boost::unit_test::data::xrange(35, (boost::unit_test::data::begin = 20, boost::unit_test::data::step = 1))
+            * boost::unit_test::data::xrange(35, (boost::unit_test::data::begin = 20, boost::unit_test::data::step = 1)),
+            seeker_shift, pos_rborder_beg, pos_rborder_end
+        ) {
+            auto target = std::string("key1=val1;x;key2=val2;y;key3=val3;z;");
+            auto delimiters = std::vector<std::string>{
+                ";x;",
+                ";y;",
+                ";z;"
+            };
 
             auto seeker = target.cbegin() + seeker_shift;
 
+            auto pos_delim = uns::string::find(target, seeker, delimiters);
+
+            auto result = std::string();
+
+            auto ethalon = std::string(seeker, pos_delim);
+
+            auto seeking_result =
+                (target.cbegin() + pos_rborder_beg >= pos_delim)
+                && (pos_delim - target.cbegin() <= pos_rborder_end - 3);
+
             BOOST_TEST(
-                seeking_result == uns::string::seeker_set(target, seeker, samples, false, -4, pos_of_3rd_eq, pos_of_3rd_eq)
+                seeking_result == uns::string::seeker_read(target, seeker, result, delimiters, false, -1, target.begin() + pos_rborder_beg, target.begin() + pos_rborder_end)
             );
-            
+
             BOOST_TEST(
                 (
-                    seeking_result 
-                    ? (
-                        target.begin() + seeker_shift <= pos_of_some_key1
-                        ? pos_of_some_val1 - target.begin()
-                        : pos_of_some_val2 - target.begin()
-                    )
+                    seeking_result
+                    ? (pos_delim + 3) - target.begin() + 1
                     : seeker_shift
                 ) == seeker - target.begin()
             );
+
+            BOOST_TEST(
+                (seeking_result && (ethalon == result) || !seeking_result) == true
+            );
+        };
+    /*
+        BOOST_DATA_TEST_CASE(correct_2,
+            boost::unit_test::data::xrange(100, (boost::unit_test::data::step = 10))
+            * boost::unit_test::data::make(
+                {
+                    uns::test::make_u8(u8"some_key1"),
+                    uns::test::make_u8(u8"некий_ключ2"),
+                    uns::test::make_u8(u8"some_key3"),
+                    uns::test::make_u8(u8"unpresented_key4")
+                }
+            )
+            * boost::unit_test::data::xrange(100, (boost::unit_test::data::step = 5))
+            * boost::unit_test::data::xrange(100, (boost::unit_test::data::step = 5)),
+            seeker_shift, sample, pos_rborder_beg, pos_rborder_end
+        ) {
+            auto target = std::u8string(u8"start:some_key1 = some_val1; некий_ключ2 = некое_значение2; some_key3 = some_val3; xvx");
+
+            auto pos_of_sample = uns::string::find(target, target.begin(), sample);
+
+            auto seeker = target.cbegin() + seeker_shift;
+
+            auto seeking_result =
+                (target.cbegin() + seeker_shift <= pos_of_sample)
+                && (pos_of_sample <= target.cbegin() + pos_rborder_beg)
+                && (pos_of_sample + sample.size() + 3 <= target.cbegin() + pos_rborder_end);
+
+            BOOST_TEST(
+                seeking_result == uns::string::seeker_set(target, seeker, sample, false, -4, target.begin() + pos_rborder_beg, target.begin() + pos_rborder_end)
+            );
+
+            BOOST_TEST(
+                (
+                    seeking_result
+                    ? (pos_of_sample + sample.size() + 3) - target.begin()
+                    : seeker_shift
+                    ) == seeker - target.begin()
+            );
+        };
+
+        BOOST_AUTO_TEST_CASE(correct_3) {
+            auto target = std::string("start:some_key1 = some_val1; некий_ключ2 = некое_значение2; some_key3 = some_val3; xvx");
+            auto samples = std::list<std::string>{
+                "some_key1",
+                "некий_ключ2",
+                "some_key3"
+            };
+
+            auto pos_of_sample1 = uns::string::find(target, target.begin(), "some_key1");
+            auto seeker = target.begin();
+
+            BOOST_TEST(
+                true == uns::string::seeker_set(target, seeker, samples, true, 3)
+            );
+
+            BOOST_TEST(
+                (pos_of_sample1 - target.begin() + 3) == seeker - target.begin()
+            );
+        };
+
+        BOOST_AUTO_TEST_CASE(correct_4) {
+            auto target = std::wstring(L"start:some_key1 = some_val1; некий_ключ2 = некое_значение2; some_key3 = some_val3; xvx");
+
+            auto pos_of_sample1 = uns::string::find(target, target.begin(), L"some_key1");
+            auto seeker = target.begin();
+
+            BOOST_TEST(
+                true == uns::string::seeker_set(target, seeker, L"some_key1", true, 3)
+            );
+
+            BOOST_TEST(
+                (pos_of_sample1 - target.begin() + 3) == seeker - target.begin()
+            );
+        };
+
+        BOOST_AUTO_TEST_CASE(correct_5) {
+            auto target = std::string("start:some_key1 = some_val1; некий_ключ2 = некое_значение2; some_key3 = some_val3; xvx");
+            auto samples = std::list<std::string>{
+                "some_key1",
+                "некий_ключ2",
+                "some_key3"
+            };
+            auto borders = std::list<std::string>{
+                "some_val1",
+                "некое_значение2",
+                "some_val3"
+            };
+
+            auto pos_of_sample = uns::string::find(target, target.begin(), samples);
+            auto seeker = target.begin();
+
+            BOOST_TEST(
+                true == uns::string::seeker_set(target, seeker, samples, true, 3, borders)
+            );
+
+            BOOST_TEST(
+                (pos_of_sample - target.begin() + 3) == seeker - target.begin()
+            );
+        };
+
+        BOOST_AUTO_TEST_CASE(correct_6) {
+            auto target = std::string("start:some_key1 = some_val1; некий_ключ2 = некое_значение2; some_key3 = some_val3; xvx");
+            auto sample = std::string("некий_ключ2");
+            auto borders = std::list<std::string>{
+                "некое_значение2",
+                "some_val3"
+            };
+
+            auto pos_of_sample = uns::string::find(target, target.begin(), sample);
+            auto seeker = target.begin();
+
+            BOOST_TEST(
+                true == uns::string::seeker_set(target, seeker, sample, true, 3, borders)
+            );
+
+            BOOST_TEST(
+                (pos_of_sample - target.begin() + 3) == seeker - target.begin()
+            );
+        };
+
+        BOOST_AUTO_TEST_CASE(correct_7) {
+            auto target = std::string("start:some_key1 = some_val1; некий_ключ2 = некое_значение2; some_key3 = some_val3; xvx");
+            auto samples = std::list<std::string>{
+                "some_key1",
+                "некий_ключ2",
+                "some_key3"
+            };
+            auto border = std::string{ "some_val1" };
+
+            auto pos_of_sample = uns::string::find(target, target.begin(), samples);
+            auto seeker = target.begin();
+
+            BOOST_TEST(
+                true == uns::string::seeker_set(target, seeker, samples, true, 3, border)
+            );
+
+            BOOST_TEST(
+                (pos_of_sample - target.begin() + 3) == seeker - target.begin()
+            );
+        };
+
+        BOOST_AUTO_TEST_CASE(correct_8) {
+            auto target = std::string("start:some_key1 = some_val1; некий_ключ2 = некое_значение2; some_key3 = some_val3; xvx");
+            auto sample = std::string("некий_ключ2");
+            auto border = std::string{ "некое_значение2" };
+
+            auto pos_of_sample = uns::string::find(target, target.begin(), sample);
+            auto seeker = target.begin();
+
+            BOOST_TEST(
+                true == uns::string::seeker_set(target, seeker, sample, true, 3, border)
+            );
+
+            BOOST_TEST(
+                (pos_of_sample - target.begin() + 3) == seeker - target.begin()
+            );
         };*/
-
-
 
     BOOST_AUTO_TEST_SUITE_END();
 
