@@ -794,7 +794,7 @@ namespace uns::string {
 
 		result = string_t(seeker, pos_delimiter);
 
-		return uns::string::seeker_pos(target, seeker, pos_delimiter, pos_delimiter + delimiter->size() - 1, from_begin, relative_position, right_border_beg, right_border_end);
+		return uns::string::seeker_pos(target, seeker, pos_delimiter, pos_delimiter + delimiter.size() - 1, from_begin, relative_position, right_border_beg, right_border_end);
 	};
 	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> collection_t>
 	bool seeker_read(
