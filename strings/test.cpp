@@ -920,9 +920,6 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
             auto pos_of_some_key1 = uns::string::find(target, target.begin(), u8"some_key1");
             auto pos_of_some_key2 = uns::string::find(target, target.begin(), u8"некий_ключ2");
             auto pos_of_some_key3 = uns::string::find(target, target.begin(), u8"some_key3");
-            auto pos_of_some_val1 = uns::string::find(target, target.begin(), u8"some_val1");
-            auto pos_of_some_val2 = uns::string::find(target, target.begin(), u8"некое_значение2");
-            auto pos_of_some_val3 = uns::string::find(target, target.begin(), u8"some_val3");
 
             auto seeker = target.cbegin() + seeker_shift;
 
@@ -1156,13 +1153,13 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
             BOOST_TEST(
                 (
                     seeking_result
-                    ? (pos_delim + 3) - target.begin() + 1
+                    ? (pos_delim + 3) - target.begin()
                     : seeker_shift
                 ) == seeker - target.begin()
             );
 
             BOOST_TEST(
-                (seeking_result && (ethalon == result) || !seeking_result) == true
+                ((seeking_result && (ethalon == result)) || !seeking_result) == true
             );
         };
     /*
