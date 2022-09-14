@@ -869,7 +869,7 @@ namespace uns::string {
 		auto pos_right_border = uns::string::find(target, seeker, right_border);
 
 		if(pos_right_border != target.cend())
-			return uns::string::seeker_read(target, seeker, result, delimiters, from_begin, relative_position, pos_right_border, pos_right_border + right_border->size() - 1);
+			return uns::string::seeker_read(target, seeker, result, delimiters, from_begin, relative_position, pos_right_border, pos_right_border + right_border.size() - 1);
 		else
 			return uns::string::seeker_read(target, seeker, result, delimiters, from_begin, relative_position);
 	};
@@ -886,7 +886,7 @@ namespace uns::string {
 		auto pos_right_border = uns::string::find(target, seeker, right_border);
 
 		if(pos_right_border != target.cend())
-			return uns::string::seeker_read(target, seeker, result, delimiter, from_begin, relative_position, pos_right_border, pos_right_border + right_border->size() - 1);
+			return uns::string::seeker_read(target, seeker, result, delimiter, from_begin, relative_position, pos_right_border, pos_right_border + right_border.size() - 1);
 		else
 			return uns::string::seeker_read(target, seeker, result, delimiter, from_begin, relative_position);
 	};

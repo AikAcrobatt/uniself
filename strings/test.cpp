@@ -1373,6 +1373,90 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
             );
         };
 
+        BOOST_DATA_TEST_CASE(correct_7,
+            boost::unit_test::data::xrange(35, (boost::unit_test::data::step = 1)),
+            seeker_shift
+        ) {
+            auto target = std::string("key1=val1;x;key2=val2;y;key3=val3;z;");
+            auto delimiters = std::vector<std::string>{
+                ";x;",
+                ";y;",
+                ";z;"
+            };
+            auto rborder = std::string{ "al2" };
+
+            auto seeker = target.cbegin() + seeker_shift;
+
+            auto delimiter_found = delimiters.end();
+            auto pos_delim = uns::string::find(target, seeker, delimiters, delimiter_found);
+            auto pos_rborder = uns::string::find(target, seeker, rborder);
+
+            auto result = std::string();
+
+            auto ethalon = std::string(seeker, pos_delim);
+
+            auto seeking_result =
+                (pos_delim != target.end())
+                && (pos_delim - target.begin() > seeker_shift)
+                && (pos_rborder - target.begin() > seeker_shift)
+                && (pos_rborder >= pos_delim);
+
+            BOOST_TEST(
+                seeking_result == uns::string::seeker_read(target, seeker, result, delimiters, true, 0, rborder)
+            );
+
+            BOOST_TEST(
+                (
+                    seeking_result
+                    ? pos_delim - target.begin()
+                    : seeker_shift
+                ) == seeker - target.begin()
+            );
+
+            BOOST_TEST(
+                ((seeking_result && (ethalon == result)) || !seeking_result) == true
+            );
+        };
+
+        BOOST_DATA_TEST_CASE(correct_8,
+            boost::unit_test::data::xrange(35, (boost::unit_test::data::step = 1)),
+            seeker_shift
+        ) {
+            auto target = std::string("key1=val1;x;key2=val2;y;key3=val3;z;");
+            auto delimiter = std::string(";y;");
+            auto rborder = std::list<std::string>{"key3"};
+
+            auto seeker = target.cbegin() + seeker_shift;
+
+            auto pos_delim = uns::string::find(target, seeker, delimiter);
+            auto pos_rborder = uns::string::find(target, seeker, rborder);
+
+            auto result = std::string();
+
+            auto ethalon = std::string(seeker, pos_delim);
+
+            auto seeking_result =
+                (pos_delim != target.end())
+                && (pos_delim - target.begin() > seeker_shift)
+                && (pos_rborder >= pos_delim);
+
+            BOOST_TEST(
+                seeking_result == uns::string::seeker_read(target, seeker, result, delimiter, true, 1, rborder)
+            );
+
+            BOOST_TEST(
+                (
+                    seeking_result
+                    ? (pos_delim - target.begin() + 1)
+                    : seeker_shift
+                ) == seeker - target.begin()
+            );
+
+            BOOST_TEST(
+                ((seeking_result && (ethalon == result)) || !seeking_result) == true
+            );
+        };
+
     BOOST_AUTO_TEST_SUITE_END();
 
 BOOST_AUTO_TEST_SUITE_END();
