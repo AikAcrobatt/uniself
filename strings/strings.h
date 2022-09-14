@@ -837,7 +837,7 @@ namespace uns::string {
 		else
 			return uns::string::seeker_read(target, seeker, result, delimiters, from_begin, relative_position);
 	};
-	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> collection_t, uns::const_iterable_collection<string_t> rborder_t>
+	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> rborder_t>
 	bool seeker_read(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
@@ -873,7 +873,7 @@ namespace uns::string {
 		else
 			return uns::string::seeker_read(target, seeker, result, delimiters, from_begin, relative_position);
 	};
-	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> collection_t>
+	template<uns::string::std_basic string_t>
 	bool seeker_read(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
