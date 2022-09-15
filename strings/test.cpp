@@ -1459,4 +1459,60 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
 
     BOOST_AUTO_TEST_SUITE_END();
 
+    BOOST_AUTO_TEST_SUITE(sample_read)
+
+        BOOST_AUTO_TEST_CASE(correct_1) {
+            auto target = std::string("key1 = val1;x;key2 =  val2;y; key3=val3;z;");
+            auto delimiters = std::list<std::string>{
+                ";x;",
+                ";y;",
+                ";z;"
+            };
+
+            auto result = std::string();
+
+            result.clear();
+            BOOST_TEST(
+                true == uns::string::sample_read<std::string>(target, "key1", false, -4, result, delimiters, uns::string::find(target, target.begin(), "ey3"))
+            );
+            BOOST_TEST( "val1" == result );
+
+            result.clear();
+            BOOST_TEST(
+                true == uns::string::sample_read(target, std::string("key2"), false, -5, result, delimiters, uns::string::find(target, target.begin(), "ey3"))
+            );
+            BOOST_TEST("val2" == result);
+
+            result.clear();
+            BOOST_TEST(
+                false == uns::string::sample_read<std::string>(target, "key3", false, -2, result, delimiters, uns::string::find(target, target.begin(), "ey3"))
+            );
+        };
+    
+        BOOST_AUTO_TEST_CASE(correct_2) {
+            auto target = std::string("key1 = val1;o;key2 =  val2;o; key3=val3;o;");
+            auto delimiter = std::string(";o;");
+
+            auto result = std::string();
+
+            result.clear();
+            BOOST_TEST(
+                true == uns::string::sample_read(target, std::string("key1"), false, -4, result, delimiter, uns::string::find(target, target.begin(), "ey3"))
+            );
+            BOOST_TEST("val1" == result);
+
+            result.clear();
+            BOOST_TEST(
+                true == uns::string::sample_read<std::string>(target, "key2", false, -5, result, delimiter, uns::string::find(target, target.begin(), "ey3"))
+            );
+            BOOST_TEST("val2" == result);
+
+            result.clear();
+            BOOST_TEST(
+                false == uns::string::sample_read<std::string>(target, "key3", false, -2, result, ";o;", uns::string::find(target, target.begin(), "ey3"))
+            );
+        };
+
+    BOOST_AUTO_TEST_SUITE_END();
+
 BOOST_AUTO_TEST_SUITE_END();
