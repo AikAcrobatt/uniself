@@ -7,7 +7,7 @@
 #include <list>
 #pragma warning(default: 4668; default: 4365)
 
-#include "strings.h"
+#include "uniself/strings.h"
 
 #define BOOST_TEST_MODULE uns_strings_test
 #include "boost/test/included/unit_test.hpp"

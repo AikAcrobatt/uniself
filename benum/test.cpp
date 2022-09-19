@@ -11,7 +11,7 @@
 #include <boost/mpl/list.hpp>
 
 #pragma warning(disable: 4514)
-#include "benum.h"
+#include "uniself/benum.h"
 
 namespace abyss {
 

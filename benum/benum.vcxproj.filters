@@ -20,7 +20,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="benum.h">
+    <ClInclude Include="..\benum.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
