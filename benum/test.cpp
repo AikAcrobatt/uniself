@@ -4,7 +4,7 @@
 #include <iostream>
 #pragma warning(default: 4668; default: 4365)
 
-#define BOOST_TEST_MODULE uns::benum::test
+#define BOOST_TEST_MODULE uns_benum_test
 #include "boost/test/included/unit_test.hpp"
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/data/monomorphic.hpp>
