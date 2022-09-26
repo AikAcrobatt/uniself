@@ -24,7 +24,7 @@ namespace uns::math {
 	constexpr bool equals(value1_t arg1, value2_t arg2) noexcept {
 		static const auto minw = std::numeric_limits<value1_t>::min() * static_cast<value1_t>(10);
 		if(uns::math::abs(arg1) > minw && uns::math::abs(static_cast<value1_t>(arg2)) > minw)
-			return (uns::math::abs(arg1 - static_cast<value1_t>(arg2)) <= static_cast<value1_t>(1.0e-14) * (uns::math::abs(arg1) + uns::math::abs(static_cast<value1_t>(arg2))));
+			return (uns::math::abs(arg1 - static_cast<value1_t>(arg2)) < static_cast<value1_t>(1.0e-14) * (uns::math::abs(arg1) + uns::math::abs(static_cast<value1_t>(arg2))));
 		else return (uns::math::abs(arg1) <= minw && uns::math::abs(static_cast<value1_t>(arg2)) <= minw);
 	};
 	template<std::floating_point value1_t, std::convertible_to<value1_t> value2_t, std::convertible_to<value1_t> value3_t>

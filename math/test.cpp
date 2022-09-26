@@ -41,11 +41,14 @@ BOOST_AUTO_TEST_SUITE(equals_test)
     };
 
     BOOST_DATA_TEST_CASE(correct2,
-        boost::unit_test::data::xrange(1.0L, (boost::unit_test::data::begin = 1000.0L, boost::unit_test::data::step = 1.0L))
-        * boost::unit_test::data::xrange(2.0L * eq_modifier / (1.0L - eq_modifier), (boost::unit_test::data::begin = -2.0L * eq_modifier / (1.0L + eq_modifier), boost::unit_test::data::step = eq_modifier / 100.0L)),
+        boost::unit_test::data::xrange(1000.0L, (boost::unit_test::data::begin = 1.0L, boost::unit_test::data::step = 1.0L))
+        * boost::unit_test::data::xrange(2.0L * eq_modifier, (boost::unit_test::data::begin = -2.05L * eq_modifier, boost::unit_test::data::step = 0.1 * eq_modifier)),
         val1, mult
     ) {
-        BOOST_TEST(uns::math::equals(val1, val1 * (1 + mult)));
+        auto case_flag = (mult < 2.0L * eq_modifier / (1.0L - eq_modifier)) && (mult > -2.0L * eq_modifier / (1.0L + eq_modifier));
+        BOOST_TEST(
+            case_flag == uns::math::equals(val1 * (1 + mult), val1)
+        );
     };
 
 
