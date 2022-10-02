@@ -148,3 +148,45 @@ BOOST_AUTO_TEST_SUITE(sign_test)
     };
 
 BOOST_AUTO_TEST_SUITE_END();
+
+BOOST_AUTO_TEST_SUITE(div_test)
+
+    BOOST_DATA_TEST_CASE(correct1,
+        (boost::unit_test::data::xrange(-0.1L, (boost::unit_test::data::begin = -10.0L, boost::unit_test::data::step = 0.12399L))
+            + boost::unit_test::data::xrange(10.0L * minw, (boost::unit_test::data::begin = 0.0L, boost::unit_test::data::step = minw))
+            + boost::unit_test::data::xrange(10.0L, (boost::unit_test::data::begin = 11.0L * minw, boost::unit_test::data::step = 0.12399L)))
+        * (boost::unit_test::data::xrange(-0.1L, (boost::unit_test::data::begin = -10.0L, boost::unit_test::data::step = 0.12399L))
+            + boost::unit_test::data::xrange(10.0L * minw, (boost::unit_test::data::begin = 0.0L, boost::unit_test::data::step = minw))
+            + boost::unit_test::data::xrange(10.0L, (boost::unit_test::data::begin = 11.0L * minw, boost::unit_test::data::step = 0.12399L))),
+        val1, val2
+    ) {
+        auto divide_to_zero_result_value = 777.777L;
+        auto correct_result = static_cast<long double>(uns::math::equals(val2, 0.0L) ? uns::math::sign(val1) * divide_to_zero_result_value : val1 / val2);
+        auto div_res = correct_result;
+        auto res = true;
+        BOOST_TEST(res = uns::math::equals(correct_result, div_res = uns::math::div(val1, val2, divide_to_zero_result_value)));
+
+        if(!res) {
+            std::cout << "correct_result = " << correct_result << "\n";
+            std::cout << "div_res = " << div_res << "\n";
+        };
+    };
+
+    BOOST_DATA_TEST_CASE(correct2,
+        boost::unit_test::data::xrange(100, (boost::unit_test::data::begin = -100, boost::unit_test::data::step = 1))
+        * boost::unit_test::data::xrange(100, (boost::unit_test::data::begin = -100, boost::unit_test::data::step = 1)),
+        val1, val2
+    ) {
+        auto divide_to_zero_result_value = 777;
+        auto correct_result = static_cast<int>(val2 == 0 ? uns::math::sign(val1) * divide_to_zero_result_value : val1 / val2);
+        auto div_res = correct_result;
+        auto res = true;
+        BOOST_TEST(res = uns::math::equals(correct_result, div_res = uns::math::div(val1, val2, divide_to_zero_result_value)));
+
+        if(!res) {
+            std::cout << "correct_result = " << correct_result << "\n";
+            std::cout << "div_res = " << div_res << "\n";
+        };
+    };
+
+BOOST_AUTO_TEST_SUITE_END();
