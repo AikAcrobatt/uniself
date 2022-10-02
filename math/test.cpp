@@ -18,6 +18,20 @@
 auto minw = std::numeric_limits<long double>::min();
 constexpr auto eq_modifier = 1.0e-14L;
 
+BOOST_AUTO_TEST_SUITE(abs_test)
+
+    BOOST_DATA_TEST_CASE(correct,
+        boost::unit_test::data::xrange(10.0L * minw, (boost::unit_test::data::begin = 0.0L, boost::unit_test::data::step = minw * 0.5))
+        + boost::unit_test::data::xrange(10.0L, (boost::unit_test::data::begin = 11.0L * minw, boost::unit_test::data::step = 0.12399L)),
+        val
+    ) {
+        BOOST_TEST(val == uns::math::abs(val));
+
+        BOOST_TEST(val == uns::math::abs(-val));
+    };
+
+BOOST_AUTO_TEST_SUITE_END();
+
 BOOST_AUTO_TEST_SUITE(equals_test)
 
     BOOST_DATA_TEST_CASE(correct1,
@@ -89,34 +103,48 @@ BOOST_AUTO_TEST_SUITE_END();
 
 BOOST_AUTO_TEST_SUITE(moreeq_test)
 
-BOOST_DATA_TEST_CASE(correct,
-    (boost::unit_test::data::xrange(-0.1L, (boost::unit_test::data::begin = -10.0L, boost::unit_test::data::step = 0.12399L))
-        + boost::unit_test::data::xrange(10.0L * minw, (boost::unit_test::data::begin = 0.0L, boost::unit_test::data::step = minw))
-        + boost::unit_test::data::xrange(10.0L, (boost::unit_test::data::begin = 11.0L * minw, boost::unit_test::data::step = 0.12399L)))
-    * (boost::unit_test::data::xrange(-0.1L, (boost::unit_test::data::begin = -10.0L, boost::unit_test::data::step = 0.12399L))
-        + boost::unit_test::data::xrange(10.0L * minw, (boost::unit_test::data::begin = 0.0L, boost::unit_test::data::step = minw))
-        + boost::unit_test::data::xrange(10.0L, (boost::unit_test::data::begin = 11.0L * minw, boost::unit_test::data::step = 0.12399L))),
-    val1, val2
-) {
-    auto correct_result = (!uns::math::equals(val1, val2) && val1 > val2) || uns::math::equals(val1, val2);
-    BOOST_TEST(correct_result == uns::math::moreeq(val1, val2));
-};
+    BOOST_DATA_TEST_CASE(correct,
+        (boost::unit_test::data::xrange(-0.1L, (boost::unit_test::data::begin = -10.0L, boost::unit_test::data::step = 0.12399L))
+            + boost::unit_test::data::xrange(10.0L * minw, (boost::unit_test::data::begin = 0.0L, boost::unit_test::data::step = minw))
+            + boost::unit_test::data::xrange(10.0L, (boost::unit_test::data::begin = 11.0L * minw, boost::unit_test::data::step = 0.12399L)))
+        * (boost::unit_test::data::xrange(-0.1L, (boost::unit_test::data::begin = -10.0L, boost::unit_test::data::step = 0.12399L))
+            + boost::unit_test::data::xrange(10.0L * minw, (boost::unit_test::data::begin = 0.0L, boost::unit_test::data::step = minw))
+            + boost::unit_test::data::xrange(10.0L, (boost::unit_test::data::begin = 11.0L * minw, boost::unit_test::data::step = 0.12399L))),
+        val1, val2
+    ) {
+        auto correct_result = (!uns::math::equals(val1, val2) && val1 > val2) || uns::math::equals(val1, val2);
+        BOOST_TEST(correct_result == uns::math::moreeq(val1, val2));
+    };
 
 BOOST_AUTO_TEST_SUITE_END();
 
 BOOST_AUTO_TEST_SUITE(lesseq_test)
 
-BOOST_DATA_TEST_CASE(correct,
-    (boost::unit_test::data::xrange(-0.1L, (boost::unit_test::data::begin = -10.0L, boost::unit_test::data::step = 0.12399L))
+    BOOST_DATA_TEST_CASE(correct,
+        (boost::unit_test::data::xrange(-0.1L, (boost::unit_test::data::begin = -10.0L, boost::unit_test::data::step = 0.12399L))
+            + boost::unit_test::data::xrange(10.0L * minw, (boost::unit_test::data::begin = 0.0L, boost::unit_test::data::step = minw))
+            + boost::unit_test::data::xrange(10.0L, (boost::unit_test::data::begin = 11.0L * minw, boost::unit_test::data::step = 0.12399L)))
+        * (boost::unit_test::data::xrange(-0.1L, (boost::unit_test::data::begin = -10.0L, boost::unit_test::data::step = 0.12399L))
+            + boost::unit_test::data::xrange(10.0L * minw, (boost::unit_test::data::begin = 0.0L, boost::unit_test::data::step = minw))
+            + boost::unit_test::data::xrange(10.0L, (boost::unit_test::data::begin = 11.0L * minw, boost::unit_test::data::step = 0.12399L))),
+        val1, val2
+    ) {
+        auto correct_result = (!uns::math::equals(val1, val2) && val1 < val2) || uns::math::equals(val1, val2);
+        BOOST_TEST(correct_result == uns::math::lesseq(val1, val2));
+    };
+
+BOOST_AUTO_TEST_SUITE_END();
+
+BOOST_AUTO_TEST_SUITE(sign_test)
+
+    BOOST_DATA_TEST_CASE(correct,
+        boost::unit_test::data::xrange(-0.1L, (boost::unit_test::data::begin = -10.0L, boost::unit_test::data::step = 0.12399L))
         + boost::unit_test::data::xrange(10.0L * minw, (boost::unit_test::data::begin = 0.0L, boost::unit_test::data::step = minw))
-        + boost::unit_test::data::xrange(10.0L, (boost::unit_test::data::begin = 11.0L * minw, boost::unit_test::data::step = 0.12399L)))
-    * (boost::unit_test::data::xrange(-0.1L, (boost::unit_test::data::begin = -10.0L, boost::unit_test::data::step = 0.12399L))
-        + boost::unit_test::data::xrange(10.0L * minw, (boost::unit_test::data::begin = 0.0L, boost::unit_test::data::step = minw))
-        + boost::unit_test::data::xrange(10.0L, (boost::unit_test::data::begin = 11.0L * minw, boost::unit_test::data::step = 0.12399L))),
-    val1, val2
-) {
-    auto correct_result = (!uns::math::equals(val1, val2) && val1 < val2) || uns::math::equals(val1, val2);
-    BOOST_TEST(correct_result == uns::math::lesseq(val1, val2));
-};
+        + boost::unit_test::data::xrange(10.0L, (boost::unit_test::data::begin = 11.0L * minw, boost::unit_test::data::step = 0.12399L)),
+        val
+    ) {
+        auto correct_result = (uns::math::equals(val, 0.0L) ? 0 : (uns::math::more(val, 0.0L) ? 1 : -1));
+        BOOST_TEST(correct_result == uns::math::sign(val));
+    };
 
 BOOST_AUTO_TEST_SUITE_END();
