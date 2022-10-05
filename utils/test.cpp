@@ -3,6 +3,6 @@
 
 #include "uniself/utils.h"
 
-int main() {
+int uns::utils::main() {
     std::cout << "Hello World!\n";
 }
