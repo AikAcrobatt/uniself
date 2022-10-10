@@ -3,6 +3,7 @@
 #include <limits>
 
 #include "uniself/math.h"
+#include "uniself/matrix.h"
 
 #pragma warning(default: 4668; default: 4365)
 
@@ -187,6 +188,18 @@ BOOST_AUTO_TEST_SUITE(div_test)
             std::cout << "correct_result = " << correct_result << "\n";
             std::cout << "div_res = " << div_res << "\n";
         };
+    };
+
+BOOST_AUTO_TEST_SUITE_END();
+
+BOOST_AUTO_TEST_SUITE(matrix_str_test)
+
+    BOOST_AUTO_TEST_CASE(correct1) {
+        
+        auto mtx1 = uns::math::matrix<long double, ublas::row_major, std::vector<long double>>(3, 4);
+        auto str = uns::string::u8_cast<std::u8string>(mtx1);
+        auto mtx2 = uns::string::u8_cast<uns::math::matrix<long double, ublas::row_major, std::vector<long double>>>(str);
+
     };
 
 BOOST_AUTO_TEST_SUITE_END();
