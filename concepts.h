@@ -8,6 +8,7 @@ namespace uns {
 	concept iterable_collection = requires (collection_t collection) {
 		collection.begin();
 		collection.end();
+		{ collection.begin() } -> std::convertible_to<typename collection_t::iterator>;
 		{ *(collection.begin()) } -> std::convertible_to<value_t>;
 		collection.begin()++;
 		{ collection.size() } -> std::integral;
@@ -19,6 +20,7 @@ namespace uns {
 		&& requires (collection_t collection) {
 			collection.cbegin();
 			collection.cend();
+			{ collection.cbegin() } -> std::convertible_to<typename collection_t::const_iterator>;
 			{ *(collection.cbegin()) } -> std::convertible_to<value_t>;
 			collection.cbegin()++;
 			{ collection.size() } -> std::integral;
