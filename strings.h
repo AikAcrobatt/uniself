@@ -39,7 +39,15 @@ namespace uns::string {
 	//SPECIFIC STRING CONCEPTS
 	//defines types that can be dealed with as like they are of std::basic_string type
 	template<typename string_t>
-	concept std_basic = std::derived_from<string_t, std::basic_string<typename string_t::value_type>>;
+	concept common =
+		requires (string_t str) {
+			{ *(str.cbegin()) } ->	std::convertible_to<typename string_t::value_type>;
+			str.find(str, 0);
+			str.substr(0, 0);
+		}
+	&& std::integral<decltype(string_t::npos)>
+	&& uns::const_iterable_collection<string_t, typename string_t::value_type>;
+
 
 	//STRING CAST FUNCTIONS
 	//convertions of std::u32string
@@ -469,7 +477,7 @@ namespace uns::string {
 
 	//STRINGS OPERATIONS
 	//positioning a seeker in the string relatively some mark symbols in it
-	template<uns::string::std_basic string_t>
+	template<uns::string::common string_t>
 	bool seeker_pos(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
@@ -502,7 +510,7 @@ namespace uns::string {
 		}
 		else return false;
 	};
-	template<uns::string::std_basic string_t>
+	template<uns::string::common string_t>
 	bool seeker_pos(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
@@ -514,7 +522,7 @@ namespace uns::string {
 	) noexcept {
 		return uns::string::seeker_pos(target, seeker, first_mark, last_mark, from_begin, relative_position, right_border_beg, target.cend());
 	};
-	template<uns::string::std_basic string_t>
+	template<uns::string::common string_t>
 	bool seeker_pos(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
@@ -528,7 +536,7 @@ namespace uns::string {
 
 
 	//seeking for sample(s) at given target string (the leftmost appearance, but not lefter than the seeker)
-	template<uns::string::std_basic string_t, uns::const_iterable_collection<std::basic_string_view<typename string_t::value_type>> collection_t>
+	template<uns::string::common string_t, uns::const_iterable_collection<std::basic_string_view<typename string_t::value_type>> collection_t>
 	typename string_t::const_iterator find(
 		const string_t&																target,							//target string
 		const typename string_t::const_iterator&									seeker,							//seeker of symbol to start the search
@@ -556,7 +564,7 @@ namespace uns::string {
 
 		return target.cbegin() + res_pos;
 	};
-	template<uns::string::std_basic string_t, uns::const_iterable_collection<std::basic_string_view<typename string_t::value_type>> collection_t>
+	template<uns::string::common string_t, uns::const_iterable_collection<std::basic_string_view<typename string_t::value_type>> collection_t>
 	typename string_t::const_iterator find(
 		const string_t&																target,							//target string
 		const typename string_t::const_iterator&									seeker,							//seeker of symbol to start the search
@@ -566,7 +574,7 @@ namespace uns::string {
 
 		return uns::string::find(target, seeker, samples, found_sample);
 	};
-	template<uns::string::std_basic string_t>
+	template<uns::string::common string_t>
 	typename string_t::const_iterator find(
 		const string_t&																target,							//target string
 		const typename string_t::const_iterator&									seeker,							//seeker of symbol to start the search
@@ -589,7 +597,7 @@ namespace uns::string {
 
 		return target.cbegin() + res_pos;
 	};
-	template<uns::string::std_basic string_t, typename unused_t>
+	template<uns::string::common string_t, typename unused_t>
 	typename string_t::const_iterator find(
 		const string_t&																target,							//target string
 		const typename string_t::const_iterator&									seeker,							//seeker of symbol to start the search
@@ -605,7 +613,7 @@ namespace uns::string {
 	// relatively of found sample(s) (only if at least one sample found)
 	//
 	//returns true only if both: some sample found at not lefter than seeker pos AND seeker was successfully placed to new pos
-	template<uns::string::std_basic string_t, uns::const_iterable_collection<std::basic_string_view<typename string_t::value_type>> collection_t>
+	template<uns::string::common string_t, uns::const_iterable_collection<std::basic_string_view<typename string_t::value_type>> collection_t>
 	bool seeker_set(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
@@ -622,7 +630,7 @@ namespace uns::string {
 
 		return uns::string::seeker_pos(target, seeker, found_sample_pos, found_sample_pos + found_sample->size() - 1, from_begin, relative_position, right_border_beg, right_border_end);
 	};
-	template<uns::string::std_basic string_t>
+	template<uns::string::common string_t>
 	bool seeker_set(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
@@ -638,7 +646,7 @@ namespace uns::string {
 
 		return uns::string::seeker_pos(target, seeker, found_sample_pos, found_sample_pos + sample.size() - 1, from_begin, relative_position, right_border_beg, right_border_end);
 	};
-	template<uns::string::std_basic string_t, uns::const_iterable_collection<std::basic_string_view<typename string_t::value_type>> collection_t>
+	template<uns::string::common string_t, uns::const_iterable_collection<std::basic_string_view<typename string_t::value_type>> collection_t>
 	bool seeker_set(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
@@ -651,7 +659,7 @@ namespace uns::string {
 
 		return uns::string::seeker_set(target, seeker, samples, from_begin, relative_position, right_border_beg, right_border_end);
 	};
-	template<uns::string::std_basic string_t>
+	template<uns::string::common string_t>
 	bool seeker_set(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
@@ -664,7 +672,7 @@ namespace uns::string {
 
 		return uns::string::seeker_set(target, seeker, sample, from_begin, relative_position, right_border_beg, right_border_end);
 	};
-	template<uns::string::std_basic string_t, uns::const_iterable_collection<std::basic_string_view<typename string_t::value_type>> samples_t, uns::const_iterable_collection<std::basic_string_view<typename string_t::value_type>> rborder_t>
+	template<uns::string::common string_t, uns::const_iterable_collection<std::basic_string_view<typename string_t::value_type>> samples_t, uns::const_iterable_collection<std::basic_string_view<typename string_t::value_type>> rborder_t>
 	bool seeker_set(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
@@ -681,7 +689,7 @@ namespace uns::string {
 		else
 			return uns::string::seeker_set(target, seeker, samples, from_begin, relative_position);
 	};
-	template<uns::string::std_basic string_t, uns::const_iterable_collection<std::basic_string_view<typename string_t::value_type>> rborder_t>
+	template<uns::string::common string_t, uns::const_iterable_collection<std::basic_string_view<typename string_t::value_type>> rborder_t>
 	bool seeker_set(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
@@ -698,7 +706,7 @@ namespace uns::string {
 		else
 			return uns::string::seeker_set(target, seeker, sample, from_begin, relative_position);
 	};
-	template<uns::string::std_basic string_t, uns::const_iterable_collection<std::basic_string_view<typename string_t::value_type>> collection_t>
+	template<uns::string::common string_t, uns::const_iterable_collection<std::basic_string_view<typename string_t::value_type>> collection_t>
 	bool seeker_set(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
@@ -714,7 +722,7 @@ namespace uns::string {
 		else
 			return uns::string::seeker_set(target, seeker, samples, from_begin, relative_position);
 	};
-	template<uns::string::std_basic string_t>
+	template<uns::string::common string_t>
 	bool seeker_set(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
@@ -735,7 +743,7 @@ namespace uns::string {
 	//reading a substring from the target string from the current seeker's pos till the delimiter string (not including it)
 	//	returns true only if the delimiter string was found righter(!) than current seeker AND the seeker was successfully placed to
 	//	specified position, relatively to the found delimiter
-	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> collection_t>
+	template<uns::string::common string_t, uns::const_iterable_collection<string_t> collection_t>
 	bool seeker_read(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
@@ -756,7 +764,7 @@ namespace uns::string {
 
 		return uns::string::seeker_pos(target, seeker, pos_delimiter, pos_delimiter + delimiter->size() - 1, from_begin, relative_position, right_border_beg, right_border_end);
 	};
-	template<uns::string::std_basic string_t>
+	template<uns::string::common string_t>
 	bool seeker_read(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
@@ -775,7 +783,7 @@ namespace uns::string {
 
 		return uns::string::seeker_pos(target, seeker, pos_delimiter, pos_delimiter + delimiter.size() - 1, from_begin, relative_position, right_border_beg, right_border_end);
 	};
-	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> collection_t>
+	template<uns::string::common string_t, uns::const_iterable_collection<string_t> collection_t>
 	bool seeker_read(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
@@ -786,7 +794,7 @@ namespace uns::string {
 	) noexcept {
 		return uns::string::seeker_read(target, seeker, result, delimiters, from_begin, relative_position, target.cend(), target.cend());
 	};
-	template<uns::string::std_basic string_t>
+	template<uns::string::common string_t>
 	bool seeker_read(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
@@ -797,7 +805,7 @@ namespace uns::string {
 	) noexcept {
 		return uns::string::seeker_read(target, seeker, result, delimiter, from_begin, relative_position, target.cend(), target.cend());
 	};
-	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> collection_t, uns::const_iterable_collection<string_t> rborder_t>
+	template<uns::string::common string_t, uns::const_iterable_collection<string_t> collection_t, uns::const_iterable_collection<string_t> rborder_t>
 	bool seeker_read(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
@@ -816,7 +824,7 @@ namespace uns::string {
 		else
 			return uns::string::seeker_read(target, seeker, result, delimiters, from_begin, relative_position);
 	};
-	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> rborder_t>
+	template<uns::string::common string_t, uns::const_iterable_collection<string_t> rborder_t>
 	bool seeker_read(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
@@ -835,7 +843,7 @@ namespace uns::string {
 		else
 			return uns::string::seeker_read(target, seeker, result, delimiter, from_begin, relative_position);
 	};
-	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> collection_t>
+	template<uns::string::common string_t, uns::const_iterable_collection<string_t> collection_t>
 	bool seeker_read(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
@@ -852,7 +860,7 @@ namespace uns::string {
 		else
 			return uns::string::seeker_read(target, seeker, result, delimiters, from_begin, relative_position);
 	};
-	template<uns::string::std_basic string_t>
+	template<uns::string::common string_t>
 	bool seeker_read(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
@@ -876,7 +884,7 @@ namespace uns::string {
 	//
 	//returns true only if the sample was found in the target string AND the seeker was placed to the proper symbol of found
 	// sample successfully AND at least one of the delimiter(s) was found righter than the seeker
-	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> delimiters_t>
+	template<uns::string::common string_t, uns::const_iterable_collection<string_t> delimiters_t>
 	bool sample_read(
 		const string_t&																target,							//target string
 		const string_t&																sample,							//a sample wich should be found within the target
@@ -892,7 +900,7 @@ namespace uns::string {
 
 		return uns::string::seeker_read(target, seeker, result, delimiters, true, 0, right_border_beg, target.cend());
 	};
-	template<uns::string::std_basic string_t>
+	template<uns::string::common string_t>
 	bool sample_read(
 		const string_t&																target,							//target string
 		const string_t&																sample,							//a sample wich should be found within the target
@@ -908,7 +916,7 @@ namespace uns::string {
 
 		return uns::string::seeker_read(target, seeker, result, delimiter, true, 0, right_border_beg, target.cend());
 	};
-	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> delimiters_t>
+	template<uns::string::common string_t, uns::const_iterable_collection<string_t> delimiters_t>
 	bool sample_read(
 		const string_t&																target,							//target string
 		const string_t&																sample,							//a sample wich should be found within the target
@@ -919,7 +927,7 @@ namespace uns::string {
 	) noexcept {
 		return uns::string::sample_read(target, sample, from_begin, relative_position, result, delimiters, target.cend());
 	};
-	template<uns::string::std_basic string_t>
+	template<uns::string::common string_t>
 	bool sample_read(
 		const string_t&																target,							//target string
 		const string_t&																sample,							//a sample wich should be found within the target
@@ -930,7 +938,7 @@ namespace uns::string {
 	) noexcept {
 		return uns::string::sample_read(target, sample, from_begin, relative_position, result, delimiter, target.cend());
 	};
-	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> delimiters_t, uns::const_iterable_collection<string_t> rborders_t>
+	template<uns::string::common string_t, uns::const_iterable_collection<string_t> delimiters_t, uns::const_iterable_collection<string_t> rborders_t>
 	bool sample_read(
 		const string_t&																target,							//target string
 		const string_t&																sample,							//a sample wich should be found within the target
@@ -944,7 +952,7 @@ namespace uns::string {
 
 		return uns::string::sample_read(target, sample, from_begin, relative_position, result, delimiters, pos_right_border);
 	};
-	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> rborders_t>
+	template<uns::string::common string_t, uns::const_iterable_collection<string_t> rborders_t>
 	bool sample_read(
 		const string_t&																target,							//target string
 		const string_t&																sample,							//a sample wich should be found within the target
@@ -958,7 +966,7 @@ namespace uns::string {
 
 		return uns::string::sample_read(target, sample, from_begin, relative_position, result, delimiter, pos_right_border);
 	};
-	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> delimiters_t>
+	template<uns::string::common string_t, uns::const_iterable_collection<string_t> delimiters_t>
 	bool sample_read(
 		const string_t&																target,							//target string
 		const string_t&																sample,							//a sample wich should be found within the target
@@ -972,7 +980,7 @@ namespace uns::string {
 
 		return uns::string::sample_read(target, sample, from_begin, relative_position, result, delimiters, pos_right_border);
 	};
-	template<uns::string::std_basic string_t>
+	template<uns::string::common string_t>
 	bool sample_read(
 		const string_t&																target,							//target string
 		const string_t&																sample,							//a sample wich should be found within the target
