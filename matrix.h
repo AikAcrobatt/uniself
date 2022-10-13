@@ -30,7 +30,7 @@ namespace uns::string {
 	};
 
 	//casts to & from u8strings for matrices
-	template<std::convertible_to<std::u8string> out_t,uns::math::ublas_matrix matrix_t>
+	template<std::convertible_to<std::u8string> out_t, uns::math::ublas_matrix matrix_t>
 	out_t u8_cast(const matrix_t& mtx) {
 		auto res = static_cast<std::u8string>(u8"[");
 		res += uns::string::u8_cast<std::u8string>(mtx.size1());
@@ -42,7 +42,7 @@ namespace uns::string {
 		auto is_leftmost = true;
 		for(auto maj : mtx) {
 			if(!is_upmost)
-				res += u8",\n"
+				res += u8",\n";
 			else
 				is_upmost = false;
 
@@ -51,7 +51,7 @@ namespace uns::string {
 			is_leftmost = true;
 			for(auto val : maj) {
 				if(!is_leftmost)
-					res += u8", "
+					res += u8", ";
 				else
 					is_leftmost = false;
 
@@ -66,7 +66,7 @@ namespace uns::string {
 		return res;
 	};
 	template<uns::math::ublas_matrix matrix_t>
-	matrix_t u8_cast(const std::u8string_view& str) {
+	matrix_t u8_cast(const std::u8string& str) {
 		static const auto bracket_op = std::u8string{ u8"[" };
 		static const auto mul = std::u8string{ u8"x" };
 		static const auto bracket_cl = std::u8string{ u8"]" };
@@ -79,25 +79,25 @@ namespace uns::string {
 		auto read_str = std::u8string{};
 		auto seeker = str.begin();
 
-		if(!uns::string::seeker_set(str, seeker, bracket_op, false, -1)) throw std::runtime_error{"Matrix string format violation: a '[' not found"};
-		if(!uns::string::seeker_read(str, seeker, read_str, mul, false, -2)) throw std::runtime_error{ "Matrix string format violation: cant read till 'x'" };
+		if(!uns::string::seeker_set<std::u8string>(str, seeker, bracket_op, false, -1)) throw std::runtime_error{"Matrix string format violation: a '[' not found"};
+		if(!uns::string::seeker_read<std::u8string>(str, seeker, read_str, mul, false, -2)) throw std::runtime_error{ "Matrix string format violation: cant read till 'x'" };
 		res.resize1(uns::string::u8_cast<typename matrix_t::size_type>(read_str));
-		if(!uns::string::seeker_read(str, seeker, read_str, bracket_cl, false, -1)) throw std::runtime_error{ "Matrix string format violation: cant read till ']'" };
+		if(!uns::string::seeker_read<std::u8string>(str, seeker, read_str, bracket_cl, false, -1)) throw std::runtime_error{ "Matrix string format violation: cant read till ']'" };
 		res.resize2(uns::string::u8_cast<typename matrix_t::size_type>(read_str));
 
-		if(!uns::string::seeker_set(str, seeker, brace_op, false, -1)) throw std::runtime_error{ "Matrix string format violation: a '{' not found" };
+		if(!uns::string::seeker_set<std::u8string>(str, seeker, brace_op, false, -1)) throw std::runtime_error{ "Matrix string format violation: a '{' not found" };
 		if(res.size1() > 0) {
-			if(!uns::string::seeker_set(str, seeker, brace_op, false, -1)) throw std::runtime_error{ "Matrix string format violation: a '{ {' not found" };
+			if(!uns::string::seeker_set<std::u8string>(str, seeker, brace_op, false, -1)) throw std::runtime_error{ "Matrix string format violation: a '{ {' not found" };
 
 			auto dim1_counter = 0;
 			auto dim2_counter = 0;
 			for(auto& maj : res) {
 				for(auto& val : maj) {
 					if(dim2_counter < res.size2() - 1)
-						if(!uns::string::seeker_read(str, seeker, read_str, comma, false, -1, brace_cl)) throw std::runtime_error{ "Matrix string format violation: cant read till ',' of dim #2" };
+						if(!uns::string::seeker_read<std::u8string>(str, seeker, read_str, comma, false, -1, brace_cl)) throw std::runtime_error{ "Matrix string format violation: cant read till ',' of dim #2" };
 						else val = uns::string::u8_cast<typename matrix_t::value_type>(read_str);
 					else
-						if(!uns::string::seeker_read(str, seeker, read_str, brace_cl, false, -1)) throw std::runtime_error{ "Matrix string format violation: cant read till  '}' of dim #2" };
+						if(!uns::string::seeker_read<std::u8string>(str, seeker, read_str, brace_cl, false, -1)) throw std::runtime_error{ "Matrix string format violation: cant read till  '}' of dim #2" };
 						else val = uns::string::u8_cast<typename matrix_t::value_type>(read_str);
 
 					dim2_counter++;
