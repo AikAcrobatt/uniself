@@ -821,7 +821,7 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
             auto found_sample = samples.cend();
 
             BOOST_TEST(
-                static_cast<int>(target.cend() - target.cbegin()) == uns::string::find(target, target.cbegin(), samples, found_sample) - target.cbegin()
+                static_cast<int>(target.cend() - target.cbegin()) == uns::string::find<std::u8string>(target, target.cbegin(), samples, found_sample) - target.cbegin()
             );
 
             BOOST_TEST(
@@ -837,7 +837,7 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
             auto found_sample = samples.cend();
 
             BOOST_TEST(
-                static_cast<int>(target.cend() - target.cbegin()) == uns::string::find(target, target.cbegin(), samples, found_sample) - target.cbegin()
+                static_cast<int>(target.cend() - target.cbegin()) == uns::string::find<std::u8string>(target, target.cbegin(), samples, found_sample) - target.cbegin()
             );
 
             BOOST_TEST(
@@ -883,11 +883,11 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
         };
 
         BOOST_AUTO_TEST_CASE(incorrect_6) {
-            auto target = uns::test::make_u8(u8"");
-            auto sample = uns::test::make_u8(u8" ру");
+            auto target = std::u8string{ u8"" };
+            auto sample = std::u8string{ u8" ру" };
 
             BOOST_TEST(
-                static_cast<int>(target.cend() - target.cbegin()) == uns::string::find(target, target.cbegin(), sample) - target.cbegin()
+                static_cast<int>(target.cend() - target.cbegin()) == uns::string::find<std::u8string>(target, target.cbegin(), sample) - target.cbegin()
             );
         };
 
@@ -896,7 +896,7 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
             auto sample = uns::test::make_u8(u8"");
 
             BOOST_TEST(
-                static_cast<int>(target.cend() - target.cbegin()) == uns::string::find(target, target.cbegin(), sample) - target.cbegin()
+                static_cast<int>(target.cend() - target.cbegin()) == uns::string::find<std::u8string>(target, target.cbegin(), sample) - target.cbegin()
             );
         };
 
@@ -1007,7 +1007,7 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
                 "some_key3"
             };
 
-            auto pos_of_sample1 = uns::string::find(target, target.begin(), "some_key1");
+            auto pos_of_sample1 = uns::string::find(target, target.begin(), static_cast<std::string>("some_key1"));
             auto seeker = target.begin();
 
             BOOST_TEST(
@@ -1022,7 +1022,7 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
         BOOST_AUTO_TEST_CASE(correct_4) {
             auto target = std::wstring(L"start:some_key1 = some_val1; некий_ключ2 = некое_значение2; some_key3 = some_val3; xvx");
 
-            auto pos_of_sample1 = uns::string::find(target, target.begin(), L"some_key1");
+            auto pos_of_sample1 = uns::string::find(target, target.begin(), static_cast<std::wstring>(L"some_key1"));
             auto seeker = target.begin();
 
             BOOST_TEST(

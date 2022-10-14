@@ -20,7 +20,7 @@
 
 #pragma warning(disable: 4514)
 
-template<typename elem_t, uns::const_iterable_collection<elem_t> collection_t>
+template<typename elem_t, uns::const_collection<elem_t> collection_t>
 bool checker_const_iter(collection_t&&) {
     return true;
 };
@@ -29,7 +29,7 @@ bool checker_const_iter(non_collection_t&&) {
     return false;
 };
 
-template<typename elem_t, uns::iterable_collection<elem_t> collection_t>
+template<typename elem_t, uns::collection<elem_t> collection_t>
 bool checker_iter(collection_t&&) {
     return true;
 };
@@ -60,7 +60,7 @@ public:
     std::size_t size() const noexcept { return std::vector<elem_t>::size(); };
 };
 
-BOOST_AUTO_TEST_SUITE(iterable_collections)
+BOOST_AUTO_TEST_SUITE(collections)
 
     using types_list1 = boost::mpl::list<std::vector<char>, std::list<char>, std::set<char>, std::string, const_vector<char>>;
     BOOST_AUTO_TEST_CASE_TEMPLATE(correct1, collection_candidate_t, types_list1) {
