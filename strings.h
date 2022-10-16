@@ -560,7 +560,7 @@ namespace uns::string {
 		auto res_pos = target.cend() - target.cbegin();
 
 		for(auto sample = samples.cbegin(); sample != samples.cend(); ++sample) {
-			if(sample->empty()) continue;
+			if(static_cast<target_t>(*sample).empty()) continue;
 			if(
 				auto sample_pos = target.find(*sample, seeker_pos);
 				sample_pos >= seeker_pos
@@ -590,11 +590,11 @@ namespace uns::string {
 		const typename target_t::const_iterator&									seeker,							//seeker of symbol to start the search
 		const sample_t&																sample							//a sample to seek within the target
 	) noexcept {
-		if(seeker == target.cend() || sample.empty()) return target.cend();
+		if(seeker == target.cend() || static_cast<target_t>(sample).empty()) return target.cend();
 		const auto seeker_pos = seeker - target.cbegin();
 		auto res_pos = target.cend() - target.cbegin();
 
-		if(!sample.empty()) {
+		if(!static_cast<target_t>(sample).empty()) {
 			if(
 				auto sample_pos = target.find(sample, seeker_pos);
 				sample_pos >= seeker_pos
@@ -654,7 +654,7 @@ namespace uns::string {
 
 		if(found_sample_pos == target.cend()) return false;
 
-		return uns::string::seeker_pos<typename target_t::const_iterator>(target, seeker, found_sample_pos, found_sample_pos + sample.size() - 1, from_begin, relative_position, right_border_beg, right_border_end);
+		return uns::string::seeker_pos<typename target_t::const_iterator>(target.cbegin(), target.cend(), seeker, found_sample_pos, found_sample_pos + static_cast<target_t>(sample).size() - 1, from_begin, relative_position, right_border_beg, right_border_end);
 	};
 	template<uns::string::common target_t, uns::const_collection_of_convertibles_to<target_t> samples_t>
 	bool seeker_set(
@@ -772,7 +772,7 @@ namespace uns::string {
 
 		result = result_t{ seeker, pos_delimiter };
 
-		return uns::string::seeker_pos<typename target_t::const_iterator>(target, seeker, pos_delimiter, pos_delimiter + delimiter->size() - 1, from_begin, relative_position, right_border_beg, right_border_end);
+		return uns::string::seeker_pos<typename target_t::const_iterator>(target.cbegin(), target.cend(), seeker, pos_delimiter, pos_delimiter + delimiter->size() - 1, from_begin, relative_position, right_border_beg, right_border_end);
 	};
 	template<uns::string::common target_t, std::convertible_to<target_t> result_t, std::convertible_to<target_t> delimiter_t>
 	bool seeker_read(
@@ -791,7 +791,7 @@ namespace uns::string {
 
 		result = result_t{ seeker, pos_delimiter };
 
-		return uns::string::seeker_pos<typename target_t::const_iterator>(target, seeker, pos_delimiter, pos_delimiter + delimiter.size() - 1, from_begin, relative_position, right_border_beg, right_border_end);
+		return uns::string::seeker_pos<typename target_t::const_iterator>(target.cbegin(), target.cend(), seeker, pos_delimiter, pos_delimiter + static_cast<target_t>(delimiter).size() - 1, from_begin, relative_position, right_border_beg, right_border_end);
 	};
 	template<uns::string::common target_t, std::convertible_to<target_t> result_t, uns::const_collection_of_convertibles_to<target_t> delimiters_t>
 	bool seeker_read(
