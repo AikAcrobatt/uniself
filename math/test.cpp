@@ -213,4 +213,23 @@ BOOST_AUTO_TEST_SUITE(matrix_str_test)
                 BOOST_TEST(mtx1(i1, i2) == mtx2(i1, i2));
     };
 
+    BOOST_AUTO_TEST_CASE(correct2) {
+
+        auto mtx1 = uns::math::matrix<double>(3, 4);
+
+        for(int i1 = 0; i1 < mtx1.size1(); i1++)
+            for(int i2 = 0; i2 < mtx1.size2(); i2++)
+                mtx1(i1, i2) = i1 * 10 + i2;
+
+        auto str = uns::string::u8_cast<std::u8string>(mtx1);
+        auto mtx2 = uns::string::u8_cast<uns::math::matrix<double>>(str);
+
+        BOOST_TEST(mtx1.size1() == mtx2.size1());
+        BOOST_TEST(mtx1.size2() == mtx2.size2());
+
+        for(int i1 = 0; i1 < mtx1.size1(); i1++)
+            for(int i2 = 0; i2 < mtx1.size2(); i2++)
+                BOOST_TEST(uns::math::equals(mtx1(i1, i2), mtx2(i1, i2)));
+    };
+
 BOOST_AUTO_TEST_SUITE_END();

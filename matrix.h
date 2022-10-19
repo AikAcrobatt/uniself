@@ -24,11 +24,6 @@ namespace uns::math {
 
 namespace uns::string {
 
-	template<typename some_type>
-	concept u8_castable = requires (some_type elem) {
-		uns::string::u8_cast<std::u8string>(elem);
-	};
-
 	//casts to & from u8strings for matrices
 	template<std::convertible_to<std::u8string> out_t,uns::math::ublas_matrix matrix_t>
 	out_t u8_cast(const matrix_t& mtx) {
