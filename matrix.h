@@ -68,10 +68,11 @@ namespace uns::string {
 	template<uns::math::ublas_matrix matrix_t>
 	matrix_t u8_cast(const std::u8string& str) {
 		static const auto bracket_op = std::u8string{ u8"[" };
-		static const auto mul = std::u8string{ u8" x" };
+		static const auto mul = std::u8string{ u8" x " };
 		static const auto bracket_cl = std::u8string{ u8"]" };
 		static const auto space = std::u8string{ u8" " };
 		static const auto comma = std::u8string{ u8"," };
+		static const auto comma_space = std::u8string{ u8", " };
 		static const auto brace_op = std::u8string{ u8"{" };
 		static const auto brace_cl = std::u8string{ u8"}" };
 
@@ -80,30 +81,33 @@ namespace uns::string {
 		auto seeker = str.begin();
 
 		if(!uns::string::seeker_set(str, seeker, bracket_op, false, -1)) throw std::runtime_error{"Matrix string format violation: a '[' not found"};
-		if(!uns::string::seeker_read(str, seeker, read_str, mul, false, -2)) throw std::runtime_error{ "Matrix string format violation: cant read till 'x'" };
+		if(!uns::string::seeker_read(str, seeker, read_str, mul, false, -1)) throw std::runtime_error{ "Matrix string format violation: cant read till 'x'" };
 		auto size1 = uns::string::u8_cast<typename matrix_t::size_type>(read_str);
 		if(!uns::string::seeker_read(str, seeker, read_str, bracket_cl, false, -1)) throw std::runtime_error{ "Matrix string format violation: cant read till ']'" };
 		auto size2 = uns::string::u8_cast<typename matrix_t::size_type>(read_str);
 		res.resize(size1, size2);
 
 		if(!uns::string::seeker_set(str, seeker, brace_op, false, -1)) throw std::runtime_error{ "Matrix string format violation: a '{' not found" };
-		if(res.size1() > 0) {
-			if(!uns::string::seeker_set(str, seeker, brace_op, false, -1)) throw std::runtime_error{ "Matrix string format violation: a '{ {' not found" };
 
-			for(int i1 = 0; i1 < res.size1(); i1++) {
-				for(int i2 = 0; i2 < res.size2(); i2++) {
-					if(i2 < res.size2() - 1)
-						if(!uns::string::seeker_read(str, seeker, read_str, comma, false, -1, brace_cl)) throw std::runtime_error{ "Matrix string format violation: cant read till ',' of dim #2" };
-						else res(i1, i2) = uns::string::u8_cast<typename matrix_t::value_type>(read_str);
-					else
-						if(!uns::string::seeker_read(str, seeker, read_str, brace_cl, false, -1)) throw std::runtime_error{ "Matrix string format violation: cant read till  '}' of dim #2" };
-						else res(i1, i2) = uns::string::u8_cast<typename matrix_t::value_type>(read_str);
+		for(int i1 = 0; i1 < res.size1(); i1++) {
+			if(!uns::string::seeker_set(str, seeker, brace_op, false, -1)) throw std::runtime_error{ "Matrix string format violation: a newline '{' not found" };
 
+			for(int i2 = 0; i2 < res.size2(); i2++) {
+				if(i2 < res.size2() - 1) {
+					if(!uns::string::seeker_read(str, seeker, read_str, comma_space, false, -1, brace_cl)) throw std::runtime_error{ "Matrix string format violation: cant read till ',' of dim #2" };
+					else res(i1, i2) = uns::string::u8_cast<typename matrix_t::value_type>(read_str);
+				}
+				else {
+					if(!uns::string::seeker_read(str, seeker, read_str, brace_cl, false, -1)) throw std::runtime_error{ "Matrix string format violation: cant read till  '}' of dim #2" };
+					else res(i1, i2) = uns::string::u8_cast<typename matrix_t::value_type>(read_str);
 				};
-				if(i1 < res.size1() - 1)
-					if(!uns::string::seeker_set(str, seeker, comma, false, -1, brace_cl)) throw std::runtime_error{ "Matrix string format violation: a ',' of dim #1 not found" };
-				else
-					if(!uns::string::seeker_set(str, seeker, brace_cl, false, -1)) throw std::runtime_error{ "Matrix string format violation: a '}' of dim #1 not found" };
+
+			};
+			if(i1 < res.size1() - 1) {
+				if(!uns::string::seeker_set(str, seeker, comma, false, -1, brace_cl)) throw std::runtime_error{ "Matrix string format violation: a ',' of dim #1 not found" };
+			}
+			else {
+				if(!uns::string::seeker_set(str, seeker, brace_cl, false, -1)) throw std::runtime_error{ "Matrix string format violation: a '}' of dim #1 not found" };
 			};
 		};
 
