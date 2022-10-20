@@ -111,3 +111,135 @@ namespace uns::string {
 
 };
 
+namespace uns::math {
+
+	//matrix resize with filling
+	template<uns::math::ublas_matrix matrix_t>
+	void resize(
+		matrix_t& m, 
+		typename matrix_t::size_type new_size1, 
+		typename matrix_t::size_type new_size2, 
+		typename matrix_t::value_type filler
+	) {
+		auto size1 = m.size1();
+		auto size2 = m.size2();
+
+		m.resize(new_size1, new_size2, true);
+		for(auto i1 = size1; i1 < m.size1(); i1++) {
+			for(auto i2 = 0; i2 < size2 && i2 < m.size2(); i2++) {
+				m(i1, i2) = filler;
+			};
+		};
+		for(auto i1 = 0; i1 < m.size1(); i1++) {
+			for(auto i2 = size2; i2 < m.size2(); i2++) {
+				m(i1, i2) = filler;
+			};
+		};
+	};
+
+
+	//addition of matrices fo different sizes
+	template<uns::math::ublas_matrix matrix_t>
+	matrix_t sum(
+		const matrix_t& m1,
+		const matrix_t& m2
+	) {
+		matrix_t res(uns::math::max(m1.size1(), m2.size1()), uns::math::max(m1.size2(), m2.size2()));
+
+		auto min1 = uns::math::min(m1.size1(), m2.size1());
+		auto min2 = uns::math::min(m1.size2(), m2.size2()));
+
+		auto i1 = min1;
+		auto i2 = min2;
+		for(i1 = 0; i1 < min1; i1++) {
+			for(i2 = 0; i2 < min2; i2++) {
+				if(!uns::math::equals(m1(i1, i2), -m2(i1, i2))) res(i1, i2) = m1(i1, i2) + m2(i1, i2);
+				else res(i1, i2) = typename matrix_t::value_type{ 0 };
+			};
+			for(i2 = min2; i2 < m1.size2(); i2++) {
+				res(i1, i2) = m1(i1, i2);
+			};
+			for(i2 = min2; i2 < m2.size2(); i2++) {
+				res(i1, i2) = m2(i1, i2);
+			};
+		};
+		for(i1 = min1; i1 < m1.size1(); i1++) {
+			for(i2 = 0; i2 < m1.size2(); i2++) {
+				res(i1, i2) = m1(i1, i2);
+			};
+		};
+		for(i1 = min1; i1 < m2.size1(); i1++) {
+			for(i2 = 0; i2 < m2.size2(); i2++) {
+				res(i1, i2) = m2(i1, i2);
+			};
+		};
+
+		return res;
+	};
+
+
+	//subtraction of matrices of different sizes
+	template<uns::math::ublas_matrix matrix_t>
+	matrix_t sub(
+		const matrix_t& m1,
+		const matrix_t& m2
+	) {
+		matrix_t res(uns::math::max(m1.size1(), m2.size1()), uns::math::max(m1.size2(), m2.size2()));
+
+		auto min1 = uns::math::min(m1.size1(), m2.size1());
+		auto min2 = uns::math::min(m1.size2(), m2.size2()));
+
+		auto i1 = min1;
+		auto i2 = min2;
+		for(i1 = 0; i1 < min1; i1++) {
+			for(i2 = 0; i2 < min2; i2++) {
+				if(!uns::math::equals(m1(i1, i2), m2(i1, i2))) res(i1, i2) = m1(i1, i2) - m2(i1, i2);
+				else res(i1, i2) = typename matrix_t::value_type{ 0 };
+			};
+			for(i2 = min2; i2 < m1.size2(); i2++) {
+				res(i1, i2) = m1(i1, i2);
+			};
+			for(i2 = min2; i2 < m2.size2(); i2++) {
+				res(i1, i2) = -m2(i1, i2);
+			};
+		};
+		for(i1 = min1; i1 < m1.size1(); i1++) {
+			for(i2 = 0; i2 < m1.size2(); i2++) {
+				res(i1, i2) = m1(i1, i2);
+			};
+		};
+		for(i1 = min1; i1 < m2.size1(); i1++) {
+			for(i2 = 0; i2 < m2.size2(); i2++) {
+				res(i1, i2) = -m2(i1, i2);
+			};
+		};
+
+		return res;
+	};
+
+
+	//prodaction of matrices of different sizes
+	template<uns::math::ublas_matrix matrix_t>
+	matrix_t prod(
+		const matrix_t& m1,
+		const matrix_t& m2
+	) {
+		auto res = matrix_t{ m1.size1(), m2.size2() };
+		res *= typename matrix_t::value_type{ 0 };
+
+		auto min = uns::math::min(m1.size2(), m2.size1()));
+		auto i1 = min;
+		auto i2 = min; 
+		auto i3 = min;
+		for(i1 = 0; i1 < res.size1(); i1++) {
+			for(i2 = 0; i2 < res.size2(); i2++) {
+				for(i3 = 0; i3 < min; i3++) {
+					res(i1, i2) += m1(i1, i3) * m2(i3, i2);
+				};
+			};
+		};
+
+		return res;
+	};
+
+};
