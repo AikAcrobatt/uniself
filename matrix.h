@@ -111,7 +111,7 @@ namespace uns::string {
 
 };
 
-namespace uns::math {
+namespace uns::math::linear {
 
 	//matrix resize with filling
 	template<uns::math::ublas_matrix matrix_t>
@@ -132,6 +132,22 @@ namespace uns::math {
 		};
 		for(auto i1 = 0; i1 < m.size1(); i1++) {
 			for(auto i2 = size2; i2 < m.size2(); i2++) {
+				m(i1, i2) = filler;
+			};
+		};
+	};
+
+
+	//fills the matrix with specified value
+	template<uns::math::ublas_matrix matrix_t>
+	void fill(
+		matrix_t& m,
+		typename matrix_t::value_type filler
+	) {
+		auto i1 = typename matrix_t::size_type{ 0 };
+		auto i2 = typename matrix_t::size_type{ 0 };
+		for(i1 = 0; i1 < m.size1(); i1++) {
+			for(i2 = 0; i2 < m.size2(); i2++) {
 				m(i1, i2) = filler;
 			};
 		};
@@ -218,7 +234,7 @@ namespace uns::math {
 	};
 
 
-	//prodaction of matrices of different sizes
+	//production of matrices of different sizes
 	template<uns::math::ublas_matrix matrix_t>
 	matrix_t prod(
 		const matrix_t& m1,
@@ -242,4 +258,108 @@ namespace uns::math {
 		return res;
 	};
 
+
+	//copying of dim1 units within the same matrix
+	template<uns::math::ublas_matrix matrix_t>
+	void copy1(
+		matrix_t& m,
+		typename matrix_t::size_type from1,
+		typename matrix_t::size_type to1
+	) {
+		if(from1 > m.size1() || to1 > m.size1()) return;
+		auto i2 = typename matrix_t::size_type{ 0 };
+		for(i2 = 0; i2 < m.size2(); i2++)
+			m(to1, i2) = m(from1, i2);
+	};
+
+
+	//swap of dim1 units within the same matrix
+	template<uns::math::ublas_matrix matrix_t>
+	void swap1(
+		matrix_t& m,
+		typename matrix_t::size_type from1,
+		typename matrix_t::size_type to1
+	) {
+		if(from1 > m.size1() || to1 > m.size1()) return;
+		auto i2 = typename matrix_t::size_type{ 0 };
+		auto temp = typename matrix_t::value_type{ 0 };
+		for(i2 = 0; i2 < m.size2(); i2++) {
+			temp = m(to1, i2);
+			m(to1, i2) = m(from1, i2);
+			m(from1, i2) = temp;
+		};
+	};
+
+
+	//copying of dim2 units within the same matrix
+	template<uns::math::ublas_matrix matrix_t>
+	void copy2(
+		matrix_t& m,
+		typename matrix_t::size_type from2,
+		typename matrix_t::size_type to2
+	) {
+		if(from2 > m.size2() || to2 > m.size2()) return;
+		auto i1 = typename matrix_t::size_type{ 0 };
+		for(i1 = 0; i1 < m.size1(); i1++)
+			m(i1, to2) = m(i1, from2);
+	};
+
+
+	//swap of dim2 units within the same matrix
+	template<uns::math::ublas_matrix matrix_t>
+	void swap2(
+		matrix_t& m,
+		typename matrix_t::size_type from2,
+		typename matrix_t::size_type to2
+	) {
+		if(from2 > m.size2() || to2 > m.size2()) return;
+		auto i1 = typename matrix_t::size_type{ 0 };
+		auto temp = typename matrix_t::value_type{ 0 };
+		for(i1 = 0; i1 < m.size1(); i1++) {
+			temp = m(i1, to2);
+			m(i1, to2) = m(i1, from2);
+			m(i1, from2) = temp;
+		};
+	};
+
+
+	//trace of matrix
+	template<uns::math::ublas_matrix matrix_t>
+	typename matrix_t::value_type trace(
+		const matrix_t& m
+	) {
+		auto res = typename matrix_t::value_type{ 0 };
+
+		auto min_dim = uns::math::min(m.size1(), m.size2());
+		auto i = min_dim;
+
+		for(i = 0; i < min_dim; i++) {
+			res += m(i, i);
+		};
+
+		return res;
+	};
+
+
+	//returns the identical matrix
+	template<uns::math::ublas_matrix matrix_t>
+	matrix_t make_identity(
+		typename matrix_t::size_type size1,
+		typename matrix_t::size_type size2
+	) {
+		matrix_t res(size1, size2);
+
+		auto i1 = typename matrix_t::size_type{ 0 };
+		auto i2 = typename matrix_t::size_type{ 0 };
+
+		for(i1 = 0; i1 < res.size1(); i1++)
+			for(i2 = 0; i2 < res.size2(); i2++)
+				res(i1, i2) = ((i1 == i2) ? typename matrix_t::value_type{ 1 } : typename matrix_t::value_type{ 0 });
+
+		return res;
+	};
+	template<uns::math::ublas_matrix matrix_t>
+	matrix_t make_identity(const matrix_t& m) {
+		return uns::math::make_identity<matrix_t>(m.size1(), m.size2());
+	};
 };
