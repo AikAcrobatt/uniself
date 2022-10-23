@@ -254,8 +254,21 @@ namespace uns::string {
 	template<typename out_t>
 		requires (std::is_integral<out_t>::value && !std::is_same<out_t, bool>::value)
 	out_t u8_cast(const std::u8string_view& str) {
-		auto pos_hex = str.find(u8"0x"); if(!(pos_hex >= 0 && pos_hex < str.size())) pos_hex = str.find(u8"0X");
-		auto pos_bin = str.find(u8"0b"); if(!(pos_bin >= 0 && pos_bin < str.size())) pos_bin = str.find(u8"0B");
+		auto start_pos = 0;
+		for(start_pos = 0; start_pos < str.size(); start_pos++) {
+			if(
+				char8_t lit = str[start_pos];
+				lit != u8' '
+				&& lit != u8'\n'
+				&& lit != u8'\t'
+				&& lit != u8'\r'
+			) {
+				break;
+			};
+		};
+
+		auto pos_hex = str.find(u8"0x", start_pos); if(!(pos_hex >= 0 && pos_hex < str.size())) pos_hex = str.find(u8"0X", start_pos);
+		auto pos_bin = str.find(u8"0b", start_pos); if(!(pos_bin >= 0 && pos_bin < str.size())) pos_bin = str.find(u8"0B", start_pos);
 		auto pos_minus = str.find(u8"-");
 		auto is_hex = (pos_hex >= 0 && pos_hex < str.size());
 		auto is_bin = (pos_bin >= 0 && pos_bin < str.size());
@@ -277,7 +290,7 @@ namespace uns::string {
 
 		if(!is_hex && !is_bin) {
 			auto res = out_t(0);
-			const char* begin = reinterpret_cast<const char*>(str.data());
+			const char* begin = reinterpret_cast<const char*>(str.data() + start_pos);
 			const char* end = &begin[str.size()];
 
 			auto conv = std::from_chars(begin, end, res, 10);
@@ -289,7 +302,7 @@ namespace uns::string {
 
 		if(is_hex) {
 			auto res = out_t(0);
-			const char* begin = reinterpret_cast<const char*>(&str.data()[pos_hex]);
+			const char* begin = reinterpret_cast<const char*>(&str.data()[pos_hex] + start_pos);
 			const char* end = &begin[str.size()];
 
 			auto conv = std::from_chars(begin, end, res, 16);
@@ -301,7 +314,7 @@ namespace uns::string {
 
 		if(is_bin) {
 			auto res = out_t(0);
-			const char* begin = reinterpret_cast<const char*>(&str.data()[pos_bin]);
+			const char* begin = reinterpret_cast<const char*>(&str.data()[pos_bin] + start_pos);
 			const char* end = &begin[str.size()];
 
 			auto conv = std::from_chars(begin, end, res, 2);
@@ -315,8 +328,21 @@ namespace uns::string {
 	};
 	template<std::floating_point out_t>
 	out_t u8_cast(const std::u8string_view& str) {
+		auto start_pos = 0;
+		for(start_pos = 0; start_pos < str.size(); start_pos++) {
+			if(
+				char8_t lit = str[start_pos];
+				lit != u8' '
+				&& lit != u8'\n'
+				&& lit != u8'\t'
+				&& lit != u8'\r'
+			) {
+				break;
+			};
+		};
+
 		auto res = out_t(0);
-		const char* begin = reinterpret_cast<const char*>(str.data());
+		const char* begin = reinterpret_cast<const char*>(str.data() + start_pos);
 		const char* end = &begin[str.size()];
 
 		for(auto format :

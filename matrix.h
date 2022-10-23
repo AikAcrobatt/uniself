@@ -163,7 +163,7 @@ namespace uns::math::linear {
 		matrix_t res(uns::math::max(m1.size1(), m2.size1()), uns::math::max(m1.size2(), m2.size2()));
 
 		auto min1 = uns::math::min(m1.size1(), m2.size1());
-		auto min2 = uns::math::min(m1.size2(), m2.size2()));
+		auto min2 = uns::math::min(m1.size2(), m2.size2());
 
 		auto i1 = min1;
 		auto i2 = min2;
@@ -203,7 +203,7 @@ namespace uns::math::linear {
 		matrix_t res(uns::math::max(m1.size1(), m2.size1()), uns::math::max(m1.size2(), m2.size2()));
 
 		auto min1 = uns::math::min(m1.size1(), m2.size1());
-		auto min2 = uns::math::min(m1.size2(), m2.size2()));
+		auto min2 = uns::math::min(m1.size2(), m2.size2());
 
 		auto i1 = min1;
 		auto i2 = min2;
@@ -243,7 +243,7 @@ namespace uns::math::linear {
 		auto res = matrix_t{ m1.size1(), m2.size2() };
 		res *= typename matrix_t::value_type{ 0 };
 
-		auto min = uns::math::min(m1.size2(), m2.size1()));
+		auto min = uns::math::min(m1.size2(), m2.size1());
 		auto i1 = min;
 		auto i2 = min; 
 		auto i3 = min;
@@ -360,6 +360,6 @@ namespace uns::math::linear {
 	};
 	template<uns::math::ublas_matrix matrix_t>
 	matrix_t make_identity(const matrix_t& m) {
-		return uns::math::make_identity<matrix_t>(m.size1(), m.size2());
+		return uns::math::linear::make_identity<matrix_t>(m.size1(), m.size2());
 	};
 };
