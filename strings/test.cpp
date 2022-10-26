@@ -917,9 +917,9 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
                 uns::test::make_u8(u8"some_key3")
             };
 
-            auto pos_of_some_key1 = uns::string::find(target, target.begin(), u8"some_key1");
-            auto pos_of_some_key2 = uns::string::find(target, target.begin(), u8"некий_ключ2");
-            auto pos_of_some_key3 = uns::string::find(target, target.begin(), u8"some_key3");
+            auto pos_of_some_key1 = uns::string::find<std::u8string>(target, target.begin(), u8"some_key1");
+            auto pos_of_some_key2 = uns::string::find<std::u8string>(target, target.begin(), u8"некий_ключ2");
+            auto pos_of_some_key3 = uns::string::find<std::u8string>(target, target.begin(), u8"some_key3");
 
             auto seeker = target.cbegin() + seeker_shift;
 
@@ -977,7 +977,7 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
         ) {
             auto target = std::u8string(u8"start:some_key1 = some_val1; некий_ключ2 = некое_значение2; some_key3 = some_val3; xvx");
 
-            auto pos_of_sample = uns::string::find(target, target.begin(), sample);
+            auto pos_of_sample = uns::string::find<std::u8string>(target, target.begin(), sample);
 
             auto seeker = target.cbegin() + seeker_shift;
 
@@ -987,7 +987,7 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
                 && (pos_of_sample + sample.size() + 3 <= target.cbegin() + pos_rborder_end);
 
             BOOST_TEST(
-                seeking_result == uns::string::seeker_set(target, seeker, sample, false, -4, target.begin() + pos_rborder_beg, target.begin() + pos_rborder_end)
+                seeking_result == uns::string::seeker_set<std::u8string>(target, seeker, sample, false, -4, target.begin() + pos_rborder_beg, target.begin() + pos_rborder_end)
             );
 
             BOOST_TEST(
@@ -1007,7 +1007,7 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
                 "some_key3"
             };
 
-            auto pos_of_sample1 = uns::string::find(target, target.begin(), "some_key1");
+            auto pos_of_sample1 = uns::string::find<std::string>(target, target.begin(), "some_key1");
             auto seeker = target.begin();
 
             BOOST_TEST(
@@ -1022,11 +1022,11 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
         BOOST_AUTO_TEST_CASE(correct_4) {
             auto target = std::wstring(L"start:some_key1 = some_val1; некий_ключ2 = некое_значение2; some_key3 = some_val3; xvx");
 
-            auto pos_of_sample1 = uns::string::find(target, target.begin(), L"some_key1");
+            auto pos_of_sample1 = uns::string::find<std::wstring>(target, target.begin(), L"some_key1");
             auto seeker = target.begin();
 
             BOOST_TEST(
-                true == uns::string::seeker_set(target, seeker, L"some_key1", true, 3)
+                true == uns::string::seeker_set<std::wstring>(target, seeker, L"some_key1", true, 3)
             );
 
             BOOST_TEST(
@@ -1473,19 +1473,19 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
 
             result.clear();
             BOOST_TEST(
-                true == uns::string::sample_read<std::string>(target, "key1", false, -4, result, delimiters, uns::string::find(target, target.begin(), "ey3"))
+                true == uns::string::sample_read<std::string>(target, "key1", false, -4, result, delimiters, uns::string::find<std::string>(target, target.begin(), "ey3"))
             );
             BOOST_TEST( "val1" == result );
 
             result.clear();
             BOOST_TEST(
-                true == uns::string::sample_read(target, std::string("key2"), false, -5, result, delimiters, uns::string::find(target, target.begin(), "ey3"))
+                true == uns::string::sample_read(target, std::string("key2"), false, -5, result, delimiters, uns::string::find<std::string>(target, target.begin(), "ey3"))
             );
             BOOST_TEST("val2" == result);
 
             result.clear();
             BOOST_TEST(
-                false == uns::string::sample_read<std::string>(target, "key3", false, -2, result, delimiters, uns::string::find(target, target.begin(), "ey3"))
+                false == uns::string::sample_read<std::string>(target, "key3", false, -2, result, delimiters, uns::string::find<std::string>(target, target.begin(), "ey3"))
             );
         };
     
@@ -1497,19 +1497,19 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
 
             result.clear();
             BOOST_TEST(
-                true == uns::string::sample_read(target, std::string("key1"), false, -4, result, delimiter, uns::string::find(target, target.begin(), "ey3"))
+                true == uns::string::sample_read<std::string>(target, std::string("key1"), false, -4, result, delimiter, uns::string::find<std::string>(target, target.begin(), "ey3"))
             );
             BOOST_TEST("val1" == result);
 
             result.clear();
             BOOST_TEST(
-                true == uns::string::sample_read<std::string>(target, "key2", false, -5, result, delimiter, uns::string::find(target, target.begin(), "ey3"))
+                true == uns::string::sample_read<std::string>(target, "key2", false, -5, result, delimiter, uns::string::find<std::string>(target, target.begin(), "ey3"))
             );
             BOOST_TEST("val2" == result);
 
             result.clear();
             BOOST_TEST(
-                false == uns::string::sample_read<std::string>(target, "key3", false, -2, result, ";o;", uns::string::find(target, target.begin(), "ey3"))
+                false == uns::string::sample_read<std::string>(target, "key3", false, -2, result, ";o;", uns::string::find<std::string>(target, target.begin(), "ey3"))
             );
         };
 

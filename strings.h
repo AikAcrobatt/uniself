@@ -590,13 +590,13 @@ namespace uns::string {
 	) noexcept {
 		auto found_sample = samples.cend();
 
-		return uns::string::find(target, seeker, samples, found_sample);
+		return uns::string::find<string_t>(target, seeker, samples, found_sample);
 	};
 	template<uns::string::std_basic string_t>
 	typename string_t::const_iterator find(
 		const string_t&																target,							//target string
 		const typename string_t::const_iterator&									seeker,							//seeker of symbol to start the search
-		const std::basic_string_view<typename string_t::value_type>&				sample							//a sample to seek within the target
+		const string_t&																sample							//a sample to seek within the target
 	) noexcept {
 		if(seeker == target.cend() || sample.empty()) return target.cend();
 		const auto seeker_pos = seeker - target.cbegin();
@@ -622,7 +622,7 @@ namespace uns::string {
 		const string_t&																sample,							//a sample to seek within the target
 		const unused_t&																found_sample					//an unused parameter to deliver template compatibility with a collection-of-samples case (so it can be of any type and value)
 	) noexcept {
-		return uns::string::find(target, seeker, sample);
+		return uns::string::find<string_t>(target, seeker, sample);
 	};
 
 
@@ -642,11 +642,11 @@ namespace uns::string {
 		typename string_t::const_iterator											right_border_end				//position of the last symbol of the right border, that serves as the limit of seeker positioning from the right
 	) noexcept {
 		auto found_sample = samples.cend();
-		auto found_sample_pos = uns::string::find(target, seeker, samples, found_sample);
+		auto found_sample_pos = uns::string::find<string_t>(target, seeker, samples, found_sample);
 
 		if(found_sample_pos == target.cend()) return false;
 
-		return uns::string::seeker_pos(target, seeker, found_sample_pos, found_sample_pos + found_sample->size() - 1, from_begin, relative_position, right_border_beg, right_border_end);
+		return uns::string::seeker_pos<string_t>(target, seeker, found_sample_pos, found_sample_pos + found_sample->size() - 1, from_begin, relative_position, right_border_beg, right_border_end);
 	};
 	template<uns::string::std_basic string_t>
 	bool seeker_set(
@@ -658,11 +658,11 @@ namespace uns::string {
 		typename string_t::const_iterator											right_border_beg,				//position of the first symbol of the right border, that serves as the limit for finding delimiters (including right_border_beg)
 		typename string_t::const_iterator											right_border_end				//position of the last symbol of the right border, that serves as the limit of seeker positioning from the right
 	) noexcept {
-		auto found_sample_pos = uns::string::find(target, seeker, sample);
+		auto found_sample_pos = uns::string::find<string_t>(target, seeker, sample);
 
 		if(found_sample_pos == target.cend()) return false;
 
-		return uns::string::seeker_pos(target, seeker, found_sample_pos, found_sample_pos + sample.size() - 1, from_begin, relative_position, right_border_beg, right_border_end);
+		return uns::string::seeker_pos<string_t>(target, seeker, found_sample_pos, found_sample_pos + sample.size() - 1, from_begin, relative_position, right_border_beg, right_border_end);
 	};
 	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> collection_t>
 	bool seeker_set(
@@ -675,20 +675,20 @@ namespace uns::string {
 		auto right_border_beg = target.cend();
 		auto right_border_end = target.cend();
 
-		return uns::string::seeker_set(target, seeker, samples, from_begin, relative_position, right_border_beg, right_border_end);
+		return uns::string::seeker_set<string_t>(target, seeker, samples, from_begin, relative_position, right_border_beg, right_border_end);
 	};
 	template<uns::string::std_basic string_t>
 	bool seeker_set(
 		const string_t&																target,							//target string
 		typename string_t::const_iterator&											seeker,							//positioning seeker
-		const std::basic_string_view<typename string_t::value_type>&				sample,							//a collection of samples wich should be found within the target (only not lefter than the initial place of the seeker)
+		const string_t&																sample,							//a collection of samples wich should be found within the target (only not lefter than the initial place of the seeker)
 		bool																		from_begin,						//if true, this flag indicates that seeker's new position must be made relative to the begin of found sample, false - to the end of found sample
 		typename std::iterator_traits<typename string_t::const_iterator>::difference_type	relative_position		//this value indicates of how mutch symbols the seeker should be moved from first/last symbol of found sample (if from begin than to the end of target string, if from end than to the beginning)
 	) noexcept {
 		auto right_border_beg = target.cend();
 		auto right_border_end = target.cend();
 
-		return uns::string::seeker_set(target, seeker, sample, from_begin, relative_position, right_border_beg, right_border_end);
+		return uns::string::seeker_set<string_t>(target, seeker, sample, from_begin, relative_position, right_border_beg, right_border_end);
 	};
 	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> samples_t, uns::const_iterable_collection<string_t> rborder_t>
 	bool seeker_set(
@@ -700,12 +700,12 @@ namespace uns::string {
 		const rborder_t&															right_borders					//collection of possible right borders of seeking (the mostleft will be considered an actual right border)
 	) noexcept {
 		auto actual_right_border = right_borders.cend();
-		auto right_border_beg = uns::string::find(target, seeker, right_borders, actual_right_border);
+		auto right_border_beg = uns::string::find<string_t>(target, seeker, right_borders, actual_right_border);
 
 		if(right_border_beg != target.cend() && actual_right_border != right_borders.cend())
-			return uns::string::seeker_set(target, seeker, samples, from_begin, relative_position, right_border_beg, right_border_beg + actual_right_border->size());
+			return uns::string::seeker_set<string_t>(target, seeker, samples, from_begin, relative_position, right_border_beg, right_border_beg + actual_right_border->size());
 		else
-			return uns::string::seeker_set(target, seeker, samples, from_begin, relative_position);
+			return uns::string::seeker_set<string_t>(target, seeker, samples, from_begin, relative_position);
 	};
 	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> rborder_t>
 	bool seeker_set(
@@ -717,12 +717,12 @@ namespace uns::string {
 		const rborder_t&															right_borders					//collection of possible right borders of seeking (the mostleft will be considered an actual right border)
 	) noexcept {
 		auto actual_right_border = right_borders.cend();
-		auto right_border_beg = uns::string::find(target, seeker, right_borders, actual_right_border);
+		auto right_border_beg = uns::string::find<string_t>(target, seeker, right_borders, actual_right_border);
 
 		if(right_border_beg != target.cend() && actual_right_border != right_borders.cend())
-			return uns::string::seeker_set(target, seeker, sample, from_begin, relative_position, right_border_beg, right_border_beg + actual_right_border->size());
+			return uns::string::seeker_set<string_t>(target, seeker, sample, from_begin, relative_position, right_border_beg, right_border_beg + actual_right_border->size());
 		else
-			return uns::string::seeker_set(target, seeker, sample, from_begin, relative_position);
+			return uns::string::seeker_set<string_t>(target, seeker, sample, from_begin, relative_position);
 	};
 	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> collection_t>
 	bool seeker_set(
@@ -734,13 +734,13 @@ namespace uns::string {
 		const string_t&																right_border					//a substring-actual right border of seeking
 	) noexcept {
 		if(
-			auto right_border_beg = uns::string::find(target, seeker, right_border);
+			auto right_border_beg = uns::string::find<string_t>(target, seeker, right_border);
 			!right_border.empty()
 			&& right_border_beg != target.cend()
 		)
-			return uns::string::seeker_set(target, seeker, samples, from_begin, relative_position, right_border_beg, right_border_beg + right_border.size());
+			return uns::string::seeker_set<string_t>(target, seeker, samples, from_begin, relative_position, right_border_beg, right_border_beg + right_border.size());
 		else
-			return uns::string::seeker_set(target, seeker, samples, from_begin, relative_position);
+			return uns::string::seeker_set<string_t>(target, seeker, samples, from_begin, relative_position);
 	};
 	template<uns::string::std_basic string_t>
 	bool seeker_set(
@@ -752,13 +752,13 @@ namespace uns::string {
 		const string_t&																right_border					//a substring-actual right border of seeking
 	) noexcept {
 		if(
-			auto right_border_beg = uns::string::find(target, seeker, right_border);
+			auto right_border_beg = uns::string::find<string_t>(target, seeker, right_border);
 			!right_border.empty()
 			&& right_border_beg != target.cend()
 		)
-			return uns::string::seeker_set(target, seeker, sample, from_begin, relative_position, right_border_beg, right_border_beg + right_border.size());
+			return uns::string::seeker_set<string_t>(target, seeker, sample, from_begin, relative_position, right_border_beg, right_border_beg + right_border.size());
 		else
-			return uns::string::seeker_set(target, seeker, sample, from_begin, relative_position);
+			return uns::string::seeker_set<string_t>(target, seeker, sample, from_begin, relative_position);
 	};
 
 
@@ -778,13 +778,13 @@ namespace uns::string {
 	) noexcept {
 		auto delimiter = delimiters.cend();
 
-		auto pos_delimiter = uns::string::find(target, seeker, delimiters, delimiter);
+		auto pos_delimiter = uns::string::find<string_t>(target, seeker, delimiters, delimiter);
 		if(delimiter == delimiters.cend()) return false;
 		if(!(pos_delimiter > seeker && pos_delimiter < target.cend())) return false;
 
 		result = string_t(seeker, pos_delimiter);
 
-		return uns::string::seeker_pos(target, seeker, pos_delimiter, pos_delimiter + delimiter->size() - 1, from_begin, relative_position, right_border_beg, right_border_end);
+		return uns::string::seeker_pos<string_t>(target, seeker, pos_delimiter, pos_delimiter + delimiter->size() - 1, from_begin, relative_position, right_border_beg, right_border_end);
 	};
 	template<uns::string::std_basic string_t>
 	bool seeker_read(
@@ -797,13 +797,13 @@ namespace uns::string {
 		typename string_t::const_iterator											right_border_beg,				//position of the first symbol of the right border, that serves as the limit for finding delimiters (including right_border_beg)
 		typename string_t::const_iterator											right_border_end				//position of the last symbol of the right border
 	) noexcept {
-		auto pos_delimiter = uns::string::find(target, seeker, delimiter);
+		auto pos_delimiter = uns::string::find<string_t>(target, seeker, delimiter);
 
 		if(!(pos_delimiter > seeker && pos_delimiter < target.cend())) return false;
 
 		result = string_t(seeker, pos_delimiter);
 
-		return uns::string::seeker_pos(target, seeker, pos_delimiter, pos_delimiter + delimiter.size() - 1, from_begin, relative_position, right_border_beg, right_border_end);
+		return uns::string::seeker_pos<string_t>(target, seeker, pos_delimiter, pos_delimiter + delimiter.size() - 1, from_begin, relative_position, right_border_beg, right_border_end);
 	};
 	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> collection_t>
 	bool seeker_read(
@@ -814,7 +814,7 @@ namespace uns::string {
 		bool																		from_begin,						//if true, this flag indicates that seeker's new position must be made relative to the begin of found sample, false - to the end of found sample
 		typename std::iterator_traits<typename string_t::const_iterator>::difference_type	relative_position		//this value indicates of how mutch symbols the seeker should be moved from first/last symbol of found sample (if from begin than to the end of target string, if from end than to the beginning)
 	) noexcept {
-		return uns::string::seeker_read(target, seeker, result, delimiters, from_begin, relative_position, target.cend(), target.cend());
+		return uns::string::seeker_read<string_t>(target, seeker, result, delimiters, from_begin, relative_position, target.cend(), target.cend());
 	};
 	template<uns::string::std_basic string_t>
 	bool seeker_read(
@@ -825,7 +825,7 @@ namespace uns::string {
 		bool																		from_begin,						//if true, this flag indicates that seeker's new position must be made relative to the begin of found sample, false - to the end of found sample
 		typename std::iterator_traits<typename string_t::const_iterator>::difference_type	relative_position		//this value indicates of how mutch symbols the seeker should be moved from first/last symbol of found sample (if from begin than to the end of target string, if from end than to the beginning)
 	) noexcept {
-		return uns::string::seeker_read(target, seeker, result, delimiter, from_begin, relative_position, target.cend(), target.cend());
+		return uns::string::seeker_read<string_t>(target, seeker, result, delimiter, from_begin, relative_position, target.cend(), target.cend());
 	};
 	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> collection_t, uns::const_iterable_collection<string_t> rborder_t>
 	bool seeker_read(
@@ -839,12 +839,12 @@ namespace uns::string {
 	) noexcept {
 		auto right_border = right_borders.cend();
 
-		auto pos_right_border = uns::string::find(target, seeker, right_borders, right_border);
+		auto pos_right_border = uns::string::find<string_t>(target, seeker, right_borders, right_border);
 
 		if(right_border != right_borders.cend())
-			return uns::string::seeker_read(target, seeker, result, delimiters, from_begin, relative_position, pos_right_border, pos_right_border + right_border->size() - 1);
+			return uns::string::seeker_read<string_t>(target, seeker, result, delimiters, from_begin, relative_position, pos_right_border, pos_right_border + right_border->size() - 1);
 		else
-			return uns::string::seeker_read(target, seeker, result, delimiters, from_begin, relative_position);
+			return uns::string::seeker_read<string_t>(target, seeker, result, delimiters, from_begin, relative_position);
 	};
 	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> rborder_t>
 	bool seeker_read(
@@ -858,12 +858,12 @@ namespace uns::string {
 	) noexcept {
 		auto right_border = right_borders.cend();
 
-		auto pos_right_border = uns::string::find(target, seeker, right_borders, right_border);
+		auto pos_right_border = uns::string::find<string_t>(target, seeker, right_borders, right_border);
 
 		if(right_border != right_borders.cend())
-			return uns::string::seeker_read(target, seeker, result, delimiter, from_begin, relative_position, pos_right_border, pos_right_border + right_border->size() - 1);
+			return uns::string::seeker_read<string_t>(target, seeker, result, delimiter, from_begin, relative_position, pos_right_border, pos_right_border + right_border->size() - 1);
 		else
-			return uns::string::seeker_read(target, seeker, result, delimiter, from_begin, relative_position);
+			return uns::string::seeker_read<string_t>(target, seeker, result, delimiter, from_begin, relative_position);
 	};
 	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> collection_t>
 	bool seeker_read(
@@ -875,12 +875,12 @@ namespace uns::string {
 		typename std::iterator_traits<typename string_t::const_iterator>::difference_type	relative_position,		//this value indicates of how mutch symbols the seeker should be moved from first/last symbol of found sample (if from begin than to the end of target string, if from end than to the beginning)
 		const string_t&																right_border					//position of the first symbol of the right border, that serves as the limit for finding delimiters (including right_border_beg)
 	) noexcept {
-		auto pos_right_border = uns::string::find(target, seeker, right_border);
+		auto pos_right_border = uns::string::find<string_t>(target, seeker, right_border);
 
 		if(pos_right_border != target.cend())
-			return uns::string::seeker_read(target, seeker, result, delimiters, from_begin, relative_position, pos_right_border, pos_right_border + right_border.size() - 1);
+			return uns::string::seeker_read<string_t>(target, seeker, result, delimiters, from_begin, relative_position, pos_right_border, pos_right_border + right_border.size() - 1);
 		else
-			return uns::string::seeker_read(target, seeker, result, delimiters, from_begin, relative_position);
+			return uns::string::seeker_read<string_t>(target, seeker, result, delimiters, from_begin, relative_position);
 	};
 	template<uns::string::std_basic string_t>
 	bool seeker_read(
@@ -892,12 +892,12 @@ namespace uns::string {
 		typename std::iterator_traits<typename string_t::const_iterator>::difference_type	relative_position,		//this value indicates of how mutch symbols the seeker should be moved from first/last symbol of found sample (if from begin than to the end of target string, if from end than to the beginning)
 		const string_t&																right_border					//position of the first symbol of the right border, that serves as the limit for finding delimiters (including right_border_beg)
 	) noexcept {
-		auto pos_right_border = uns::string::find(target, seeker, right_border);
+		auto pos_right_border = uns::string::find<string_t>(target, seeker, right_border);
 
 		if(pos_right_border != target.cend())
-			return uns::string::seeker_read(target, seeker, result, delimiter, from_begin, relative_position, pos_right_border, pos_right_border + right_border.size() - 1);
+			return uns::string::seeker_read<string_t>(target, seeker, result, delimiter, from_begin, relative_position, pos_right_border, pos_right_border + right_border.size() - 1);
 		else
-			return uns::string::seeker_read(target, seeker, result, delimiter, from_begin, relative_position);
+			return uns::string::seeker_read<string_t>(target, seeker, result, delimiter, from_begin, relative_position);
 	};
 
 
@@ -918,9 +918,9 @@ namespace uns::string {
 	) noexcept {
 		auto seeker = target.cbegin();
 
-		if(!uns::string::seeker_set(target, seeker, sample, from_begin, relative_position, right_border_beg, target.cend())) return false;
+		if(!uns::string::seeker_set<string_t>(target, seeker, sample, from_begin, relative_position, right_border_beg, target.cend())) return false;
 
-		return uns::string::seeker_read(target, seeker, result, delimiters, true, 0, right_border_beg, target.cend());
+		return uns::string::seeker_read<string_t>(target, seeker, result, delimiters, true, 0, right_border_beg, target.cend());
 	};
 	template<uns::string::std_basic string_t>
 	bool sample_read(
@@ -934,9 +934,9 @@ namespace uns::string {
 	) noexcept {
 		auto seeker = target.cbegin();
 
-		if(!uns::string::seeker_set(target, seeker, sample, from_begin, relative_position, right_border_beg, target.cend())) return false;
+		if(!uns::string::seeker_set<string_t>(target, seeker, sample, from_begin, relative_position, right_border_beg, target.cend())) return false;
 
-		return uns::string::seeker_read(target, seeker, result, delimiter, true, 0, right_border_beg, target.cend());
+		return uns::string::seeker_read<string_t>(target, seeker, result, delimiter, true, 0, right_border_beg, target.cend());
 	};
 	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> delimiters_t>
 	bool sample_read(
@@ -947,7 +947,7 @@ namespace uns::string {
 		string_t&																	result,							//a result string (in case of fail, it becomes empty)
 		const delimiters_t&															delimiters						//an iterable collection of delimiting strings
 	) noexcept {
-		return uns::string::sample_read(target, sample, from_begin, relative_position, result, delimiters, target.cend());
+		return uns::string::sample_read<string_t>(target, sample, from_begin, relative_position, result, delimiters, target.cend());
 	};
 	template<uns::string::std_basic string_t>
 	bool sample_read(
@@ -958,7 +958,7 @@ namespace uns::string {
 		string_t&																	result,							//a result string (in case of fail, it becomes empty)
 		const string_t&																delimiter						//an iterable collection of delimiting strings
 	) noexcept {
-		return uns::string::sample_read(target, sample, from_begin, relative_position, result, delimiter, target.cend());
+		return uns::string::sample_read<string_t>(target, sample, from_begin, relative_position, result, delimiter, target.cend());
 	};
 	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> delimiters_t, uns::const_iterable_collection<string_t> rborders_t>
 	bool sample_read(
@@ -970,9 +970,9 @@ namespace uns::string {
 		const delimiters_t&															delimiters,						//an iterable collection of delimiting strings
 		const rborders_t&															right_borders						//position of the first symbol of the right border, that serves as the limit for finding delimiters (including right_border_beg)
 	) noexcept {
-		auto pos_right_border = uns::string::find(target, target.cbegin(), right_borders);
+		auto pos_right_border = uns::string::find<string_t>(target, target.cbegin(), right_borders);
 
-		return uns::string::sample_read(target, sample, from_begin, relative_position, result, delimiters, pos_right_border);
+		return uns::string::sample_read<string_t>(target, sample, from_begin, relative_position, result, delimiters, pos_right_border);
 	};
 	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> rborders_t>
 	bool sample_read(
@@ -984,9 +984,9 @@ namespace uns::string {
 		const string_t&																delimiter,						//an iterable collection of delimiting strings
 		const rborders_t&															right_borders						//position of the first symbol of the right border, that serves as the limit for finding delimiters (including right_border_beg)
 	) noexcept {
-		auto pos_right_border = uns::string::find(target, target.cbegin(), right_borders);
+		auto pos_right_border = uns::string::find<string_t>(target, target.cbegin(), right_borders);
 
-		return uns::string::sample_read(target, sample, from_begin, relative_position, result, delimiter, pos_right_border);
+		return uns::string::sample_read<string_t>(target, sample, from_begin, relative_position, result, delimiter, pos_right_border);
 	};
 	template<uns::string::std_basic string_t, uns::const_iterable_collection<string_t> delimiters_t>
 	bool sample_read(
@@ -998,9 +998,9 @@ namespace uns::string {
 		const delimiters_t&															delimiters,						//an iterable collection of delimiting strings
 		const string_t&																right_border						//position of the first symbol of the right border, that serves as the limit for finding delimiters (including right_border_beg)
 	) noexcept {
-		auto pos_right_border = uns::string::find(target, target.cbegin(), right_border);
+		auto pos_right_border = uns::string::find<string_t>(target, target.cbegin(), right_border);
 
-		return uns::string::sample_read(target, sample, from_begin, relative_position, result, delimiters, pos_right_border);
+		return uns::string::sample_read<string_t>(target, sample, from_begin, relative_position, result, delimiters, pos_right_border);
 	};
 	template<uns::string::std_basic string_t>
 	bool sample_read(
@@ -1012,9 +1012,9 @@ namespace uns::string {
 		const string_t&																delimiter,						//an iterable collection of delimiting strings
 		const string_t&																right_border					//position of the first symbol of the right border, that serves as the limit for finding delimiters (including right_border_beg)
 	) noexcept {
-		auto pos_right_border = uns::string::find(target, target.cbegin(), right_border);
+		auto pos_right_border = uns::string::find<string_t>(target, target.cbegin(), right_border);
 
-		return uns::string::sample_read(target, sample, from_begin, relative_position, result, delimiter, pos_right_border);
+		return uns::string::sample_read<string_t>(target, sample, from_begin, relative_position, result, delimiter, pos_right_border);
 	};
 
 };
