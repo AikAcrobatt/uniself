@@ -1,6 +1,7 @@
 #pragma once
 
 #include <concepts>
+#include <initializer_list>
 
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/io.hpp>
@@ -20,7 +21,55 @@ namespace uns::math {
 	concept ublas_matrix = std::derived_from<matrix_t, ublas::matrix<typename matrix_t::value_type, ublas::row_major, typename matrix_t::array_type>>
 		|| std::derived_from<matrix_t, ublas::matrix<typename matrix_t::value_type, ublas::column_major, typename matrix_t::array_type>>;
 
+	template<uns::math::ublas_matrix matrix_t>
+	matrix_t make(
+		std::initializer_list<std::initializer_list<typename matrix_t::value_type>> list_of_lists
+	) {
+		auto res = matrix_t{ 0, 0 };
+
+		auto size1 = list_of_lists.size();
+		if(size1 == 0) return res;
+
+		auto i1 = typename matrix_t::size_type{ 0 };
+		auto i2 = typename matrix_t::size_type{ 0 };
+		auto list_ptr = list_of_lists.begin();
+		auto elem_ptr = list_ptr->begin();
+		auto end1_found = false;
+		auto end2_found = false;
+
+		auto size2 = list_ptr->size();
+		if(size2 == 0) return res;
+
+		res.resize(size1, size2, false);
+
+		for(i1 = 0; i1 < res.size1(); i1++) {
+			end2_found = false;
+			
+			for(i2 = 0; i2 < res.size2(); i2++) {
+				end1_found = (end1_found || list_ptr == list_of_lists.end());
+				end2_found = (end1_found || end2_found || (!end1_found && elem_ptr == list_ptr->end()));
+
+				if(end1_found || end2_found) {
+					res(i1, i2) = static_cast<typename matrix_t::value_type>(0);
+				}
+				else {
+					res(i1, i2) = static_cast<typename matrix_t::value_type>(*elem_ptr);
+				};
+
+				if(!end2_found) elem_ptr++;
+			};
+
+			if(!end1_found) {
+				list_ptr++;
+				elem_ptr = list_ptr->begin();
+			};
+		};
+
+		return res;
+	};
+
 };
+
 
 namespace uns::string {
 
@@ -33,9 +82,12 @@ namespace uns::string {
 		res += uns::string::u8_cast<std::u8string>(mtx.size2());
 		res += u8"] {\n";
 
+		auto i1 = typename matrix_t::size_type{ 0 };
+		auto i2 = typename matrix_t::size_type{ 0 };
+
 		auto is_upmost = true;
 		auto is_leftmost = true;
-		for(int i1 = 0; i1 < mtx.size1(); i1++) {
+		for(i1 = 0; i1 < mtx.size1(); i1++) {
 			if(!is_upmost)
 				res += u8",\n";
 			else
@@ -44,7 +96,7 @@ namespace uns::string {
 			res += u8"\t{";
 
 			is_leftmost = true;
-			for(int i2 = 0; i2 < mtx.size2(); i2++) {
+			for(i2 = 0; i2 < mtx.size2(); i2++) {
 				if(!is_leftmost)
 					res += u8", ";
 				else
@@ -63,13 +115,15 @@ namespace uns::string {
 	template<uns::math::ublas_matrix matrix_t>
 	matrix_t u8_cast(const std::u8string& str) {
 		static const auto bracket_op = std::u8string{ u8"[" };
-		static const auto mul = std::u8string{ u8" x " };
+		static const auto mul = std::u8string{ u8"x" };
 		static const auto bracket_cl = std::u8string{ u8"]" };
 		static const auto space = std::u8string{ u8" " };
 		static const auto comma = std::u8string{ u8"," };
-		static const auto comma_space = std::u8string{ u8", " };
 		static const auto brace_op = std::u8string{ u8"{" };
 		static const auto brace_cl = std::u8string{ u8"}" };
+
+		auto i1 = typename matrix_t::size_type{ 0 };
+		auto i2 = typename matrix_t::size_type{ 0 };
 
 		auto res = matrix_t{};
 		auto read_str = std::u8string{};
@@ -84,12 +138,12 @@ namespace uns::string {
 
 		if(!uns::string::seeker_set(str, seeker, brace_op, false, -1)) throw std::runtime_error{ "Matrix string format violation: a '{' not found" };
 
-		for(int i1 = 0; i1 < res.size1(); i1++) {
+		for(i1 = 0; i1 < res.size1(); i1++) {
 			if(!uns::string::seeker_set(str, seeker, brace_op, false, -1)) throw std::runtime_error{ "Matrix string format violation: a newline '{' not found" };
 
-			for(int i2 = 0; i2 < res.size2(); i2++) {
+			for(i2 = 0; i2 < res.size2(); i2++) {
 				if(i2 < res.size2() - 1) {
-					if(!uns::string::seeker_read(str, seeker, read_str, comma_space, false, -1, brace_cl)) throw std::runtime_error{ "Matrix string format violation: cant read till ',' of dim #2" };
+					if(!uns::string::seeker_read(str, seeker, read_str, comma, false, -1, brace_cl)) throw std::runtime_error{ "Matrix string format violation: cant read till ',' of dim #2" };
 					else res(i1, i2) = uns::string::u8_cast<typename matrix_t::value_type>(read_str);
 				}
 				else {
@@ -111,27 +165,67 @@ namespace uns::string {
 
 };
 
-namespace uns::math::linear {
+
+namespace uns::math {
+
+	template<uns::math::ublas_matrix matrix1_t, uns::math::ublas_matrix matrix2_t>
+	constexpr bool equals(matrix1_t mtx1, matrix2_t mtx2) noexcept {
+		if(mtx1.size1() != mtx2.size1() || mtx1.size2() != mtx2.size2()) return false;
+
+		auto i1 = typename matrix1_t::size_type{ 0 };
+		auto i2 = typename matrix1_t::size_type{ 0 };
+
+		for(i1 = 0; i1 < mtx2.size1(); i1++) {
+			for(i2 = 0; i2 < mtx2.size2(); i2++) {
+				if(!uns::math::equals<typename matrix1_t::value_type, typename matrix2_t::value_type>(mtx1(i1, i2), mtx2(i1, i2))) return false;
+			};
+		};
+
+		return true;
+	};
+	template<uns::math::ublas_matrix matrix1_t, uns::math::ublas_matrix matrix2_t, std::convertible_to<typename matrix1_t::value_type> accuracy_t>
+	constexpr bool equals(matrix1_t mtx1, matrix2_t mtx2, const accuracy_t accuracy) noexcept {
+		if(mtx1.size1() != mtx2.size1() || mtx1.size2() != mtx2.size2()) return false;
+
+		auto i1 = typename matrix1_t::size_type{ 0 };
+		auto i2 = typename matrix1_t::size_type{ 0 };
+
+		for(i1 = 0; i1 < mtx2.size1(); i1++) {
+			for(i2 = 0; i2 < mtx2.size2(); i2++) {
+				if(!uns::math::equals<typename matrix1_t::value_type, typename matrix2_t::value_type, accuracy_t>(mtx1(i1, i2), mtx2(i1, i2), accuracy)) return false;
+			};
+		};
+
+		return true;
+	};
+
+};
+
+
+namespace uns::math {
 
 	//matrix resize with filling
 	template<uns::math::ublas_matrix matrix_t>
 	void resize(
 		matrix_t& m, 
-		typename matrix_t::size_type new_size1, 
-		typename matrix_t::size_type new_size2, 
-		typename matrix_t::value_type filler
+		const typename matrix_t::size_type new_size1, 
+		const typename matrix_t::size_type new_size2,
+		const typename matrix_t::value_type filler
 	) {
+		auto i1 = typename matrix_t::size_type{ 0 };
+		auto i2 = typename matrix_t::size_type{ 0 };
+
 		auto size1 = m.size1();
 		auto size2 = m.size2();
 
 		m.resize(new_size1, new_size2, true);
-		for(auto i1 = size1; i1 < m.size1(); i1++) {
-			for(auto i2 = 0; i2 < size2 && i2 < m.size2(); i2++) {
+		for(i1 = size1; i1 < m.size1(); i1++) {
+			for(i2 = 0; i2 < size2 && i2 < m.size2(); i2++) {
 				m(i1, i2) = filler;
 			};
 		};
-		for(auto i1 = 0; i1 < m.size1(); i1++) {
-			for(auto i2 = size2; i2 < m.size2(); i2++) {
+		for(i1 = 0; i1 < m.size1(); i1++) {
+			for(i2 = size2; i2 < m.size2(); i2++) {
 				m(i1, i2) = filler;
 			};
 		};
@@ -142,7 +236,7 @@ namespace uns::math::linear {
 	template<uns::math::ublas_matrix matrix_t>
 	void fill(
 		matrix_t& m,
-		typename matrix_t::value_type filler
+		const typename matrix_t::value_type filler
 	) {
 		auto i1 = typename matrix_t::size_type{ 0 };
 		auto i2 = typename matrix_t::size_type{ 0 };
@@ -154,7 +248,7 @@ namespace uns::math::linear {
 	};
 
 
-	//addition of matrices fo different sizes
+	//addition of matrices of different sizes
 	template<uns::math::ublas_matrix matrix_t>
 	matrix_t sum(
 		const matrix_t& m1,
@@ -259,6 +353,47 @@ namespace uns::math::linear {
 	};
 
 
+	//trace of matrix
+	template<uns::math::ublas_matrix matrix_t>
+	typename matrix_t::value_type trace(
+		const matrix_t& m
+	) {
+		auto res = typename matrix_t::value_type{ 0 };
+
+		auto min_size = uns::math::min(m.size1(), m.size2());
+		auto i = min_size;
+
+		for(i = 0; i < min_size; i++) {
+			res += m(i, i);
+		};
+
+		return res;
+	};
+
+
+	//returns the identical matrix
+	template<uns::math::ublas_matrix matrix_t>
+	matrix_t make_identity(
+		typename matrix_t::size_type size1,
+		typename matrix_t::size_type size2
+	) {
+		matrix_t res(size1, size2);
+
+		auto i1 = typename matrix_t::size_type{ 0 };
+		auto i2 = typename matrix_t::size_type{ 0 };
+
+		for(i1 = 0; i1 < res.size1(); i1++)
+			for(i2 = 0; i2 < res.size2(); i2++)
+				res(i1, i2) = ((i1 == i2) ? typename matrix_t::value_type{ 1 } : typename matrix_t::value_type{ 0 });
+
+		return res;
+	};
+	template<uns::math::ublas_matrix matrix_t>
+	matrix_t make_identity(const matrix_t& m) {
+		return uns::math::make_identity<matrix_t>(m.size1(), m.size2());
+	};
+
+
 	//copying of dim1 units within the same matrix
 	template<uns::math::ublas_matrix matrix_t>
 	void copy1(
@@ -323,43 +458,107 @@ namespace uns::math::linear {
 	};
 
 
-	//trace of matrix
+	//matrix upper triangulation, based on Haussian algorithm
 	template<uns::math::ublas_matrix matrix_t>
-	typename matrix_t::value_type trace(
-		const matrix_t& m
+	typename matrix_t::value_type triangulate(
+		matrix_t& m
 	) {
-		auto res = typename matrix_t::value_type{ 0 };
+		const auto _0 = static_cast<typename matrix_t::value_type>(0);
+		const auto _1 = static_cast<typename matrix_t::value_type>(1);
+		auto sign = _1;
+		auto multiplier = _1;
+		auto min_size = uns::math::min<typename matrix_t::size_type>(m.size1(), m.size2());
+		auto i1 = static_cast<typename matrix_t::size_type>(0);
+		auto i2 = static_cast<typename matrix_t::size_type>(0);
+		auto i3 = static_cast<typename matrix_t::size_type>(0);
+		auto line_of_nonzero = static_cast<typename matrix_t::size_type>(0);
 
-		auto min_dim = uns::math::min(m.size1(), m.size2());
-		auto i = min_dim;
+		for(i2 = 0; i2 < min_size; i2++) {
+			if(uns::math::equals<typename matrix_t::value_type>(m(i2, i2), _0)) {
+				line_of_nonzero = 0;
+				for(i1 = i2 + 1; i1 < m.size1(); i1++) {
+					if(!uns::math::equals<typename matrix_t::value_type>(m(i1, i2), _0)) {
+						line_of_nonzero = i1;
+						break;
+					};
+				};
+				if(line_of_nonzero > i2) {
+					uns::math::swap1(m, line_of_nonzero, i2);
+					sign *= -_1;
+				};
+			};
+			for(i1 = i2 + 1; i1 < m.size1(); i1++) {
+				if(!uns::math::equals<typename matrix_t::value_type>(m(i2, i2), _0)) {
+					if(!uns::math::equals<typename matrix_t::value_type>(m(i1, i2), _0)) {
+						multiplier = static_cast<typename matrix_t::value_type>(m(i1, i2)) / static_cast<typename matrix_t::value_type>(m(i2, i2));
 
-		for(i = 0; i < min_dim; i++) {
-			res += m(i, i);
+						for(i3 = i2; i3 < m.size2(); i3++) {
+							if(uns::math::equals<typename matrix_t::value_type>(m(i1, i3), multiplier * m(i2, i3))) {
+								m(i1, i3) = _0;
+							}
+							else {
+								m(i1, i3) = m(i1, i3) - multiplier * m(i2, i3);
+							};
+						};
+					}
+					else {
+						m(i1, i2) = _0;
+					};
+				}
+				else {
+					m(i2, i2) = _0;
+				};
+			};
+		};
+
+		return sign;
+	};
+
+
+	//determinant of matrix
+	template<uns::math::ublas_matrix matrix_t>
+	typename matrix_t::value_type det(
+		matrix_t m
+	) {
+		auto res = static_cast<typename matrix_t::value_type>(0);
+
+		if(m.size1() != m.size2()) return res;
+		else res = static_cast<typename matrix_t::value_type>(1);
+
+		uns::math::triangulate(m);
+
+		typename matrix_t::size_type i1 = 0;
+		for(i1 = 0; i1 < m.size1(); i1++) {
+			res *= m(i1, i1);
 		};
 
 		return res;
 	};
 
-
-	//returns the identical matrix
+	
+	//rank of matrix
 	template<uns::math::ublas_matrix matrix_t>
-	matrix_t make_identity(
-		typename matrix_t::size_type size1,
-		typename matrix_t::size_type size2
+	typename matrix_t::size_type rank(
+		matrix_t m
 	) {
-		matrix_t res(size1, size2);
+		uns::math::triangulate(m);
 
-		auto i1 = typename matrix_t::size_type{ 0 };
-		auto i2 = typename matrix_t::size_type{ 0 };
+		const auto _0 = static_cast<typename matrix_t::value_type>(0);
 
-		for(i1 = 0; i1 < res.size1(); i1++)
-			for(i2 = 0; i2 < res.size2(); i2++)
-				res(i1, i2) = ((i1 == i2) ? typename matrix_t::value_type{ 1 } : typename matrix_t::value_type{ 0 });
+		auto i1 = static_cast<typename matrix_t::size_type>(0);
+		auto i2 = static_cast<typename matrix_t::size_type>(0);
+
+		auto res = static_cast<typename matrix_t::size_type>(0);
+
+		for(i1 = 0; i1 < m.size1(); i1++) {
+			for(i2 = 0; i2 < m.size2(); i2++) {
+				if(!uns::math::equals(m(i1, i2), _0)) {
+					res++;
+					break;
+				};
+			};
+		};
 
 		return res;
-	};
-	template<uns::math::ublas_matrix matrix_t>
-	matrix_t make_identity(const matrix_t& m) {
-		return uns::math::linear::make_identity<matrix_t>(m.size1(), m.size2());
 	};
 };
