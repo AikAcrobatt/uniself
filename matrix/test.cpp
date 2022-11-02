@@ -379,16 +379,29 @@ BOOST_AUTO_TEST_SUITE(matrix_basic_ops_test)
             { -2.2, -4.5, -0.1, -9.9 }
         });
 
-        auto rank = uns::math::rank(mtx1);
+        auto rank1 = uns::math::rank(mtx1);
 
         BOOST_TEST(
-            rank == 4
+            rank1 == 4
+        );
+
+        auto mtx2 = uns::math::make<uns::math::matrix<double>>({
+            { 1.0, -8.7, 3.4, 5.5 },
+            { -7.0, 2.2, -1.0, 0.0 },
+            { 8.8, -1.2, 5.5, 9.4 },
+            { 8.8, -1.2, 5.5, 9.4 }
+        });
+
+        auto rank2 = uns::math::rank(mtx2);
+
+        BOOST_TEST(
+            rank2 == 3
         );
     };
 
 BOOST_AUTO_TEST_SUITE_END();
 
-BOOST_AUTO_TEST_SUITE(matrix_arithmetic_ops_test)
+BOOST_AUTO_TEST_SUITE(matrix_calculations_test)
 
     BOOST_AUTO_TEST_CASE(sum_test) {
         auto mtx1 = uns::math::make<uns::math::matrix<double>>({
@@ -461,6 +474,53 @@ BOOST_AUTO_TEST_SUITE(matrix_arithmetic_ops_test)
 
         BOOST_TEST(
             uns::math::equals(mtx3, uns::math::prod(mtx1, mtx2))
+        );
+    };
+
+    BOOST_AUTO_TEST_CASE(orto_test) {
+        auto mtx1 = uns::math::make<uns::math::matrix<long double>>({
+            { 0.0, 1.2, 2.3 },
+            { -2.2, -4.5, -0.1 },
+            { 2.2, 3.3, 5.2 }
+        });
+
+        auto mtx2 = uns::math::make_orto(mtx1);
+        auto mtx3 = uns::math::trans(mtx2);
+        auto mtx4 = uns::math::prod(mtx3, mtx2);
+        auto mtx5 = uns::math::prod(mtx2, mtx3);
+
+        auto i_mtx = uns::math::make_identity(mtx2);
+
+        BOOST_TEST(
+            uns::math::equals(i_mtx, mtx4, 1.0e-15)
+        );
+
+        BOOST_TEST(
+            uns::math::equals(i_mtx, mtx5, 1.0e-15)
+        );
+    };
+
+    BOOST_AUTO_TEST_CASE(inverse_test) {
+        auto mtx1 = uns::math::make<uns::math::matrix<long double>>({
+            { 0.0, 1.2, 2.3 },
+            { -2.2, -4.5, -0.1 },
+            { 2.2, 3.3, 5.2 }
+        });
+
+        auto mtx2 = mtx1;
+        BOOST_TEST(uns::math::inverse(mtx1, mtx2));
+
+        auto mtx3 = uns::math::prod(mtx1, mtx2);
+        auto mtx4 = uns::math::prod(mtx2, mtx1);
+
+        auto i_mtx = uns::math::make_identity(mtx1);
+
+        BOOST_TEST(
+            uns::math::equals(i_mtx, mtx3, 1.0e-15)
+        );
+
+        BOOST_TEST(
+            uns::math::equals(i_mtx, mtx4, 1.0e-15)
         );
     };
 
@@ -550,6 +610,74 @@ BOOST_AUTO_TEST_SUITE(transformations_test)
         });
 
         uns::math::swap2(mtx1, 1, 3);
+
+        BOOST_TEST(
+            uns::math::equals(mtx1, mtx2)
+        );
+    };
+
+    BOOST_AUTO_TEST_CASE(overthrow_test1) {
+        auto mtx1 = uns::math::make<uns::math::matrix<int>>({
+            { 0, 1, 2, 3 },
+            { 4, 5, 6, 7 },
+            { 8, 9, 10, 11 },
+            { 12, 13, 14, 15 }
+        });
+
+        auto mtx2 = uns::math::make<uns::math::matrix<int>>({
+            { 15, 14, 13, 12 },
+            { 11, 10, 9, 8 },
+            { 7, 6, 5, 4 },
+            { 3, 2, 1, 0 }
+        });
+
+        uns::math::overthrow(mtx1);
+
+        BOOST_TEST(
+            uns::math::equals(mtx1, mtx2)
+        );
+    };
+
+    BOOST_AUTO_TEST_CASE(overthrow_test2) {
+        auto mtx1 = uns::math::make<uns::math::matrix<int>>({
+            { 0, 1, 2, 3, -1 },
+            { 4, 5, 6, 7, -2 },
+            { 8, 9, 10, 11, -3 },
+            { 12, 13, 14, 15, -4 }
+        });
+
+        auto mtx2 = uns::math::make<uns::math::matrix<int>>({
+            { -4, 15, 14, 13, 12 },
+            { -3, 11, 10, 9, 8 },
+            { -2, 7, 6, 5, 4 },
+            { -1, 3, 2, 1, 0 }
+        });
+
+        uns::math::overthrow(mtx1);
+
+        BOOST_TEST(
+            uns::math::equals(mtx1, mtx2)
+        );
+    };
+
+    BOOST_AUTO_TEST_CASE(overthrow_test3) {
+        auto mtx1 = uns::math::make<uns::math::matrix<int>>({
+            { 0, 1, 2, 3, -1 },
+            { 4, 5, 6, 7, -2 },
+            { -11, -12, -13, -14, -15 },
+            { 8, 9, 10, 11, -3 },
+            { 12, 13, 14, 15, -4 }
+        });
+
+        auto mtx2 = uns::math::make<uns::math::matrix<int>>({
+            { -4, 15, 14, 13, 12 },
+            { -3, 11, 10, 9, 8 },
+            { -15, -14, -13, -12, -11 },
+            { -2, 7, 6, 5, 4 },
+            { -1, 3, 2, 1, 0 }
+        });
+
+        uns::math::overthrow(mtx1);
 
         BOOST_TEST(
             uns::math::equals(mtx1, mtx2)

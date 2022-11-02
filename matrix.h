@@ -394,6 +394,80 @@ namespace uns::math {
 	};
 
 
+	//generates an ortogonal matrix based on input
+	template<uns::math::ublas_matrix matrix_t>
+	matrix_t make_orto(
+		const matrix_t& m
+	) {
+		using result_t = matrix_t;
+
+		if(m.size1() != m.size2()) return uns::math::make_identity<result_t>(m.size1(), m.size2());
+
+		auto i1 = static_cast<typename result_t::size_type>(0);
+		auto i2 = static_cast<typename result_t::size_type>(0);
+		auto i3 = static_cast<typename result_t::size_type>(0);
+
+		auto res = m;
+
+		const auto _0 = static_cast<typename result_t::value_type>(0);
+		const auto _1 = static_cast<typename result_t::value_type>(1);
+		auto norm = _0;
+		auto koeff = std::vector<typename result_t::value_type>{}; koeff.resize(m.size1());
+
+		for(i3 = 1; i3 <= res.size1(); i3++) {
+			//normalizing previous vector
+			norm = _0;
+			for(i2 = 0; i2 < res.size2(); i2++) {
+				norm += res(i3 - 1, i2) * res(i3 - 1, i2);
+			};
+			norm = uns::math::div(_1, static_cast<typename result_t::value_type>(sqrt(norm)));
+			for(i2 = 0; i2 < res.size2(); i2++) {
+				res(i3 - 1, i2) = res(i3 - 1, i2) * norm;
+			};
+
+			if(i3 == res.size1()) break;
+			for(auto& el : koeff) {
+				el = _0;
+			};
+			
+			//counting koefficients
+			for(i1 = 0; i1 < i3; i1++) {
+				for(i2 = 0; i2 < res.size2(); i2++) {
+					koeff[i1] -= res(i3, i2) * res(i1, i2);
+				};
+			};
+			//counting new vector
+			for(i1 = 0; i1 < i3; i1++) {
+				for(i2 = 0; i2 < res.size2(); i2++) {
+					res(i3, i2) = res(i3, i2) + koeff[i1] * res(i1, i2);
+				};
+			};
+		};
+
+		return res;
+	};
+
+
+	//copying of dim1 units within the same matrix
+	template<uns::math::ublas_matrix matrix_t>
+	matrix_t trans(
+		matrix_t& m
+	) {
+		auto res = matrix_t{ m.size2(), m.size1() };
+
+		auto i1 = static_cast<typename matrix_t::size_type>(0);
+		auto i2 = static_cast<typename matrix_t::size_type>(0);
+
+		for(i1 = 0; i1 < m.size1(); i1++) {
+			for(i2 = 0; i2 < m.size2(); i2++) {
+				res(i2, i1) = m(i1, i2);
+			};
+		};
+
+		return res;
+	};
+
+
 	//copying of dim1 units within the same matrix
 	template<uns::math::ublas_matrix matrix_t>
 	void copy1(
@@ -561,4 +635,128 @@ namespace uns::math {
 
 		return res;
 	};
+
+	
+	//matrix upper triangulation, based on Haussian algorithm
+	template<uns::math::ublas_matrix matrix_t>
+	void overthrow(
+		matrix_t& m
+	) {
+		const auto size1 = m.size1();
+		const auto size2 = m.size2();
+		auto i1 = static_cast<typename matrix_t::size_type>(0);
+		auto i2 = static_cast<typename matrix_t::size_type>(0);
+		auto i1_ = static_cast<typename matrix_t::size_type>(0);
+		auto i2_ = static_cast<typename matrix_t::size_type>(0);
+		auto for_lines = m.size1() / static_cast<typename matrix_t::size_type>(2);
+		auto for_cols = m.size2() / static_cast<typename matrix_t::size_type>(2);
+		auto temp = static_cast<typename matrix_t::value_type>(0);
+
+		for(i1 = 0; i1 < for_lines; i1++) {
+			for(i2 = 0; i2 < size2; i2++) {
+				i1_ = size1 - i1 - 1;
+				i2_ = size2 - i2 - 1;
+				temp = m(i1, i2);
+				m(i1, i2) = m(i1_, i2_);
+				m(i1_, i2_) = temp;
+			};
+		};
+
+		if(m.size1() % static_cast<int>(2) == 1) {
+			for(i2 = 0; i2 < for_cols; i2++) {
+				i2_ = size2 - i2 - 1;
+				temp = m(for_lines, i2);
+				m(for_lines, i2) = m(for_lines, i2_);
+				m(for_lines, i2_) = temp;
+			};
+		};
+	};
+
+
+	//generates a fully-inverted matrix
+	template<uns::math::ublas_matrix matrix_t>
+	bool inverse(
+		const matrix_t& init,
+		matrix_t& res
+	) {
+		if(init.size1() != init.size2()) return false;
+
+		auto i1 = static_cast<typename matrix_t::size_type>(0);
+		auto i2 = static_cast<typename matrix_t::size_type>(0);
+		auto i3 = static_cast<typename matrix_t::size_type>(0);
+		auto line_of_nonzero = static_cast<typename matrix_t::size_type>(0);
+
+		const auto _0 = static_cast<typename matrix_t::value_type>(0);
+		const auto _1 = static_cast<typename matrix_t::value_type>(1);
+		auto koeff = _1;
+
+		auto init_copy = init;
+		res = uns::math::make_identity(init);
+
+		for(short int phase = 1; phase <= 2; phase++) {
+			if(phase == 2) {
+				uns::math::overthrow(init_copy);
+				uns::math::overthrow(res);
+			};
+
+			for(i2 = 0; i2 < init_copy.size2(); i2++) {
+				if(uns::math::equals(init_copy(i2, i2), _0)) {
+					line_of_nonzero = 0;
+					i1 = 0;
+					for(i1 = i2 + 1; i1 < init_copy.size1(); i1++) {
+						if(!uns::math::equals(init_copy(i1, i2), _0)) {
+							line_of_nonzero = i1;
+							break;
+						};
+					};
+					if(i1 == init_copy.size1()) {
+						return false;
+					};
+					if(line_of_nonzero > i2) {
+						uns::math::swap1(init_copy, line_of_nonzero, i2);
+						uns::math::swap1(res, line_of_nonzero, i2);
+					};
+				};
+				for(i1 = i2 + 1; i1 < init_copy.size1(); i1++) {
+					if(!uns::math::equals(init_copy(i1, i2), _0)) {
+						koeff = init_copy(i1, i2) / init_copy(i2, i2);
+						for(i3 = 0; i3 < init_copy.size2(); i3++) {
+							if(uns::math::equals(init_copy(i1, i3), koeff * init_copy(i2, i3))) {
+								init_copy(i1, i3) = _0;
+							}
+							else {
+								init_copy(i1, i3) = init_copy(i1, i3) - koeff * init_copy(i2, i3);
+							};
+
+							if(uns::math::equals(res(i1, i3), koeff * res(i2, i3))) {
+								res(i1, i3) = _0;
+							}
+							else {
+								res(i1, i3) = res(i1, i3) - koeff * res(i2, i3);
+							};
+						};
+					}
+					else {
+						init_copy(i1, i2) = _0;
+					};
+				};
+			};
+		};
+
+		for(i1 = 0; i1 < init_copy.size1(); i1++) {
+			for(i2 = 0; i2 < init_copy.size2(); i2++) {
+				if(!uns::math::equals(init_copy(i1, i1), _0)) {
+					res(i1, i2) = res(i1, i2) / init_copy(i1, i1);
+				}
+				else {
+					return false;
+				};
+			};
+		};
+
+		uns::math::overthrow(res);
+		return true;
+	};
+
+
 };
