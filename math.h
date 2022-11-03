@@ -107,4 +107,9 @@ namespace uns::math {
 	};
 
 
+	template<typename result_t = long double, uns::math::numeric value_t>
+	result_t sqrt(value_t arg) {
+		return static_cast<result_t>(::sqrt(arg));
+	};
+
 };

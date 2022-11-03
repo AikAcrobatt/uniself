@@ -420,7 +420,7 @@ namespace uns::math {
 			for(i2 = 0; i2 < res.size2(); i2++) {
 				norm += res(i3 - 1, i2) * res(i3 - 1, i2);
 			};
-			norm = uns::math::div(_1, static_cast<typename result_t::value_type>(sqrt(norm)));
+			norm = uns::math::div(_1, static_cast<typename result_t::value_type>(uns::math::sqrt(norm)));
 			for(i2 = 0; i2 < res.size2(); i2++) {
 				res(i3 - 1, i2) = res(i3 - 1, i2) * norm;
 			};

@@ -190,3 +190,44 @@ BOOST_AUTO_TEST_SUITE(div_test)
     };
 
 BOOST_AUTO_TEST_SUITE_END();
+
+
+BOOST_AUTO_TEST_SUITE(sqrt_test)
+
+    BOOST_DATA_TEST_CASE(correct1,
+        boost::unit_test::data::make(
+            {
+                0.0,
+                1.0,
+                2.0,
+                4.0,
+                9.0,
+                16.0,
+                3.0,
+                5.0,
+                7.123
+            }
+        )
+        ^ boost::unit_test::data::make(
+            { 
+                0.0,
+                1.0,
+                1.414213562373095,
+                2.0,
+                3.0,
+                4.0,
+                1.732050807568877,
+                2.236067977499789,
+                2.6688949023893764
+            }
+        ),
+        val1, val2
+    ) {
+        auto res = uns::math::sqrt(val1);
+
+        BOOST_TEST(
+            uns::math::equals(val2, res)
+        );
+    };
+
+BOOST_AUTO_TEST_SUITE_END();
