@@ -68,6 +68,29 @@ namespace uns::math {
 	};
 
 
+	//max/min funcs
+	template<uns::math::numeric value_t>
+	value_t max(const value_t& arg1, const value_t& arg2) noexcept {
+		if(arg1 > arg2) return arg1;
+		else return arg2;
+	};
+	template<uns::math::numeric value_t, typename ... args_t>
+	value_t max(const value_t& arg1, const args_t& ...args) noexcept {
+		if(auto arg_ = static_cast<value_t>(max(args)); arg1 > arg_) return arg1;
+		else return arg_;
+	};
+	template<uns::math::numeric value_t>
+	value_t min(const value_t& arg1, const value_t& arg2) noexcept {
+		if(arg1 < arg2) return arg1;
+		else return arg2;
+	};
+	template<uns::math::numeric value_t, typename ... args_t>
+	value_t min(const value_t& arg1, const args_t& ...args) noexcept {
+		if(auto arg_ = static_cast<value_t>(min(args)); arg1 < arg_) return arg1;
+		else return arg_;
+	};
+
+
 	//exponential moving average
 	template<std::floating_point value1_t, std::floating_point value2_t, std::floating_point value3_t>
 	value2_t ema(value1_t current_value, value2_t previous_ema, value3_t modificator) noexcept {
@@ -83,5 +106,10 @@ namespace uns::math {
 		);
 	};
 
+
+	template<typename result_t = long double, uns::math::numeric value_t>
+	result_t sqrt(value_t arg) {
+		return static_cast<result_t>(::sqrt(arg));
+	};
 
 };

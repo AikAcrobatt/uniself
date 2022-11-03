@@ -3,7 +3,6 @@
 #include <limits>
 
 #include "uniself/math.h"
-#include "uniself/matrix.h"
 
 #pragma warning(default: 4668; default: 4365)
 
@@ -192,14 +191,43 @@ BOOST_AUTO_TEST_SUITE(div_test)
 
 BOOST_AUTO_TEST_SUITE_END();
 
-BOOST_AUTO_TEST_SUITE(matrix_str_test)
 
-    BOOST_AUTO_TEST_CASE(correct1) {
-        
-        auto mtx1 = uns::math::matrix<long double, ublas::row_major, std::vector<long double>>(3, 4);
-        auto str = uns::string::u8_cast<std::u8string>(mtx1);
-        auto mtx2 = uns::string::u8_cast<uns::math::matrix<long double, ublas::row_major, std::vector<long double>>>(str);
+BOOST_AUTO_TEST_SUITE(sqrt_test)
 
+    BOOST_DATA_TEST_CASE(correct1,
+        boost::unit_test::data::make(
+            {
+                0.0,
+                1.0,
+                2.0,
+                4.0,
+                9.0,
+                16.0,
+                3.0,
+                5.0,
+                7.123
+            }
+        )
+        ^ boost::unit_test::data::make(
+            { 
+                0.0,
+                1.0,
+                1.414213562373095,
+                2.0,
+                3.0,
+                4.0,
+                1.732050807568877,
+                2.236067977499789,
+                2.6688949023893764
+            }
+        ),
+        val1, val2
+    ) {
+        auto res = uns::math::sqrt(val1);
+
+        BOOST_TEST(
+            uns::math::equals(val2, res)
+        );
     };
 
 BOOST_AUTO_TEST_SUITE_END();
