@@ -1,13 +1,19 @@
 ﻿#pragma once
 
+#define UNS_HEADER_STRINGS
+
 #include <string>
 #include <charconv>
 #include <type_traits>
 #include <concepts>
 #include <exception>
 
+#ifndef UNS_HEADER_BENUM
 #include "uniself/benum.h"
+#endif
+#ifndef UNS_HEADER_CONCEPTS
 #include "uniself/concepts.h"
+#endif
 
 namespace uns::test {
 

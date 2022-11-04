@@ -1,13 +1,19 @@
 #pragma once
 
+#define UNS_HEADER_MATRIX
+
 #include <concepts>
 #include <initializer_list>
 
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/io.hpp>
 
+#ifndef UNS_HEADER_MATH
 #include "uniself/math.h"
+#endif
+#ifndef UNS_HEADER_STRINGS
 #include "uniself/strings.h"
+#endif
 
 
 namespace ublas = boost::numeric::ublas;

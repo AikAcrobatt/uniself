@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#define UNS_HEADER_BENUM
+
 #include <type_traits>
 #pragma warning(disable: 4626; disable: 4820; disable: 5027)
 #include "better_enums/enum.h"

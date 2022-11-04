@@ -1,5 +1,7 @@
 #pragma once
 
+#define UNS_HEADER_MATH
+
 #include <concepts>
 #include <limits>
 

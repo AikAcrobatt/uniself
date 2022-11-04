@@ -1,5 +1,7 @@
 #pragma once
 
+#define UNS_HEADER_CONCEPTS
+
 #include <concepts>
 
 namespace uns {
