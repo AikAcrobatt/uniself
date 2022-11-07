@@ -5,11 +5,15 @@
 #include <iostream>
 #include <string>
 #include <limits>
+#include <tuple>
 
 #include "boost/property_tree/ptree.hpp"
 
 #ifndef UNS_HEADER_MATH
 #include "uniself/math.h"
+#endif
+#ifndef UNS_HEADER_STRINGS
+#include "uniself/strings.h"
 #endif
 
 namespace uns::nn {
@@ -53,7 +57,7 @@ namespace uns::nn {
 			virtual uns::nn::adress adress() const noexcept = 0;
 			virtual bool is_reversible() const noexcept = 0;
 			virtual signal_t dropout() const noexcept = 0;
-			virtual void react(const network_params&) = 0;
+			virtual void react(const network_params<signal_t>&) = 0;
 		};
 
 
@@ -106,11 +110,11 @@ namespace uns::nn {
 
 			virtual std::u8string type() const noexcept { return u8"Zero"; };
 
-			virtual signal_t operator()(signal_t, const network_params&) { return signal_t(0); };
+			virtual signal_t operator()(signal_t, const network_params<signal_t>&) { return signal_t(0); };
 
-			virtual signal_t _dS(signal_t, const network_params&) const { return signal_t(0); };
+			virtual signal_t _dS(signal_t, const network_params<signal_t>&) const { return signal_t(0); };
 
-			virtual signal_t _dp(int, signal_t, const network_params&) const { return signal_t(0); };
+			virtual signal_t _dp(int, signal_t, const network_params<signal_t>&) const { return signal_t(0); };
 		};
 
 
@@ -150,13 +154,13 @@ namespace uns::nn {
 
 			virtual std::u8string type() const noexcept { return u8"Zero"; };
 
-			virtual signal_t operator()(const std::vector<std::pair<neuron<signal_t>*, signal_t>>&, const network_params&) { return signal_t(0); };
+			virtual signal_t operator()(const std::vector<std::pair<neuron<signal_t>*, signal_t>>&, const network_params<signal_t>&) { return signal_t(0); };
 
-			virtual signal_t _dr(int, const std::vector<std::pair<neuron<signal_t>*, signal_t>>&, const network_params&) { return signal_t(0); };
+			virtual signal_t _dr(int, const std::vector<std::pair<neuron<signal_t>*, signal_t>>&, const network_params<signal_t>&) { return signal_t(0); };
 
-			virtual signal_t _dw(int, const std::vector<std::pair<neuron<signal_t>*, signal_t>>&, const network_params&) { return signal_t(0); };
+			virtual signal_t _dw(int, const std::vector<std::pair<neuron<signal_t>*, signal_t>>&, const network_params<signal_t>&) { return signal_t(0); };
 
-			virtual signal_t _dp(int, const std::vector<std::pair<neuron<signal_t>*, signal_t>>&, const network_params&) { return signal_t(0); };
+			virtual signal_t _dp(int, const std::vector<std::pair<neuron<signal_t>*, signal_t>>&, const network_params<signal_t>&) { return signal_t(0); };
 		};
 	};
 
@@ -216,6 +220,7 @@ namespace uns::nn {
 
 	//a class of input_neuron introduces the sequential neural network's data input
 	template<class signal_t>
+	//using signal_t = double;
 	class sequential_neuron : public uns::nn::general::neuron<signal_t> {
 	protected:
 		using weight_t = signal_t;
@@ -223,36 +228,33 @@ namespace uns::nn {
 		using base_t = uns::nn::general::neuron<signal_t>;
 	public:
 		using representation_t = boost::property_tree::ptree;
+		using neuron_signal_t = signal_t;
 
 		enum {
 			neuron = 0,
 			weight = 1
 		};
 	protected:
-		int layer_index = 0;
-		size_t index = 0;
-
 		uns::nn::adress _adress;
 		std::unique_ptr<uns::nn::general::activator<signal_t>> F;
 		std::unique_ptr<uns::nn::general::collector<signal_t>> S;
 		std::vector<std::pair<uns::nn::general::neuron<signal_t>*, weight_t>> _links;
 		std::vector<param_t> _params;
 	public:
-		using neuron_signal_t = signal_t;
-
 		sequential_neuron() noexcept : F(nullptr), S(nullptr) {};
-		sequential_neuron(const uns::nn::sequential_neuron<signal_t>& n) = delete;
-		sequential_neuron<signal_t>& operator=(const uns::nn::sequential_neuron<signal_t>& n) = delete;
-		sequential_neuron(uns::nn::sequential_neuron<signal_t>&& n) = delete;
-		sequential_neuron<signal_t>& operator=(uns::nn::sequential_neuron<signal_t>&& n) = delete;
+		sequential_neuron(const uns::nn::sequential_neuron& n) = delete;
+		sequential_neuron& operator=(const uns::nn::sequential_neuron& n) = delete;
+		sequential_neuron(uns::nn::sequential_neuron&& n) = delete;
+		sequential_neuron& operator=(uns::nn::sequential_neuron&& n) = delete;
 		~sequential_neuron() noexcept {};
 
 		representation_t represent() const;
+		void represent(const representation_t&, const std::vector<std::vector<uns::nn::general::neuron<signal_t>*>>&, const std::vector<uns::nn::general::neuron<signal_t>*>&);
 
 		std::u8string type() const noexcept override { return F->type() + u8"." + S->type(); };
 
 		uns::nn::adress adress() const noexcept override { return _adress; };
-		void adress(uns::nn::adress Adress) const noexcept override { _adress = Adress; };
+		void adress(uns::nn::adress Adress) noexcept { _adress = Adress; };
 
 		bool is_reversible() const noexcept override { return false; };
 
@@ -266,30 +268,83 @@ namespace uns::nn {
 
 		void C(const signal_t c) noexcept { *S = c; };
 
-		void react(const uns::nn::general::network_params& common_params) override { (*F)(S->Value(), common_params.forward(_params)); };
+		void react(const uns::nn::general::network_params<signal_t>& common_params) override { (*F)(S->value(), common_params.forward(_params)); };
 
-		void collect(const uns::nn::general::network_params& common_params) { (*S)(_links, common_params.forward(_params)); };
+		void collect(const uns::nn::general::network_params<signal_t>& common_params) { (*S)(_links, common_params.forward(_params)); };
 	};
 
 	template<typename signal_t>
 	inline typename uns::nn::sequential_neuron<signal_t>::representation_t uns::nn::sequential_neuron<signal_t>::represent() const {
 		using neuron_t = uns::nn::sequential_neuron<signal_t>;
-		using representation_t = uns::nn::neuron_representation<signal_t>;
 
-		uns::nn::neuron_representation<signal_t> res;
-		res.r = R();
-		res.s = C();
-		size_t last_link_index = 0;
+		auto res = representation_t{};
+
+		res.put("type", uns::string::u8_cast<std::string>(type()));
+
+		res.put("R", uns::string::u8_cast<std::string>(uns::string::u8_cast<std::u8string>(R())));
+		res.put("C", uns::string::u8_cast<std::string>(uns::string::u8_cast<std::u8string>(C())));
+
+		res.put("links.total", uns::string::u8_cast<std::string>(uns::string::u8_cast<std::u8string>(_links.size())));
+
+		auto idx = static_cast<int>(0);
 		for(auto link : _links) {
-			res._links.push_back(std::tuple<int, size_t, weight_t>(0, 0, std::get<neuron_t::weight>(link)));
-			last_link_index = res._links.size() - 1;
-			std::tie(
-				std::get<representation_t::layer_adress>(res._links[last_link_index]),
-				std::get<representation_t::neuron_adress>(res._links[last_link_index])
-			) = std::get<neuron_t::neuron>(link)->Index();
+			res.put(
+				uns::string::u8_cast<std::string>(
+					u8"links.i"
+					+ uns::string::u8_cast<std::u8string>(idx)
+					+ u8".layer"
+				),
+				uns::string::u8_cast<std::string>(
+					uns::string::u8_cast<std::u8string>(
+						std::get<neuron_t::neuron>(link)->adress().layer
+					)
+				)
+			);
+
+			res.put(
+				uns::string::u8_cast<std::string>(
+					u8"links.i"
+					+ uns::string::u8_cast<std::u8string>(idx)
+					+ u8".index"
+				),
+				uns::string::u8_cast<std::string>(
+					uns::string::u8_cast<std::u8string>(
+						std::get<neuron_t::neuron>(link)->adress().index
+					)
+				)
+			);
+
+			res.put(
+				uns::string::u8_cast<std::string>(
+					u8"links.i"
+					+ uns::string::u8_cast<std::u8string>(idx)
+					+ u8".weight"
+				),
+				uns::string::u8_cast<std::string>(
+					uns::string::u8_cast<std::u8string>(
+						std::get<neuron_t::weight>(link)
+					)
+				)
+			);
+
+			++idx;
 		};
+
+		idx = 0;
 		for(auto param : _params) {
-			res._params.push_back(param);
+			res.put(
+				uns::string::u8_cast<std::string>(
+					u8"params.i"
+					+ uns::string::u8_cast<std::u8string>(idx)
+				),
+				uns::string::u8_cast<std::string>(
+					uns::string::u8_cast<std::u8string>(
+						param
+					)
+				)
+			);
+
+			++idx;
 		};
 
 		return res;
