@@ -16,6 +16,8 @@
 #include "uniself/strings.h"
 #endif
 
+#define UNS_DEV_EXCEPTION_MSG std::string{ __FUNCTION__ } + "[" + std::to_string(__LINE__) + "]"
+
 namespace uns::nn {
 
 
@@ -115,6 +117,12 @@ namespace uns::nn {
 			virtual signal_t _dS(signal_t, const network_params<signal_t>&) const { return signal_t(0); };
 
 			virtual signal_t _dp(int, signal_t, const network_params<signal_t>&) const { return signal_t(0); };
+
+			//basic auxiliary class intended to create activators from string
+			class castor {
+			public:
+				virtual std::unique_ptr<uns::nn::general::activator<signal_t>> operator()(std::u8string_view) const = 0;
+			};
 		};
 
 
@@ -161,6 +169,12 @@ namespace uns::nn {
 			virtual signal_t _dw(int, const std::vector<std::pair<neuron<signal_t>*, signal_t>>&, const network_params<signal_t>&) { return signal_t(0); };
 
 			virtual signal_t _dp(int, const std::vector<std::pair<neuron<signal_t>*, signal_t>>&, const network_params<signal_t>&) { return signal_t(0); };
+
+			//basic auxiliary class intended to create collector from string
+			class castor {
+			public:
+				virtual std::unique_ptr<uns::nn::general::collector<signal_t>> operator()(std::u8string_view) const = 0;
+			};
 		};
 	};
 
@@ -240,6 +254,8 @@ namespace uns::nn {
 		std::unique_ptr<uns::nn::general::collector<signal_t>> S;
 		std::vector<std::pair<uns::nn::general::neuron<signal_t>*, weight_t>> _links;
 		std::vector<param_t> _params;
+
+		std::unique_ptr<std::vector<std::pair<uns::nn::adress, weight_t>>> _adresses = nullptr;
 	public:
 		sequential_neuron() noexcept : F(nullptr), S(nullptr) {};
 		sequential_neuron(const uns::nn::sequential_neuron& n) = delete;
@@ -249,7 +265,8 @@ namespace uns::nn {
 		~sequential_neuron() noexcept {};
 
 		representation_t represent() const;
-		void represent(const representation_t&, const std::vector<std::vector<uns::nn::general::neuron<signal_t>*>>&, const std::vector<uns::nn::general::neuron<signal_t>*>&);
+		void set(const representation_t&, const uns::nn::adress&, const uns::nn::general::activator<signal_t>::castor&, const uns::nn::general::collector<signal_t>::castor&);
+		void link(const std::shared_ptr<std::vector<std::vector<uns::nn::general::neuron<signal_t>*>>>&);
 
 		std::u8string type() const noexcept override { return F->type() + u8"." + S->type(); };
 
@@ -330,6 +347,8 @@ namespace uns::nn {
 			++idx;
 		};
 
+		res.put("params.total", uns::string::u8_cast<std::string>(uns::string::u8_cast<std::u8string>(_params.size())));
+
 		idx = 0;
 		for(auto param : _params) {
 			res.put(
@@ -350,22 +369,190 @@ namespace uns::nn {
 		return res;
 	};
 
+	template<typename signal_t>
+	inline void uns::nn::sequential_neuron<signal_t>::set(
+		const typename uns::nn::sequential_neuron<signal_t>::representation_t& repr,
+		const uns::nn::adress& adress,
+		const uns::nn::general::activator<signal_t>::castor& activator_cast,
+		const uns::nn::general::collector<signal_t>::castor& collector_cast
+	) {
+		_adress = adress;
 
+		{
+			auto type = std::u8string{};
+			try {
+				auto type = uns::string::u8_cast<std::u8string>(
+					repr.get_child("type").get_value<std::string>()
+				);
+			}
+			catch(...) {
+				if(F == nullptr) throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+			};
+
+			auto activator_type = std::u8string{};
+			auto collector_type = std::u8string{};
+
+			auto seeker = type.begin();
+			uns::string::seeker_read<std::u8string>(type, seeker, activator_type, u8".", false, -1);
+
+			collector_type = type.substr(seeker - type.begin());
+
+			F = activator_cast(activator_type);
+			if(F == nullptr) throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+
+			S = collector_cast(collector_type);
+			if(S == nullptr) throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+		};
+
+		try {
+			*F = uns::string::u8_cast<signal_t>(
+				uns::string::u8_cast<std::u8string>(
+					repr.get_child("R").get_value<std::string>()
+				)
+			);
+		}
+		catch(...) {
+			throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+		};
+
+		try {
+			*S = uns::string::u8_cast<signal_t>(
+				uns::string::u8_cast<std::u8string>(
+					repr.get_child("C").get_value<std::string>()
+				)
+			);
+		}
+		catch(...) {
+			throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+		};
+
+		int idx = 0;
+
+		{
+			int _params_total = 0;
+			try {
+				_params_total = uns::string::u8_cast<int>(
+					uns::string::u8_cast<std::u8string>(
+						repr.get_child("params.total").get_value<std::string>()
+					)
+				);
+			}
+			catch(...) {
+				throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+			};
+
+			for(idx = 0; idx < _params_total; idx++) {
+				try {
+					_params.push_back(
+						uns::string::u8_cast<signal_t>(
+							uns::string::u8_cast<std::u8string>(
+								repr.get_child(
+									uns::string::u8_cast<std::string>(
+										u8"params.i"
+										+ uns::string::u8_cast<std::u8string>(idx)
+									)
+								).get_value<std::string>()
+							)
+						)
+					);
+				}
+				catch(...) {
+					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+				};
+			};
+		};
+
+		_adresses = std::make_unique<std::vector<std::pair<uns::nn::adress, weight_t>>>();
+		{
+			int _links_total = 0;
+			try {
+				_links_total = uns::string::u8_cast<int>(
+					uns::string::u8_cast<std::u8string>(
+						repr.get_child("links.total").get_value<std::string>()
+					)
+				);
+			}
+			catch(...) {
+				throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+			};
+
+			auto link = std::pair<uns::nn::adress, weight_t>{};
+
+			for(idx = 0; idx < _links_total; idx++) {
+				try {
+					link.first.layer = uns::string::u8_cast<int>(
+						uns::string::u8_cast<std::u8string>(
+							repr.get_child(
+								uns::string::u8_cast<std::string>(
+									u8"links.i"
+									+ uns::string::u8_cast<std::u8string>(idx)
+									+ u8".layer"
+								)
+							).get_value<std::string>()
+						)
+					);
+				}
+				catch(...) {
+					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+				};
+				try {
+					link.first.index = uns::string::u8_cast<int>(
+						uns::string::u8_cast<std::u8string>(
+							repr.get_child(
+								uns::string::u8_cast<std::string>(
+									u8"links.i"
+									+ uns::string::u8_cast<std::u8string>(idx)
+									+ u8".index"
+								)
+							).get_value<std::string>()
+						)
+					);
+				}
+				catch(...) {
+					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+				};
+				try {
+					link.second = uns::string::u8_cast<weight_t>(
+						uns::string::u8_cast<std::u8string>(
+							repr.get_child(
+								uns::string::u8_cast<std::string>(
+									u8"links.i"
+									+ uns::string::u8_cast<std::u8string>(idx)
+									+ u8".weight"
+								)
+							).get_value<std::string>()
+						)
+					);
+				}
+				catch(...) {
+					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+				};
+				
+				_adresses->push_back(link);
+			};
+		};
+	};
+
+	template<typename signal_t>
+	inline void uns::nn::sequential_neuron<signal_t>::link(const std::shared_ptr<std::vector<std::vector<uns::nn::general::neuron<signal_t>*>>>& referings) {
+		if(_adresses == nullptr) throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+
+		_links.clear();
+
+		for(const auto& adress : *_adresses) {
+			try {
+				auto link = std::pair<uns::nn::general::neuron<signal_t>*, weight_t>{};
+				link.first = referings->at(adress.first.layer).at(adress.first.index);
+				link.second = adress.second;
+				_links.push_back(link);
+			}
+			catch(std::out_of_range&) {
+				throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+			};
+		};
+
+		_adresses = nullptr;
+	};
 };
 
 
-
-
-
-
-		/*
-
-			virtual std::u8string type() const noexcept = 0;
-			virtual signal_t R() const noexcept = 0;
-			virtual void R(signal_t) noexcept = 0;
-			virtual uns::nn::adress adress() const noexcept = 0;
-			virtual bool is_reversible() const noexcept = 0;
-			virtual signal_t dropout() const noexcept = 0;
-			virtual void react(const network_params&) = 0;
-
-		*/
