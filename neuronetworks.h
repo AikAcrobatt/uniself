@@ -49,49 +49,9 @@ namespace uns::nn {
 		};
 
 
+		//an interface of general neuron (a preliminary declaration)
 		template<typename signal_t>
-		class activator;
-
-		template<typename signal_t>
-		class collector;
-
-
-		//an interface of general neuron
-		template<typename signal_t>
-		class neuron {
-		public:
-			using repr_type = boost::property_tree::ptree;
-			using signal_type = boost::property_tree::ptree;
-
-			virtual std::u8string type() const noexcept = 0;
-
-			virtual repr_type represent() const noexcept = 0;
-			virtual void set(const repr_type&, const uns::nn::adress&, const uns::nn::general::activator<signal_type>::caster&, const uns::nn::general::collector<signal_type>::caster&) = 0;
-			virtual void link(const std::vector<std::vector<uns::nn::general::neuron<signal_type>*>>&) = 0;
-
-			virtual signal_type R() const noexcept { return signal_type{ 0 }; };
-			virtual void R(signal_type) noexcept {};
-			virtual signal_type C() const noexcept { return signal_type{ 0 }; };
-			virtual void C(signal_type) noexcept {};
-
-			virtual uns::nn::adress adress() const noexcept = 0;
-			virtual bool is_reversible() const noexcept { return false; };
-			virtual signal_type dropout() const noexcept { return signal_type{ 0 }; };
-			virtual void dropout(signal_type) noexcept {};
-
-			virtual void react(const network_params<signal_type>&) = 0;
-		};
-
-
-		//an interface of general neuro network
-		template<typename signal_t>
-		class network {
-		protected:
-			std::vector<neuron<signal_t>*> _outputs;
-			std::vector<neuron<signal_t>*> _inputs;	//TODO here was an std::vector<input_neuron<signal_t>*> _inputs
-		public:
-			virtual void react() = 0;
-		};
+		class neuron;
 
 
 		//basic activator class can be used as default activator
@@ -102,18 +62,16 @@ namespace uns::nn {
 		public:
 			activator() noexcept {};
 			activator(const activator& obj) noexcept :
-				_value(obj._value)
-			{};
+				_value(obj._value) {};
 			activator& operator=(const activator& obj) noexcept {
 				if(this == &obj) return *this;
 
 				_value = obj._value;
-				
+
 				return *this;
 			};
 			activator(activator&& obj) noexcept :
-				_value(std::move(obj._value))
-			{};
+				_value(std::move(obj._value)) {};
 			activator& operator=(activator&& obj) noexcept {
 				if(this == &obj) return *this;
 
@@ -139,6 +97,7 @@ namespace uns::nn {
 			virtual signal_t _dp(int, signal_t, const network_params<signal_t>&) const { return signal_t(0); };
 
 			//basic auxiliary class intended to create activators from string
+			//	actually it's a map from string to activator
 			class caster {
 			public:
 				virtual std::unique_ptr<uns::nn::general::activator<signal_t>> operator()(const std::u8string_view&) const = 0;
@@ -152,7 +111,7 @@ namespace uns::nn {
 		protected:
 			signal_t _value = signal_t(0);
 		public:
-			collector() noexcept {}; 
+			collector() noexcept {};
 			collector(const collector& obj) noexcept :
 				_value(obj._value) {};
 			collector& operator=(const collector& obj) noexcept {
@@ -191,16 +150,64 @@ namespace uns::nn {
 			virtual signal_t _dp(int, const std::vector<std::pair<neuron<signal_t>*, signal_t>>&, const network_params<signal_t>&) { return signal_t(0); };
 
 			//basic auxiliary class intended to create collector from string
+			//	actually it's a map from string to collector
 			class caster {
 			public:
 				virtual std::unique_ptr<uns::nn::general::collector<signal_t>> operator()(const std::u8string_view&) const = 0;
 			};
+		};
+
+
+		//an interface of general neuron
+		template<typename signal_t>
+		class neuron {
+		public:
+			using repr_type = boost::property_tree::ptree;
+			using signal_type = signal_t;
+
+			virtual std::u8string type() const noexcept = 0;
+
+			virtual repr_type represent() const noexcept = 0;
+			virtual void set(const repr_type&, const uns::nn::adress&, const uns::nn::general::activator<signal_type>::caster&, const uns::nn::general::collector<signal_type>::caster&) = 0;
+			virtual void link(const std::vector<std::vector<uns::nn::general::neuron<signal_type>*>>&, const std::vector<uns::nn::general::neuron<signal_type>*>&) = 0;
+
+			virtual signal_type R() const noexcept { return signal_type{ 0 }; };
+			virtual void R(signal_type) noexcept {};
+			virtual signal_type C() const noexcept { return signal_type{ 0 }; };
+			virtual void C(signal_type) noexcept {};
+
+			virtual uns::nn::adress adress() const noexcept = 0;
+			virtual bool is_reversible() const noexcept { return false; };
+			virtual signal_type dropout() const noexcept { return signal_type{ 0 }; };
+			virtual void dropout(signal_type) noexcept {};
+
+			virtual void react(const network_params<signal_type>&) {};
+			virtual void collect(const uns::nn::general::network_params<signal_t>& common_params) {};
+		};
+
+
+		//an interface of general neuro network
+		template<typename neuron_t>
+		class network {
+		public:
+			using repr_type = boost::property_tree::ptree;
+			using signal_type = typename neuron_t::signal_type;
+		protected:
+			std::vector<uns::nn::general::neuron<signal_type>*> _outputs;
+			std::vector<uns::nn::general::neuron<signal_type>*> _inputs;	//TODO here was an std::vector<input_neuron<signal_t>*> _inputs
+		public:
+			virtual repr_type represent() const noexcept;
+			virtual void set(const repr_type&, const uns::nn::general::activator<signal_type>::caster&, const uns::nn::general::collector<signal_type>::caster&);
+			virtual void link(const uns::nn::general::input_data_object<signal_type>&);
+			virtual void react(const network_params<signal_type>&) = 0;
+
 		};
 	};
 
 
 	//a class of input_neuron introduces the neural network's data input
 	template<typename signal_t>
+	//using signal_t = double;
 	class input_neuron : public uns::nn::general::neuron<signal_t> {
 	protected:
 		signal_t* _value_of_cell = nullptr;
@@ -210,7 +217,7 @@ namespace uns::nn {
 	public:
 		input_neuron() {};
 		input_neuron(const input_neuron& inp) = delete;
-		input_neuron>& operator=(const input_neuron& inp) = delete;
+		input_neuron& operator=(const input_neuron& inp) = delete;
 		input_neuron(input_neuron&& inp) = delete;
 		input_neuron& operator=(input_neuron&& inp) = delete;
 		~input_neuron() {};
@@ -247,12 +254,12 @@ namespace uns::nn {
 			};
 			//TODO to think about how to check correctly the num_of_input to max_val violation
 			_num_of_cell = num_of_input;
-			_value_of_cell = ido.Get(_num_of_cell);
+			_value_of_cell = ido.get(_num_of_cell);
 		};
 	};
 
 
-	//a class of input_neuron introduces the sequential neural network's data input
+	//a class of neuron introduces the neurons supposed to consist sequential neural network's body
 	template<class signal_t>
 	//using signal_t = double;
 	class sequential_neuron : public uns::nn::general::neuron<signal_t> {
@@ -284,7 +291,7 @@ namespace uns::nn {
 
 		uns::nn::general::neuron<signal_t>::repr_type represent() const noexcept override;
 		void set(const uns::nn::general::neuron<signal_t>::repr_type&, const uns::nn::adress&, const uns::nn::general::activator<signal_t>::caster&, const uns::nn::general::collector<signal_t>::caster&) override;
-		void link(const std::vector<std::vector<uns::nn::general::neuron<signal_t>*>>&) override;
+		void link(const std::vector<std::vector<uns::nn::general::neuron<signal_t>*>>&, const std::vector<uns::nn::general::neuron<signal_t>*>&) override;
 
 		std::u8string type() const noexcept override { return F->type() + u8"." + S->type(); };
 
@@ -298,7 +305,7 @@ namespace uns::nn {
 
 		void react(const uns::nn::general::network_params<signal_t>& common_params) override { (*F)(S->value(), common_params.forward(_params)); };
 
-		void collect(const uns::nn::general::network_params<signal_t>& common_params) { (*S)(links, common_params.forward(_params)); };
+		void collect(const uns::nn::general::network_params<signal_t>& common_params) override { (*S)(links, common_params.forward(_params)); };
 	};
 
 	template<typename signal_t>
@@ -545,7 +552,10 @@ namespace uns::nn {
 	};
 
 	template<typename signal_t>
-	inline void uns::nn::sequential_neuron<signal_t>::link(const std::vector<std::vector<uns::nn::general::neuron<signal_t>*>>& referings) {
+	inline void uns::nn::sequential_neuron<signal_t>::link(
+		const std::vector<std::vector<uns::nn::general::neuron<signal_t>*>>& main_body,
+		const std::vector<uns::nn::general::neuron<signal_t>*>& inputs_
+	) {
 		if(_adresses == nullptr) throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
 
 		links.clear();
@@ -553,7 +563,12 @@ namespace uns::nn {
 		for(const auto& adress : *_adresses) {
 			try {
 				auto link = std::pair<uns::nn::general::neuron<signal_t>*, weight_t>{};
-				link.first = referings.at(adress.first.layer).at(adress.first.index);
+				if(adress.first.layer < 0) {
+					link.first = inputs_.at(adress.first.index);
+				}
+				else {
+					link.first = main_body.at(adress.first.layer).at(adress.first.index);
+				};
 				link.second = adress.second;
 				links.push_back(link);
 			}
@@ -566,7 +581,9 @@ namespace uns::nn {
 	};
 
 
+	//a class of neuron introduces the nonrecursive reversation neuron used for learning by gradient-down method
 	template<typename signal_t>
+	//using signal_t = double;
 	class nonrecursive_reverse_neuron : public uns::nn::sequential_neuron<signal_t> {
 	protected:
 		using base_t = uns::nn::sequential_neuron<signal_t>;
@@ -584,7 +601,7 @@ namespace uns::nn {
 
 		bool _is_learning = true;
 		signal_t _dropout = signal_t{ 0 };
-		std::unique_ptr<std::vector<std::pair<uns::nn::adress, place_t>> _adresses = nullptr;
+		std::unique_ptr<std::vector<std::pair<uns::nn::adress, place_t>> __adresses = nullptr;
 	public:
 		nonrecursive_reverse_neuron() {};
 		nonrecursive_reverse_neuron(const uns::nn::nonrecursive_reverse_neuron<signal_t>&) = delete;
@@ -595,7 +612,7 @@ namespace uns::nn {
 
 		inline uns::nn::general::neuron<signal_t>::repr_type represent() const noexcept override;
 		void set(const uns::nn::general::neuron<signal_t>::repr_type&, const uns::nn::adress&, const uns::nn::general::activator<signal_t>::caster&, const uns::nn::general::collector<signal_t>::caster&) override;
-		void link(const std::vector<std::vector<uns::nn::general::neuron<signal_t>*>>&) override;
+		void link(const std::vector<std::vector<uns::nn::general::neuron<signal_t>*>>&, const std::vector<uns::nn::general::neuron<signal_t>*>&) override;
 
 		bool is_reversible() const noexcept override { return true; };
 
@@ -771,7 +788,7 @@ namespace uns::nn {
 
 		int idx = 0;
 
-		_adresses = std::make_unique<std::vector<std::pair<uns::nn::adress, place_t>>>();
+		__adresses = std::make_unique<std::vector<std::pair<uns::nn::adress, place_t>>>();
 		{
 			int _links_total = 0;
 			try {
@@ -837,31 +854,93 @@ namespace uns::nn {
 					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
 				};
 
-				_adresses->push_back(link);
+				__adresses->push_back(link);
 			};
 		};
 	};
 
 	template<typename signal_t>
-	inline void uns::nn::nonrecursive_reverse_neuron<signal_t>::link(const std::vector<std::vector<uns::nn::general::neuron<signal_t>*>>& referings) {
-		if(_adresses == nullptr) throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+	inline void uns::nn::nonrecursive_reverse_neuron<signal_t>::link(
+		const std::vector<std::vector<uns::nn::general::neuron<signal_t>*>>& main_body,
+		const std::vector<uns::nn::general::neuron<signal_t>*>& inputs_
+	) {
+		if(__adresses == nullptr) throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
 
 		_links.clear();
 
 		for(const auto& _adress : *_adresses) {
 			try {
 				auto link = std::pair<uns::nn::general::neuron<signal_t>*, place_t>{};
-				link.first = referings.at(_adress.first.layer).at(_adress.first.index);
+				if(_adress.first.layer < 0) {
+					link.first = inputs_.at(_adress.first.index);
+				}
+				else {
+					link.first = main_body.at(_adress.first.layer).at(_adress.first.index);
+				};
 				link.second = _adress.second;
-				links.push_back(link);
+				_links.push_back(link);
 			}
 			catch(std::out_of_range&) {
 				throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
 			};
 		};
 
-		_adresses = nullptr;
+		__adresses = nullptr;
 	};
+
+
+	//a class of neuron introduces the neurons supposed to consist sequential neural network's body
+	//template<class neuron_t>
+	using neuron_t = uns::nn::general::neuron<double>;
+	class sequential_base_network : public uns::nn::general::network<neuron_t> {
+	public:
+		using signal_t = typename neuron_t::signal_type;
+		using base_t = uns::nn::general::network<neuron_t>;
+	protected:
+		std::vector<std::vector<neuron_t*>> layers;
+	public:
+		sequential_base_network() {};
+		sequential_base_network(const sequential_base_network& net) = delete;
+		sequential_base_network& operator=(const sequential_base_network& net) = delete;
+		sequential_base_network(sequential_base_network&& net) = delete;
+		sequential_base_network& operator=(sequential_base_network&& net) = delete;
+		~sequential_base_network() {
+			for(auto& layer : layers)
+				for(auto neuron : layer) {
+					delete neuron;
+				};
+			for(auto input : _inputs)
+				delete input;
+		};
+
+		uns::nn::general::network<neuron_t>::repr_type represent() const noexcept override;
+		void set(const uns::nn::general::network<neuron_t>::repr_type&, const uns::nn::general::activator<signal_type>::caster&, const uns::nn::general::collector<signal_type>::caster&) override;
+		void link(const uns::nn::general::input_data_object<signal_type>&) override;
+
+		void react(const uns::nn::general::network_params<signal_t>& common_params) override {
+			for(auto input : _inputs)
+				input->react(common_params);
+			for(auto& layer : layers)
+				for(auto neuron : layer) {
+					neuron->collect(common_params);
+					neuron->react(common_params);
+				};
+		};
+
+		signal_t R(size_t layer_index, size_t index) const { return layers[layer_index][index]->R(); };
+
+		signal_t C(size_t layer_index, size_t index) const { return layers[layer_index][index]->C(); };
+
+		signal_t O(size_t index) const { return _outputs[index]->R(); };
+
+		signal_t I(size_t index) const { return _inputs[index]->R(); };
+
+		size_t layers_total() const { return layers.size(); };
+		size_t neurons_total(size_t index) const { return layers[index].size(); };
+		size_t outputs_total() const { return _outputs.size(); };
+		size_t inputs_total() const { return _inputs.size(); };
+	};
+
 
 };
 
