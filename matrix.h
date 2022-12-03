@@ -1,6 +1,6 @@
 #pragma once
 
-#define UNS_HEADER_MATRIX
+#define UNS_HEADER_MATRIX "matrix.h"
 
 #include <concepts>
 #include <initializer_list>

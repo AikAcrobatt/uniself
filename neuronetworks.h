@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#define UNS_HEADER_NEURONETWORKS
+#define UNS_HEADER_NEURONETWORKS "neuronetworks.h"
 
 #include <iostream>
 #include <string>
@@ -16,7 +16,7 @@
 #include "uniself/strings.h"
 #endif
 
-#define UNS_DEV_EXCEPTION_MSG std::string{ __FUNCTION__ } + "[" + std::to_string(__LINE__) + "]"
+#define UNS_DEV_EXCEPTION_MSG std::string{ UNS_HEADER_NEURONETWORKS } + "[" + std::to_string(__LINE__) + "]"
 
 namespace uns::nn {
 

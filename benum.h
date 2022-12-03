@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#define UNS_HEADER_BENUM
+#define UNS_HEADER_BENUM "benum.h"
 
 #include <type_traits>
 #pragma warning(disable: 4626; disable: 4820; disable: 5027)
