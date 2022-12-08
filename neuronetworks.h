@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#define UNS_HEADER_NEURONETWORKS
+#define UNS_HEADER_NEURONETWORKS "neuronetworks.h"
 
 #include <iostream>
 #include <string>

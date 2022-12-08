@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#define UNS_HEADER_STRINGS
+#define UNS_HEADER_STRINGS "strings.h"
 
 #include <string>
 #include <charconv>

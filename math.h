@@ -1,6 +1,6 @@
 #pragma once
 
-#define UNS_HEADER_MATH
+#define UNS_HEADER_MATH "math.h"
 
 #include <concepts>
 #include <limits>
