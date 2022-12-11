@@ -171,6 +171,10 @@ namespace uns::nn {
 			virtual void set(const repr_type&, const uns::nn::adress&, const typename uns::nn::general::activator<signal_type>::caster&, const typename uns::nn::general::collector<signal_type>::caster&) = 0;
 			virtual void link(const std::vector<std::vector<uns::nn::general::neuron<signal_type>*>>&, const std::vector<std::vector<uns::nn::general::neuron<signal_type>*>>&) = 0;
 
+			virtual int subneurons_total() const noexcept { return 0; };
+			virtual const neuron* subneuron(int connection_idx) const noexcept { return nullptr; };
+			virtual neuron* subneuron(int connection_idx) noexcept { return nullptr; };
+
 			virtual signal_type R() const noexcept { return signal_type{ 0 }; };
 			virtual void R(signal_type) noexcept {};
 			virtual signal_type C() const noexcept { return signal_type{ 0 }; };
@@ -562,6 +566,24 @@ namespace uns::nn {
 
 		uns::nn::adress adress() const noexcept override { return _adress; };
 
+		int subneurons_total() const noexcept override { return links.size(); };
+		const uns::nn::general::neuron<signal_t>* subneuron(int connection_idx) const noexcept override {
+			if(connection_idx >= 0 && connection_idx < links.size()) {
+				return links[connection_idx].first;
+			}
+			else {
+				return nullptr;
+			};
+		};
+		uns::nn::general::neuron<signal_t>* subneuron(int connection_idx) noexcept override {
+			if(connection_idx >= 0 && connection_idx < links.size()) {
+				return links[connection_idx].first;
+			}
+			else {
+				return nullptr;
+			};
+		};
+
 		signal_t R() const noexcept override { return F->value(); };
 		void R(const signal_t R) noexcept override { *F = R; };
 
@@ -839,7 +861,16 @@ namespace uns::nn {
 				__adresses = nullptr;
 			}
 			else {
+				_links.clear();
 
+				//TODO this algo is wrong!
+				for(const auto& link : base_t::links) {
+					for(int subneuron_idx = 0; subneuron_idx < link.first->subneurons_total(); ++subneuron_idx) {
+						if(link.first->subneuron(subneuron_idx) == this) {
+							_links.push_back(std::pair<< uns::nn::nonrecursive_reverse_neuron<signal_t>*, place_t>{ link.first, subneuron_idx });
+						};
+					};
+				};
 			};
 		};
 
