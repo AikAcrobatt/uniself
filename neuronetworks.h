@@ -169,7 +169,7 @@ namespace uns::nn {
 
 			virtual repr_type represent() const noexcept = 0;
 			virtual void set(const repr_type&, const uns::nn::adress&, const typename uns::nn::general::activator<signal_type>::caster&, const typename uns::nn::general::collector<signal_type>::caster&) = 0;
-			virtual void link(const std::vector<std::vector<uns::nn::general::neuron<signal_type>*>>&, const std::vector<uns::nn::general::neuron<signal_type>*>&) = 0;
+			virtual void link(const std::vector<std::vector<uns::nn::general::neuron<signal_type>*>>&, const std::vector<std::vector<uns::nn::general::neuron<signal_type>*>>&) = 0;
 
 			virtual signal_type R() const noexcept { return signal_type{ 0 }; };
 			virtual void R(signal_type) noexcept {};
@@ -194,7 +194,7 @@ namespace uns::nn {
 			using signal_type = typename neuron_t::signal_type;
 		protected:
 			std::vector<uns::nn::general::neuron<signal_type>*> _outputs;
-			std::vector<uns::nn::general::neuron<signal_type>*> _inputs;	//TODO here was an std::vector<input_neuron<signal_t>*> _inputs
+			std::vector<std::vector<uns::nn::general::neuron<signal_type>*>> _inputs;	//TODO here was an std::vector<input_neuron<signal_t>*> _inputs
 		public:
 			virtual repr_type represent() const noexcept;
 			virtual void set(const repr_type&, const typename uns::nn::general::activator<signal_type>::caster, const typename uns::nn::general::collector<signal_type>::caster&);
@@ -379,11 +379,11 @@ namespace uns::nn {
 				auto type = std::u8string{};
 				try {
 					auto type = uns::string::u8_cast<std::u8string>(
-						repr.get_child("type").get_value<std::string>()
-						);
+						repr.get<std::string>("type")
+					);
 				}
 				catch(...) {
-					if(F == nullptr) throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
 				};
 
 				auto activator_type = std::u8string{};
@@ -404,9 +404,9 @@ namespace uns::nn {
 			try {
 				*F = uns::string::u8_cast<signal_t>(
 					uns::string::u8_cast<std::u8string>(
-						repr.get_child("R").get_value<std::string>()
-						)
-					);
+						repr.get<std::string>("R")
+					)
+				);
 			}
 			catch(...) {
 				throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
@@ -415,9 +415,9 @@ namespace uns::nn {
 			try {
 				*S = uns::string::u8_cast<signal_t>(
 					uns::string::u8_cast<std::u8string>(
-						repr.get_child("C").get_value<std::string>()
-						)
-					);
+						repr.get<std::string>("C")
+					)
+				);
 			}
 			catch(...) {
 				throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
@@ -430,9 +430,9 @@ namespace uns::nn {
 				try {
 					_params_total = uns::string::u8_cast<int>(
 						uns::string::u8_cast<std::u8string>(
-							repr.get_child("params.total").get_value<std::string>()
-							)
-						);
+							repr.get<std::string>("params.total")
+						)
+					);
 				}
 				catch(...) {
 					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
@@ -443,14 +443,14 @@ namespace uns::nn {
 						_params.push_back(
 							uns::string::u8_cast<signal_t>(
 								uns::string::u8_cast<std::u8string>(
-									repr.get_child(
+									repr.get<std::string>(
 										uns::string::u8_cast<std::string>(
-											u8"params.i"
+											u8"params._"
 											+ uns::string::u8_cast<std::u8string>(idx)
-											)
-									).get_value<std::string>()
+										)
 									)
 								)
+							)
 						);
 					}
 					catch(...) {
@@ -465,9 +465,9 @@ namespace uns::nn {
 				try {
 					_links_total = uns::string::u8_cast<int>(
 						uns::string::u8_cast<std::u8string>(
-							repr.get_child("links.total").get_value<std::string>()
-							)
-						);
+							repr.get<std::string>("links.total")
+						)
+					);
 				}
 				catch(...) {
 					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
@@ -479,15 +479,15 @@ namespace uns::nn {
 					try {
 						link.first.layer = uns::string::u8_cast<int>(
 							uns::string::u8_cast<std::u8string>(
-								repr.get_child(
+								repr.get<std::string>(
 									uns::string::u8_cast<std::string>(
-										u8"links.i"
+										u8"links._"
 										+ uns::string::u8_cast<std::u8string>(idx)
 										+ u8".layer"
-										)
-								).get_value<std::string>()
+									)
 								)
-							);
+							)
+						);
 					}
 					catch(...) {
 						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
@@ -495,15 +495,15 @@ namespace uns::nn {
 					try {
 						link.first.index = uns::string::u8_cast<int>(
 							uns::string::u8_cast<std::u8string>(
-								repr.get_child(
+								repr.get<std::string>(
 									uns::string::u8_cast<std::string>(
-										u8"links.i"
+										u8"links._"
 										+ uns::string::u8_cast<std::u8string>(idx)
 										+ u8".index"
-										)
-								).get_value<std::string>()
+									)
 								)
-							);
+							)
+						);
 					}
 					catch(...) {
 						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
@@ -511,15 +511,15 @@ namespace uns::nn {
 					try {
 						link.second = uns::string::u8_cast<weight_t>(
 							uns::string::u8_cast<std::u8string>(
-								repr.get_child(
+								repr.get<std::string>(
 									uns::string::u8_cast<std::string>(
-										u8"links.i"
+										u8"links._"
 										+ uns::string::u8_cast<std::u8string>(idx)
 										+ u8".weight"
-										)
-								).get_value<std::string>()
+									)
 								)
-							);
+							)
+						);
 					}
 					catch(...) {
 						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
@@ -532,7 +532,7 @@ namespace uns::nn {
 
 		void link(
 			const std::vector<std::vector<uns::nn::general::neuron<signal_t>*>>& main_body,
-			const std::vector<uns::nn::general::neuron<signal_t>*>& inputs_
+			const std::vector<std::vector<uns::nn::general::neuron<signal_t>*>>& inputs_
 		) override {
 			if(_adresses == nullptr) throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
 
@@ -542,7 +542,7 @@ namespace uns::nn {
 				try {
 					auto link = std::pair<uns::nn::general::neuron<signal_t>*, weight_t>{};
 					if(adress.first.layer < 0) {
-						link.first = inputs_.at(adress.first.index);
+						link.first = inputs_.at(-adress.first.layer - 1).at(adress.first.index);
 					}
 					else {
 						link.first = main_body.at(adress.first.layer).at(adress.first.index);
@@ -580,17 +580,19 @@ namespace uns::nn {
 	class nonrecursive_reverse_neuron : public uns::nn::sequential_neuron<signal_t> {
 	protected:
 		using base_t = uns::nn::sequential_neuron<signal_t>;
-		using place_t = uns::nn::sequential_neuron<signal_t>;
+		using place_t = int;
 	public:
 		enum {
 			neuron = 0,
 			place = 1
 		};
 	protected:
+		class set_interruption {};
+
 		signal_t _r = 0;
 		signal_t _s = 0;
 		std::vector<std::pair<nonrecursive_reverse_neuron<signal_t>*, place_t>> _links;
-		input_neuron<signal_t>* _input = nullptr;
+		uns::nn::general::neuron<signal_t>* _input = nullptr;
 
 		bool _is_learning = true;
 		signal_t _dropout = signal_t{ 0 };
@@ -712,39 +714,40 @@ namespace uns::nn {
 			try {
 				_r = uns::string::u8_cast<signal_t>(
 					uns::string::u8_cast<std::u8string>(
-						repr.get_child("_R").get_value<std::string>()
-						)
-					);
+						repr.get<std::string>("_R")
+					)
+				);
 			}
 			catch(...) {
-				throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+				_r = signal_t{};
 			};
 
 			try {
 				_s = uns::string::u8_cast<signal_t>(
 					uns::string::u8_cast<std::u8string>(
-						repr.get_child("_C").get_value<std::string>()
-						)
-					);
+						repr.get<std::string>("_C")
+					)
+				);
 			}
 			catch(...) {
-				throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+				_s = signal_t{};
 			};
 
-			int idx = 0;
 
-			__adresses = std::make_unique<std::vector<std::pair<uns::nn::adress, place_t>>>();
-			{
+			try	{
+				__adresses = std::unique_ptr<std::vector<std::pair<uns::nn::adress, place_t>>>(new std::vector<std::pair<uns::nn::adress, place_t>>{});
+
+				int idx = 0;
 				int _links_total = 0;
 				try {
 					_links_total = uns::string::u8_cast<int>(
 						uns::string::u8_cast<std::u8string>(
-							repr.get_child("_links.total").get_value<std::string>()
-							)
-						);
+							repr.get<std::string>("_links.total")
+						)
+					);
 				}
 				catch(...) {
-					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+					throw set_interruption{};
 				};
 
 				auto link = std::pair<uns::nn::adress, place_t>{};
@@ -753,83 +756,91 @@ namespace uns::nn {
 					try {
 						link.first.layer = uns::string::u8_cast<int>(
 							uns::string::u8_cast<std::u8string>(
-								repr.get_child(
+								repr.get<std::string>(
 									uns::string::u8_cast<std::string>(
-										u8"_links.i"
+										u8"_links._"
 										+ uns::string::u8_cast<std::u8string>(idx)
 										+ u8".layer"
-										)
-								).get_value<std::string>()
+									)
 								)
-							);
+							)
+						);
 					}
 					catch(...) {
-						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+						throw set_interruption{};
 					};
 					try {
 						link.first.index = uns::string::u8_cast<int>(
 							uns::string::u8_cast<std::u8string>(
-								repr.get_child(
+								repr.get<std::string>(
 									uns::string::u8_cast<std::string>(
-										u8"_links.i"
+										u8"_links._"
 										+ uns::string::u8_cast<std::u8string>(idx)
 										+ u8".index"
-										)
-								).get_value<std::string>()
+									)
 								)
-							);
+							)
+						);
 					}
 					catch(...) {
-						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+						throw set_interruption{};
 					};
 					try {
-						link.second = uns::string::u8_cast<base_t::weight_t>(
+						link.second = uns::string::u8_cast<place_t>(
 							uns::string::u8_cast<std::u8string>(
-								repr.get_child(
+								repr.get<std::string>(
 									uns::string::u8_cast<std::string>(
-										u8"_links.i"
+										u8"_links._"
 										+ uns::string::u8_cast<std::u8string>(idx)
 										+ u8".place"
-										)
-								).get_value<std::string>()
+									)
 								)
-							);
+							)
+						);
 					}
 					catch(...) {
-						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+						throw set_interruption{};
 					};
 
 					__adresses->push_back(link);
 				};
+			}
+			catch(set_interruption&) {
+				__adresses = nullptr;
 			};
 		};
 
 		void link(
 			const std::vector<std::vector<uns::nn::general::neuron<signal_t>*>>& main_body,
-			const std::vector<uns::nn::general::neuron<signal_t>*>& inputs_
+			const std::vector<std::vector<uns::nn::general::neuron<signal_t>*>>& reverse_inputs
 		) override {
-			if(__adresses == nullptr) throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+			base_t::link(main_body(), reverse_inputs);
 
-			_links.clear();
+			if(__adresses != nullptr) {
+				_links.clear();
 
-			for(const auto& _adress : *base_t::_adresses) {
-				try {
-					auto link = std::pair<uns::nn::general::neuron<signal_t>*, place_t>{};
-					if(_adress.first.layer < 0) {
-						link.first = inputs_.at(_adress.first.index);
+				for(const auto& _adress : *__adresses) {
+					try {
+						auto link = std::pair<uns::nn::general::neuron<signal_t>*, place_t>{};
+						if(_adress.first.layer < 0) {
+							_input = reverse_inputs.at(_adress.first.index);
+						}
+						else {
+							link.first = main_body.at(_adress.first.layer).at(_adress.first.index);
+						};
+						link.second = _adress.second;
+						_links.push_back(link);
 					}
-					else {
-						link.first = main_body.at(_adress.first.layer).at(_adress.first.index);
+					catch(std::out_of_range&) {
+						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
 					};
-					link.second = _adress.second;
-					_links.push_back(link);
-				}
-				catch(std::out_of_range&) {
-					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
 				};
-			};
 
-			__adresses = nullptr;
+				__adresses = nullptr;
+			}
+			else {
+
+			};
 		};
 
 		bool is_reversible() const noexcept override { return true; };
