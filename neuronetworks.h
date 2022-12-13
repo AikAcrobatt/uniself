@@ -22,9 +22,17 @@ namespace uns::nn {
 
 
 	//an adress of neuron in every neuronetwork
-	struct adress {
+	class adress {
+	public:
 		int layer = 0;
 		int index = 0;
+
+		bool operator==(const uns::nn::adress& obj) const noexcept {
+			return layer == obj.layer && index == obj.index;
+		};
+		bool operator!=(const uns::nn::adress& obj) const noexcept {
+			return !(*this == obj);
+		};
 	};
 
 	namespace general {
@@ -309,41 +317,41 @@ namespace uns::nn {
 			for(auto link : links) {
 				res.put(
 					uns::string::u8_cast<std::string>(
-						u8"links.i"
+						u8"links._"
 						+ uns::string::u8_cast<std::u8string>(idx)
 						+ u8".layer"
-						),
+					),
 					uns::string::u8_cast<std::string>(
 						uns::string::u8_cast<std::u8string>(
 							std::get<neuron_t::neuron>(link)->adress().layer
-							)
 						)
+					)
 				);
 
 				res.put(
 					uns::string::u8_cast<std::string>(
-						u8"links.i"
+						u8"links._"
 						+ uns::string::u8_cast<std::u8string>(idx)
 						+ u8".index"
-						),
+					),
 					uns::string::u8_cast<std::string>(
 						uns::string::u8_cast<std::u8string>(
 							std::get<neuron_t::neuron>(link)->adress().index
-							)
 						)
+					)
 				);
 
 				res.put(
 					uns::string::u8_cast<std::string>(
-						u8"links.i"
+						u8"links._"
 						+ uns::string::u8_cast<std::u8string>(idx)
 						+ u8".weight"
-						),
+					),
 					uns::string::u8_cast<std::string>(
 						uns::string::u8_cast<std::u8string>(
 							std::get<neuron_t::weight>(link)
-							)
 						)
+					)
 				);
 
 				++idx;
@@ -355,14 +363,14 @@ namespace uns::nn {
 			for(auto param : _params) {
 				res.put(
 					uns::string::u8_cast<std::string>(
-						u8"params.i"
+						u8"params._"
 						+ uns::string::u8_cast<std::u8string>(idx)
-						),
+					),
 					uns::string::u8_cast<std::string>(
 						uns::string::u8_cast<std::u8string>(
 							param
-							)
 						)
+					)
 				);
 
 				++idx;
@@ -463,7 +471,7 @@ namespace uns::nn {
 				};
 			};
 
-			_adresses = std::make_unique<std::vector<std::pair<uns::nn::adress, weight_t>>>();
+			_adresses = std::unique_ptr<std::vector<std::pair<uns::nn::adress, weight_t>>>(new std::vector<std::pair<uns::nn::adress, weight_t>>{});
 			{
 				int _links_total = 0;
 				try {
@@ -595,7 +603,6 @@ namespace uns::nn {
 		void collect(const uns::nn::general::network_params<signal_t>& common_params) override { (*S)(links, common_params.forward(_params)); };
 	};
 
-
 	//a class of neuron introduces the nonrecursive reversation neuron used for learning by gradient-down method
 	template<typename signal_t>
 	//using signal_t = double;
@@ -635,47 +642,47 @@ namespace uns::nn {
 			res.put("_R", uns::string::u8_cast<std::string>(uns::string::u8_cast<std::u8string>(_R())));
 			res.put("_C", uns::string::u8_cast<std::string>(uns::string::u8_cast<std::u8string>(_C())));
 
-			res.put("_links.total", uns::string::u8_cast<std::string>(uns::string::u8_cast<std::u8string>(_links.size())));
+			res.put("_links.total", uns::string::u8_cast<std::string>(uns::string::u8_cast<std::u8string>(_links.size() + (_input != nullptr ? 1 : 0)))));
 
 			auto idx = static_cast<int>(0);
 			for(auto _link : _links) {
 				res.put(
 					uns::string::u8_cast<std::string>(
-						u8"_links.i"
+						u8"_links._"
 						+ uns::string::u8_cast<std::u8string>(idx)
 						+ u8".layer"
-						),
+					),
 					uns::string::u8_cast<std::string>(
 						uns::string::u8_cast<std::u8string>(
 							std::get<neuron>(_link)->adress().layer
-							)
 						)
+					)
 				);
 
 				res.put(
 					uns::string::u8_cast<std::string>(
-						u8"_links.i"
+						u8"_links._"
 						+ uns::string::u8_cast<std::u8string>(idx)
 						+ u8".index"
-						),
+					),
 					uns::string::u8_cast<std::string>(
 						uns::string::u8_cast<std::u8string>(
 							std::get<neuron>(_link)->adress().index
-							)
 						)
+					)
 				);
 
 				res.put(
 					uns::string::u8_cast<std::string>(
-						u8"_links.i"
+						u8"_links._"
 						+ uns::string::u8_cast<std::u8string>(idx)
 						+ u8".place"
-						),
+					),
 					uns::string::u8_cast<std::string>(
 						uns::string::u8_cast<std::u8string>(
 							std::get<place>(_link)
-							)
 						)
+					)
 				);
 
 				++idx;
@@ -684,41 +691,41 @@ namespace uns::nn {
 			if(_input != nullptr) {
 				res.put(
 					uns::string::u8_cast<std::string>(
-						u8"_links.i"
+						u8"_links._"
 						+ uns::string::u8_cast<std::u8string>(idx)
 						+ u8".layer"
-						),
+					),
 					uns::string::u8_cast<std::string>(
 						uns::string::u8_cast<std::u8string>(
 							static_cast<int>(_input->adress().layer)
-							)
 						)
+					)
 				);
 
 				res.put(
 					uns::string::u8_cast<std::string>(
-						u8"_links.i"
+						u8"_links._"
 						+ uns::string::u8_cast<std::u8string>(idx)
 						+ u8".index"
-						),
+					),
 					uns::string::u8_cast<std::string>(
 						uns::string::u8_cast<std::u8string>(
 							static_cast<int>(_input->adress().index)
-							)
 						)
+					)
 				);
 
 				res.put(
 					uns::string::u8_cast<std::string>(
-						u8"_links.i"
-						+ uns::string::u8_cast<std::u8string>(idx)
+						u8"_links._"
+						+ uns::string::u8_cast<std::u8string>(-1)
 						+ u8".place"
-						),
+					),
 					uns::string::u8_cast<std::string>(
 						uns::string::u8_cast<std::u8string>(
 							static_cast<int>(0)	//TODO to enshure that this is right place
-							)
 						)
+					)
 				);
 			};
 
@@ -863,11 +870,20 @@ namespace uns::nn {
 			else {
 				_links.clear();
 
-				//TODO this algo is wrong!
-				for(const auto& link : base_t::links) {
-					for(int subneuron_idx = 0; subneuron_idx < link.first->subneurons_total(); ++subneuron_idx) {
-						if(link.first->subneuron(subneuron_idx) == this) {
-							_links.push_back(std::pair<< uns::nn::nonrecursive_reverse_neuron<signal_t>*, place_t>{ link.first, subneuron_idx });
+				for(const auto& layer : main_body) {
+					for(const auto& neuron_ptr : layer) {
+						for(int subneuron_idx = 0; subneuron_idx < neuron_ptr->subneurons_total(); ++subneuron_idx) {
+							if(neuron_ptr->subneuron(subneuron_idx)->adress() == this->adress()) {
+								_links.push_back(std::pair<nonrecursive_reverse_neuron<signal_t>*, place_t>{ neuron_ptr, subneuron_idx });
+							};
+						};
+					};
+				};
+
+				for(const auto& reverse_input_ptr : reverse_inputs) {
+					for(int subneuron_idx = 0; subneuron_idx < reverse_input_ptr->subneurons_total(); ++subneuron_idx) {
+						if(reverse_input_ptr->subneuron(subneuron_idx)->adress() == this->adress()) {
+							_input = reverse_input_ptr;
 						};
 					};
 				};
@@ -905,15 +921,15 @@ namespace uns::nn {
 
 		void set_learning(bool islearning) { _is_learning = islearning; };
 
-		signal_t dS_dr(int index, const uns::nn::general::network_params<signal_t>& common_params) const { return base_t::S->_dr(index, base_t::links, common_params); };
+		signal_t dS_dr(int index, const uns::nn::general::network_params<signal_t>& common_params) const { return base_t::S->_dr(index, base_t::links, common_params.forward(base_t::_params)); };	//TODO to think: forwarding params of this neuron can unintendedly replace params of subneurons
 
-		signal_t dS_dw(int index, const uns::nn::general::network_params<signal_t>& common_param) const { return base_t::S->_dw(index, base_t::links, common_param); };
+		signal_t dS_dw(int index, const uns::nn::general::network_params<signal_t>& common_params) const { return base_t::S->_dw(index, base_t::links, common_params.forward(base_t::_params)); };
 
-		signal_t dS_dp(int index, const uns::nn::general::network_params<signal_t>& common_param) const { return base_t::S->_dp(index, base_t::links, common_param); };
+		signal_t dS_dp(int index, const uns::nn::general::network_params<signal_t>& common_params) const { return base_t::S->_dp(index, base_t::links, common_params.forward(base_t::_params)); };
 
-		signal_t dF_dS(const uns::nn::general::network_params<signal_t>& common_param) const { return base_t::F->_dS(base_t::C(), common_param); };
+		signal_t dF_dS(const uns::nn::general::network_params<signal_t>& common_params) const { return base_t::F->_dS(base_t::C(), common_params.forward(base_t::_params)); };
 
-		signal_t dF_dp(int index, const uns::nn::general::network_params<signal_t>& common_param) const { return base_t::F->_dp(index, base_t::C(), common_param); };
+		signal_t dF_dp(int index, const uns::nn::general::network_params<signal_t>& common_params) const { return base_t::F->_dp(index, base_t::C(), common_params.forward(base_t::_params)); };
 	};
 
 
@@ -969,7 +985,7 @@ namespace uns::nn {
 		size_t inputs_total() const { return base_t::_inputs.size(); };
 	};
 
-
+	
 };
 
 
