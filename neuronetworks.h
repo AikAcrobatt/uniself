@@ -949,12 +949,14 @@ namespace uns::nn {
 		sequential_base_network(sequential_base_network&& net) = delete;
 		sequential_base_network& operator=(sequential_base_network&& net) = delete;
 		~sequential_base_network() {
-			for(auto& layer : layers)
+			for(auto& layer : layers) {
 				for(auto neuron : layer) {
 					delete neuron;
 				};
-			for(auto input : base_t::_inputs)
+			};
+			for(auto input : base_t::_inputs) {
 				delete input;
+			};
 		};
 
 		uns::nn::general::network<neuron_t>::repr_type represent() const noexcept override;
@@ -962,13 +964,15 @@ namespace uns::nn {
 		void link(const uns::nn::general::input_data_object<signal_t>&) override;
 
 		void react(const uns::nn::general::network_params<signal_t>& common_params) override {
-			for(auto input : base_t::_inputs)
+			for(auto input : base_t::_inputs) {
 				input->react(common_params);
-			for(auto& layer : layers)
+			};
+			for(auto& layer : layers) {
 				for(auto neuron : layer) {
 					neuron->collect(common_params);
 					neuron->react(common_params);
 				};
+			};
 		};
 
 		signal_t R(size_t layer_index, size_t index) const { return layers[layer_index][index]->R(); };
