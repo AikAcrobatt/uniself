@@ -934,8 +934,8 @@ namespace uns::nn {
 
 
 	//a class of neuron introduces the neurons supposed to consist sequential neural network's body
-	template<class neuron_t>
-	//using neuron_t = uns::nn::general::neuron<double>;
+	//template<class neuron_t>
+	using neuron_t = uns::nn::general::neuron<double>;
 	class sequential_base_network : public uns::nn::general::network<neuron_t> {
 	public:
 		using signal_t = typename neuron_t::signal_type;
@@ -954,13 +954,65 @@ namespace uns::nn {
 					delete neuron;
 				};
 			};
-			for(auto input : base_t::_inputs) {
-				delete input;
+			for(auto layer : base_t::_inputs) {
+				for(auto input : layer) {
+					delete input;
+				};
 			};
 		};
 
-		uns::nn::general::network<neuron_t>::repr_type represent() const noexcept override;
-		void set(const uns::nn::general::network<neuron_t>::repr_type&, const typename uns::nn::general::activator<signal_t>::caster&, const typename uns::nn::general::collector<signal_t>::caster&) override;
+		uns::nn::general::network<neuron_t>::repr_type represent() const noexcept override {
+			auto res = typename uns::nn::general::network<neuron_t>::repr_type{};
+			int idx1 = 0;
+			int idx2 = 0;
+
+			res.put("layers.total", layers.size());
+			idx1 = 0;
+			idx2 = 0;
+			for(const auto& layer : layers) {
+				res.put(
+					"layers._"
+					+ uns::string::u8_cast<std::string>(uns::string::u8_cast<std::u8string>(idx1))
+					+ ".neurons.total",
+					layer.size()
+				);
+				
+				for(const auto& neuron : layer) {
+					res.add_child(
+						"layers._"
+						+ uns::string::u8_cast<std::string>(uns::string::u8_cast<std::u8string>(idx1))
+						+ ".neurons._"
+						+ uns::string::u8_cast<std::string>(uns::string::u8_cast<std::u8string>(idx2)),
+						neuron->represent()
+					);
+
+					++idx2;
+				};
+
+				++idx1;
+			};
+
+			res.put("outputs.total", base_t::_outputs.size());
+			idx1 = 0;
+			for(const auto& output : base_t::_outputs) {
+				res.put(
+					"outputs._"
+					+ uns::string::u8_cast<std::string>(uns::string::u8_cast<std::u8string>(idx1))
+					+ ".layer",
+					output->adress().layer
+				);
+				res.put(
+					"outputs._"
+					+ uns::string::u8_cast<std::string>(uns::string::u8_cast<std::u8string>(idx1))
+					+ ".index",
+					output->adress().index
+				);
+				++idx1;
+			};
+
+			return res;
+		};
+		void set(const typename uns::nn::general::network<neuron_t>::repr_type&, const typename uns::nn::general::activator<signal_t>::caster&, const typename uns::nn::general::collector<signal_t>::caster&) override;
 		void link(const uns::nn::general::input_data_object<signal_t>&) override;
 
 		void react(const uns::nn::general::network_params<signal_t>& common_params) override {
