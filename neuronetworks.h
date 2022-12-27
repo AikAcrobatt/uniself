@@ -610,7 +610,7 @@ namespace uns::nn {
 	};
 
 
-	//a class of neuron introduces the neurons supposed to consist sequential neural network's body
+	//a class of network introduces the sequential neural network
 	template<class neuron_t>
 	//using neuron_t = uns::nn::sequential_neuron<double>;
 	class sequential_base_network : public uns::nn::general::network<neuron_t> {
@@ -629,6 +629,10 @@ namespace uns::nn {
 		sequential_base_network(sequential_base_network&& net) = delete;
 		sequential_base_network& operator=(sequential_base_network&& net) = delete;
 		~sequential_base_network() {
+			clear();
+		};
+	protected:
+		void clear() noexcept {
 			for(auto& layer : m_layers) {
 				for(auto neuron : layer) {
 					delete neuron;
@@ -638,7 +642,7 @@ namespace uns::nn {
 				delete input;
 			};
 		};
-
+	public:
 		uns::nn::general::network<signal_type>::repr_type represent() const noexcept override {
 			auto res = typename uns::nn::general::network<neuron_t>::repr_type{};
 
@@ -737,6 +741,66 @@ namespace uns::nn {
 	};
 
 	
+	//a class of network introduces the reversable neural network
+	template<class signal_t>
+	//using neuron_t = uns::nn::sequential_neuron<double>;
+	class nonrecursive_reverse_network: public uns::nn::sequential_base_network<uns::nn::nonrecursive_reverse_neuron<signal_t>> {
+	protected:
+		using this_type = nonrecursive_reverse_network<signal_t>;
+	public:
+		using neuron_type = uns::nn::nonrecursive_reverse_neuron<signal_t>;
+		using signal_type = typename neuron_type::signal_type;
+		using base = uns::nn::sequential_base_network<uns::nn::nonrecursive_reverse_neuron<signal_t>>;
+	protected:
+		std::vector<uns::nn::general::neuron<signal_type>*> m_reverse_inputs;
+	public:
+		nonrecursive_reverse_network() {};
+		nonrecursive_reverse_network(const nonrecursive_reverse_network& net) = delete;
+		nonrecursive_reverse_network& operator=(const nonrecursive_reverse_network& net) = delete;
+		nonrecursive_reverse_network(nonrecursive_reverse_network&& net) = delete;
+		nonrecursive_reverse_network& operator=(nonrecursive_reverse_network&& net) = delete;
+		~nonrecursive_reverse_network() {
+			base::clear();
+
+			for(auto neuron_ptr : m_reverse_inputs) {
+				delete neuron_ptr;
+			};
+		};
+
+		void _link(uns::nn::general::input_data_object<typename base::signal_type>& odo) {
+			auto reverse_inputs = std::unordered_map<uns::nn::adress, uns::nn::nonrecursive_reverse_neuron<typename base::signal_type>*, uns::nn::adress::hash>{};
+
+			for(const auto& layer : base::m_layers) {
+				for(auto neuron_ptr : layer) {
+					neuron_ptr->_link(base::m_layers, reverse_inputs, odo);
+				};
+			};
+
+			for(auto& [adress, reverse_input_ptr] : reverse_inputs) {
+				m_reverse_inputs.push_back(reverse_input_ptr);
+			};
+		};
+
+		void _react(const uns::nn::general::network_params<signal_type>& common_params) override {
+			for(auto m_reverse_input : m_reverse_inputs) {
+				m_reverse_input->_react(common_params);
+			};
+			for(auto layer_ptr = base::m_layers.rbegin(); layer_ptr < base::m_layers.rend(); ++layer_ptr) {
+				for(auto neuron_ptr = layer_ptr->rbegin(); neuron_ptr < layer_ptr.rend(); ++neuron_ptr) {
+					neuron_ptr->_collect(common_params);
+					neuron_ptr->_react(common_params);
+				};
+			};
+		};
+
+		signal_type _R(std::size_t layer_index, std::size_t index) const { return m_layers[layer_index][index]->_R(); };
+
+		signal_type _C(std::size_t layer_index, std::size_t index) const { return m_layers[layer_index][index]->_C(); };
+
+		signal_type _O(std::size_t index) const { return base::m_outputs[index]->_R(); };
+
+		signal_type _I(std::size_t index) const { return base::m_inputs[index]->_R(); };
+	};
 };
 
 
