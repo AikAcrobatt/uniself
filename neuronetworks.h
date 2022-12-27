@@ -125,7 +125,7 @@ namespace uns::nn {
 				layers(obj.layers),
 				outputs(obj.outputs)
 			{};
-			network& operator=(const neuron& obj) {
+			network& operator=(const network& obj) {
 				if(this == &obj) return *this;
 
 				layers = obj.layers;
@@ -176,7 +176,7 @@ namespace uns::nn {
 		class input_data_object {
 		public:
 			virtual std::size_t size() const = 0;
-			virtual neuron<signal_t>* get(const uns::nn::adress&) const = 0;
+			virtual neuron<signal_t>* get(const uns::nn::adress&) = 0;
 			virtual bool has_it(const uns::nn::adress&) const noexcept = 0;
 		};
 
@@ -332,7 +332,7 @@ namespace uns::nn {
 		public:
 			using signal_type = typename neuron_t::signal_type;
 			using neuron_type = neuron_t;
-			using repr_type = uns::nn::representation::network<neuron_type>;
+			using repr_type = uns::nn::representation::network<typename neuron_type::repr_type>;
 		protected:
 			std::vector<uns::nn::general::neuron<signal_type>*> m_outputs;
 			std::vector<uns::nn::general::neuron<signal_type>*> m_inputs;
@@ -352,7 +352,6 @@ namespace uns::nn {
 
 	//a class of neuron introduces the neurons supposed to consist sequential neural network's body
 	template<class signal_t>
-	//using signal_t = double;
 	class sequential_neuron : public uns::nn::general::neuron<signal_t> {
 	protected:
 		using this_type = uns::nn::general::neuron<signal_t>;
@@ -362,9 +361,9 @@ namespace uns::nn {
 		using param_type = signal_t;
 		using base = uns::nn::general::neuron<signal_t>;
 	public:
-		enum {
-			neuron = 0,
-			weight = 1
+		enum part{
+			_neuron_ = 0,
+			_weight_ = 1
 		};
 	protected:
 		uns::nn::adress m_adress;
@@ -404,8 +403,8 @@ namespace uns::nn {
 			for(auto link : m_links) {
 				res.links.emplace_back(
 					std::pair<uns::nn::adress, weight_type>{
-						std::get<this_type::neuron>(link)->adress(),
-						std::get<this_type::weight>(link)
+						std::get<part::_neuron_>(link)->adress(),
+						std::get<part::_weight_>(link)
 					}
 				);
 			};
@@ -448,10 +447,10 @@ namespace uns::nn {
 				auto link = std::pair<uns::nn::general::neuron<signal_t>*, weight_type>{};
 				if(ido.has_it(adress)) {
 					if(inputs.find(adress) == inputs.end()) {
-						std::get<this_type::neuron>(link) = inputs[adress] = ido.get(adress);
+						std::get<part::_neuron_>(link) = inputs[adress] = ido.get(adress);
 					}
 					else {
-						std::get<this_type::neuron>(link) = inputs[adress];
+						std::get<part::_neuron_>(link) = inputs[adress];
 					};
 				}
 				else {
@@ -459,13 +458,13 @@ namespace uns::nn {
 						adress.layer >= 0 && adress.layer < main_body.size()
 						&& adress.index >= 0 && adress.index < main_body[adress.layer].size()
 					) {
-						std::get<this_type::neuron>(link) = main_body[adress.layer][adress.index];
+						std::get<part::_neuron_>(link) = main_body[adress.layer][adress.index];
 					}
 					else {
 						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
 					};
 				};
-				std::get<this_type::weight>(link) = weight;
+				std::get<part::_weight_>(link) = weight;
 				m_links.push_back(link);
 			};
 
@@ -479,7 +478,7 @@ namespace uns::nn {
 		int subneurons_total() const noexcept override { return m_links.size(); };
 		const uns::nn::general::neuron<signal_type>* subneuron(int connection_idx) const noexcept override {
 			if(connection_idx >= 0 && connection_idx < m_links.size()) {
-				return std::get<this_type::neuron>(m_links[connection_idx]);
+				return std::get<part::_neuron_>(m_links[connection_idx]);
 			}
 			else {
 				return nullptr;
@@ -487,7 +486,7 @@ namespace uns::nn {
 		};
 		uns::nn::general::neuron<signal_type>* subneuron(int connection_idx) noexcept override {
 			if(connection_idx >= 0 && connection_idx < m_links.size()) {
-				return std::get<this_type::neuron>(m_links[connection_idx]);
+				return std::get<part::_neuron_>(static_cast<std::pair<uns::nn::general::neuron<signal_type>*, weight_type>>(m_links[connection_idx]));
 			}
 			else {
 				return nullptr;
@@ -508,22 +507,17 @@ namespace uns::nn {
 
 	//a class of neuron introduces the nonrecursive reversation neuron used for learning by gradient-down method
 	template<typename signal_t>
-	//using signal_t = double;
 	class nonrecursive_reverse_neuron : public uns::nn::sequential_neuron<signal_t> {
 	protected:
 		using this_type = uns::nn::nonrecursive_reverse_neuron<signal_t>;
 		using base = uns::nn::sequential_neuron<signal_t>;
 		using place_type = int;
 	public:
-		enum {
-			neuron = 0,
-			place = 1
-		};
 	protected:
 		base::signal_type m_r = 0;
 		base::signal_type m_s = 0;
 		std::vector<std::pair<nonrecursive_reverse_neuron<typename base::signal_type>*, place_type>> m__links;
-		uns::nn::general::neuron<base::signal_type>* m_input = nullptr;
+		uns::nn::general::neuron<typename base::signal_type>* m_input = nullptr;
 		bool m_is_learning = true;
 		base::signal_type m_dropout = base::signal_type{ 0 };
 	public:
@@ -536,7 +530,7 @@ namespace uns::nn {
 
 		void _link(
 			std::vector<std::vector<uns::nn::nonrecursive_reverse_neuron<typename base::signal_type>*>>& main_body,
-			std::unordered_map<uns::nn::adress, uns::nn::nonrecursive_reverse_neuron<typename base::signal_type>*, uns::nn::adress::hash>& reverse_inputs,
+			std::unordered_map<uns::nn::adress, uns::nn::general::neuron<typename base::signal_type>*, uns::nn::adress::hash>& reverse_inputs,
 			uns::nn::general::input_data_object<typename base::signal_type>& odo
 		) {
 			m__links.clear();
@@ -557,7 +551,7 @@ namespace uns::nn {
 
 			if(odo.has_it(this->adress())) {
 				if(reverse_inputs.find(this->adress()) == reverse_inputs.end()) {
-					m_input = reverse_inputs[this->adress()] = ido.get(this->adress());
+					m_input = reverse_inputs[this->adress()] = odo.get(this->adress());
 				}
 				else {
 					m_input = reverse_inputs[this->adress()];
@@ -611,11 +605,10 @@ namespace uns::nn {
 
 
 	//a class of network introduces the sequential neural network
-	template<class neuron_t>
-	//using neuron_t = uns::nn::sequential_neuron<double>;
+	template<class neuron_t, class inputs_allocator_t>
 	class sequential_base_network : public uns::nn::general::network<neuron_t> {
 	protected:
-		using this_type = sequential_base_network<neuron_t>;
+		using this_type = sequential_base_network<neuron_t, inputs_allocator_t>;
 	public:
 		using neuron_type = typename neuron_t;
 		using signal_type = typename neuron_type::signal_type;
@@ -629,26 +622,25 @@ namespace uns::nn {
 		sequential_base_network(sequential_base_network&& net) = delete;
 		sequential_base_network& operator=(sequential_base_network&& net) = delete;
 		~sequential_base_network() {
-			clear();
-		};
-	protected:
-		void clear() noexcept {
 			for(auto& layer : m_layers) {
 				for(auto neuron : layer) {
 					delete neuron;
 				};
 			};
+
 			for(auto input : base::m_inputs) {
-				delete input;
+				inputs_allocator_t::dealloc(input);
 			};
 		};
+	protected:
 	public:
-		uns::nn::general::network<signal_type>::repr_type represent() const noexcept override {
+		typename uns::nn::general::network<neuron_t>::repr_type represent() const noexcept override {
 			auto res = typename uns::nn::general::network<neuron_t>::repr_type{};
 
 			for(const auto& layer : m_layers) {
+				res.layers.push_back(std::vector<typename neuron_type::repr_type>{});
 				for(auto neuron_ptr : layer) {
-					res.layers.emplace_back(neuron_ptr->represent());
+					res.layers.back().emplace_back(neuron_ptr->represent());
 				};
 			};
 
@@ -666,9 +658,10 @@ namespace uns::nn {
 			uns::nn::general::input_data_object<signal_type>& ido
 		) override {
 			for(const auto& layer : repr.layers) {
-				for(const auto& [neuron, weight] : layer) {
+				m_layers.push_back(std::vector<neuron_type*>{});
+				for(const auto& neuron : layer) {
 					auto neuron_ptr = new neuron_type{};
-					m_layers.push_back(neuron_ptr);
+					m_layers.back().push_back(neuron_ptr);
 				};
 			};
 
@@ -690,7 +683,7 @@ namespace uns::nn {
 					if(layer_idx < repr.layers.size() && neuron_idx < repr.layers[layer_idx].size()) {
 						m_layers[layer_idx][neuron_idx]->set(
 							repr.layers[layer_idx][neuron_idx],
-							uns::nn::adress{ layer_idx, neuron_idx },
+							uns::nn::adress{ static_cast<int>(layer_idx), static_cast<int>(neuron_idx) },
 							activator_cast,
 							collector_cast
 						);
@@ -701,10 +694,17 @@ namespace uns::nn {
 				};
 			};
 
+			auto layers = std::vector<std::vector<uns::nn::general::neuron<signal_type>*>>{};
+			for(const auto& layer : m_layers) {
+				layers.push_back(std::vector<uns::nn::general::neuron<signal_type>*>{});
+				for(auto neuron_ptr : layer) {
+					layers.back().push_back(neuron_ptr);
+				};
+			};
 			auto inputs_map = std::unordered_map<uns::nn::adress, uns::nn::general::neuron<signal_type>*, uns::nn::adress::hash>{};
 			for(const auto& layer : m_layers) {
 				for(auto neuron_ptr : layer) {
-					neuron_ptr->link(m_layers, inputs_map, ido);
+					neuron_ptr->link(layers, inputs_map, ido);
 				};
 			};
 
@@ -742,15 +742,14 @@ namespace uns::nn {
 
 	
 	//a class of network introduces the reversable neural network
-	template<class signal_t>
-	//using neuron_t = uns::nn::sequential_neuron<double>;
-	class nonrecursive_reverse_network: public uns::nn::sequential_base_network<uns::nn::nonrecursive_reverse_neuron<signal_t>> {
+	template<class signal_t, class inputs_allocator_t, class outputs_allocator_t>
+	class nonrecursive_reverse_network: public uns::nn::sequential_base_network<uns::nn::nonrecursive_reverse_neuron<signal_t>, inputs_allocator_t> {
 	protected:
-		using this_type = nonrecursive_reverse_network<signal_t>;
+		using this_type = nonrecursive_reverse_network<signal_t, inputs_allocator_t, outputs_allocator_t>;
 	public:
 		using neuron_type = uns::nn::nonrecursive_reverse_neuron<signal_t>;
 		using signal_type = typename neuron_type::signal_type;
-		using base = uns::nn::sequential_base_network<uns::nn::nonrecursive_reverse_neuron<signal_t>>;
+		using base = uns::nn::sequential_base_network<uns::nn::nonrecursive_reverse_neuron<signal_t>, inputs_allocator_t>;
 	protected:
 		std::vector<uns::nn::general::neuron<signal_type>*> m_reverse_inputs;
 	public:
@@ -760,15 +759,13 @@ namespace uns::nn {
 		nonrecursive_reverse_network(nonrecursive_reverse_network&& net) = delete;
 		nonrecursive_reverse_network& operator=(nonrecursive_reverse_network&& net) = delete;
 		~nonrecursive_reverse_network() {
-			base::clear();
-
 			for(auto neuron_ptr : m_reverse_inputs) {
-				delete neuron_ptr;
+				outputs_allocator_t::dealloc(neuron_ptr);
 			};
 		};
 
-		void _link(uns::nn::general::input_data_object<typename base::signal_type>& odo) {
-			auto reverse_inputs = std::unordered_map<uns::nn::adress, uns::nn::nonrecursive_reverse_neuron<typename base::signal_type>*, uns::nn::adress::hash>{};
+		void _link(uns::nn::general::input_data_object<signal_type>& odo) {
+			auto reverse_inputs = std::unordered_map<uns::nn::adress, uns::nn::general::neuron<typename base::signal_type>*, uns::nn::adress::hash>{};
 
 			for(const auto& layer : base::m_layers) {
 				for(auto neuron_ptr : layer) {
@@ -781,7 +778,7 @@ namespace uns::nn {
 			};
 		};
 
-		void _react(const uns::nn::general::network_params<signal_type>& common_params) override {
+		void _react(const uns::nn::general::network_params<signal_type>& common_params) {
 			for(auto m_reverse_input : m_reverse_inputs) {
 				m_reverse_input->_react(common_params);
 			};
@@ -793,9 +790,9 @@ namespace uns::nn {
 			};
 		};
 
-		signal_type _R(std::size_t layer_index, std::size_t index) const { return m_layers[layer_index][index]->_R(); };
+		signal_type _R(std::size_t layer_index, std::size_t index) const { return base::m_layers[layer_index][index]->_R(); };
 
-		signal_type _C(std::size_t layer_index, std::size_t index) const { return m_layers[layer_index][index]->_C(); };
+		signal_type _C(std::size_t layer_index, std::size_t index) const { return base::m_layers[layer_index][index]->_C(); };
 
 		signal_type _O(std::size_t index) const { return base::m_outputs[index]->_R(); };
 

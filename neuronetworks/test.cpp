@@ -1,6 +1,8 @@
 ﻿
 #include <iostream>
 #include <sstream>
+#include <vector>
+#include <array>
 
 #include <boost/property_tree/ptree.hpp>
 #include "boost/property_tree/json_parser.hpp"
@@ -101,99 +103,161 @@ public:
 	const uns::nn::general::network_params<signal_type>& forward(const std::vector<signal_type>&) const override { return *this; };
 };
 
+
+template<typename signal_type>
+class input_neuron: public uns::nn::general::neuron<signal_type> {
+public:
+	using base = uns::nn::general::neuron<signal_type>;
+	using repr_type = uns::nn::representation::neuron<signal_type>;
+
+	uns::nn::adress m_adress;
+	signal_type* data = nullptr;
+
+	input_neuron() noexcept {};
+	input_neuron(const input_neuron&) = delete;
+	input_neuron& operator=(const input_neuron&) = delete;
+	input_neuron(input_neuron&&) = delete;
+	input_neuron& operator=(input_neuron&&) = delete;
+	~input_neuron() noexcept {};
+
+	std::u8string type() const noexcept override { return u8"input"; };
+
+	repr_type represent() const noexcept override { return repr_type{}; };
+	void set(
+		const repr_type& repr,
+		const uns::nn::adress& adress,
+		const typename uns::nn::general::activator<signal_type>::caster& act,
+		const typename uns::nn::general::collector<signal_type>::caster& col
+	) override {
+		m_adress = adress;
+	};
+	void link(
+		std::vector<std::vector<uns::nn::general::neuron<signal_type>*>>&,
+		std::unordered_map<uns::nn::adress, uns::nn::general::neuron<signal_type>*, uns::nn::adress::hash>&,
+		uns::nn::general::input_data_object<signal_type>&
+	) override {};
+
+	int subneurons_total() const noexcept override { return 0; };
+	const uns::nn::general::neuron<signal_type>* subneuron(int connection_idx) const noexcept override { return nullptr; };
+	uns::nn::general::neuron<signal_type>* subneuron(int connection_idx) noexcept override { return nullptr; };
+
+	signal_type R() const noexcept override { return *data; };
+
+	uns::nn::adress adress() const noexcept override { return m_adress; };
+};
+
+
 template<typename signal_type>
 class _input_data_object: public uns::nn::general::input_data_object<signal_type> {
 public:
+	std::array<signal_type, 10> data;
+
 	_input_data_object() {};
 
-	std::size_t size() const override { return 10; };
-	uns::nn::general::neuron<signal_type>* get(const uns::nn::adress&) const override {
-		return new uns::nn::sequential_neuron<signal_type>{};
+	std::size_t size() const override { return data.size(); };
+	uns::nn::general::neuron<signal_type>* get(const uns::nn::adress& adress) override {
+		auto res = new input_neuron<signal_type>{};
+		res->m_adress = adress;
+		if(adress.index >= 0 && adress.index < 10) {
+			res->data = &(data[adress.index]);
+		}
+		else {
+			res->data = nullptr;
+		};
+
+		return res;
+	};
+	bool has_it(const uns::nn::adress& adress) const noexcept override {
+		return (adress.layer < 0 && adress.index >= 0 && adress.index < data.size());
 	};
 
+	static void dealloc(uns::nn::general::neuron<signal_type>* reverse_input_neuron_ptr) {
+		delete reinterpret_cast<input_neuron<signal_type>*>(reverse_input_neuron_ptr);
+	};
+};
 
+template<typename signal_type>
+class _output_data_object: public uns::nn::general::input_data_object<signal_type> {
+public:
+	std::array<signal_type, 10> data;
+
+	_output_data_object() {};
+
+	std::size_t size() const override { return data.size(); };
+	uns::nn::general::neuron<signal_type>* get(const uns::nn::adress& adress) override {
+		auto res = new input_neuron<signal_type>{};
+		res->m_adress = adress;
+		if(adress.index >= 0 && adress.index < 10) {
+			res->data = &(data[adress.index]);
+		}
+		else {
+			res->data = nullptr;
+		};
+
+		return res;
+	};
+	bool has_it(const uns::nn::adress& adress) const noexcept override {
+		return (adress.layer == 1 && adress.index >= 0 && adress.index < data.size());
+	};
+
+	static void dealloc(uns::nn::general::neuron<signal_type>* reverse_input_neuron_ptr) {
+		delete reinterpret_cast<input_neuron<signal_type>*>(reverse_input_neuron_ptr);
+	};
 };
 
 int main() {
     std::cout << "START\n";
 
-    auto repr = boost::property_tree::ptree{};
-
-    std::stringstream s;
-
-    s << R"^^(
-{
-	"layers" : {
-		"total": "1",
-		"#0": {
-			"neurons": {
-				"total": "2",
-				"#0": {
-					"type": "Line.Perc",
-					"R": "1.2056",
-					"C": "-0.070099999999999996",
-					"links": {
-						"total": "3",
-						"#0": {
-							"layer": "-1",
-							"index": "0",
-							"weight": "8.0470000000000006"
-						},
-						"#1": {
-							"layer": "-1",
-							"index": "1",
-							"weight": "5.1600000000000001"
-						},
-						"#2": {
-							"layer": "-1",
-							"index": "2",
-							"weight": "-0.01"
-						}
-					},
-					"params": {
-						"total": "2",
-						"#0": "5",
-						"#1": "6"
-					}
-				},
-				"#1": {
-					"type": "Sigma.Perc",
-					"R": "1.2056",
-					"C": "-0.070099999999999996",
-					"links": {
-						"total": "1",
-						"#0": {
-							"layer": "0",
-							"index": "0",
-							"weight": "1.0470000000000006"
-						}
-					},
-					"params": {
-						"total": "1",
-						"#0": "5"
-					}
-				}
-			}
-		}
-	},
-	"outputs": {
-		"total": "1",
-		"#0": {
-			"layer": "0",
-			"index": "1"
-		}
-	}
-}
-    )^^";
-
-    boost::property_tree::read_json(s, repr);
-
-	auto nn = uns::nn::sequential_base_network<uns::nn::sequential_neuron<double>>{};
+	auto repr = uns::nn::representation::network<uns::nn::representation::neuron<double>>{};
 
 	auto act = _activator_cast<double>{};
 	auto col = _collector_cast<double>{};
 	auto ido = _input_data_object<double>{};
+
+	repr.layers.push_back(std::vector<uns::nn::representation::neuron<double>>{});
+
+	repr.layers.back().push_back(uns::nn::representation::neuron<double>{});
+	repr.layers.back().back().activator = u8"Line";
+	repr.layers.back().back().collector = u8"Perc";
+	repr.layers.back().back().r = 0.12;
+	repr.layers.back().back().c = -0.3;
+	repr.layers.back().back().links = {
+		{ { -1, 0 }, 1.01 },
+		{ { -1, 1 }, 1.02 },
+		{ { -1, 2 }, 1.02 }
+	};
+	repr.layers.back().back().params = { 1, 3, 5 };
+
+	repr.layers.back().push_back(uns::nn::representation::neuron<double>{});
+	repr.layers.back().back().activator = u8"Sigma";
+	repr.layers.back().back().collector = u8"Perc";
+	repr.layers.back().back().r = 50.21;
+	repr.layers.back().back().c = 8.08;
+	repr.layers.back().back().links = {
+		{ { 0, 0 }, 15.01 }
+	};
+	repr.layers.back().back().params = { 1 };
+
+	repr.layers.push_back(std::vector<uns::nn::representation::neuron<double>>{});
+
+	repr.layers.back().push_back(uns::nn::representation::neuron<double>{});
+	repr.layers.back().back().activator = u8"Line";
+	repr.layers.back().back().collector = u8"Perc";
+	repr.layers.back().back().r = 0;
+	repr.layers.back().back().c = -1;
+	repr.layers.back().back().links = {
+		{ { 0, 0 }, -1.5 },
+		{ { 0, 1 }, 7000.0 }
+	};
+	repr.layers.back().back().params = { 100, 300 };
+
+	repr.outputs.push_back(uns::nn::adress{ 1, 0 });
+
+	auto nn = uns::nn::nonrecursive_reverse_network<double, _input_data_object<double>, _output_data_object<double>>{};
 	nn.set(repr, act, col, ido);
+
+	auto odo = _output_data_object<double>{};
+	nn._link(odo);
 
     std::cout << "FINISH\n";
 };
