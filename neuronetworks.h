@@ -47,10 +47,115 @@ namespace uns::nn {
 	};
 
 
+	namespace representation {
+
+		template<typename signal_t>
+		class neuron {
+		public:
+			using signal_type = signal_t;
+			using weight_type = signal_t;
+			using param_type = signal_t;
+
+			std::u8string activator = u8"";
+			signal_type r = signal_type{};
+			std::u8string collector = u8"";
+			signal_type c = signal_type{};
+			std::vector<std::pair<uns::nn::adress, weight_type>> links;
+			std::vector<param_type> params;
+
+			neuron() noexcept {};
+			neuron(const neuron& obj) noexcept :
+				activator(obj.activator),
+				collector(obj.collector),
+				links(obj.links),
+				params(obj.params),
+				r(obj.r),
+				c(obj.c)
+			{};
+			neuron& operator=(const neuron & obj) {
+				if(this == &obj) return *this;
+
+				activator = obj.activator;
+				collector = obj.collector;
+				links = obj.links;
+				params = obj.params;
+				r = obj.r;
+				c = obj.c;
+
+				return *this;
+			};
+			neuron(neuron&& obj) noexcept :
+				activator(std::move(obj.activator)),
+				collector(std::move(obj.collector)),
+				links(std::move(obj.links)),
+				params(std::move(obj.params)),
+				r(std::move(obj.r)),
+				c(std::move(obj.c))
+			{};
+			neuron& operator=(neuron&& obj) {
+				if(this == &obj) return *this;
+
+				activator = std::move(obj.activator);
+				collector = std::move(obj.collector);
+				links = std::move(obj.links);
+				params = std::move(obj.params);
+				r = std::move(obj.r);
+				c = std::move(obj.c);
+
+				return *this;
+			};
+			~neuron() {};
+
+			std::u8string to_string() const noexcept { return u8""; };
+
+			void set(const std::u8string_view& str) {};
+		};
+
+
+		template<typename neuron_repr_t>
+		class network {
+		public:
+			using neuron_repr_type = neuron_repr_t;
+
+			std::vector<std::vector<neuron_repr_t>> layers;
+			std::vector<uns::nn::adress> outputs;
+
+			network() noexcept {};
+			network(const network& obj) noexcept :
+				layers(obj.layers),
+				outputs(obj.outputs)
+			{};
+			network& operator=(const neuron& obj) {
+				if(this == &obj) return *this;
+
+				layers = obj.layers;
+				outputs = obj.outputs;
+
+				return *this;
+			};
+			network(network&& obj) noexcept :
+				layers(std::move(obj.layers)),
+				outputs(std::move(obj.outputs))
+			{};
+			network& operator=(network&& obj) {
+				if(this == &obj) return *this;
+
+				layers = std::move(obj.layers);
+				outputs = std::move(obj.outputs);
+
+				return *this;
+			};
+			~network() {};
+
+			std::u8string to_string() const noexcept { return u8""; };
+
+			void set(const std::u8string_view& str) {};
+		};
+	};
+
+
 	namespace general {
 		//this namespace is intended to contain prototypes and interfaces
-
-
 
 		//class that introduces a paramaters' container that is fit for the whole network but also for a particular neuron
 		template<typename signal_t>
@@ -72,6 +177,7 @@ namespace uns::nn {
 		public:
 			virtual std::size_t size() const = 0;
 			virtual neuron<signal_t>* get(const uns::nn::adress&) const = 0;
+			virtual bool has_it(const uns::nn::adress&) const noexcept = 0;
 		};
 
 
@@ -183,8 +289,8 @@ namespace uns::nn {
 		template<typename signal_t>
 		class neuron {
 		public:
-			using repr_type = boost::property_tree::ptree;
 			using signal_type = signal_t;
+			using repr_type = uns::nn::representation::neuron<signal_type>;
 
 			virtual std::u8string type() const noexcept = 0;
 
@@ -224,8 +330,9 @@ namespace uns::nn {
 		template<typename neuron_t>
 		class network {
 		public:
-			using repr_type = boost::property_tree::ptree;
 			using signal_type = typename neuron_t::signal_type;
+			using neuron_type = neuron_t;
+			using repr_type = uns::nn::representation::network<neuron_type>;
 		protected:
 			std::vector<uns::nn::general::neuron<signal_type>*> m_outputs;
 			std::vector<uns::nn::general::neuron<signal_type>*> m_inputs;
@@ -247,6 +354,8 @@ namespace uns::nn {
 	template<class signal_t>
 	//using signal_t = double;
 	class sequential_neuron : public uns::nn::general::neuron<signal_t> {
+	protected:
+		using this_type = uns::nn::general::neuron<signal_t>;
 	public:
 		using signal_type = signal_t;
 		using weight_type = signal_t;
@@ -274,78 +383,31 @@ namespace uns::nn {
 		~sequential_neuron() noexcept {};
 
 		uns::nn::general::neuron<signal_type>::repr_type represent() const noexcept override {
-			using neuron_type = uns::nn::sequential_neuron<signal_type>;
+			auto res = typename uns::nn::general::neuron<signal_type>::repr_type{};
 
-			auto res = typename neuron_type::repr_type{};
-
-			res.put("type", uns::string::u8_cast<std::string>(type()));
-
-			res.put("R", uns::string::u8_cast<std::string>(uns::string::u8_cast<std::u8string>(R())));
-			res.put("C", uns::string::u8_cast<std::string>(uns::string::u8_cast<std::u8string>(C())));
-
-			res.put("links.total", uns::string::u8_cast<std::string>(uns::string::u8_cast<std::u8string>(m_links.size())));
-
-			int idx = 0;
-			for(auto link : m_links) {
-				res.put(
-					uns::string::u8_cast<std::string>(
-						u8"links.#"
-						+ uns::string::u8_cast<std::u8string>(idx)
-						+ u8".layer"
-					),
-					uns::string::u8_cast<std::string>(
-						uns::string::u8_cast<std::u8string>(
-							std::get<neuron_type::neuron>(link)->adress().layer
-						)
-					)
-				);
-
-				res.put(
-					uns::string::u8_cast<std::string>(
-						u8"links.#"
-						+ uns::string::u8_cast<std::u8string>(idx)
-						+ u8".index"
-					),
-					uns::string::u8_cast<std::string>(
-						uns::string::u8_cast<std::u8string>(
-							std::get<neuron_type::neuron>(link)->adress().index
-						)
-					)
-				);
-
-				res.put(
-					uns::string::u8_cast<std::string>(
-						u8"links.#"
-						+ uns::string::u8_cast<std::u8string>(idx)
-						+ u8".weight"
-					),
-					uns::string::u8_cast<std::string>(
-						uns::string::u8_cast<std::u8string>(
-							std::get<neuron_type::weight>(link)
-						)
-					)
-				);
-
-				++idx;
+			if(m_F != nullptr) {
+				res.activator = m_F->type();
+			}
+			else {
+				res.activator = u8"";
 			};
 
-			res.put("params.total", uns::string::u8_cast<std::string>(uns::string::u8_cast<std::u8string>(m_params.size())));
+			if(m_S != nullptr) {
+				res.collector = m_F->type();
+			}
+			else {
+				res.collector = u8"";
+			};
 
-			idx = 0;
-			for(auto param : m_params) {
-				res.put(
-					uns::string::u8_cast<std::string>(
-						u8"params.#"
-						+ uns::string::u8_cast<std::u8string>(idx)
-					),
-					uns::string::u8_cast<std::string>(
-						uns::string::u8_cast<std::u8string>(
-							param
-						)
-					)
+			res.params = m_params;
+
+			for(auto link : m_links) {
+				res.links.emplace_back(
+					std::pair<uns::nn::adress, weight_type>{
+						std::get<this_type::neuron>(link)->adress(),
+						std::get<this_type::weight>(link)
+					}
 				);
-
-				++idx;
 			};
 
 			return res;
@@ -357,189 +419,20 @@ namespace uns::nn {
 			const typename uns::nn::general::activator<signal_type>::caster& activator_cast,
 			const typename uns::nn::general::collector<signal_type>::caster& collector_cast
 		) override {
-			using neuron_type = uns::nn::sequential_neuron<signal_type>;
-
 			m_adress = adress;
 
-			{
-				auto type = std::u8string{};
-				try {
-					type = uns::string::u8_cast<std::u8string>(
-						repr.get<std::string>("type")
-					);
-				}
-				catch(const std::runtime_error& e) {
-					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-				}
-				catch(const std::exception&) {
-					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-				};
+			m_F = activator_cast(repr.activator);
+			if(m_F == nullptr) throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+			*m_F = repr.r;
 
-				auto activator_type = std::u8string{};
-				auto collector_type = std::u8string{};
+			m_S = collector_cast(repr.collector);
+			if(m_S == nullptr) throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+			*m_S = repr.c;
 
-				auto seeker = type.begin();
-				uns::string::seeker_read<std::u8string>(type, seeker, activator_type, u8".", false, -1);
-
-				collector_type = type.substr(seeker - type.begin());
-
-				m_F = activator_cast(activator_type);
-				if(m_F == nullptr) throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-
-				m_S = collector_cast(collector_type);
-				if(m_S == nullptr) throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-			};
-
-			try {
-				*m_F = uns::string::u8_cast<signal_type>(
-					uns::string::u8_cast<std::u8string>(
-						repr.get<std::string>("R")
-					)
-				);
-			}
-			catch(const std::runtime_error&) {
-				throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-			}
-			catch(const std::exception&) {
-				throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-			};
-
-			try {
-				*m_S = uns::string::u8_cast<signal_type>(
-					uns::string::u8_cast<std::u8string>(
-						repr.get<std::string>("C")
-					)
-				);
-			}
-			catch(const std::runtime_error&) {
-				throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-			}
-			catch(const std::exception&) {
-				throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-			};
-
-			int idx = 0;
-			{
-				int params_total = 0;
-				try {
-					params_total = uns::string::u8_cast<int>(
-						uns::string::u8_cast<std::u8string>(
-							repr.get<std::string>("params.total")
-						)
-					);
-				}
-				catch(const std::runtime_error&) {
-					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-				}
-				catch(const std::exception&) {
-					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-				};
-
-				for(idx = 0; idx < params_total; idx++) {
-					try {
-						m_params.push_back(
-							uns::string::u8_cast<signal_type>(
-								uns::string::u8_cast<std::u8string>(
-									repr.get<std::string>(
-										uns::string::u8_cast<std::string>(
-											u8"params.#"
-											+ uns::string::u8_cast<std::u8string>(idx)
-										)
-									)
-								)
-							)
-						);
-					}
-					catch(const std::runtime_error&) {
-						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-					}
-					catch(const std::exception&) {
-						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-					};
-				};
-			};
+			m_params = repr.params;
 
 			m_adresses = std::unique_ptr<std::vector<std::pair<uns::nn::adress, weight_type>>>(new std::vector<std::pair<uns::nn::adress, weight_type>>{});
-			{
-				int links_total = 0;
-				try {
-					links_total = uns::string::u8_cast<int>(
-						uns::string::u8_cast<std::u8string>(
-							repr.get<std::string>("links.total")
-						)
-					);
-				}
-				catch(const std::runtime_error&) {
-					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-				}
-				catch(const std::exception&) {
-					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-				};
-
-				auto link = std::pair<uns::nn::adress, weight_type>{};
-
-				for(idx = 0; idx < links_total; idx++) {
-					try {
-						std::get<neuron_type::neuron>(link).layer = uns::string::u8_cast<int>(
-							uns::string::u8_cast<std::u8string>(
-								repr.get<std::string>(
-									uns::string::u8_cast<std::string>(
-										u8"links.#"
-										+ uns::string::u8_cast<std::u8string>(idx)
-										+ u8".layer"
-									)
-								)
-							)
-						);
-					}
-					catch(const std::runtime_error&) {
-						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-					}
-					catch(const std::exception&) {
-						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-					};
-					try {
-						std::get<neuron_type::neuron>(link).index = uns::string::u8_cast<int>(
-							uns::string::u8_cast<std::u8string>(
-								repr.get<std::string>(
-									uns::string::u8_cast<std::string>(
-										u8"links.#"
-										+ uns::string::u8_cast<std::u8string>(idx)
-										+ u8".index"
-									)
-								)
-							)
-						);
-					}
-					catch(const std::runtime_error&) {
-						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-					}
-					catch(const std::exception&) {
-						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-					};
-					try {
-						std::get<neuron_type::weight>(link) = uns::string::u8_cast<weight_type>(
-							uns::string::u8_cast<std::u8string>(
-								repr.get<std::string>(
-									uns::string::u8_cast<std::string>(
-										u8"links.#"
-										+ uns::string::u8_cast<std::u8string>(idx)
-										+ u8".weight"
-									)
-								)
-							)
-						);
-					}
-					catch(const std::runtime_error&) {
-						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-					}
-					catch(const std::exception&) {
-						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-					};
-
-					m_adresses->push_back(link);
-				};
-			};
+			*m_adresses = repr.links;
 		};
 
 		void link(
@@ -547,32 +440,33 @@ namespace uns::nn {
 			std::unordered_map<uns::nn::adress, uns::nn::general::neuron<signal_type>*, uns::nn::adress::hash>& inputs,
 			uns::nn::general::input_data_object<signal_type>& ido
 		) override {
-			using neuron_type = uns::nn::sequential_neuron<signal_type>;
-
 			if(m_adresses == nullptr) throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
 
 			m_links.clear();
 
 			for(const auto& [adress, weight] : *m_adresses) {
-				try {
-					auto link = std::pair<uns::nn::general::neuron<signal_t>*, weight_type>{};
-					if(adress.layer < 0) {
-						if(inputs.find(adress) == inputs.end()) {
-							std::get<neuron_type::neuron>(link) = inputs[adress] = ido.get(adress);
-						}
-						else {
-							std::get<neuron_type::neuron>(link) = inputs[adress];
-						};
+				auto link = std::pair<uns::nn::general::neuron<signal_t>*, weight_type>{};
+				if(ido.has_it(adress)) {
+					if(inputs.find(adress) == inputs.end()) {
+						std::get<this_type::neuron>(link) = inputs[adress] = ido.get(adress);
 					}
 					else {
-						std::get<neuron_type::neuron>(link) = main_body.at(adress.layer).at(adress.index);
+						std::get<this_type::neuron>(link) = inputs[adress];
 					};
-					std::get<neuron_type::weight>(link) = weight;
-					m_links.push_back(link);
 				}
-				catch(std::out_of_range&) {
-					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+				else {
+					if(
+						adress.layer >= 0 && adress.layer < main_body.size()
+						&& adress.index >= 0 && adress.index < main_body[adress.layer].size()
+					) {
+						std::get<this_type::neuron>(link) = main_body[adress.layer][adress.index];
+					}
+					else {
+						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+					};
 				};
+				std::get<this_type::weight>(link) = weight;
+				m_links.push_back(link);
 			};
 
 			m_adresses = nullptr;
@@ -583,36 +477,32 @@ namespace uns::nn {
 		uns::nn::adress adress() const noexcept override { return m_adress; };
 
 		int subneurons_total() const noexcept override { return m_links.size(); };
-		const uns::nn::general::neuron<signal_t>* subneuron(int connection_idx) const noexcept override {
-			using neuron_type = uns::nn::sequential_neuron<signal_type>;
-
+		const uns::nn::general::neuron<signal_type>* subneuron(int connection_idx) const noexcept override {
 			if(connection_idx >= 0 && connection_idx < m_links.size()) {
-				return std::get<neuron_type::neuron>(m_links[connection_idx]);
+				return std::get<this_type::neuron>(m_links[connection_idx]);
 			}
 			else {
 				return nullptr;
 			};
 		};
-		uns::nn::general::neuron<signal_t>* subneuron(int connection_idx) noexcept override {
-			using neuron_type = uns::nn::sequential_neuron<signal_type>;
-
+		uns::nn::general::neuron<signal_type>* subneuron(int connection_idx) noexcept override {
 			if(connection_idx >= 0 && connection_idx < m_links.size()) {
-				return std::get<neuron_type::neuron>(m_links[connection_idx]);
+				return std::get<this_type::neuron>(m_links[connection_idx]);
 			}
 			else {
 				return nullptr;
 			};
 		};
 
-		signal_t R() const noexcept override { return m_F->value(); };
-		void R(const signal_t R) noexcept override { *m_F = R; };
+		signal_type R() const noexcept override { return m_F->value(); };
+		void R(const signal_type R) noexcept override { *m_F = R; };
 
-		signal_t C() const noexcept { return m_S->value(); };
-		void C(const signal_t c) noexcept { *m_S = c; };
+		signal_type C() const noexcept { return m_S->value(); };
+		void C(const signal_type c) noexcept { *m_S = c; };
 
-		void react(const uns::nn::general::network_params<signal_t>& common_params) override { (*m_F)(m_S->value(), common_params.forward(m_params)); };
+		void react(const uns::nn::general::network_params<signal_type>& common_params) override { (*m_F)(m_S->value(), common_params.forward(m_params)); };
 
-		void collect(const uns::nn::general::network_params<signal_t>& common_params) override { (*m_S)(m_links, common_params.forward(m_params)); };
+		void collect(const uns::nn::general::network_params<signal_type>& common_params) override { (*m_S)(m_links, common_params.forward(m_params)); };
 	};
 
 
@@ -621,6 +511,7 @@ namespace uns::nn {
 	//using signal_t = double;
 	class nonrecursive_reverse_neuron : public uns::nn::sequential_neuron<signal_t> {
 	protected:
+		using this_type = uns::nn::nonrecursive_reverse_neuron<signal_t>;
 		using base = uns::nn::sequential_neuron<signal_t>;
 		using place_type = int;
 	public:
@@ -629,16 +520,12 @@ namespace uns::nn {
 			place = 1
 		};
 	protected:
-		class set_interruption {};
-
 		base::signal_type m_r = 0;
 		base::signal_type m_s = 0;
-		std::vector<std::pair<nonrecursive_reverse_neuron<base::signal_type>*, place_type>> m__links;
+		std::vector<std::pair<nonrecursive_reverse_neuron<typename base::signal_type>*, place_type>> m__links;
 		uns::nn::general::neuron<base::signal_type>* m_input = nullptr;
-
 		bool m_is_learning = true;
 		base::signal_type m_dropout = base::signal_type{ 0 };
-		std::unique_ptr<std::vector<std::pair<uns::nn::adress, place_type>>> m__adresses = nullptr;
 	public:
 		nonrecursive_reverse_neuron() {};
 		nonrecursive_reverse_neuron(const uns::nn::nonrecursive_reverse_neuron<signal_t>&) = delete;
@@ -647,291 +534,33 @@ namespace uns::nn {
 		nonrecursive_reverse_neuron<signal_t>& operator=(uns::nn::nonrecursive_reverse_neuron<signal_t>&&) = delete;
 		~nonrecursive_reverse_neuron() {};
 
-		uns::nn::general::neuron<signal_t>::repr_type represent() const noexcept override {
-			using neuron_type = uns::nn::nonrecursive_reverse_neuron<typename base::signal_type>;
-
-			auto res = base::represent();
-
-			res.put("_R", uns::string::u8_cast<std::string>(uns::string::u8_cast<std::u8string>(_R())));
-			res.put("_C", uns::string::u8_cast<std::string>(uns::string::u8_cast<std::u8string>(_C())));
-
-			res.put("_links.total", uns::string::u8_cast<std::string>(uns::string::u8_cast<std::u8string>(m__links.size() + (m_input != nullptr ? 1 : 0))));
-
-			auto idx = static_cast<int>(0);
-			for(auto _link : m__links) {
-				res.put(
-					uns::string::u8_cast<std::string>(
-						u8"_links.#"
-						+ uns::string::u8_cast<std::u8string>(idx)
-						+ u8".layer"
-					),
-					uns::string::u8_cast<std::string>(
-						uns::string::u8_cast<std::u8string>(
-							std::get<neuron_type::neuron>(_link)->adress().layer
-						)
-					)
-				);
-
-				res.put(
-					uns::string::u8_cast<std::string>(
-						u8"_links.#"
-						+ uns::string::u8_cast<std::u8string>(idx)
-						+ u8".index"
-					),
-					uns::string::u8_cast<std::string>(
-						uns::string::u8_cast<std::u8string>(
-							std::get<neuron_type::neuron>(_link)->adress().index
-						)
-					)
-				);
-
-				res.put(
-					uns::string::u8_cast<std::string>(
-						u8"_links.#"
-						+ uns::string::u8_cast<std::u8string>(idx)
-						+ u8".place"
-					),
-					uns::string::u8_cast<std::string>(
-						uns::string::u8_cast<std::u8string>(
-							std::get<neuron_type::place>(_link)
-						)
-					)
-				);
-
-				++idx;
-			};
-
-			if(m_input != nullptr) {
-				res.put(
-					uns::string::u8_cast<std::string>(
-						u8"_links.#"
-						+ uns::string::u8_cast<std::u8string>(idx)
-						+ u8".layer"
-					),
-					uns::string::u8_cast<std::string>(
-						uns::string::u8_cast<std::u8string>(
-							m_input->adress().layer
-						)
-					)
-				);
-
-				res.put(
-					uns::string::u8_cast<std::string>(
-						u8"_links.#"
-						+ uns::string::u8_cast<std::u8string>(idx)
-						+ u8".index"
-					),
-					uns::string::u8_cast<std::string>(
-						uns::string::u8_cast<std::u8string>(
-							m_input->adress().index
-						)
-					)
-				);
-
-				res.put(
-					uns::string::u8_cast<std::string>(
-						u8"_links.#"
-						+ uns::string::u8_cast<std::u8string>(idx)
-						+ u8".place"
-					),
-					uns::string::u8_cast<std::string>(
-						uns::string::u8_cast<std::u8string>(
-							static_cast<int>(0)	//TODO to enshure that this is right place
-						)
-					)
-				);
-			};
-
-			return res;
-		};
-		
-		void set(
-			const uns::nn::general::neuron<signal_t>::repr_type& repr,
-			const uns::nn::adress& adress,
-			const typename uns::nn::general::activator<signal_t>::caster& activator_cast,
-			const typename uns::nn::general::collector<signal_t>::caster& collector_cast
-		) override {
-			using neuron_type = uns::nn::nonrecursive_reverse_neuron<typename base::signal_type>;
-
-			base::set(repr, adress, activator_cast, collector_cast);
-
-			try {
-				m_r = uns::string::u8_cast<signal_t>(
-					uns::string::u8_cast<std::u8string>(
-						repr.get<std::string>("_R")
-					)
-				);
-			}
-			catch(const std::runtime_error&) {
-				throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-			}
-			catch(const std::exception&) {
-				m_r = typename base::signal_type{};
-			};
-
-			try {
-				m_s = uns::string::u8_cast<signal_t>(
-					uns::string::u8_cast<std::u8string>(
-						repr.get<std::string>("_C")
-					)
-				);
-			}
-			catch(const std::runtime_error&) {
-				throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-			}
-			catch(const std::exception&) {
-				m_s = typename base::signal_type{};
-			};
-
-
-			try	{
-				m__adresses = std::unique_ptr<std::vector<std::pair<uns::nn::adress, place_type>>>(new std::vector<std::pair<uns::nn::adress, place_type>>{});
-
-				int idx = 0;
-				int links_total = 0;
-				try {
-					links_total = uns::string::u8_cast<int>(
-						uns::string::u8_cast<std::u8string>(
-							repr.get<std::string>("_links.total")
-						)
-					);
-				}
-				catch(const std::runtime_error&) {
-					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-				}
-				catch(const std::exception&) {
-					throw set_interruption{};
-				};
-
-				auto link = std::pair<uns::nn::adress, place_type>{};
-
-				for(idx = 0; idx < links_total; idx++) {
-					try {
-						std::get<neuron_type::neuron>(link).layer = uns::string::u8_cast<int>(
-							uns::string::u8_cast<std::u8string>(
-								repr.get<std::string>(
-									uns::string::u8_cast<std::string>(
-										u8"_links.#"
-										+ uns::string::u8_cast<std::u8string>(idx)
-										+ u8".layer"
-									)
-								)
-							)
-						);
-					}
-					catch(const std::runtime_error&) {
-						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-					}
-					catch(const std::exception&) {
-						throw set_interruption{};
-					};
-					try {
-						std::get<neuron_type::neuron>(link).index = uns::string::u8_cast<int>(
-							uns::string::u8_cast<std::u8string>(
-								repr.get<std::string>(
-									uns::string::u8_cast<std::string>(
-										u8"_links.#"
-										+ uns::string::u8_cast<std::u8string>(idx)
-										+ u8".index"
-									)
-								)
-							)
-						);
-					}
-					catch(const std::runtime_error&) {
-						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-					}
-					catch(const std::exception&) {
-						throw set_interruption{};
-					};
-					try {
-						std::get<neuron_type::place>(link) = uns::string::u8_cast<place_type>(
-							uns::string::u8_cast<std::u8string>(
-								repr.get<std::string>(
-									uns::string::u8_cast<std::string>(
-										u8"_links.#"
-										+ uns::string::u8_cast<std::u8string>(idx)
-										+ u8".place"
-									)
-								)
-							)
-						);
-					}
-					catch(const std::runtime_error&) {
-						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-					}
-					catch(const std::exception&) {
-						throw set_interruption{};
-					};
-
-					m__adresses->push_back(link);
-				};
-			}
-			catch(set_interruption&) {
-				m__adresses = nullptr;
-			};
-		};
-
 		void _link(
-			std::vector<std::vector<uns::nn::nonrecursive_reverse_neuron<signal_t>*>>& main_body,
-			std::vector<uns::nn::sequential_neuron<signal_t>*>& reverse_inputs
+			std::vector<std::vector<uns::nn::nonrecursive_reverse_neuron<typename base::signal_type>*>>& main_body,
+			std::unordered_map<uns::nn::adress, uns::nn::nonrecursive_reverse_neuron<typename base::signal_type>*, uns::nn::adress::hash>& reverse_inputs,
+			uns::nn::general::input_data_object<typename base::signal_type>& odo
 		) {
-			using neuron_type = uns::nn::nonrecursive_reverse_neuron<typename base::signal_type>;
+			m__links.clear();
 
-			if(m__adresses != nullptr) {
-				m__links.clear();
-
-				for(const auto& _adress : *m__adresses) {
-					try {
-						auto link = std::pair<uns::nn::general::neuron<signal_t>*, place_type>{};
-						if(std::get<neuron_type::neuron>(_adress).layer < 0) {
-							for(auto reverse_input_ptr : reverse_inputs) {
-								if(reverse_input_ptr->adress() == _adress) {
-									m_input = reverse_input_ptr;
-									break;
-								};
-							};
-						}
-						else {
-							std::get<neuron_type::neuron>(_adress) = main_body.at(std::get<neuron_type::neuron>(_adress).layer).at(std::get<neuron_type::neuron>(_adress).index);
-							std::get<neuron_type::place>(link) = std::get<neuron_type::place>(_adress);
-							m__links.push_back(link);
-						};
-					}
-					catch(std::out_of_range&) {
-						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-					};
-				};
-
-				m__adresses = nullptr;
-			}
-			else {
-				m__links.clear();
-
-				for(const auto& layer : main_body) {
-					for(const auto& neuron_ptr : layer) {
-						if(neuron_ptr == nullptr) {
-							throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-						};
-
-						for(int subneuron_idx = 0; subneuron_idx < neuron_ptr->subneurons_total(); ++subneuron_idx) {
-							if(neuron_ptr->subneuron(subneuron_idx)->adress() == this->adress()) {
-								m__links.push_back(std::pair<nonrecursive_reverse_neuron<signal_t>*, place_type>{ neuron_ptr, subneuron_idx });
-							};
-						};
-					};
-				};
-
-				for(auto reverse_input_ptr : reverse_inputs) {
-					if(reverse_input_ptr == nullptr) {
+			for(const auto& layer : main_body) {
+				for(const auto& neuron_ptr : layer) {
+					if(neuron_ptr == nullptr) {
 						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
 					};
 
-					for(int subneuron_idx = 0; subneuron_idx < reverse_input_ptr->subneurons_total(); ++subneuron_idx) {
-						if(reverse_input_ptr->subneuron(subneuron_idx)->adress() == this->adress()) {
-							m_input = reverse_input_ptr;
+					for(int subneuron_idx = 0; subneuron_idx < neuron_ptr->subneurons_total(); ++subneuron_idx) {
+						if(neuron_ptr->subneuron(subneuron_idx)->adress() == this->adress()) {
+							m__links.emplace_back(std::pair<nonrecursive_reverse_neuron<typename base::signal_type>*, place_type>{ neuron_ptr, subneuron_idx });
 						};
 					};
+				};
+			};
+
+			if(odo.has_it(this->adress())) {
+				if(reverse_inputs.find(this->adress()) == reverse_inputs.end()) {
+					m_input = reverse_inputs[this->adress()] = ido.get(this->adress());
+				}
+				else {
+					m_input = reverse_inputs[this->adress()];
 				};
 			};
 		};
@@ -985,8 +614,11 @@ namespace uns::nn {
 	template<class neuron_t>
 	//using neuron_t = uns::nn::sequential_neuron<double>;
 	class sequential_base_network : public uns::nn::general::network<neuron_t> {
+	protected:
+		using this_type = sequential_base_network<neuron_t>;
 	public:
-		using signal_t = typename neuron_t::signal_type;
+		using neuron_type = typename neuron_t;
+		using signal_type = typename neuron_type::signal_type;
 		using base = uns::nn::general::network<neuron_t>;
 	protected:
 		std::vector<std::vector<neuron_t*>> m_layers;
@@ -1007,226 +639,78 @@ namespace uns::nn {
 			};
 		};
 
-		uns::nn::general::network<neuron_t>::repr_type represent() const noexcept override {
+		uns::nn::general::network<signal_type>::repr_type represent() const noexcept override {
 			auto res = typename uns::nn::general::network<neuron_t>::repr_type{};
-			int idx1 = 0;
-			int idx2 = 0;
 
-			res.put("layers.total", m_layers.size());
-			idx1 = 0;
-			idx2 = 0;
 			for(const auto& layer : m_layers) {
-				res.put(
-					uns::string::u8_cast<std::string>(
-						u8"layers.#"
-						+ uns::string::u8_cast<std::u8string>(idx1)
-						+ u8".neurons.total"
-					),
-					layer.size()
-				);
-
-				idx2 = 0;
-				for(const auto& neuron : layer) {
-					res.add_child(
-						uns::string::u8_cast<std::string>(
-							u8"layers.#"
-							+ uns::string::u8_cast<std::u8string>(idx1)
-							+ u8".neurons.#"
-							+ uns::string::u8_cast<std::u8string>(idx2)
-						),
-						neuron->represent()
-					);
-
-					++idx2;
+				for(auto neuron_ptr : layer) {
+					res.layers.emplace_back(neuron_ptr->represent());
 				};
-
-				++idx1;
 			};
 
-			res.put("outputs.total", base::m_outputs.size());
-			idx1 = 0;
-			for(const auto& output : base::m_outputs) {
-				res.put(
-					uns::string::u8_cast<std::string>(
-						u8"outputs.#"
-						+ uns::string::u8_cast<std::u8string>(idx1)
-						+ u8".layer"
-					),
-					output->adress().layer
-				);
-				res.put(
-					uns::string::u8_cast<std::string>(
-						u8"outputs.#"
-						+ uns::string::u8_cast<std::u8string>(idx1)
-						+ u8".index"
-					),
-					output->adress().index
-				);
-				++idx1;
+			for(auto output_ptr : base::m_outputs) {
+				res.outputs.emplace_back(output_ptr->adress());
 			};
 
 			return res;
 		};
 		
 		void set(
-			const typename uns::nn::general::network<neuron_t>::repr_type& repr,
-			const typename uns::nn::general::activator<signal_t>::caster& activator_cast,
-			const typename uns::nn::general::collector<signal_t>::caster& collector_cast,
-			uns::nn::general::input_data_object<signal_t>& ido
+			const typename uns::nn::general::network<neuron_type>::repr_type& repr,
+			const typename uns::nn::general::activator<signal_type>::caster& activator_cast,
+			const typename uns::nn::general::collector<signal_type>::caster& collector_cast,
+			uns::nn::general::input_data_object<signal_type>& ido
 		) override {
-			int layers_total = 0;
-			try {
-				layers_total = uns::string::u8_cast<int>(
-					uns::string::u8_cast<std::u8string>(
-						repr.get<std::string>("layers.total")
-					)
-				);
-			}
-			catch(const std::runtime_error&) {
-				throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-			}
-			catch(const std::exception&) {
-				throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+			for(const auto& layer : repr.layers) {
+				for(const auto& [neuron, weight] : layer) {
+					auto neuron_ptr = new neuron_type{};
+					m_layers.push_back(neuron_ptr);
+				};
 			};
 
-			for(int idx1 = 0; idx1 < layers_total; ++idx1) {
-				int neurons_total = 0;
-				try {
-					neurons_total = uns::string::u8_cast<int>(
-						uns::string::u8_cast<std::u8string>(
-							repr.get<std::string>(
-								uns::string::u8_cast<std::string>(
-									u8"layers.#"
-									+ uns::string::u8_cast<std::u8string>(idx1)
-									+ u8".neurons.total"
-								)
-							)
-						)
-					);
+			base::m_outputs.clear();
+			for(const auto& output : repr.outputs) {
+				if(
+					output.layer >= 0 && output.layer < m_layers.size()
+					&& output.index >= 0 && output.index < m_layers[output.layer].size()
+				) {
+					base::m_outputs.push_back(m_layers[output.layer][output.index]);
 				}
-				catch(const std::runtime_error&) {
-					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-				}
-				catch(const std::exception&) {
+				else {
 					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
 				};
-
-				m_layers.push_back(std::vector<neuron_t*>{});
-				for(int idx2 = 0; idx2 < neurons_total; ++idx2) {
-					m_layers[idx1].push_back(new neuron_t{});
-					m_layers[idx1][idx2]->set(
-						repr.get_child(
-							uns::string::u8_cast<std::string>(
-								u8"layers.#"
-								+ uns::string::u8_cast<std::u8string>(idx1)
-								+ u8".neurons.#"
-								+ uns::string::u8_cast<std::u8string>(idx2)
-							)
-						),
-						uns::nn::adress{ idx1, idx2 },
-						activator_cast,
-						collector_cast
-					);
-				};
 			};
 
-			int outputs_total = 0;
-			try {
-				outputs_total = uns::string::u8_cast<int>(
-					uns::string::u8_cast<std::u8string>(
-						repr.get<std::string>(
-							"outputs.total"
-						)
-					)
-				);
-			}
-			catch(const std::runtime_error& e) {
-				throw std::runtime_error(e);
-			}
-			catch(const std::exception&) {
-				throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-			};
-
-			auto output_adresses = std::vector<uns::nn::adress>{};
-			auto output_adress = uns::nn::adress{};
-			for(int idx1 = 0; idx1 < outputs_total; ++idx1) {
-				output_adress.layer = uns::string::u8_cast<int>(
-					uns::string::u8_cast<std::u8string>(
-						repr.get<std::string>(
-							uns::string::u8_cast<std::string>(
-								u8"outputs.#"
-								+ uns::string::u8_cast<std::u8string>(idx1)
-								+ u8".layer"
-							)
-						)
-					)
-				);
-				output_adress.index = uns::string::u8_cast<int>(
-					uns::string::u8_cast<std::u8string>(
-						repr.get<std::string>(
-							uns::string::u8_cast<std::string>(
-								u8"outputs.#"
-								+ uns::string::u8_cast<std::u8string>(idx1)
-								+ u8".index"
-							)
-						)
-					)
-				);
-
-				if(output_adress.layer >= m_layers.size()) {
-					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-				};
-				if(output_adress.layer >= 0 && (output_adress.index < 0 || output_adress.index >= m_layers[output_adress.layer].size())) {
-					throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-				};
-
-				output_adresses.push_back(output_adress);
-			};
-
-			auto layers = std::vector<std::vector<uns::nn::general::neuron<signal_t>*>>{};
-			for(auto layer : m_layers) {
-				layers.push_back(std::vector<uns::nn::general::neuron<signal_t>*>{});
-				for(auto neuron_ptr : layer) {
-					layers.back().push_back(neuron_ptr);
-				};
-			};
-
-			auto inputs = std::unordered_map<uns::nn::adress, uns::nn::general::neuron<signal_t>*, uns::nn::adress::hash>{};
-			for(auto layer : m_layers) {
-				for(auto neuron_ptr : layer) {
-					neuron_ptr->link(
-						layers,
-						inputs,
-						ido
-					);
-				};
-			};
-
-			for(auto [adress, input_ptr] : inputs) {
-				base::m_inputs.push_back(input_ptr);
-			};
-
-			for(auto output_adress : output_adresses) {
-				if(output_adress.layer >= 0) {
-					if(output_adress.index >= 0 && output_adress.index < m_layers[output_adress.layer].size()) {
-						base::m_outputs.push_back(m_layers[output_adress.layer][output_adress.index]);
+			for(std::size_t layer_idx = 0; layer_idx < m_layers.size(); ++layer_idx) {
+				for(std::size_t neuron_idx = 0; neuron_idx < m_layers[layer_idx].size(); ++neuron_idx) {
+					if(layer_idx < repr.layers.size() && neuron_idx < repr.layers[layer_idx].size()) {
+						m_layers[layer_idx][neuron_idx]->set(
+							repr.layers[layer_idx][neuron_idx],
+							uns::nn::adress{ layer_idx, neuron_idx },
+							activator_cast,
+							collector_cast
+						);
 					}
 					else {
 						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
 					};
-				}
-				else {
-					try {
-						base::m_outputs.push_back(inputs.at(output_adress));
-					}
-					catch(const std::out_of_range&) {
-						throw std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-					};
 				};
+			};
+
+			auto inputs_map = std::unordered_map<uns::nn::adress, uns::nn::general::neuron<signal_type>*, uns::nn::adress::hash>{};
+			for(const auto& layer : m_layers) {
+				for(auto neuron_ptr : layer) {
+					neuron_ptr->link(m_layers, inputs_map, ido);
+				};
+			};
+
+			base::m_inputs.clear();
+			for(const auto& [adress, input_ptr] : inputs_map) {
+				base::m_inputs.push_back(input_ptr);
 			};
 		};
 
-		void react(const uns::nn::general::network_params<signal_t>& common_params) override {
+		void react(const uns::nn::general::network_params<signal_type>& common_params) override {
 			for(auto input : base::m_inputs) {
 				input->react(common_params);
 			};
@@ -1238,18 +722,18 @@ namespace uns::nn {
 			};
 		};
 
-		signal_t R(size_t layer_index, size_t index) const { return m_layers[layer_index][index]->R(); };
+		signal_type R(std::size_t layer_index, std::size_t index) const { return m_layers[layer_index][index]->R(); };
 
-		signal_t C(size_t layer_index, size_t index) const { return m_layers[layer_index][index]->C(); };
+		signal_type C(std::size_t layer_index, std::size_t index) const { return m_layers[layer_index][index]->C(); };
 
-		signal_t O(size_t index) const { return base::m_outputs[index]->R(); };
+		signal_type O(std::size_t index) const { return base::m_outputs[index]->R(); };
 
-		signal_t I(size_t index) const { return base::m_inputs[index]->R(); };
+		signal_type I(std::size_t index) const { return base::m_inputs[index]->R(); };
 
-		size_t layers_total() const { return m_layers.size(); };
-		size_t neurons_total(size_t index) const { return m_layers[index].size(); };
-		size_t outputs_total() const { return base::m_outputs.size(); };
-		size_t inputs_total() const { return base::m_inputs.size(); };
+		std::size_t layers_total() const { return m_layers.size(); };
+		std::size_t neurons_total(size_t index) const { return m_layers[index].size(); };
+		std::size_t outputs_total() const { return base::m_outputs.size(); };
+		std::size_t inputs_total() const { return base::m_inputs.size(); };
 	};
 
 	
