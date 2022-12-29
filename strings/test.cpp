@@ -16,13 +16,6 @@
 #include <boost/mpl/list.hpp>
 
 
-UNS_BENUM_DECLARATOR(benum_test, int,
-    t1 = 0,
-    t2 = 10,
-    t3
-);
-
-
 BOOST_AUTO_TEST_SUITE(u8_cast_testing)
 
     BOOST_AUTO_TEST_SUITE(u8_strings)
@@ -640,108 +633,6 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
             };
 
         BOOST_AUTO_TEST_SUITE_END();
-
-    BOOST_AUTO_TEST_SUITE_END();
-
-    BOOST_AUTO_TEST_SUITE(benums)
-
-        BOOST_DATA_TEST_CASE(std_u8string_to_benum_correct,
-            boost::unit_test::data::make(
-                {
-                    uns::test::make_u8(u8"t1"),
-                    uns::test::make_u8(u8"t2"),
-                    uns::test::make_u8(u8"t3")
-                }
-            )
-            ^ boost::unit_test::data::make(
-                {
-                    static_cast<benum_test>(benum_test::t1),
-                    static_cast<benum_test>(benum_test::t2),
-                    static_cast<benum_test>(benum_test::t3)
-                }
-            ),
-            in_str, out_val
-        ) {
-            BOOST_TEST(out_val == uns::string::u8_cast<benum_test>(in_str));
-        };
-
-        BOOST_DATA_TEST_CASE(std_u8string_to_benum_incorrect,
-            boost::unit_test::data::make(
-                {
-                    uns::test::make_u8(u8" t1"),
-                    uns::test::make_u8(u8"t 2"),
-                    uns::test::make_u8(u8"t3 ")
-                }
-            )
-            ^ boost::unit_test::data::make(
-                {
-                    static_cast<benum_test>(benum_test::t1),
-                    static_cast<benum_test>(benum_test::t2),
-                    static_cast<benum_test>(benum_test::t3)
-                }
-            ),
-            in_str, out_val
-        ) {
-            BOOST_CHECK_THROW(out_val == uns::string::u8_cast<benum_test>(in_str), std::runtime_error);
-        };
-
-        BOOST_DATA_TEST_CASE(benum_to_std_u8string_correct,
-            boost::unit_test::data::make(
-                {
-                    static_cast<benum_test>(benum_test::t1),
-                    static_cast<benum_test>(benum_test::t2),
-                    static_cast<benum_test>(benum_test::t3)
-                }
-            )
-            ^ boost::unit_test::data::make(
-                {
-                    uns::test::make_u8(u8"t1"),
-                    uns::test::make_u8(u8"t2"),
-                    uns::test::make_u8(u8"t3")
-                }
-            ),
-            in_val, out_str
-        ) {
-            BOOST_TEST(out_str == uns::test::make_u8(uns::string::u8_cast<std::u8string>(in_val)));
-        };
-
-        BOOST_DATA_TEST_CASE(forward_identical_cast,
-            boost::unit_test::data::make(
-                {
-                    static_cast<benum_test>(benum_test::t1),
-                    static_cast<benum_test>(benum_test::t2),
-                    static_cast<benum_test>(benum_test::t3)
-                }
-            ),
-            the_val
-        ) {
-            BOOST_TEST(
-                the_val == uns::string::u8_cast<benum_test>(
-                    uns::string::u8_cast<std::u8string>(the_val)
-                )
-            );
-        };
-
-        BOOST_DATA_TEST_CASE(backward_identical_cast,
-            boost::unit_test::data::make(
-                {
-                    uns::test::make_u8(u8"t1"),
-                    uns::test::make_u8(u8"t2"),
-                    uns::test::make_u8(u8"t3")
-                }
-            ),
-            the_str
-        ) {
-            BOOST_TEST(
-                the_str == uns::test::make_u8(
-                    uns::string::u8_cast<std::u8string>(
-                        uns::string::u8_cast<benum_test>(
-                            the_str
-                        )
-                    )
-                )
-            );
-        };
 
     BOOST_AUTO_TEST_SUITE_END();
 

@@ -8,6 +8,10 @@
 #pragma warning(default: 4626; default: 4820; default: 5027)
 
 
+#ifndef UNS_HEADER_STRINGS
+#include "uniself/strings.h"
+#endif
+
 //BENUM DECLARATOR
 #define UNS_BENUM_DECLARATOR(BENUM_NAME, SPECIFICATION_TYPE, ...)																	        \
 	BETTER_ENUM(BENUM_NAME, SPECIFICATION_TYPE, __VA_ARGS__);															                    \
@@ -53,4 +57,18 @@ namespace uns {
 	//BENUM TYPE_TRAITS
 	template<typename benum_t>
 	class is_benum : public std::integral_constant<bool, uns::benum<benum_t>> {};
+};
+
+
+namespace uns::string {
+
+	//convertions of benum types with std::u8string
+	template<std::constructible_from<std::u8string> out_t, uns::benum in_t>
+	out_t u8_cast(const in_t& obj) {
+		return uns::string::u8_cast<std::u8string>(obj._to_string());
+	};
+	template<uns::benum out_t>
+	out_t u8_cast(const std::u8string_view& obj) {
+		return out_t::_from_string(uns::string::u8_cast<std::string>(obj).c_str());
+	};
 };

@@ -8,9 +8,6 @@
 #include <concepts>
 #include <exception>
 
-#ifndef UNS_HEADER_BENUM
-#include "uniself/benum.h"
-#endif
 #ifndef UNS_HEADER_CONCEPTS
 #include "uniself/concepts.h"
 #endif
@@ -398,16 +395,6 @@ namespace uns::string {
 			return std::u8string(reinterpret_cast<const char8_t*>(res.c_str()));
 		else
 			throw std::runtime_error("An input value can't be converted to string");
-	};
-
-	//convertions of benum types with std::u8string
-	template<std::constructible_from<std::u8string> out_t, uns::benum in_t>
-	out_t u8_cast(const in_t& obj) {
-		return uns::string::u8_cast<std::u8string>(obj._to_string());
-	};
-	template<uns::benum out_t>
-	out_t u8_cast(const std::u8string_view& obj) {
-		return out_t::_from_string(uns::string::u8_cast<std::string>(obj).c_str());
 	};
 
 };
