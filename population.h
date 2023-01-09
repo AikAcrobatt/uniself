@@ -48,12 +48,12 @@ namespace uns::population {
 			m_order_ptr(&order),
 			m_index(idx)
 		{};
-		order_element(const order_element& obj) :
+		order_element(const uns::population::order_element& obj) :
 			m_unit_ptr(obj.m_unit_ptr),
 			m_order_ptr(obj.m_order_ptr),
 			m_index(obj.m_index)
 		{};
-		order_element& operator=(const order_element& obj) {
+		uns::population::order_element& operator=(const uns::population::order_element& obj) {
 			if(this == &obj) return *this;
 
 			m_unit_ptr = obj.m_unit_ptr;
@@ -62,11 +62,11 @@ namespace uns::population {
 
 			return *this;
 		};
-		order_element(order_element&& obj) :
+		order_element(uns::population::order_element&& obj) :
 			m_unit_ptr(std::move(obj.m_unit_ptr)),
 			m_order_ptr(obj.m_order_ptr),
 			m_index(std::move(obj.m_index)) {};
-		order_element& operator=(order_element&& obj) {
+		uns::population::order_element& operator=(uns::population::order_element&& obj) {
 			if(this == &obj) return *this;
 
 			m_unit_ptr = std::move(obj.m_unit_ptr);
@@ -103,27 +103,29 @@ namespace uns::population {
 	public:
 		using unit_type = unit_t;
 		using order_type = order_t;
-		using element_type = order_element<unit_type, order_type>;
+		using element_type = uns::population::order_element<unit_type, order_type>;
+		using distribution_type = std::uniform_real_distribution<float>;
 	protected:
 		using linear_container = std::vector<element_type>;
 	public:
 		using iterator_type = typename linear_container::iterator;
+		using const_iterator_type = typename linear_container::const_iterator;
 		using size_type = typename linear_container::size_type;
 	protected:
 		linear_container m_container;
-		std::mt19937 m_engine;
-		std::uniform_real_distribution<float> m_distribution;
+		mutable std::mt19937 m_engine;
+		mutable distribution_type m_distribution;
 	public:
 		linear_order(int seed = 0) :
 			m_engine(seed),
 			m_distribution(0.0F, 1.0F)
 		{};
-		linear_order(const linear_order& obj) :
+		linear_order(const uns::population::linear_order& obj) :
 			m_container(obj.m_container),
 			m_engine(obj.m_engine),
 			m_distribution(obj.m_distribution)
 		{};
-		linear_order& operator=(const linear_order& obj) {
+		uns::population::linear_order& operator=(const uns::population::linear_order& obj) {
 			if(this == &obj) return *this;
 
 			m_container = obj.m_container;
@@ -132,12 +134,12 @@ namespace uns::population {
 
 			return *this;
 		};
-		linear_order(linear_order&& obj) :
+		linear_order(uns::population::linear_order&& obj) :
 			m_container(std::move(obj.m_container)),
 			m_engine(std::move(obj.m_engine)),
 			m_distribution(std::move(obj.m_distribution))
 		{};
-		linear_order& operator=(linear_order&& obj) {
+		uns::population::linear_order& operator=(uns::population::linear_order&& obj) {
 			if(this == &obj) return *this;
 
 			m_container = std::move(obj.m_container);
@@ -148,6 +150,10 @@ namespace uns::population {
 		};
 		~linear_order() noexcept {};
 
+		const_iterator_type cbegin() const { return m_container.cbegin(); };
+
+		const_iterator_type cend() const { return m_container.cend(); };
+
 		const iterator_type begin() const { return m_container.begin(); };
 		iterator_type begin() { return m_container.begin(); };
 
@@ -156,8 +162,8 @@ namespace uns::population {
 
 		size_type size() const { return m_container.size(); };
 
-		auto operator[](size_type index) const { return m_container[index]; };
-		auto& operator[](size_type index) { return m_container[index]; };
+		element_type operator[](size_type index) const { return m_container[index]; };
+		element_type& operator[](size_type index) { return m_container[index]; };
 
 		void clear() {
 			m_container.clear();
@@ -175,7 +181,7 @@ namespace uns::population {
 		};
 
 		void indexate() {
-			size_t index = 0;
+			auto index = typename element_type::index_type{ 0 };
 			for(auto& unit : m_container) {
 				unit.index() = index++;
 			};
@@ -185,12 +191,13 @@ namespace uns::population {
 
 
 	template<typename unit_t>
-	class unordered_order : public linear_order<unit_t, unordered_order<unit_t>> {
+	class unordered_order : public uns::population::linear_order<unit_t, uns::population::unordered_order<unit_t>> {
 	protected:
-		using base = linear_order<unit_t, unordered_order<unit_t>>;
+		using base = uns::population::linear_order<unit_t, uns::population::unordered_order<unit_t>>;
 	public:
 		using element_type = typename base::element_type;
 		using iterator_type = typename base::iterator_type;
+		using const_iterator_type = typename base::const_iterator_type;
 		using size_type = typename base::size_type;
 		using unit_type = typename base::unit_type;
 	public:
@@ -224,35 +231,53 @@ namespace uns::population {
 		};
 		~unordered_order() noexcept {};
 
+		const_iterator_type pick() const {
+			size_type index = 0;
+			if(!(size() > 0)) return cbegin();
+
+			index = static_cast<size_type>(static_cast<typename base::distribution_type::result_type>(size()) * base::m_distribution(base::m_engine));
+			if(index >= size() || index == 0) {
+				return cbegin();
+			}
+			else {
+				index = size() - 1;
+				return (cbegin() + index);
+			};
+		};
 		iterator_type pick() {
 			size_type index = 0;
-			if(!(base::m_container.size() > 0)) return base::m_container.begin();
+			if(!(size() > 0)) return begin();
 
-			index = static_cast<typename base::size_t>(base::m_container.size() * base::m_distribution(base::m_engine));
-			if(index >= base::m_container.size()) index = base::m_container.size() - 1;
-
-			return (base::m_container.begin() + index);
+			index = static_cast<size_type>(size() * base::m_distribution(base::m_engine));
+			if(index >= size() || index == 0) {
+				return begin();
+			}
+			else {
+				index = size() - 1;
+				return (begin() + index);
+			};
 		};
 	};
 
 
-	template<typename unit_t, bool(*m_predicate)(unit_t&, unit_t&)>
-	class ordered_order : public linear_order<unit_t, ordered_order<unit_t, m_predicate>> {
+	template<typename unit_t, bool(*m_predicate)(const unit_t&, const unit_t&)>
+	class ordered_order : public uns::population::linear_order<unit_t, uns::population::ordered_order<unit_t, m_predicate>> {
 	protected:
-		using base = linear_order<unit_t, ordered_order<unit_t, m_predicate>>;
+		using base = uns::population::linear_order<unit_t, uns::population::ordered_order<unit_t, m_predicate>>;
 	public:
 		using element_type = typename base::element_type;
 		using iterator_type = typename base::iterator_type;
+		using const_iterator_type = typename base::const_iterator_type;
 		using size_type = typename base::size_type;
 		using unit_type = typename base::unit_type;
 	public:
 		ordered_order(int seed = 0) : base(seed) {};
-		ordered_order(const ordered_order& obj) :
+		ordered_order(const uns::population::ordered_order& obj) :
 			base::m_container(obj.m_container),
 			base::m_engine(obj.m_engine),
 			base::m_distribution(obj.m_distribution)
 		{};
-		ordered_order& operator=(const ordered_order& obj) {
+		uns::population::ordered_order& operator=(const uns::population::ordered_order& obj) {
 			if(this == &obj) return *this;
 
 			base::m_container = obj.m_container;
@@ -261,12 +286,12 @@ namespace uns::population {
 
 			return *this;
 		};
-		ordered_order(ordered_order&& obj) :
+		ordered_order(uns::population::ordered_order&& obj) :
 			base::m_container(std::move(obj.m_container)),
 			base::m_engine(std::move(obj.m_engine)),
 			base::m_distribution(std::move(obj.m_distribution))
 		{};
-		ordered_order& operator=(ordered_order&& obj) {
+		uns::population::ordered_order& operator=(uns::population::ordered_order&& obj) {
 			if(this == &obj) return *this;
 
 			base::m_container = std::move(obj.m_container);
@@ -276,30 +301,76 @@ namespace uns::population {
 		};
 		~ordered_order() noexcept {};
 
-		iterator_type pick_less(const element_type& elem) {
-			size_t index = 0;
-			if(!(base::m_container.size() - 1 - elem.index() > 0)) return base::m_container.begin();
+		const_iterator_type pick_less(const element_type& elem) const {
+			size_type index = 0;
+			if(!(size() > elem.index() + 1)) return cbegin();
 
-			index = static_cast<size_t>(
-				(base::m_container.size() - elem.index() - 1) * base::m_distribution(base::m_engine)
+			index = static_cast<size_type>(
+				static_cast<typename base::distribution_type::result_type>(size() - elem.index() - 1) * base::m_distribution(base::m_engine)
+				) + elem.index() + 1;
+
+			if(index >= size() || index == 0) {
+				return cbegin();
+			}
+			else {
+				index = size() - 1;
+				return cbegin() + index;
+			};
+		};
+		iterator_type pick_less(const element_type& elem) {
+			size_type index = 0;
+			if(!(size() > elem.index() + 1)) return begin();
+
+			index = static_cast<size_type>(
+				static_cast<typename base::distribution_type::result_type>(size() - elem.index() - 1) * base::m_distribution(base::m_engine)
 			) + elem.index() + 1;
 
-			if(index >= base::m_container.size()) index = base::m_container.size() - 1;
-			return (base::m_container.begin() + index);
+			if(index >= size() || index == 0) {
+				return begin();
+			}
+			else {
+				index = size() - 1;
+				return begin() + index;
+			};
 		};
 
+		const_iterator_type pick_more(const element_type& elem) const {
+			size_type index = 0;
+			if(!(elem.index() > 1)) return cbegin();
+
+			index = static_cast<size_type>(static_cast<typename base::distribution_type::result_type>(elem.index()) * base::m_distribution(base::m_engine));
+
+			if(index >= size()) {
+				return cbegin() + (size() - 1);
+			}
+			else if(index == 0) {
+				return cbegin() + 1;
+			}
+			else {
+				index = size() - 1;
+				return cbegin() + index;
+			};
+		};
 		iterator_type pick_more(const element_type& elem) {
-			size_t index = 0;
-			if(!(elem.index() > 1)) return base::m_container.begin();
+			size_type index = 0;
+			if(!(elem.index() > 1)) return begin();
 
-			index = static_cast<size_t>(elem.index() * base::m_distribution(base::m_engine));
+			index = static_cast<size_type>(static_cast<typename base::distribution_type::result_type>(elem.index()) * base::m_distribution(base::m_engine));
 
-			if(index >= elem.index()) index = elem.index() - 1;
-			return (base::m_container.begin() + index);
+			if(index >= size()) {
+				return begin() + (size() - 1);
+			}
+			else if(index == 0) {
+				return begin() + 1;
+			}
+			else {
+				index = size() - 1;
+				return begin() + index;
+			};
 		};
 
 		virtual void sort() {
-			std::sort(base::m_container.begin(), base::m_container.end(), m_predicate);
+			std::sort(begin(), end(), m_predicate);
 			base::indexate();
 		};
 	};
@@ -317,8 +388,10 @@ namespace uns::population {
 	public:
 		using unit_type = typename order_element_t::unit_type;
 		virtual std::vector<std::shared_ptr<unit_type>> breed(order_element_t& order_element) {
+			auto res = std::vector<std::shared_ptr<unit_type>>{};
 			order_element.unit().add_points(typename unit_type::points_type(-1));
-			return std::shared_ptr<unit_type>{ new unit_type{} };
+			res.push_back(std::shared_ptr<unit_type>{ new unit_type{} });
+			return res;
 		};
 	};
 
@@ -391,22 +464,30 @@ namespace uns::population {
 			};
 		};
 
-		virtual void custom_condition() { units.indexate(); };
-		virtual void custom_condition(order_elemnt_type& elem) { elem.unit().condition(); };
+		//customizable events
+		virtual void OnConditioningBegin() { units.indexate(); };
+		virtual void OnConditioningEnd() {};
+		virtual void OnConditioningUnitBegin(order_elemnt_type& elem) { elem.unit().condition(); };
+		virtual void OnConditioningUnitEnd(order_elemnt_type& elem) {};
 	public:
-		void condition() {
-			custom_condition();
+		void condition() { 
+			OnConditioningBegin();
 
 			for(auto& element : units) {
-				custom_condition(element);
+				OnConditioningUnitBegin(element);
+
 				ration_source.feed(element);
 				breed(element);
 				life_control(element);
 				fatal_act(element);
+
+				OnConditioningUnitEnd(element);
 			};
 
 			barrier(*this);
 			sanitation();
+
+			OnConditioningEnd();
 		};
 	};
 };
