@@ -7,6 +7,7 @@
 #include <limits>
 #include <tuple>
 #include <functional>
+#include <concepts>
 
 #include "boost/property_tree/ptree.hpp"
 
@@ -64,7 +65,7 @@ namespace uns::nn {
 			std::vector<param_type> params;
 
 			neuron() noexcept {};
-			neuron(const neuron& obj) noexcept :
+			neuron(const uns::nn::representation::neuron& obj) noexcept :
 				activator(obj.activator),
 				collector(obj.collector),
 				links(obj.links),
@@ -72,7 +73,7 @@ namespace uns::nn {
 				r(obj.r),
 				c(obj.c)
 			{};
-			neuron& operator=(const neuron & obj) {
+			uns::nn::representation::neuron& operator=(const uns::nn::representation::neuron & obj) {
 				if(this == &obj) return *this;
 
 				activator = obj.activator;
@@ -84,7 +85,7 @@ namespace uns::nn {
 
 				return *this;
 			};
-			neuron(neuron&& obj) noexcept :
+			neuron(uns::nn::representation::neuron&& obj) noexcept :
 				activator(std::move(obj.activator)),
 				collector(std::move(obj.collector)),
 				links(std::move(obj.links)),
@@ -92,7 +93,7 @@ namespace uns::nn {
 				r(std::move(obj.r)),
 				c(std::move(obj.c))
 			{};
-			neuron& operator=(neuron&& obj) {
+			uns::nn::representation::neuron& operator=(uns::nn::representation::neuron&& obj) {
 				if(this == &obj) return *this;
 
 				activator = std::move(obj.activator);
@@ -121,11 +122,11 @@ namespace uns::nn {
 			std::vector<uns::nn::adress> outputs;
 
 			network() noexcept {};
-			network(const network& obj) noexcept :
+			network(const uns::nn::representation::network& obj) noexcept :
 				layers(obj.layers),
 				outputs(obj.outputs)
 			{};
-			network& operator=(const network& obj) {
+			uns::nn::representation::network& operator=(const uns::nn::representation::network& obj) {
 				if(this == &obj) return *this;
 
 				layers = obj.layers;
@@ -133,11 +134,11 @@ namespace uns::nn {
 
 				return *this;
 			};
-			network(network&& obj) noexcept :
+			network(uns::nn::representation::network&& obj) noexcept :
 				layers(std::move(obj.layers)),
 				outputs(std::move(obj.outputs))
 			{};
-			network& operator=(network&& obj) {
+			uns::nn::representation::network& operator=(uns::nn::representation::network&& obj) {
 				if(this == &obj) return *this;
 
 				layers = std::move(obj.layers);
@@ -162,7 +163,7 @@ namespace uns::nn {
 		class network_params {
 		public:
 			virtual signal_t get(int) const = 0;
-			virtual const network_params& forward(const std::vector<signal_t>&) const = 0;
+			virtual const uns::nn::general::network_params& forward(const std::vector<signal_t>&) const = 0;
 		};
 
 
@@ -176,7 +177,7 @@ namespace uns::nn {
 		class input_data_object {
 		public:
 			virtual std::size_t size() const = 0;
-			virtual neuron<signal_t>* get(const uns::nn::adress&) = 0;
+			virtual uns::nn::general::neuron<signal_t>* get(const uns::nn::adress&) = 0;
 			virtual bool has_it(const uns::nn::adress&) const noexcept = 0;
 		};
 
@@ -188,25 +189,25 @@ namespace uns::nn {
 			signal_t m_value = signal_t(0);
 		public:
 			activator() noexcept {};
-			activator(const activator& obj) noexcept :
+			activator(const uns::nn::general::activator& obj) noexcept :
 				m_value(obj.m_value) {};
-			activator& operator=(const activator& obj) noexcept {
+			uns::nn::general::activator& operator=(const uns::nn::general::activator& obj) noexcept {
 				if(this == &obj) return *this;
 
 				m_value = obj.m_value;
 
 				return *this;
 			};
-			activator(activator&& obj) noexcept :
+			activator(uns::nn::general::activator&& obj) noexcept :
 				m_value(std::move(obj.m_value)) {};
-			activator& operator=(activator&& obj) noexcept {
+			uns::nn::general::activator& operator=(uns::nn::general::activator&& obj) noexcept {
 				if(this == &obj) return *this;
 
 				m_value = std::move(obj.m_value);
 
 				return *this;
 			};
-			activator& operator=(signal_t value) noexcept {
+			uns::nn::general::activator& operator=(signal_t value) noexcept {
 				m_value = value;
 				return *this;
 			};
@@ -239,25 +240,25 @@ namespace uns::nn {
 			signal_t m_value = signal_t(0);
 		public:
 			collector() noexcept {};
-			collector(const collector& obj) noexcept :
+			collector(const uns::nn::general::collector& obj) noexcept :
 				m_value(obj.m_value) {};
-			collector& operator=(const collector& obj) noexcept {
+			uns::nn::general::collector& operator=(const uns::nn::general::collector& obj) noexcept {
 				if(this == &obj) return *this;
 
 				m_value = obj.m_value;
 
 				return *this;
 			};
-			collector(collector&& obj) noexcept :
+			collector(uns::nn::general::collector&& obj) noexcept :
 				m_value(std::move(obj.m_value)) {};
-			collector& operator=(collector&& obj) noexcept {
+			uns::nn::general::collector& operator=(uns::nn::general::collector&& obj) noexcept {
 				if(this == &obj) return *this;
 
 				m_value = std::move(obj.m_value);
 
 				return *this;
 			};
-			collector& operator=(signal_t value) noexcept {
+			uns::nn::general::collector& operator=(signal_t value) noexcept {
 				m_value = value;
 				return *this;
 			};
@@ -268,13 +269,13 @@ namespace uns::nn {
 
 			virtual std::u8string type() const noexcept { return u8"Zero"; };
 
-			virtual signal_t operator()(const std::vector<std::pair<neuron<signal_t>*, signal_t>>&, const network_params<signal_t>&) { return signal_t(0); };
+			virtual signal_t operator()(const std::vector<std::pair<uns::nn::general::neuron<signal_t>*, signal_t>>&, const uns::nn::general::network_params<signal_t>&) { return signal_t(0); };
 
-			virtual signal_t _dr(int, const std::vector<std::pair<neuron<signal_t>*, signal_t>>&, const network_params<signal_t>&) { return signal_t(0); };
+			virtual signal_t _dr(int, const std::vector<std::pair<uns::nn::general::neuron<signal_t>*, signal_t>>&, const uns::nn::general::network_params<signal_t>&) { return signal_t(0); };
 
-			virtual signal_t _dw(int, const std::vector<std::pair<neuron<signal_t>*, signal_t>>&, const network_params<signal_t>&) { return signal_t(0); };
+			virtual signal_t _dw(int, const std::vector<std::pair<uns::nn::general::neuron<signal_t>*, signal_t>>&, const uns::nn::general::network_params<signal_t>&) { return signal_t(0); };
 
-			virtual signal_t _dp(int, const std::vector<std::pair<neuron<signal_t>*, signal_t>>&, const network_params<signal_t>&) { return signal_t(0); };
+			virtual signal_t _dp(int, const std::vector<std::pair<uns::nn::general::neuron<signal_t>*, signal_t>>&, const uns::nn::general::network_params<signal_t>&) { return signal_t(0); };
 
 			//basic auxiliary class intended to create collector from string
 			//	actually it's a map from string to collector
@@ -308,20 +309,20 @@ namespace uns::nn {
 			) = 0;
 
 			virtual int subneurons_total() const noexcept { return 0; };
-			virtual const neuron* subneuron(int connection_idx) const noexcept { return nullptr; };
-			virtual neuron* subneuron(int connection_idx) noexcept { return nullptr; };
+			virtual const uns::nn::general::neuron* subneuron(int connection_idx) const noexcept { return nullptr; };
+			virtual uns::nn::general::neuron* subneuron(int connection_idx) noexcept { return nullptr; };
 
 			virtual signal_type R() const noexcept { return signal_type{ 0 }; };
-			virtual void R(signal_type) noexcept {};
+			virtual void R(signal_type r) noexcept {};
 			virtual signal_type C() const noexcept { return signal_type{ 0 }; };
-			virtual void C(signal_type) noexcept {};
+			virtual void C(signal_type c) noexcept {};
 
 			virtual uns::nn::adress adress() const noexcept = 0;
 			virtual bool is_reversible() const noexcept { return false; };
 			virtual signal_type dropout() const noexcept { return signal_type{ 0 }; };
-			virtual void dropout(signal_type) noexcept {};
+			virtual void dropout(signal_type new_dropout) noexcept {};
 
-			virtual void react(const network_params<signal_type>&) {};
+			virtual void react(const uns::nn::general::network_params<signal_type>& common_params) {};
 			virtual void collect(const uns::nn::general::network_params<signal_t>& common_params) {};
 		};
 
@@ -344,7 +345,7 @@ namespace uns::nn {
 				const typename uns::nn::general::collector<signal_type>::caster&,
 				uns::nn::general::input_data_object<signal_type>&
 			) = 0;
-			virtual void react(const network_params<signal_type>&) {};
+			virtual void react(const uns::nn::general::network_params<signal_type>& common_params) {};
 
 		};
 	};
@@ -494,7 +495,7 @@ namespace uns::nn {
 		};
 
 		signal_type R() const noexcept override { return m_F->value(); };
-		void R(const signal_type R) noexcept override { *m_F = R; };
+		void R(const signal_type r) noexcept override { *m_F = r; };
 
 		signal_type C() const noexcept { return m_S->value(); };
 		void C(const signal_type c) noexcept { *m_S = c; };
@@ -513,6 +514,10 @@ namespace uns::nn {
 		using base = uns::nn::sequential_neuron<signal_t>;
 		using place_type = int;
 	public:
+		enum part {
+			_neuron_ = base::part::_neuron_,
+			_place_ = 1
+		};
 	protected:
 		base::signal_type m_r = 0;
 		base::signal_type m_s = 0;
@@ -581,7 +586,7 @@ namespace uns::nn {
 
 			m_s = 0;
 			for(auto _link : m__links) {
-				m_s += std::get<neuron_type::neuron>(_link)->m_r * std::get<neuron_type::neuron>(_link)->dS_dr(std::get<neuron_type::place>(_link), common_params);
+				m_s += std::get<part::_neuron_>(_link)->m_r * std::get<part::_neuron_>(_link)->dS_dr(std::get<part::_place_>(_link), common_params);
 			};
 			if(m_input != nullptr) {
 				m_s += m_input->R();
@@ -592,7 +597,7 @@ namespace uns::nn {
 
 		void set_learning(bool islearning) noexcept { m_is_learning = islearning; };
 
-		signal_t dS_dr(int index, const uns::nn::general::network_params<signal_t>& common_params) const { return base::S->_dr(index, base::m_links, common_params.forward(base::m_params)); };	//TODO to think: forwarding params of this neuron can unintendedly replace params of subneurons
+		signal_t dS_dr(int index, const uns::nn::general::network_params<signal_t>& common_params) const { return base::S->_dr(index, base::m_links, common_params.forward(base::m_params)); };
 
 		signal_t dS_dw(int index, const uns::nn::general::network_params<signal_t>& common_params) const { return base::S->_dw(index, base::m_links, common_params.forward(base::m_params)); };
 
@@ -605,7 +610,7 @@ namespace uns::nn {
 
 
 	//a class of network introduces the sequential neural network
-	template<class neuron_t, class inputs_allocator_t>
+	template<class neuron_t, std::derived_from<uns::nn::general::input_data_object<typename neuron_t::signal_type>> inputs_allocator_t>
 	class sequential_base_network : public uns::nn::general::network<neuron_t> {
 	protected:
 		using this_type = sequential_base_network<neuron_t, inputs_allocator_t>;
@@ -617,10 +622,10 @@ namespace uns::nn {
 		std::vector<std::vector<neuron_t*>> m_layers;
 	public:
 		sequential_base_network() {};
-		sequential_base_network(const sequential_base_network& net) = delete;
-		sequential_base_network& operator=(const sequential_base_network& net) = delete;
-		sequential_base_network(sequential_base_network&& net) = delete;
-		sequential_base_network& operator=(sequential_base_network&& net) = delete;
+		sequential_base_network(const uns::nn::sequential_base_network& net) = delete;
+		uns::nn::sequential_base_network& operator=(const uns::nn::sequential_base_network& net) = delete;
+		sequential_base_network(uns::nn::sequential_base_network&& net) = delete;
+		uns::nn::sequential_base_network& operator=(uns::nn::sequential_base_network&& net) = delete;
 		~sequential_base_network() {
 			for(auto& layer : m_layers) {
 				for(auto neuron : layer) {
@@ -742,10 +747,18 @@ namespace uns::nn {
 
 	
 	//a class of network introduces the reversable neural network
-	template<class signal_t, class inputs_allocator_t, class outputs_allocator_t>
+	template<
+		class signal_t,
+		std::derived_from<
+			uns::nn::general::input_data_object<typename uns::nn::nonrecursive_reverse_neuron<signal_t>::signal_type>
+		> inputs_allocator_t,
+		std::derived_from<
+			uns::nn::general::input_data_object<typename uns::nn::nonrecursive_reverse_neuron<signal_t>::signal_type>
+		> outputs_allocator_t
+	>
 	class nonrecursive_reverse_network: public uns::nn::sequential_base_network<uns::nn::nonrecursive_reverse_neuron<signal_t>, inputs_allocator_t> {
 	protected:
-		using this_type = nonrecursive_reverse_network<signal_t, inputs_allocator_t, outputs_allocator_t>;
+		using this_type = uns::nn::nonrecursive_reverse_network<signal_t, inputs_allocator_t, outputs_allocator_t>;
 	public:
 		using neuron_type = uns::nn::nonrecursive_reverse_neuron<signal_t>;
 		using signal_type = typename neuron_type::signal_type;
@@ -754,10 +767,10 @@ namespace uns::nn {
 		std::vector<uns::nn::general::neuron<signal_type>*> m_reverse_inputs;
 	public:
 		nonrecursive_reverse_network() {};
-		nonrecursive_reverse_network(const nonrecursive_reverse_network& net) = delete;
-		nonrecursive_reverse_network& operator=(const nonrecursive_reverse_network& net) = delete;
-		nonrecursive_reverse_network(nonrecursive_reverse_network&& net) = delete;
-		nonrecursive_reverse_network& operator=(nonrecursive_reverse_network&& net) = delete;
+		nonrecursive_reverse_network(const uns::nn::nonrecursive_reverse_network& net) = delete;
+		uns::nn::nonrecursive_reverse_network& operator=(const uns::nn::nonrecursive_reverse_network& net) = delete;
+		nonrecursive_reverse_network(uns::nn::nonrecursive_reverse_network&& net) = delete;
+		uns::nn::nonrecursive_reverse_network& operator=(uns::nn::nonrecursive_reverse_network&& net) = delete;
 		~nonrecursive_reverse_network() {
 			for(auto neuron_ptr : m_reverse_inputs) {
 				outputs_allocator_t::dealloc(neuron_ptr);
