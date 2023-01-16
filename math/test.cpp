@@ -231,3 +231,185 @@ BOOST_AUTO_TEST_SUITE(sqrt_test)
     };
 
 BOOST_AUTO_TEST_SUITE_END();
+
+BOOST_AUTO_TEST_SUITE(maximal_test)
+
+    BOOST_DATA_TEST_CASE(correct1,
+        boost::unit_test::data::make(
+            {
+                0.0,
+                1.0,
+                2.0,
+                4.0,
+                9.0,
+                16.0,
+                3.0,
+                5.0,
+                7.123
+            }
+        )
+        * boost::unit_test::data::make(
+            {
+                0.0,
+                1.0,
+                1.414213562373095,
+                2.0,
+                3.0,
+                4.0,
+                1.732050807568877,
+                2.236067977499789,
+                2.6688949023893764
+            }
+        ),
+        val1, val2
+    ) {
+        auto maximal_res = uns::math::maximal(val1, val2);
+        auto fact_res = (val1 > val2 ? val1 : val2);
+
+        BOOST_TEST(
+            uns::math::equals(maximal_res, fact_res)
+        );
+    };
+
+    BOOST_DATA_TEST_CASE(correct2,
+        boost::unit_test::data::make(
+            {
+                0.0,
+                1.0,
+                2.0,
+                4.0,
+                9.0,
+                16.0,
+                3.0,
+                5.0,
+                7.123
+            }
+        )
+        * boost::unit_test::data::make(
+            {
+                0.0,
+                1.0,
+                1.414213562373095,
+                2.0,
+                3.0,
+                4.0,
+                1.732050807568877,
+                2.236067977499789,
+                2.6688949023893764
+            }
+        )
+        * boost::unit_test::data::make(
+            {
+                0.0,
+                1.0,
+                1.414213562373095,
+                -2.0,
+                3.0,
+                4.0,
+                1.732050807568877,
+                7.123,
+                2.6688949023893764
+            }
+        ),
+        val1, val2, val3
+    ) {
+        auto maximal_res = uns::math::maximal(val1, val2, val3);
+        auto fact_res = (val1 > (val2 > val3 ? val2 : val3) ? val1 : (val2 > val3 ? val2 : val3));
+
+        BOOST_TEST(
+            uns::math::equals(maximal_res, fact_res)
+        );
+    };
+
+BOOST_AUTO_TEST_SUITE_END();
+
+BOOST_AUTO_TEST_SUITE(minimal_test)
+
+    BOOST_DATA_TEST_CASE(correct1,
+        boost::unit_test::data::make(
+            {
+                0.0,
+                1.0,
+                2.0,
+                4.0,
+                9.0,
+                16.0,
+                3.0,
+                5.0,
+                7.123
+            }
+        )
+        * boost::unit_test::data::make(
+            {
+                0.0,
+                1.0,
+                1.414213562373095,
+                2.0,
+                3.0,
+                4.0,
+                1.732050807568877,
+                2.236067977499789,
+                2.6688949023893764
+            }
+        ),
+        val1, val2
+    ) {
+        auto minimal_res = uns::math::minimal(val1, val2);
+        auto fact_res = (val1 < val2 ? val1 : val2);
+
+        BOOST_TEST(
+            uns::math::equals(minimal_res, fact_res)
+        );
+    };
+
+    BOOST_DATA_TEST_CASE(correct2,
+        boost::unit_test::data::make(
+            {
+                0.0,
+                1.0,
+                2.0,
+                4.0,
+                9.0,
+                16.0,
+                3.0,
+                5.0,
+                7.123
+            }
+        )
+        * boost::unit_test::data::make(
+            {
+                0.0,
+                1.0,
+                1.414213562373095,
+                2.0,
+                3.0,
+                4.0,
+                1.732050807568877,
+                2.236067977499789,
+                2.6688949023893764
+            }
+        )
+        * boost::unit_test::data::make(
+            {
+                0.0,
+                1.0,
+                1.414213562373095,
+                -2.0,
+                3.0,
+                4.0,
+                1.732050807568877,
+                7.123,
+                2.6688949023893764
+            }
+        ),
+        val1, val2, val3
+    ) {
+        auto minimal_res = uns::math::minimal(val1, val2, val3);
+        auto fact_res = (val1 < (val2 < val3 ? val2 : val3) ? val1 : (val2 < val3 ? val2 : val3));
+
+        BOOST_TEST(
+            uns::math::equals(minimal_res, fact_res)
+        );
+    };
+
+BOOST_AUTO_TEST_SUITE_END();

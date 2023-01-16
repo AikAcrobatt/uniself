@@ -260,10 +260,10 @@ namespace uns::math {
 		const matrix_t& m1,
 		const matrix_t& m2
 	) {
-		matrix_t res(uns::math::max(m1.size1(), m2.size1()), uns::math::max(m1.size2(), m2.size2()));
+		matrix_t res(uns::math::maximal(m1.size1(), m2.size1()), uns::math::maximal(m1.size2(), m2.size2()));
 
-		auto min1 = uns::math::min(m1.size1(), m2.size1());
-		auto min2 = uns::math::min(m1.size2(), m2.size2());
+		auto min1 = uns::math::minimal(m1.size1(), m2.size1());
+		auto min2 = uns::math::minimal(m1.size2(), m2.size2());
 
 		auto i1 = min1;
 		auto i2 = min2;
@@ -300,10 +300,10 @@ namespace uns::math {
 		const matrix_t& m1,
 		const matrix_t& m2
 	) {
-		matrix_t res(uns::math::max(m1.size1(), m2.size1()), uns::math::max(m1.size2(), m2.size2()));
+		matrix_t res(uns::math::maximal(m1.size1(), m2.size1()), uns::math::maximal(m1.size2(), m2.size2()));
 
-		auto min1 = uns::math::min(m1.size1(), m2.size1());
-		auto min2 = uns::math::min(m1.size2(), m2.size2());
+		auto min1 = uns::math::minimal(m1.size1(), m2.size1());
+		auto min2 = uns::math::minimal(m1.size2(), m2.size2());
 
 		auto i1 = min1;
 		auto i2 = min2;
@@ -343,7 +343,7 @@ namespace uns::math {
 		auto res = matrix_t{ m1.size1(), m2.size2() };
 		res *= typename matrix_t::value_type{ 0 };
 
-		auto min = uns::math::min(m1.size2(), m2.size1());
+		auto min = uns::math::minimal(m1.size2(), m2.size1());
 		auto i1 = min;
 		auto i2 = min; 
 		auto i3 = min;
@@ -366,7 +366,7 @@ namespace uns::math {
 	) {
 		auto res = typename matrix_t::value_type{ 0 };
 
-		auto min_size = uns::math::min(m.size1(), m.size2());
+		auto min_size = uns::math::minimal(m.size1(), m.size2());
 		auto i = min_size;
 
 		for(i = 0; i < min_size; i++) {
@@ -547,7 +547,7 @@ namespace uns::math {
 		const auto _1 = static_cast<typename matrix_t::value_type>(1);
 		auto sign = _1;
 		auto multiplier = _1;
-		auto min_size = uns::math::min<typename matrix_t::size_type>(m.size1(), m.size2());
+		auto min_size = uns::math::minimal<typename matrix_t::size_type>(m.size1(), m.size2());
 		auto i1 = static_cast<typename matrix_t::size_type>(0);
 		auto i2 = static_cast<typename matrix_t::size_type>(0);
 		auto i3 = static_cast<typename matrix_t::size_type>(0);
