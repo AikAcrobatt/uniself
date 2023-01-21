@@ -2,10 +2,11 @@
 
 #define UNS_HEADER_BENUM "benum.h"
 
-#include <type_traits>
+//#include <type_traits>
+#pragma warning(push)
 #pragma warning(disable: 4626; disable: 4820; disable: 5027)
 #include "better_enums/enum.h"
-#pragma warning(default: 4626; default: 4820; default: 5027)
+#pragma warning(pop)
 
 
 #ifndef UNS_HEADER_STRINGS
@@ -41,7 +42,7 @@ namespace uns {
 		benum_t::_enumerated;
 	}
 	&& requires(benum_t enum_obj) {
-		{ enum_obj } -> std::convertible_to<typename benum_t::_enumerated>;
+		{ enum_obj } -> ::std::convertible_to<typename benum_t::_enumerated>;
 	}
 	&& requires(benum_t enum_obj) {
 		benum_t::_value_iterator;
@@ -56,19 +57,19 @@ namespace uns {
 
 	//BENUM TYPE_TRAITS
 	template<typename benum_t>
-	class is_benum : public std::integral_constant<bool, uns::benum<benum_t>> {};
+	class is_benum : public ::std::integral_constant<bool, ::uns::benum<benum_t>> {};
 };
 
 
 namespace uns::string {
 
 	//convertions of benum types with std::u8string
-	template<std::constructible_from<std::u8string> out_t, uns::benum in_t>
+	template<::std::constructible_from<::std::u8string> out_t, ::uns::benum in_t>
 	out_t u8_cast(const in_t& obj) {
-		return uns::string::u8_cast<std::u8string>(obj._to_string());
+		return ::uns::string::u8_cast<::std::u8string>(obj._to_string());
 	};
-	template<uns::benum out_t>
-	out_t u8_cast(const std::u8string_view& obj) {
-		return out_t::_from_string(uns::string::u8_cast<std::string>(obj).c_str());
+	template<::uns::benum out_t>
+	out_t u8_cast(const ::std::u8string_view& obj) {
+		return out_t::_from_string(::uns::string::u8_cast<::std::string>(obj).c_str());
 	};
 };

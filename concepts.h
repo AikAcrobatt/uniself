@@ -10,9 +10,9 @@ namespace uns {
 	concept iterable_collection = requires (collection_t collection) {
 		collection.begin();
 		collection.end();
-		{ *(collection.begin()) } -> std::convertible_to<value_t>;
+		{ *(collection.begin()) } -> ::std::convertible_to<value_t>;
 		collection.begin()++;
-		{ collection.size() } -> std::integral;
+		{ collection.size() } -> ::std::integral;
 	};
 
 	template<typename collection_t, typename value_t>
@@ -21,9 +21,9 @@ namespace uns {
 		&& requires (collection_t collection) {
 			collection.cbegin();
 			collection.cend();
-			{ *(collection.cbegin()) } -> std::convertible_to<value_t>;
+			{ *(collection.cbegin()) } -> ::std::convertible_to<value_t>;
 			collection.cbegin()++;
-			{ collection.size() } -> std::integral;
+			{ collection.size() } -> ::std::integral;
 		};
 
 };
