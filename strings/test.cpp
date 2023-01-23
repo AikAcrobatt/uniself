@@ -1,10 +1,20 @@
 ﻿
-#pragma warning(push)
-#pragma warning(disable: 4668; disable: 4365; disable: 5264; disable: 4820)
 #include <iostream>
 #include <vector>
 #include <list>
 
+#pragma warning(push)
+#pragma warning(    \
+    disable: 6387;  \
+    disable: 6335;  \
+    disable: 26827; \
+    disable: 26495; \
+    disable: 26439; \
+    disable: 26451; \
+    disable: 6269;  \
+    disable: 6011;  \
+    disable: 6031   \
+)
 #define BOOST_TEST_MODULE uns_strings_test
 #include "boost/test/included/unit_test.hpp"
 #include <boost/test/data/test_case.hpp>
@@ -85,7 +95,10 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
             ),
             in_str, out_val
         ) {
+#pragma warning(push)
+#pragma warning(disable: 4552)
             BOOST_CHECK_THROW(out_val != ::uns::string::u8_cast<bool>(in_str), ::std::runtime_error);
+#pragma warning(pop)
         };
 
         BOOST_DATA_TEST_CASE(bool_to_std_u8string_correct,
@@ -195,7 +208,10 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
                 ),
                 in_str, out_val
             ) {
+#pragma warning(push)
+#pragma warning(disable: 4552)
                 BOOST_CHECK_THROW(out_val != ::uns::string::u8_cast<int>(::uns::string::u8_cast<::std::u8string>(in_str)), ::std::runtime_error);
+#pragma warning(pop)
             };
 
             BOOST_DATA_TEST_CASE(dec_to_std_u8string_correct,
@@ -321,7 +337,10 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
                 ),
                 in_str, out_val
             ) {
+#pragma warning(push)
+#pragma warning(disable: 4552)
                 BOOST_CHECK_THROW(out_val != ::uns::string::u8_cast<int>(::uns::string::u8_cast<::std::u8string>(in_str)), ::std::runtime_error);
+#pragma warning(pop)
             };
             
             BOOST_DATA_TEST_CASE(hex_to_std_u8string_correct,
@@ -439,7 +458,10 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
                 ),
                 in_str, out_val
             ) {
+#pragma warning(push)
+#pragma warning(disable: 4552)
                 BOOST_CHECK_THROW(out_val != ::uns::string::u8_cast<int>(::uns::string::u8_cast<::std::u8string>(in_str)), ::std::runtime_error);
+#pragma warning(pop)
             };
 
             BOOST_DATA_TEST_CASE(bin_to_std_u8string_correct,
@@ -557,7 +579,10 @@ BOOST_AUTO_TEST_SUITE(u8_cast_testing)
                 ),
                 in_str, out_val
             ) {
+#pragma warning(push)
+#pragma warning(disable: 4552)
                 BOOST_CHECK_THROW(out_val != ::uns::string::u8_cast<double>(::uns::string::u8_cast<::std::u8string>(in_str)), ::std::runtime_error);
+#pragma warning(pop)
             };
             
             BOOST_DATA_TEST_CASE(dbl_to_std_u8string_correct,
@@ -1034,7 +1059,7 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
 
             auto seeking_result =
                 (target.cbegin() + pos_rborder_beg >= pos_delim)
-                && (pos_delim - target.cbegin() <= pos_rborder_end - delimiter_found->size())
+                && (pos_delim - target.cbegin() <= static_cast<int>(pos_rborder_end) - static_cast<int>(delimiter_found->size()))
                 && (pos_delim > seeker_shift + target.cbegin());
 
             BOOST_TEST(
@@ -1073,7 +1098,7 @@ BOOST_AUTO_TEST_SUITE(string_seeker_methods)
 
             auto seeking_result =
                 (target.cbegin() + pos_rborder_beg >= pos_delim)
-                && (pos_delim - target.cbegin() <= pos_rborder_end - delimiter.size())
+                && (pos_delim - target.cbegin() <= static_cast<int>(pos_rborder_end) - static_cast<int>(delimiter.size()))
                 && (pos_delim > seeker_shift + target.cbegin());
 
             BOOST_TEST(

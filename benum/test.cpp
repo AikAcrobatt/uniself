@@ -1,18 +1,42 @@
 ﻿
 
-#pragma warning(push)
-#pragma warning(disable: 4668; disable: 4365)
 #include <iostream>
-#pragma warning(pop)
 
+#pragma warning(push)
+#pragma warning(    \
+    disable: 4266;  \
+    disable: 4365;  \
+    disable: 4371;  \
+    disable: 4514;  \
+    disable: 4548;  \
+    disable: 4625;  \
+    disable: 4626;  \
+    disable: 4668;  \
+    disable: 4820;  \
+    disable: 4866;  \
+    disable: 5026;  \
+    disable: 5027;  \
+    disable: 5039;  \
+    disable: 5045;  \
+    disable: 5262;  \
+    disable: 5264;  \
+    disable: 6011;  \
+    disable: 6031;  \
+    disable: 6387;  \
+    disable: 6269;  \
+    disable: 6335;  \
+    disable: 26439; \
+    disable: 26451; \
+    disable: 26495; \
+    disable: 26827  \
+)
 #define BOOST_TEST_MODULE uns_benum_test
 #include "boost/test/included/unit_test.hpp"
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/data/monomorphic.hpp>
 #include <boost/mpl/list.hpp>
+#pragma warning(pop)
 
-#pragma warning(push)
-#pragma warning(disable: 4514)
 #include "uniself/benum.h"
 
 namespace abyss {
@@ -31,7 +55,6 @@ namespace abyss {
     );
 
 };
-#pragma warning(pop)
 
 UNS_BENUM_DECLARATOR(benum_test, int,
     t1 = 0,
@@ -40,12 +63,12 @@ UNS_BENUM_DECLARATOR(benum_test, int,
 );
 
 using types_list = ::boost::mpl::list<::abyss::layers, void, int, char, ::std::string>;
-BOOST_AUTO_TEST_CASE_TEMPLATE(is_benum_test, benum_candidate_t, types_list) {
+BOOST_AUTO_TEST_CASE_TEMPLATE(benum_traits_test, benum_candidate_t, types_list) {
     if(typeid(benum_candidate_t) == typeid(::abyss::layers)) {
-        BOOST_TEST(::uns::is_benum<benum_candidate_t>::value);
+        BOOST_TEST(::uns::benum_traits<benum_candidate_t>::value);
     }
     else {
-        BOOST_TEST(!::uns::is_benum<benum_candidate_t>::value);
+        BOOST_TEST(!::uns::benum_traits<benum_candidate_t>::value);
     };
 };
 

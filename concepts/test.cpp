@@ -12,7 +12,17 @@
 
 
 #pragma warning(push)
-#pragma warning(disable: 4668; disable: 4365)
+#pragma warning(    \
+    disable: 6387;  \
+    disable: 6335;  \
+    disable: 26827; \
+    disable: 26495; \
+    disable: 26439; \
+    disable: 26451; \
+    disable: 6269;  \
+    disable: 6011;  \
+    disable: 6031   \
+)
 
 #define BOOST_TEST_MODULE uns_concepts
 #include "boost/test/included/unit_test.hpp"

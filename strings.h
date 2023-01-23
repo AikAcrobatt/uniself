@@ -2,14 +2,11 @@
 
 #define UNS_HEADER_STRINGS "strings.h"
 
-#pragma warning(push)
-#pragma warning(disable: 5264)
 #include <string>
 #include <charconv>
 #include <type_traits>
 #include <concepts>
 #include <exception>
-#pragma warning(pop)
 
 #ifndef UNS_HEADER_CONCEPTS
 #include "uniself/concepts.h"
