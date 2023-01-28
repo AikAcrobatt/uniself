@@ -17,15 +17,15 @@ namespace uns::population {
 		using points_type = points_t;
 		using health_type = health_t;
 
-		virtual void add_points(const points_type&) { /*pregnancy += points_gain;*/ };
+		virtual void add_points(const points_type&) noexcept { /*pregnancy += points_gain;*/ };
 
-		virtual void damage(const health_type&) { /*health -= health_decrease;*/ };
+		virtual void damage(const health_type&) noexcept { /*health -= health_decrease;*/ };
 
-		virtual bool is_alive() const { return false; /*return uns::math::more(health, 0.0F);*/ };
+		virtual bool is_alive() const noexcept { return false; /*return ::uns::math::more(health, 0.0F);*/ };
 
-		virtual bool is_pregnant() const { return false; /*return uns::math::more(pregnancy, 0.0F);*/ };
+		virtual bool is_pregnant() const noexcept { return false; /*return ::uns::math::more(pregnancy, 1.0F);*/ };
 
-		virtual void condition() {};
+		virtual void condition() noexcept {};
 	};
 
 
@@ -36,24 +36,24 @@ namespace uns::population {
 	public:
 		using unit_type = unit_t;
 		using order_type = order_t;
-		using index_type = typename order_t::size_t;
+		using index_type = typename order_t::size_type;
 	protected:
-		std::shared_ptr<unit_type> m_unit_ptr;
+		::std::shared_ptr<unit_type> m_unit_ptr = nullptr;
 		order_type* m_order_ptr;
 		index_type m_index = 0;
 	public:
 		order_element() = delete;
-		order_element(const std::shared_ptr<unit_type>& unit, order_type& order, index_type idx) :
+		order_element(const ::std::shared_ptr<unit_type>& unit, order_type& order, index_type idx) noexcept :
 			m_unit_ptr(unit),
 			m_order_ptr(&order),
 			m_index(idx)
 		{};
-		order_element(const order_element& obj) :
+		order_element(const order_element& obj) noexcept :
 			m_unit_ptr(obj.m_unit_ptr),
 			m_order_ptr(obj.m_order_ptr),
 			m_index(obj.m_index)
 		{};
-		order_element& operator=(const order_element& obj) {
+		order_element& operator=(const order_element& obj) noexcept {
 			if(this == &obj) return *this;
 
 			m_unit_ptr = obj.m_unit_ptr;
@@ -62,39 +62,39 @@ namespace uns::population {
 
 			return *this;
 		};
-		order_element(order_element&& obj) :
-			m_unit_ptr(std::move(obj.m_unit_ptr)),
+		order_element(order_element&& obj) noexcept :
+			m_unit_ptr(::std::move(obj.m_unit_ptr)),
 			m_order_ptr(obj.m_order_ptr),
-			m_index(std::move(obj.m_index)) {};
-		order_element& operator=(order_element&& obj) {
+			m_index(::std::move(obj.m_index)) {};
+		order_element& operator=(order_element&& obj) noexcept {
 			if(this == &obj) return *this;
 
-			m_unit_ptr = std::move(obj.m_unit_ptr);
+			m_unit_ptr = ::std::move(obj.m_unit_ptr);
 			m_order_ptr = obj.m_order_ptr;
-			m_index = std::move(obj.m_index);
+			m_index = ::std::move(obj.m_index);
 
 			return *this;
 		};
-		~order_element() {};
+		~order_element() noexcept {};
 
-		operator unit_t& () { return *m_unit_ptr; };
+		operator unit_t& () noexcept { return *m_unit_ptr; };
 
-		bool operator==(const std::shared_ptr<unit_type>& unit) const { return (unit == m_unit_ptr); };
+		bool operator==(const ::std::shared_ptr<unit_type>& unit) const noexcept { return (unit == m_unit_ptr); };
 
-		const unit_type& unit() const { return *m_unit_ptr; };
-		unit_type& unit() { return *m_unit_ptr; };
+		const unit_type& unit() const noexcept { return *m_unit_ptr; };
+		unit_type& unit() noexcept { return *m_unit_ptr; };
 
-		const order_type& order() const { return *m_order_ptr; };
-		order_type& order() { return *m_order_ptr; };
+		const order_type& order() const noexcept { return *m_order_ptr; };
+		order_type& order() noexcept { return *m_order_ptr; };
 
-		const index_type& index() const {
+		const index_type& index() const noexcept {
 			return m_index;
 		};
-		index_type& index() {
+		index_type& index() noexcept {
 			return m_index;
 		};
 
-		std::shared_ptr<unit_type> unit_ptr() { return m_unit_ptr; };
+		::std::shared_ptr<unit_type> unit_ptr() noexcept { return m_unit_ptr; };
 	};
 
 
@@ -105,14 +105,14 @@ namespace uns::population {
 		using order_type = order_t;
 		using element_type = order_element<unit_type, order_type>;
 	protected:
-		using linear_container = std::vector<element_type>;
+		using linear_container = ::std::vector<element_type>;
 	public:
 		using iterator_type = typename linear_container::iterator;
 		using size_type = typename linear_container::size_type;
 	protected:
 		linear_container m_container;
-		std::mt19937 m_engine;
-		std::uniform_real_distribution<float> m_distribution;
+		::std::mt19937 m_engine;
+		::std::uniform_real_distribution<float> m_distribution;
 	public:
 		linear_order(int seed = 0) :
 			m_engine(seed),
@@ -133,16 +133,16 @@ namespace uns::population {
 			return *this;
 		};
 		linear_order(linear_order&& obj) :
-			m_container(std::move(obj.m_container)),
-			m_engine(std::move(obj.m_engine)),
-			m_distribution(std::move(obj.m_distribution))
+			m_container(::std::move(obj.m_container)),
+			m_engine(::std::move(obj.m_engine)),
+			m_distribution(::std::move(obj.m_distribution))
 		{};
 		linear_order& operator=(linear_order&& obj) {
 			if(this == &obj) return *this;
 
-			m_container = std::move(obj.m_container);
-			m_engine = std::move(obj.m_engine);
-			m_distribution = std::move(obj.m_distribution);
+			m_container = ::std::move(obj.m_container);
+			m_engine = ::std::move(obj.m_engine);
+			m_distribution = ::std::move(obj.m_distribution);
 
 			return *this;
 		};
@@ -163,7 +163,7 @@ namespace uns::population {
 			m_container.clear();
 		};
 
-		void push(const std::shared_ptr<unit_type>& unit_to_add) {
+		void push(const ::std::shared_ptr<unit_type>& unit_to_add) {
 			m_container.push_back(element_type{ unit_to_add, *static_cast<order_type*>(this), m_container.size() });
 		};
 
@@ -210,15 +210,15 @@ namespace uns::population {
 			return *this;
 		};
 		unordered_order(unordered_order&& obj) :
-			base::m_container(std::move(obj.m_container)),
-			base::m_engine(std::move(obj.m_engine)),
-			base::m_distribution(std::move(obj.m_distribution)) {};
+			base::m_container(::std::move(obj.m_container)),
+			base::m_engine(::std::move(obj.m_engine)),
+			base::m_distribution(::std::move(obj.m_distribution)) {};
 		unordered_order& operator=(unordered_order&& obj) {
 			if(this == &obj) return *this;
 
-			base::m_container = std::move(obj.m_container);
-			base::m_engine = std::move(obj.m_engine);
-			base::m_distribution = std::move(obj.m_distribution);
+			base::m_container = ::std::move(obj.m_container);
+			base::m_engine = ::std::move(obj.m_engine);
+			base::m_distribution = ::std::move(obj.m_distribution);
 
 			return *this;
 		};
@@ -262,16 +262,16 @@ namespace uns::population {
 			return *this;
 		};
 		ordered_order(ordered_order&& obj) :
-			base::m_container(std::move(obj.m_container)),
-			base::m_engine(std::move(obj.m_engine)),
-			base::m_distribution(std::move(obj.m_distribution))
+			base::m_container(::std::move(obj.m_container)),
+			base::m_engine(::std::move(obj.m_engine)),
+			base::m_distribution(::std::move(obj.m_distribution))
 		{};
 		ordered_order& operator=(ordered_order&& obj) {
 			if(this == &obj) return *this;
 
-			base::m_container = std::move(obj.m_container);
-			base::m_engine = std::move(obj.m_engine);
-			base::m_distribution = std::move(obj.m_distribution);
+			base::m_container = ::std::move(obj.m_container);
+			base::m_engine = ::std::move(obj.m_engine);
+			base::m_distribution = ::std::move(obj.m_distribution);
 			return *this;
 		};
 		~ordered_order() noexcept {};
@@ -299,7 +299,7 @@ namespace uns::population {
 		};
 
 		virtual void sort() {
-			std::sort(base::m_container.begin(), base::m_container.end(), m_predicate);
+			::std::sort(base::m_container.begin(), base::m_container.end(), m_predicate);
 			base::indexate();
 		};
 	};
@@ -316,9 +316,9 @@ namespace uns::population {
 	class breed_manager {
 	public:
 		using unit_type = typename order_element_t::unit_type;
-		virtual std::vector<std::shared_ptr<unit_type>> breed(order_element_t& order_element) {
+		virtual ::std::vector<::std::shared_ptr<unit_type>> breed(order_element_t& order_element) {
 			order_element.unit().add_points(typename unit_type::points_type(-1));
-			return std::shared_ptr<unit_type>{ new unit_type{} };
+			return ::std::vector<::std::shared_ptr<unit_type>>{ ::std::shared_ptr<unit_type>{ new unit_type{} } };
 		};
 	};
 
@@ -352,7 +352,7 @@ namespace uns::population {
 		using size_control_type = size_control_t;
 	public:
 		order_type units;
-		std::deque<std::shared_ptr<unit_type>> birth_queue;
+		::std::deque<::std::shared_ptr<unit_type>> birth_queue;
 		ration_source_type ration_source;
 		breed_manager_type breed_manager;
 		fatal_act_operator_type fatal_act;
@@ -376,7 +376,7 @@ namespace uns::population {
 		};
 
 		void sanitation() {
-			std::vector<std::shared_ptr<unit_type>> living_units;
+			::std::vector<::std::shared_ptr<unit_type>> living_units;
 
 			for(auto element : units) {
 				if(element.unit().is_alive()) {
