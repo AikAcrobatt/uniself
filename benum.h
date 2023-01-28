@@ -2,15 +2,11 @@
 
 #define UNS_HEADER_BENUM "benum.h"
 
-#pragma warning(push)
-#pragma warning(    \
-    disable: 4514;  \
-    disable: 4626;  \
-    disable: 4820;  \
-    disable: 5045   \
-)
+#include <concepts>
+#include <type_traits>
+
+#define BETTER_ENUMS_CONSTEXPR_TO_STRING
 #include "better_enums/enum.h"
-#pragma warning(pop)
 
 
 #ifndef UNS_HEADER_STRINGS

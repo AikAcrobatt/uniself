@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+
 #pragma warning(push)
 #pragma warning(    \
     disable: 4266;  \
