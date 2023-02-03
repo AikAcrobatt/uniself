@@ -108,11 +108,12 @@ namespace uns::population {
 		using linear_container = ::std::vector<element_type>;
 	public:
 		using iterator_type = typename linear_container::iterator;
+		using const_iterator_type = typename linear_container::const_iterator;
 		using size_type = typename linear_container::size_type;
 	protected:
 		linear_container m_container;
-		::std::mt19937 m_engine;
-		::std::uniform_real_distribution<float> m_distribution;
+		mutable ::std::mt19937 m_engine;
+		mutable ::std::uniform_real_distribution<float> m_distribution;
 	public:
 		linear_order(int seed = 0) :
 			m_engine(seed),
@@ -148,10 +149,10 @@ namespace uns::population {
 		};
 		~linear_order() noexcept {};
 
-		const iterator_type begin() const { return m_container.begin(); };
+		const_iterator_type cbegin() const { return m_container.cbegin(); };
 		iterator_type begin() { return m_container.begin(); };
 
-		const iterator_type end() const { return m_container.end(); };
+		const_iterator_type cend() const { return m_container.cend(); };
 		iterator_type end() { return m_container.end(); };
 
 		size_type size() const { return m_container.size(); };
@@ -190,6 +191,7 @@ namespace uns::population {
 		using base = linear_order<unit_t, unordered_order<unit_t>>;
 	public:
 		using element_type = typename base::element_type;
+		using const_iterator_type = typename base::const_iterator_type;
 		using iterator_type = typename base::iterator_type;
 		using size_type = typename base::size_type;
 		using unit_type = typename base::unit_type;
@@ -224,14 +226,14 @@ namespace uns::population {
 		};
 		~unordered_order() noexcept {};
 
-		iterator_type pick() {
+		const_iterator_type pick() const {
 			size_type index = 0;
-			if(!(base::m_container.size() > 0)) return base::m_container.begin();
+			if(!(base::m_container.size() > 0)) return base::m_container.cbegin();
 
-			index = static_cast<typename base::size_t>(base::m_container.size() * base::m_distribution(base::m_engine));
+			index = static_cast<size_type>(base::m_container.size() * base::m_distribution(base::m_engine));
 			if(index >= base::m_container.size()) index = base::m_container.size() - 1;
 
-			return (base::m_container.begin() + index);
+			return (base::m_container.cbegin() + index);
 		};
 	};
 
@@ -242,6 +244,7 @@ namespace uns::population {
 		using base = linear_order<unit_t, ordered_order<unit_t, m_predicate>>;
 	public:
 		using element_type = typename base::element_type;
+		using const_iterator_type = typename base::const_iterator_type;
 		using iterator_type = typename base::iterator_type;
 		using size_type = typename base::size_type;
 		using unit_type = typename base::unit_type;
@@ -276,26 +279,26 @@ namespace uns::population {
 		};
 		~ordered_order() noexcept {};
 
-		iterator_type pick_less(const element_type& elem) {
-			size_t index = 0;
-			if(!(base::m_container.size() - 1 - elem.index() > 0)) return base::m_container.begin();
+		const_iterator_type pick_less(const element_type& elem) const {
+			size_type index = 0;
+			if(!(base::m_container.size() - 1 - elem.index() > 0)) return base::m_container.cbegin();
 
-			index = static_cast<size_t>(
+			index = static_cast<size_type>(
 				(base::m_container.size() - elem.index() - 1) * base::m_distribution(base::m_engine)
 			) + elem.index() + 1;
 
 			if(index >= base::m_container.size()) index = base::m_container.size() - 1;
-			return (base::m_container.begin() + index);
+			return (base::m_container.cbegin() + index);
 		};
 
-		iterator_type pick_more(const element_type& elem) {
-			size_t index = 0;
-			if(!(elem.index() > 1)) return base::m_container.begin();
+		const_iterator_type pick_more(const element_type& elem) const {
+			size_type index = 0;
+			if(!(elem.index() > 1)) return base::m_container.cbegin();
 
-			index = static_cast<size_t>(elem.index() * base::m_distribution(base::m_engine));
+			index = static_cast<size_type>(elem.index() * base::m_distribution(base::m_engine));
 
 			if(index >= elem.index()) index = elem.index() - 1;
-			return (base::m_container.begin() + index);
+			return (base::m_container.cbegin() + index);
 		};
 
 		virtual void sort() {
