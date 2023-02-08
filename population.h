@@ -23,7 +23,7 @@ namespace uns::population {
 
 		virtual bool is_alive() const noexcept { return false; /*return ::uns::math::more(health, 0.0F);*/ };
 
-		virtual bool is_pregnant() const noexcept { return false; /*return ::uns::math::more(pregnancy, 1.0F);*/ };
+		virtual points_type points() const noexcept { return points_type{ 0 }; };
 
 		virtual void condition() noexcept {};
 	};
@@ -319,10 +319,28 @@ namespace uns::population {
 	class breed_manager {
 	public:
 		using unit_type = typename order_element_t::unit_type;
-		virtual ::std::vector<::std::shared_ptr<unit_type>> breed(order_element_t& order_element) {
-			order_element.unit().add_points(typename unit_type::points_type(-1));
-			return ::std::vector<::std::shared_ptr<unit_type>>{ ::std::shared_ptr<unit_type>{ new unit_type{} } };
+
+		virtual ::std::size_t breed(order_element_t& order_element) {
+			auto counter = 0;
+
+			if(::uns::math::more(order_element.unit().points(), static_cast<typename unit_type::points_type>(1.0F))) {
+				auto descendants = ::std::vector<::std::shared_ptr<unit_type>>{};
+				descendants.reserve(static_cast<::std::size_t>(order_element.unit().points()) + 1);
+
+				while(::uns::math::more(order_element.unit().points(), static_cast<typename unit_type::points_type>(1.0F))) {
+					order_element.unit().add_points(typename unit_type::points_type(-1));
+					descendants.push_back(::std::shared_ptr<unit_type>{ new unit_type{} });
+					++counter;
+				};
+
+				for(auto descendant : descendants) {
+					order_element.order().push(descendant);
+				};
+			};
+
+			return counter;
 		};
+
 	};
 
 
@@ -350,36 +368,22 @@ namespace uns::population {
 		using points_type = typename unit_type::points_type;
 		using health_type = typename unit_type::health_type;
 		using ration_source_type = ration_source_t;
-		using breed_manager_type = breed_manager_t;
-		using fatal_act_operator_type = fatal_act_operator_t;
+		using breeder_type = breed_manager_t;
+		using fatal_actor_type = fatal_act_operator_t;
 		using size_control_type = size_control_t;
 	public:
 		order_type units;
-		::std::deque<::std::shared_ptr<unit_type>> birth_queue;
 		ration_source_type ration_source;
-		breed_manager_type breed_manager;
-		fatal_act_operator_type fatal_act;
+		breeder_type breeder;
+		fatal_actor_type fatal_actor;
 		size_control_type barrier;
 		health_type life_decrease = 0.0F;
 	public:
 		machine(int random_seed, health_type life_decrement) : units(random_seed), life_decrease(life_decrement) {};
 	protected:
-		void breed(order_elemnt_type& element) {
-			while(element.unit().is_pregnant()) {
-				for(auto descendant : breed_manager.breed(element)) {
-					if(descendant == nullptr) continue;
-
-					birth_queue.push_back(descendant);
-				};
-			};
-		};
-
-		void life_control(order_elemnt_type& element) {
-			element.unit().damage(life_decrease);
-		};
-
 		void sanitation() {
 			::std::vector<::std::shared_ptr<unit_type>> living_units;
+			living_units.reserve(units.size());
 
 			for(auto element : units) {
 				if(element.unit().is_alive()) {
@@ -394,22 +398,33 @@ namespace uns::population {
 			};
 		};
 
-		virtual void custom_condition() { units.indexate(); };
-		virtual void custom_condition(order_elemnt_type& elem) { elem.unit().condition(); };
+		virtual void OnConditionStart() { units.indexate(); };
+		virtual void OnConditionElemStart(order_elemnt_type& elem) { elem.unit().condition(); };
+		virtual void OnConditionElemFinish(order_elemnt_type& elem) { elem.unit().condition(); };
+		virtual void OnConditionFinish() { units.indexate(); };
 	public:
 		void condition() {
-			custom_condition();
+			OnConditionStart();
 
+			auto order_elements = std::vector<order_elemnt_type>{};
+			order_elements.reserve(units.size());
 			for(auto& element : units) {
-				custom_condition(element);
+				OnConditionElemStart(element);
 				ration_source.feed(element);
-				breed(element);
-				life_control(element);
-				fatal_act(element);
+				order_elements.push_back(element);
+				element.unit().damage(life_decrease);
+				fatal_actor(element);
+				OnConditionElemFinish(element);
+			};
+
+			for(auto& element : order_elements) {
+				breeder.breed(element);
 			};
 
 			barrier(*this);
 			sanitation();
+
+			OnConditionFinish();
 		};
 	};
 };

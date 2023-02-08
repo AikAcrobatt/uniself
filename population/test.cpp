@@ -1,5 +1,6 @@
 ﻿
 #include <iostream>
+#include <chrono>
 
 #include "uniself/math.h"
 #include "uniself/population.h"
@@ -19,7 +20,7 @@ public:
 
     virtual bool is_alive() const noexcept override { return ::uns::math::more(m_health, 0.0F); };
 
-    virtual bool is_pregnant() const noexcept override { return ::uns::math::more(m_pregnancy, 1.0F); };
+    virtual points_type points() const noexcept override { return m_pregnancy; };
 
     virtual void condition() noexcept override { add_points(0.25); };
 };
@@ -63,19 +64,22 @@ int main() {
     > pop(0, 1.1F);
 
     pop.units.push(::std::shared_ptr<unit>(new unit()));
+    {
+        auto t3 = ::std::chrono::steady_clock::now();
+        auto t4 = ::std::chrono::steady_clock::now();
+        auto t1 = ::std::chrono::steady_clock::now();
+        auto cout_total = t1 - t1;
+        for(int i = 0; i < interations; i++) {
+            pop.ration_source.refresh(500);
+            pop.condition();
 
-    for(int i = 0; i < interations; i++) {
-        pop.ration_source.refresh(100);
-        pop.condition();
-
-        int j = 0;
-        while(pop.birth_queue.size() > 0) {
-            pop.units.push(pop.birth_queue[0]);
-            pop.birth_queue.pop_front();
+            t3 = ::std::chrono::steady_clock::now();
+            ::std::cout << "Iter:" << i << ", size:" << pop.units.size() << "\n";
+            t4 = ::std::chrono::steady_clock::now();
+            cout_total += (t4 - t3);
         };
-        pop.birth_queue.clear();
-
-        ::std::cout << "Iter:" << i << ", size:" << pop.units.size() << "\n";
+        auto t2 = ::std::chrono::steady_clock::now();
+        ::std::cout << static_cast<long double>(::std::chrono::duration_cast<::std::chrono::microseconds>((t2 - t1) - cout_total).count()) * 0.000001 << "\n";
     };
 
     ::std::cout << "FINISH" << "\n";
