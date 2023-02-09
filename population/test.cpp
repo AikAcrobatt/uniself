@@ -22,7 +22,7 @@ public:
 
     virtual points_type points() const noexcept override { return m_pregnancy; };
 
-    virtual void condition() noexcept override { add_points(0.25); };
+    void condition() noexcept { add_points(0.40); };
 };
 
 using order_element = ::uns::population::order_element<unit, ::uns::population::unordered_order<unit>>;
@@ -70,7 +70,10 @@ int main() {
         auto t1 = ::std::chrono::steady_clock::now();
         auto cout_total = t1 - t1;
         for(int i = 0; i < interations; i++) {
-            pop.ration_source.refresh(500);
+            pop.ration_source.refresh(100);
+            for(auto unit_ptr : pop.units) {
+                unit_ptr.unit().condition();
+            };
             pop.condition();
 
             t3 = ::std::chrono::steady_clock::now();

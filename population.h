@@ -5,7 +5,6 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
-#include <deque>
 #include <random>
 
 namespace uns::population {
@@ -24,8 +23,6 @@ namespace uns::population {
 		virtual bool is_alive() const noexcept { return false; /*return ::uns::math::more(health, 0.0F);*/ };
 
 		virtual points_type points() const noexcept { return points_type{ 0 }; };
-
-		virtual void condition() noexcept {};
 	};
 
 
@@ -323,18 +320,18 @@ namespace uns::population {
 		virtual ::std::size_t breed(order_element_t& order_element) {
 			auto counter = 0;
 
-			if(::uns::math::more(order_element.unit().points(), static_cast<typename unit_type::points_type>(1.0F))) {
+			if(::uns::math::moreeq(order_element.unit().points(), static_cast<typename unit_type::points_type>(1))) {
 				auto descendants = ::std::vector<::std::shared_ptr<unit_type>>{};
 				descendants.reserve(static_cast<::std::size_t>(order_element.unit().points()) + 1);
 
-				while(::uns::math::more(order_element.unit().points(), static_cast<typename unit_type::points_type>(1.0F))) {
+				while(::uns::math::moreeq(order_element.unit().points(), static_cast<typename unit_type::points_type>(1))) {
 					order_element.unit().add_points(typename unit_type::points_type(-1));
 					descendants.push_back(::std::shared_ptr<unit_type>{ new unit_type{} });
-					++counter;
 				};
 
 				for(auto descendant : descendants) {
 					order_element.order().push(descendant);
+					++counter;
 				};
 			};
 
@@ -382,13 +379,17 @@ namespace uns::population {
 		machine(int random_seed, health_type life_decrement) : units(random_seed), life_decrease(life_decrement) {};
 	protected:
 		void sanitation() {
+			OnSanitationStart();
+
 			::std::vector<::std::shared_ptr<unit_type>> living_units;
 			living_units.reserve(units.size());
 
-			for(auto element : units) {
-				if(element.unit().is_alive()) {
-					living_units.push_back(element.unit_ptr());
+			for(auto one_unit : units) {
+				OnSanitationUnitStart(one_unit);
+				if(one_unit.unit().is_alive()) {
+					living_units.push_back(one_unit.unit_ptr());
 				};
+				OnSanitationUnitFinish(one_unit);
 			};
 
 			units.clear();
@@ -396,35 +397,42 @@ namespace uns::population {
 			for(auto living : living_units) {
 				units.push(living);
 			};
+
+			OnSanitationFinish();
 		};
 
-		virtual void OnConditionStart() { units.indexate(); };
-		virtual void OnConditionElemStart(order_elemnt_type& elem) { elem.unit().condition(); };
-		virtual void OnConditionElemFinish(order_elemnt_type& elem) { elem.unit().condition(); };
-		virtual void OnConditionFinish() { units.indexate(); };
+		virtual void OnConditionStart() {};
+		virtual void OnConditionUnitStart(order_elemnt_type& elem) {};
+		virtual void OnConditionUnitFinish(order_elemnt_type& elem) {};
+		virtual void OnConditionFinish() {};
+		virtual void OnSanitationStart() {};
+		virtual void OnSanitationUnitStart(order_elemnt_type& elem) {};
+		virtual void OnSanitationUnitFinish(order_elemnt_type& elem) {};
+		virtual void OnSanitationFinish() { units.indexate(); };
 	public:
 		void condition() {
 			OnConditionStart();
 
-			auto order_elements = std::vector<order_elemnt_type>{};
-			order_elements.reserve(units.size());
-			for(auto& element : units) {
-				OnConditionElemStart(element);
-				ration_source.feed(element);
-				order_elements.push_back(element);
-				element.unit().damage(life_decrease);
-				fatal_actor(element);
-				OnConditionElemFinish(element);
+			auto units_list = std::vector<order_elemnt_type>{};
+			units_list.reserve(units.size());
+			for(auto one_unit : units) {
+				units_list.push_back(one_unit);
+
+				OnConditionUnitStart(one_unit);
+				ration_source.feed(one_unit);
+				one_unit.unit().damage(life_decrease);
+				fatal_actor(one_unit);
+				OnConditionUnitFinish(one_unit);
 			};
 
-			for(auto& element : order_elements) {
-				breeder.breed(element);
+			for(auto& one_unit : units_list) {
+				breeder.breed(one_unit);
 			};
+
+			OnConditionFinish();
 
 			barrier(*this);
 			sanitation();
-
-			OnConditionFinish();
 		};
 	};
 };
