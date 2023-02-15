@@ -39,13 +39,13 @@ namespace uns {
 		benum_t::_values().size();
 	}
 	&& requires(benum_t enum_obj) {
-		benum_t::_enumerated;
+		typename benum_t::_enumerated;
 	}
 	&& requires(benum_t enum_obj) {
 		{ enum_obj } -> ::std::convertible_to<typename benum_t::_enumerated>;
 	}
 	&& requires(benum_t enum_obj) {
-		benum_t::_value_iterator;
+		typename benum_t::_value_iterator;
 	}
 	&& requires(benum_t enum_obj) {
 		enum_obj._to_string();
