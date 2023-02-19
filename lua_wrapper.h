@@ -112,9 +112,11 @@ namespace uns::lua {
 
 	class value;
 
+
 	namespace auxiliary {
 		class table;
 	};
+
 
 	namespace type {
 		class nil {};
@@ -153,7 +155,9 @@ namespace uns::lua {
 		};
 	};
 
+
 	static constexpr auto nil = ::uns::lua::type::nil{};	
+
 
 	class value {
 	protected:
@@ -408,6 +412,7 @@ namespace uns::lua {
 	};
 
 
+	//definitions of ::uns::lua::type::table methods =>
 	::uns::lua::type::table::table(const ::uns::lua::type::table& obj) noexcept : m_ptr(new ::uns::lua::auxiliary::table{ *obj.m_ptr}) {};
 	::uns::lua::type::table& ::uns::lua::type::table::operator=(const ::uns::lua::type::table& obj) noexcept {
 		if(this != &obj) {
@@ -435,4 +440,108 @@ namespace uns::lua {
 	::uns::lua::value& ::uns::lua::type::table::operator[] (const ::uns::lua::value& key) noexcept { return m_ptr->operator[](key); };
 
 	::std::size_t uns::lua::type::table::size() const noexcept { return m_ptr->size(); };
+	//<= definitions of ::uns::lua::type::table methods 
+
+
+	namespace auxiliary {
+
+		class state {
+		protected:
+			lua_State* m_state = nullptr;
+			bool m_copied = false;
+		public:
+			state() noexcept :
+				m_state(luaL_newstate()),
+				m_copied(false)
+			{};
+			state(const ::uns::lua::auxiliary::state& obj) noexcept :
+				m_state(lua_newthread(obj.m_state)),
+				m_copied(true)
+			{};
+			::uns::lua::auxiliary::state& operator=(const ::uns::lua::auxiliary::state& obj) noexcept {
+				if(this != &obj) {
+					reset();
+					m_state = lua_newthread(obj.m_state);
+					m_copied = true;
+				};
+				return *this;
+			};
+			state(::uns::lua::auxiliary::state&& obj) noexcept :
+				m_state(obj.m_state),
+				m_copied(true) 
+			{ 
+				obj.m_state = nullptr; 
+				obj.m_copied = false;
+			};
+			::uns::lua::auxiliary::state& operator=(::uns::lua::auxiliary::state&& obj) noexcept {
+				if(this != &obj) {
+					std::swap(m_state, obj.m_state);
+					std::swap(m_copied, obj.m_copied);
+				};
+				return *this;
+			};
+			~state() {
+				reset();
+			};
+
+			const lua_State* get() const noexcept { return m_state; };
+			lua_State* get() noexcept { return m_state; };
+		protected:
+			void reset() noexcept {
+				if(m_state != nullptr) {
+					if(!m_copied) {
+						lua_close(m_state);
+					};
+				};
+			};
+		};
+
+	};
+
+
+	class script;
+
+
+	class function {
+		friend ::uns::lua::script;
+
+		::std::shared_ptr<::uns::lua::auxiliary::state> m_script = nullptr;
+		::std::shared_ptr<::uns::lua::auxiliary::state> m_stack = nullptr;
+		::std::u8string m_function_name = u8"";
+		::uns::lua::error m_err;
+
+		int m_function_idx = 0;
+		int m_results_total = 0;
+	public:
+		function() noexcept {};
+	protected:
+		function(const ::std::shared_ptr<::uns::lua::auxiliary::state>& lua_script, const ::std::u8string& lua_global_function_name) noexcept :
+			m_script(lua_script),
+			m_function_name(lua_global_function_name),
+			m_stack(::std::shared_ptr<::uns::lua::auxiliary::state>{})
+		{
+			if(lua_script != nullptr) {
+				*m_stack = *lua_script;
+			};
+		};
+	public:
+		function(const function&) noexcept = default;
+		function& operator=(const function&) noexcept = default;
+		function(function&& obj) noexcept = default;
+		function& operator=(function&& obj) noexcept = default;
+		~function() noexcept {
+			reset();
+		};
+
+		bool valid() const noexcept { return m_stack != nullptr; };
+	protected:
+		void reset() noexcept {
+			if(valid()) {
+				if(m_function_idx != 0) {
+					lua_pop(m_stack->get(), m_function_idx >= 0 ? m_function_idx : -m_function_idx);
+				};
+				lua_gc(m_stack->get(), LUA_GCCOLLECT);
+			};
+		};
+	};
 };
