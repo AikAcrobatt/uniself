@@ -22,12 +22,18 @@ namespace uns::lua {
 		errrun = LUA_ERRRUN,
 		errsyntax = LUA_ERRSYNTAX,
 		errmem = LUA_ERRMEM,
-		errerr = LUA_ERRERR
+		errerr = LUA_ERRERR,
+		errcall
 	);
 
 
 	UNS_BENUM_DECLARATOR(errtype, int,
-		ok = 0x0
+		ok = 0x0,
+		lua_specific,
+		invalid,
+		uncallable,
+		unrepresentable,
+		not_found
 	);
 
 
@@ -80,7 +86,7 @@ namespace uns::lua {
 			::std::swap(m_type, obj.m_type);
 		};
 
-		bool is() const noexcept { return m_code != ::uns::lua::errcode::ok; };
+		bool is() const noexcept { return (m_code != ::uns::lua::errcode::ok) || (m_type != ::uns::lua::errtype::ok); };
 
 		::uns::lua::errcode code() const noexcept { return m_code; };
 		::uns::lua::errtype type() const noexcept { return m_type; };
@@ -122,9 +128,9 @@ namespace uns::lua {
 		class nil {};
 
 		using boolean = bool;
-		using number = double;
-		using integer = long long int;
-		using string = ::std::u8string;
+		using number = lua_Number;
+		using integer = lua_Integer;
+		using string = ::std::string;
 
 		class table {
 		protected:
@@ -507,15 +513,12 @@ namespace uns::lua {
 
 		::std::shared_ptr<::uns::lua::auxiliary::state> m_script = nullptr;
 		::std::shared_ptr<::uns::lua::auxiliary::state> m_stack = nullptr;
-		::std::u8string m_function_name = u8"";
+		::std::string m_function_name = "";
 		::uns::lua::error m_err;
-
-		int m_function_idx = 0;
-		int m_results_total = 0;
 	public:
 		function() noexcept {};
 	protected:
-		function(const ::std::shared_ptr<::uns::lua::auxiliary::state>& lua_script, const ::std::u8string& lua_global_function_name) noexcept :
+		function(const ::std::shared_ptr<::uns::lua::auxiliary::state>& lua_script, const ::std::string& lua_global_function_name) noexcept :
 			m_script(lua_script),
 			m_function_name(lua_global_function_name),
 			m_stack(::std::shared_ptr<::uns::lua::auxiliary::state>{})
@@ -530,17 +533,133 @@ namespace uns::lua {
 		function(function&& obj) noexcept = default;
 		function& operator=(function&& obj) noexcept = default;
 		~function() noexcept {
-			reset();
+			lua_gc(m_stack->get(), LUA_GCCOLLECT);
 		};
 
+		const ::uns::lua::error& error() const noexcept { return m_err; };
+		::uns::lua::error& error() noexcept { return m_err; };
+
+		::std::u8string name() const noexcept { return ::uns::string::u8_cast<::std::u8string>(m_function_name); };
+
 		bool valid() const noexcept { return m_stack != nullptr; };
-	protected:
-		void reset() noexcept {
-			if(valid()) {
-				if(m_function_idx != 0) {
-					lua_pop(m_stack->get(), m_function_idx >= 0 ? m_function_idx : -m_function_idx);
+
+		::std::vector<::uns::lua::value> operator() (const ::std::size_t expected_results, const ::std::vector<::uns::lua::value>& args) noexcept {
+			m_err = ::uns::lua::error{};
+
+			if(!valid()) {
+				m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid };
+				return ::std::vector<::uns::lua::value>{};
+			};
+
+			lua_getglobal(m_stack->get(), m_function_name.c_str());
+			const ::std::size_t function_idx = lua_gettop(m_stack->get());
+
+			if(!lua_isfunction(m_stack->get(), function_idx)) {
+				if(!lua_isnil(m_stack->get(), function_idx)) {
+					m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::uncallable };
+					return ::std::vector<::uns::lua::value>{};
+				}
+				else {
+					m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::not_found };
+					return ::std::vector<::uns::lua::value>{};
 				};
+			};
+
+			for(const auto& arg : args) {
+				this->push_value(arg);
+			};
+
+			if(int lua_retcode = lua_pcall(m_stack->get(), args.size(), expected_results, 0); lua_retcode != LUA_OK) {
+				std::string err_str = "";
+				if(lua_isstring(m_stack->get(), -1)) {
+					err_str = lua_tostring(m_stack->get(), -1);
+				};
+
+				lua_pop(m_stack->get(), static_cast<int>(function_idx));
 				lua_gc(m_stack->get(), LUA_GCCOLLECT);
+
+				m_err = { static_cast<::uns::lua::errcode::_enumerated>(lua_retcode), ::uns::lua::errtype::lua_specific, ::uns::string::u8_cast<::std::u8string>(err_str) };
+				return ::std::vector<::uns::lua::value>{};
+			};
+
+			auto results = ::std::vector<::uns::lua::value>{};
+			results.reserve(expected_results);
+			for(auto idx = function_idx; idx <= lua_gettop(m_stack->get()) && idx < function_idx + expected_results; ++idx) {
+				results.push_back(this->to_value(idx));
+			};
+
+			lua_pop(m_stack->get(), static_cast<int>(function_idx));
+			lua_gc(m_stack->get(), LUA_GCCOLLECT);
+
+			return results;
+		};
+	protected:
+		void push_value(const ::uns::lua::value& value) noexcept {
+			switch(value.type()) {
+				default:
+				case ::uns::lua::value_type::nil:
+				{
+					lua_pushnil(m_stack->get());
+					break;
+				}
+				case ::uns::lua::value_type::number:
+				{
+					lua_pushnumber(m_stack->get(), static_cast<::uns::lua::type::number>(value));
+					break;
+				}
+				case ::uns::lua::value_type::integer:
+				{
+					lua_pushinteger(m_stack->get(), static_cast<::uns::lua::type::integer>(value));
+					break;
+				}
+				case ::uns::lua::value_type::string:
+				{
+					lua_pushstring(m_stack->get(), static_cast<::uns::lua::type::string>(value).c_str());
+					break;
+				}
+				case ::uns::lua::value_type::boolean:
+				{
+					lua_pushboolean(m_stack->get(), static_cast<::uns::lua::type::boolean>(value));
+					break;
+				}
+				case ::uns::lua::value_type::table:
+				{
+					lua_newtable(m_stack->get());
+					//TODO it requires some methods to run over the table type
+					break;
+				}
+			};
+		};
+
+		::uns::lua::value to_value(::std::size_t idx) noexcept {
+			switch(lua_type(m_stack->get(), static_cast<int>(idx))) {
+				default:
+				case LUA_TNIL:
+				{
+					return ::uns::lua::nil;
+				}
+				case LUA_TNUMBER:
+				{
+					if(lua_isinteger(m_stack->get(), static_cast<int>(idx))) {
+						return ::uns::lua::value{ lua_tointeger(m_stack->get(), static_cast<int>(idx)) };
+					}
+					else {
+						return ::uns::lua::value{ lua_tonumber(m_stack->get(), static_cast<int>(idx)) };
+					};
+				}
+				case LUA_TSTRING:
+				{
+					return ::uns::lua::value{ static_cast<::uns::lua::type::string>(lua_tostring(m_stack->get(), static_cast<int>(idx))) };
+				}
+				case LUA_TBOOLEAN:
+				{
+					return ::uns::lua::value{ static_cast<::uns::lua::type::boolean>(lua_toboolean(m_stack->get(), static_cast<int>(idx))) };
+				}
+				case LUA_TTABLE:
+				{
+					//TODO it requires some methods to run over the table type
+					return ::uns::lua::value{};
+				}
 			};
 		};
 	};
