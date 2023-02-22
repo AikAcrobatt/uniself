@@ -669,7 +669,7 @@ namespace uns::lua {
 			};
 
 			lua_getglobal(m_stack->get(), m_function_name.c_str());
-			const ::std::size_t function_idx = lua_gettop(m_stack->get());
+			const auto function_idx = lua_gettop(m_stack->get());
 
 			if(!lua_isfunction(m_stack->get(), function_idx)) {
 				if(!lua_isnil(m_stack->get(), function_idx)) {
@@ -692,7 +692,9 @@ namespace uns::lua {
 					err_str = lua_tostring(m_stack->get(), -1);
 				};
 
-				lua_pop(m_stack->get(), static_cast<int>(function_idx));	//TODO to enshure this is what is really meant
+				if(function_idx - lua_gettop(m_stack->get()) < 0) {
+					lua_pop(m_stack->get(), function_idx - lua_gettop(m_stack->get()));
+				};
 
 				m_err = { static_cast<::uns::lua::errcode::_enumerated>(lua_retcode), ::uns::lua::errtype::lua_specific, ::uns::string::u8_cast<::std::u8string>(err_str) };
 				return ::std::vector<::uns::lua::value>{};
@@ -700,18 +702,23 @@ namespace uns::lua {
 
 			auto results = ::std::vector<::uns::lua::value>{};
 			results.reserve(expected_results);
-			for(auto idx = function_idx; idx <= lua_gettop(m_stack->get()) && idx < function_idx + expected_results; ++idx) {
+			for(auto idx = function_idx + 1; idx <= lua_gettop(m_stack->get()) && idx <= function_idx + expected_results; ++idx) {
 				results.push_back(this->to_value(idx));
 			};
 
-			lua_pop(m_stack->get(), static_cast<int>(function_idx));
-			lua_gc(m_stack->get(), LUA_GCCOLLECT);
+			if(function_idx - lua_gettop(m_stack->get()) < 0) {
+				lua_pop(m_stack->get(), function_idx - lua_gettop(m_stack->get()));
+			};
 
 			return results;
 		};
+
+		void gc() noexcept {
+			lua_gc(m_stack->get(), LUA_GCCOLLECT);
+		};
 	protected:
-		::uns::lua::value to_value(::std::size_t idx) noexcept {
-			switch(lua_type(m_stack->get(), static_cast<int>(idx))) {
+		::uns::lua::value to_value(int idx) noexcept {
+			switch(lua_type(m_stack->get(), idx)) {
 				default:
 				case LUA_TNIL:
 				{
@@ -719,25 +726,61 @@ namespace uns::lua {
 				}
 				case LUA_TNUMBER:
 				{
-					if(lua_isinteger(m_stack->get(), static_cast<int>(idx))) {
-						return ::uns::lua::value{ lua_tointeger(m_stack->get(), static_cast<int>(idx)) };
+					if(lua_isinteger(m_stack->get(), idx)) {
+						return ::uns::lua::value{ lua_tointeger(m_stack->get(), idx) };
 					}
 					else {
-						return ::uns::lua::value{ lua_tonumber(m_stack->get(), static_cast<int>(idx)) };
+						return ::uns::lua::value{ lua_tonumber(m_stack->get(), idx) };
 					};
 				}
 				case LUA_TSTRING:
 				{
-					return ::uns::lua::value{ static_cast<::uns::lua::type::string>(lua_tostring(m_stack->get(), static_cast<int>(idx))) };
+					return ::uns::lua::value{ static_cast<::uns::lua::type::string>(lua_tostring(m_stack->get(), idx)) };
 				}
 				case LUA_TBOOLEAN:
 				{
-					return ::uns::lua::value{ static_cast<::uns::lua::type::boolean>(lua_toboolean(m_stack->get(), static_cast<int>(idx))) };
+					return ::uns::lua::value{ static_cast<::uns::lua::type::boolean>(lua_toboolean(m_stack->get(), idx)) };
 				}
 				case LUA_TTABLE:
 				{
-					//TODO it requires some methods to run over the table type
-					return ::uns::lua::value{};
+					auto res = ::uns::lua::type::table{};
+
+					lua_pushnil(m_stack->get());
+					while(lua_next(m_stack->get(), idx) != 0) {
+						auto key_idx = lua_gettop(m_stack->get()) - 1;
+						auto val_idx = lua_gettop(m_stack->get());
+
+						switch(lua_type(m_stack->get(), key_idx)) {
+							default:
+							case LUA_TNIL:
+							{
+								break;
+							}
+							case LUA_TNUMBER:
+							{
+								if(lua_isinteger(m_stack->get(), key_idx)) {
+									res[lua_tointeger(m_stack->get(), key_idx)] = to_value(val_idx);
+								}
+								else {
+									res[lua_tonumber(m_stack->get(), key_idx)] = to_value(val_idx);
+								};
+
+								break;
+							}
+							case LUA_TSTRING:
+							{
+								res[static_cast<::uns::lua::type::string>(lua_tostring(m_stack->get(), key_idx))] = to_value(val_idx);
+								break;
+							}
+							case LUA_TBOOLEAN:
+							{
+								res[static_cast<::uns::lua::type::boolean>(lua_toboolean(m_stack->get(), key_idx))] = to_value(val_idx);
+								break;
+							}
+						};
+					};
+
+					return ::uns::lua::value{ res };
 				}
 			};
 		};
