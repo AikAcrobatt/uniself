@@ -42,12 +42,12 @@ namespace uns::lua {
 	protected:
 		::uns::lua::errcode m_code = ::uns::lua::errcode::ok;
 		::uns::lua::errtype m_type = ::uns::lua::errtype::ok;
-		::std::u8string m_text = u8"";
+		::std::string m_text = "";
 	public:
 		error(
 			const ::uns::lua::errcode& code = ::uns::lua::errcode::ok,
 			const ::uns::lua::errtype& type = ::uns::lua::errtype::ok,
-			const ::std::u8string text = u8""
+			const ::std::string text = ""
 		) noexcept :
 			m_text(text),
 			m_code(code),
@@ -91,7 +91,7 @@ namespace uns::lua {
 
 		::uns::lua::errcode code() const noexcept { return m_code; };
 		::uns::lua::errtype type() const noexcept { return m_type; };
-		::std::u8string text() const noexcept { return m_text; };
+		::std::string text() const noexcept { return m_text; };
 
 		::std::u8string to_string() const {
 			static const auto bracket_op = ::std::u8string{ u8"["};
@@ -102,7 +102,7 @@ namespace uns::lua {
 
 			return bracket_op + err_w + ::uns::string::u8_cast<::std::u8string>(m_code) + comma
 				+ type_w + ::uns::string::u8_cast<::std::u8string>(m_type) + bracket_cl
-				+ m_text;
+				+ ::uns::string::u8_cast<::std::u8string>(m_text);
 		};
 	};
 
@@ -331,17 +331,12 @@ namespace uns::lua {
 		};
 
 #define UNS_LUA_VALUE_CONVERT_DECLARATOR(type_identifier)										\
-		operator ::uns::lua::type::##type_identifier() const noexcept {							\
-			if(m_type == ::uns::lua::value_type::##type_identifier) {							\
-				return m_##type_identifier;														\
-			}																					\
-			else {																				\
-				return ::uns::lua::type::##type_identifier{};									\
-			};																					\
-		};							\
+		operator const ::uns::lua::type::##type_identifier&() const noexcept {					\
+			return m_##type_identifier;															\
+		};																						\
 		operator ::uns::lua::type::##type_identifier&() noexcept {								\
 			return m_##type_identifier;															\
-		};								\
+		};																						\
 
 		UNS_LUA_VALUE_CONVERT_DECLARATOR(boolean);
 		UNS_LUA_VALUE_CONVERT_DECLARATOR(number);
@@ -392,8 +387,8 @@ namespace uns::lua {
 			lua_newtable(lua_state.get());
 
 			for(
-				auto iterator = static_cast<::uns::lua::type::table>(value).cbegin<::uns::lua::type::number>();
-				iterator != static_cast<::uns::lua::type::table>(value).cend<::uns::lua::type::number>();
+				auto iterator = static_cast<const ::uns::lua::type::table&>(value).cbegin<::uns::lua::type::number>();
+				iterator != static_cast<const ::uns::lua::type::table&>(value).cend<::uns::lua::type::number>();
 				++iterator
 			) {
 				lua_pushnumber(lua_state.get(), iterator->first);
@@ -402,8 +397,8 @@ namespace uns::lua {
 			};
 
 			for(
-				auto iterator = static_cast<::uns::lua::type::table>(value).cbegin<::uns::lua::type::integer>();
-				iterator != static_cast<::uns::lua::type::table>(value).cend<::uns::lua::type::integer>();
+				auto iterator = static_cast<const ::uns::lua::type::table&>(value).cbegin<::uns::lua::type::integer>();
+				iterator != static_cast<const ::uns::lua::type::table&>(value).cend<::uns::lua::type::integer>();
 				++iterator
 			) {
 				lua_pushinteger(lua_state.get(), iterator->first);
@@ -412,8 +407,8 @@ namespace uns::lua {
 			};
 
 			for(
-				auto iterator = static_cast<::uns::lua::type::table>(value).cbegin<::uns::lua::type::boolean>();
-				iterator != static_cast<::uns::lua::type::table>(value).cend<::uns::lua::type::boolean>();
+				auto iterator = static_cast<const ::uns::lua::type::table&>(value).cbegin<::uns::lua::type::boolean>();
+				iterator != static_cast<const ::uns::lua::type::table&>(value).cend<::uns::lua::type::boolean>();
 				++iterator
 			) {
 				lua_pushboolean(lua_state.get(), iterator->first);
@@ -422,8 +417,8 @@ namespace uns::lua {
 			};
 
 			for(
-				auto iterator = static_cast<::uns::lua::type::table>(value).cbegin<::uns::lua::type::string>();
-				iterator != static_cast<::uns::lua::type::table>(value).cend<::uns::lua::type::string>();
+				auto iterator = static_cast<const ::uns::lua::type::table&>(value).cbegin<::uns::lua::type::string>();
+				iterator != static_cast<const ::uns::lua::type::table&>(value).cend<::uns::lua::type::string>();
 				++iterator
 			) {
 				lua_pushstring(lua_state.get(), iterator->first.c_str());
@@ -700,7 +695,7 @@ namespace uns::lua {
 					lua_pop(m_stack->get(), function_idx - lua_gettop(m_stack->get()));
 				};
 
-				m_err = { static_cast<::uns::lua::errcode::_enumerated>(lua_retcode), ::uns::lua::errtype::lua_specific, ::uns::string::u8_cast<::std::u8string>(err_str) };
+				m_err = { static_cast<::uns::lua::errcode::_enumerated>(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
 				return ::std::vector<::uns::lua::value>{};
 			};
 
