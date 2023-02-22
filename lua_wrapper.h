@@ -394,6 +394,7 @@ namespace uns::lua {
 			for(
 				auto iterator = static_cast<::uns::lua::type::table>(value).cbegin<::uns::lua::type::number>();
 				iterator != static_cast<::uns::lua::type::table>(value).cend<::uns::lua::type::number>();
+				++iterator
 			) {
 				lua_pushnumber(lua_state.get(), iterator->first);
 				iterator->second.push_to(lua_state);
@@ -403,6 +404,7 @@ namespace uns::lua {
 			for(
 				auto iterator = static_cast<::uns::lua::type::table>(value).cbegin<::uns::lua::type::integer>();
 				iterator != static_cast<::uns::lua::type::table>(value).cend<::uns::lua::type::integer>();
+				++iterator
 			) {
 				lua_pushinteger(lua_state.get(), iterator->first);
 				iterator->second.push_to(lua_state);
@@ -412,6 +414,7 @@ namespace uns::lua {
 			for(
 				auto iterator = static_cast<::uns::lua::type::table>(value).cbegin<::uns::lua::type::boolean>();
 				iterator != static_cast<::uns::lua::type::table>(value).cend<::uns::lua::type::boolean>();
+				++iterator
 			) {
 				lua_pushboolean(lua_state.get(), iterator->first);
 				iterator->second.push_to(lua_state);
@@ -421,6 +424,7 @@ namespace uns::lua {
 			for(
 				auto iterator = static_cast<::uns::lua::type::table>(value).cbegin<::uns::lua::type::string>();
 				iterator != static_cast<::uns::lua::type::table>(value).cend<::uns::lua::type::string>();
+				++iterator
 			) {
 				lua_pushstring(lua_state.get(), iterator->first.c_str());
 				iterator->second.push_to(lua_state);
