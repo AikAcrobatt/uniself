@@ -367,6 +367,7 @@ namespace uns::lua {
 			m_push_function(lua_state, *this);
 		};
 
+		static ::uns::lua::value make_from(::uns::lua::auxiliary::state& lua_state, int idx) noexcept;
 	protected:
 		static void push_nil(::uns::lua::auxiliary::state& lua_state, const ::uns::lua::value& value) noexcept {
 			lua_pushnil(lua_state.get());
@@ -620,6 +621,75 @@ namespace uns::lua {
 	::uns::lua::type::table::iterator<key_t> uns::lua::type::table::end() noexcept { return m_ptr->end<key_t>(); };
 	//<= definitions of ::uns::lua::type::table methods 
 
+	//definition of ::uns::lua::value::to_value
+	::uns::lua::value uns::lua::value::make_from(::uns::lua::auxiliary::state& lua_state, int idx) noexcept {
+		switch(lua_type(lua_state.get(), idx)) {
+			default:
+			case LUA_TNIL:
+			{
+				return ::uns::lua::nil;
+			}
+			case LUA_TNUMBER:
+			{
+				if(lua_isinteger(lua_state.get(), idx)) {
+					return ::uns::lua::value{ lua_tointeger(lua_state.get(), idx) };
+				}
+				else {
+					return ::uns::lua::value{ lua_tonumber(lua_state.get(), idx) };
+				};
+			}
+			case LUA_TSTRING:
+			{
+				return ::uns::lua::value{ static_cast<::uns::lua::type::string>(lua_tostring(lua_state.get(), idx)) };
+			}
+			case LUA_TBOOLEAN:
+			{
+				return ::uns::lua::value{ static_cast<::uns::lua::type::boolean>(lua_toboolean(lua_state.get(), idx)) };
+			}
+			case LUA_TTABLE:
+			{
+				auto res = ::uns::lua::type::table{};
+
+				lua_pushnil(lua_state.get());
+				while(lua_next(lua_state.get(), idx) != 0) {
+					auto key_idx = lua_gettop(lua_state.get()) - 1;
+					auto val_idx = lua_gettop(lua_state.get());
+
+					switch(lua_type(lua_state.get(), key_idx)) {
+						default:
+						case LUA_TNIL:
+						{
+							break;
+						}
+						case LUA_TNUMBER:
+						{
+							if(lua_isinteger(lua_state.get(), key_idx)) {
+								res[lua_tointeger(lua_state.get(), key_idx)] = ::uns::lua::value::make_from(lua_state, val_idx);
+							}
+							else {
+								res[lua_tonumber(lua_state.get(), key_idx)] = ::uns::lua::value::make_from(lua_state, val_idx);
+							};
+
+							break;
+						}
+						case LUA_TSTRING:
+						{
+							res[static_cast<::uns::lua::type::string>(lua_tostring(lua_state.get(), key_idx))] = ::uns::lua::value::make_from(lua_state, val_idx);
+							break;
+						}
+						case LUA_TBOOLEAN:
+						{
+							res[static_cast<::uns::lua::type::boolean>(lua_toboolean(lua_state.get(), key_idx))] = ::uns::lua::value::make_from(lua_state, val_idx);
+							break;
+						}
+					};
+				};
+
+				return ::uns::lua::value{ res };
+			}
+		};
+	};
+
 
 	class script;
 
@@ -627,7 +697,6 @@ namespace uns::lua {
 	class function {
 		friend ::uns::lua::script;
 
-		::std::shared_ptr<::uns::lua::auxiliary::state> m_script = nullptr;
 		::std::shared_ptr<::uns::lua::auxiliary::state> m_stack = nullptr;
 		::std::string m_function_name = "";
 		::uns::lua::error m_err;
@@ -635,7 +704,6 @@ namespace uns::lua {
 		function() noexcept {};
 	protected:
 		function(const ::std::shared_ptr<::uns::lua::auxiliary::state>& lua_script, const ::std::string& lua_global_function_name) noexcept :
-			m_script(lua_script),
 			m_function_name(lua_global_function_name),
 			m_stack(::std::shared_ptr<::uns::lua::auxiliary::state>{})
 		{//TODO to rewrite this constructor with script first argument eliminating friend directive
@@ -644,10 +712,10 @@ namespace uns::lua {
 			};
 		};
 	public:
-		function(const function&) noexcept = default;
-		function& operator=(const function&) noexcept = default;
-		function(function&& obj) noexcept = default;
-		function& operator=(function&& obj) noexcept = default;
+		function(const ::uns::lua::function&) noexcept = default;
+		::uns::lua::function& operator=(const ::uns::lua::function&) noexcept = default;
+		function(::uns::lua::function&& obj) noexcept = default;
+		::uns::lua::function& operator=(::uns::lua::function&& obj) noexcept = default;
 		~function() noexcept {
 			lua_gc(m_stack->get(), LUA_GCCOLLECT);
 		};
@@ -682,7 +750,7 @@ namespace uns::lua {
 			};
 
 			for(const auto& arg : args) {
-				arg.push_to(*m_script);
+				arg.push_to(*m_stack);
 			};
 
 			if(int lua_retcode = lua_pcall(m_stack->get(), args.size(), expected_results, 0); lua_retcode != LUA_OK) {
@@ -702,7 +770,7 @@ namespace uns::lua {
 			auto results = ::std::vector<::uns::lua::value>{};
 			results.reserve(expected_results);
 			for(auto idx = function_idx + 1; idx <= lua_gettop(m_stack->get()) && idx <= function_idx + expected_results; ++idx) {
-				results.push_back(this->to_value(idx));
+				results.push_back(::uns::lua::value::make_from(*m_stack, idx));
 			};
 
 			if(function_idx - lua_gettop(m_stack->get()) < 0) {
@@ -715,73 +783,80 @@ namespace uns::lua {
 		void gc() noexcept {
 			lua_gc(m_stack->get(), LUA_GCCOLLECT);
 		};
+	};
+
+
+	class global {
+		friend ::uns::lua::script;
+
+		::std::shared_ptr<::uns::lua::auxiliary::state> m_stack = nullptr;
+		::std::string m_global_name = "";
+		::uns::lua::error m_err;
+	public:
+		global() noexcept {};
 	protected:
-		::uns::lua::value to_value(int idx) noexcept {
-			switch(lua_type(m_stack->get(), idx)) {
-				default:
-				case LUA_TNIL:
-				{
-					return ::uns::lua::nil;
-				}
-				case LUA_TNUMBER:
-				{
-					if(lua_isinteger(m_stack->get(), idx)) {
-						return ::uns::lua::value{ lua_tointeger(m_stack->get(), idx) };
-					}
-					else {
-						return ::uns::lua::value{ lua_tonumber(m_stack->get(), idx) };
-					};
-				}
-				case LUA_TSTRING:
-				{
-					return ::uns::lua::value{ static_cast<::uns::lua::type::string>(lua_tostring(m_stack->get(), idx)) };
-				}
-				case LUA_TBOOLEAN:
-				{
-					return ::uns::lua::value{ static_cast<::uns::lua::type::boolean>(lua_toboolean(m_stack->get(), idx)) };
-				}
-				case LUA_TTABLE:
-				{
-					auto res = ::uns::lua::type::table{};
-
-					lua_pushnil(m_stack->get());
-					while(lua_next(m_stack->get(), idx) != 0) {
-						auto key_idx = lua_gettop(m_stack->get()) - 1;
-						auto val_idx = lua_gettop(m_stack->get());
-
-						switch(lua_type(m_stack->get(), key_idx)) {
-							default:
-							case LUA_TNIL:
-							{
-								break;
-							}
-							case LUA_TNUMBER:
-							{
-								if(lua_isinteger(m_stack->get(), key_idx)) {
-									res[lua_tointeger(m_stack->get(), key_idx)] = to_value(val_idx);
-								}
-								else {
-									res[lua_tonumber(m_stack->get(), key_idx)] = to_value(val_idx);
-								};
-
-								break;
-							}
-							case LUA_TSTRING:
-							{
-								res[static_cast<::uns::lua::type::string>(lua_tostring(m_stack->get(), key_idx))] = to_value(val_idx);
-								break;
-							}
-							case LUA_TBOOLEAN:
-							{
-								res[static_cast<::uns::lua::type::boolean>(lua_toboolean(m_stack->get(), key_idx))] = to_value(val_idx);
-								break;
-							}
-						};
-					};
-
-					return ::uns::lua::value{ res };
-				}
+		global(const ::std::shared_ptr<::uns::lua::auxiliary::state>& lua_script, const ::std::string& lua_global_variable_name) noexcept :
+			m_global_name(lua_global_variable_name),
+			m_stack(::std::shared_ptr<::uns::lua::auxiliary::state>{})
+		{//TODO to rewrite this constructor with script first argument eliminating friend directive
+			if(lua_script != nullptr) {
+				*m_stack = *lua_script;
 			};
+		};
+	public:
+		global(const global&) noexcept = default;
+		global& operator=(const global&) noexcept = default;
+		global(global&& obj) noexcept = default;
+		global& operator=(global&& obj) noexcept = default;
+		~global() noexcept {
+			lua_gc(m_stack->get(), LUA_GCCOLLECT);
+		};
+
+		const ::uns::lua::error& error() const noexcept { return m_err; };
+		::uns::lua::error& error() noexcept { return m_err; };
+
+		::std::u8string name() const noexcept { return ::uns::string::u8_cast<::std::u8string>(m_global_name); };
+
+		bool valid() const noexcept { return m_stack != nullptr; };
+
+		::uns::lua::value get() noexcept {
+			m_err = ::uns::lua::error{};
+
+			if(!valid()) {
+				m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid };
+				return ::uns::lua::value{};
+			};
+
+			lua_getglobal(m_stack->get(), m_global_name.c_str());
+			auto global_idx = lua_gettop(m_stack->get());
+						
+			if(lua_isnil(m_stack->get(), global_idx)) {
+				m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::not_found };
+				return ::uns::lua::value{};
+			};
+
+			if(
+				!(
+					lua_isnil(m_stack->get(), global_idx)
+					|| lua_isnumber(m_stack->get(), global_idx)
+					|| lua_isinteger(m_stack->get(), global_idx)
+					|| lua_isboolean(m_stack->get(), global_idx)
+					|| lua_isstring(m_stack->get(), global_idx)
+					|| lua_istable(m_stack->get(), global_idx)
+				)
+			) {
+				m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::unrepresentable };
+				return ::uns::lua::value{};
+			};
+
+			auto result = ::uns::lua::value::make_from(*m_stack, global_idx);
+			lua_pop(m_stack->get(), -1);
+
+			return result;
+		};
+
+		void gc() noexcept {
+			lua_gc(m_stack->get(), LUA_GCCOLLECT);
 		};
 	};
 };
