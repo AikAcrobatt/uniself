@@ -256,6 +256,7 @@ namespace uns::lua {
 		push_function_type m_push_function = push_nil;
 	public:
 		value() noexcept {};
+		/*
 #define UNS_LUA_VALUE_INIT_DECLARATOR(type_identifier)											\
 		value(const ::uns::lua::type::##type_identifier& obj) noexcept :						\
 			m_type(::uns::lua::value_type::##type_identifier),									\
@@ -269,12 +270,48 @@ namespace uns::lua {
 		UNS_LUA_VALUE_INIT_DECLARATOR(string);
 		UNS_LUA_VALUE_INIT_DECLARATOR(table);
 #undef UNS_LUA_VALUE_INIT_DECLARATOR
-
+*/
+		template<typename val_t>
+		requires(::std::integral<val_t> && !::std::same_as<bool, val_t>)
+		value(val_t obj) noexcept : 
+			m_type(::uns::lua::value_type::integer), 
+			m_integer(static_cast<::uns::lua::type::integer>(obj)), 
+			m_push_function(push_integer)												
+		{};
+		template<::std::floating_point val_t>
+		value(val_t obj) noexcept :
+			m_type(::uns::lua::value_type::number),
+			m_number(static_cast<::uns::lua::type::number>(obj)),
+			m_push_function(push_number)
+		{};
+		template<::std::same_as<bool> val_t>
+		value(val_t obj) noexcept :
+			m_type(::uns::lua::value_type::boolean),
+			m_boolean(obj),
+			m_push_function(push_boolean)
+		{};
+		value(const ::std::string obj) noexcept :
+			m_type(::uns::lua::value_type::string),
+			m_string(obj),
+			m_push_function(push_string)
+		{};
+		value(const char* obj) noexcept : value(::std::string{ obj } ) {};
+		value(const ::std::string_view obj) noexcept :
+			m_type(::uns::lua::value_type::string),
+			m_string(obj),
+			m_push_function(push_string)
+		{};
+		value(const ::std::u8string obj) noexcept : value(::uns::string::u8_cast<::std::string>(obj)) {};
+		value(const char8_t* obj) noexcept : value(::std::u8string{ obj }) {};
+		value(const ::uns::lua::type::table& obj) noexcept :
+			m_type(::uns::lua::value_type::table),
+			m_table(obj),
+			m_push_function(push_table)
+		{};
 		value(const ::uns::lua::type::nil& obj) noexcept :
 			m_type(::uns::lua::value_type::nil),
 			m_push_function(push_nil)
 		{};
-
 		value(const ::uns::lua::value& obj) noexcept :
 			m_type(obj.m_type),
 			m_boolean(obj.m_boolean),
@@ -766,7 +803,7 @@ namespace uns::lua {
 
 			auto results = ::std::vector<::uns::lua::value>{};
 			results.reserve(expected_results);
-			for(auto idx = function_idx + 1; idx <= lua_gettop(m_stack->get()) && idx <= function_idx + expected_results; ++idx) {
+			for(auto idx = function_idx; idx <= lua_gettop(m_stack->get()) && idx <= function_idx + expected_results - 1; ++idx) {
 				results.push_back(::uns::lua::value::make_from(*m_stack, idx));
 			};
 
