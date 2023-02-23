@@ -1,8 +1,9 @@
 #pragma once
 
 #include <iostream>
-#include <unordered_map>
 #include <concepts>
+#include <filesystem>
+#include <unordered_map>
 
 extern "C" {
 #include "lua.h"
@@ -130,7 +131,10 @@ namespace uns::lua {
 		public:
 			state() noexcept :
 				m_state(luaL_newstate()),
-				m_copied(false) {};
+				m_copied(false)
+			{
+				luaL_openlibs(m_state);
+			};
 			state(const ::uns::lua::auxiliary::state& obj) noexcept :
 				m_state(lua_newthread(obj.m_state)),
 				m_copied(true)
@@ -190,18 +194,18 @@ namespace uns::lua {
 				|| ::std::same_as<::uns::lua::type::integer, key_t>
 				|| ::std::same_as<::uns::lua::type::boolean, key_t>
 				|| ::std::same_as<::uns::lua::type::string, key_t>
-			using const_iterator = ::std::unordered_map<key_t, ::uns::lua::value>::const_iterator;
+			using const_iterator = std::unordered_map<key_t, ::uns::lua::value>::const_iterator;
 
 			template<class key_t>
 			requires ::std::same_as<::uns::lua::type::number, key_t>
 				|| ::std::same_as<::uns::lua::type::integer, key_t>
 				|| ::std::same_as<::uns::lua::type::boolean, key_t>
 				|| ::std::same_as<::uns::lua::type::string, key_t>
-			using iterator = ::std::unordered_map<key_t, ::uns::lua::value>::iterator;
+			using iterator = std::unordered_map<key_t, ::uns::lua::value>::iterator;
 		protected:
 			::std::unique_ptr<::uns::lua::auxiliary::table> m_ptr = nullptr;
 		public:
-			table() noexcept {};
+			table() noexcept;
 			table(const ::uns::lua::type::table& obj) noexcept;
 			::uns::lua::type::table& operator=(const ::uns::lua::type::table&) noexcept;
 			table(::uns::lua::type::table&&) noexcept;
@@ -435,7 +439,6 @@ namespace uns::lua {
 	namespace auxiliary {
 		class table {
 		protected:
-			::uns::lua::value nil_replacer = ::uns::lua::nil;
 			::std::unordered_map<::uns::lua::type::number, ::uns::lua::value> m_key_number;
 			::std::unordered_map<::uns::lua::type::integer, ::uns::lua::value> m_key_integer;
 			::std::unordered_map<::uns::lua::type::boolean, ::uns::lua::value> m_key_boolean;
@@ -448,8 +451,6 @@ namespace uns::lua {
 				m_key_boolean(obj.m_key_boolean),
 				m_key_string(obj.m_key_string) {};
 			::uns::lua::auxiliary::table& operator=(const ::uns::lua::auxiliary::table& obj) noexcept {
-				nil_replacer = ::uns::lua::nil;
-
 				if(this != &obj) {
 					m_key_number = obj.m_key_number;
 					m_key_integer = obj.m_key_integer;
@@ -465,9 +466,6 @@ namespace uns::lua {
 				m_key_boolean(std::move(obj.m_key_boolean)),
 				m_key_string(std::move(obj.m_key_string)) {};
 			::uns::lua::auxiliary::table& operator=(::uns::lua::auxiliary::table&& obj) noexcept {
-				nil_replacer = ::uns::lua::nil;
-				obj.nil_replacer = ::uns::lua::nil;
-
 				if(this != &obj) {
 					m_key_number = std::move(obj.m_key_number);
 					m_key_integer = std::move(obj.m_key_integer);
@@ -477,7 +475,7 @@ namespace uns::lua {
 
 				return *this;
 			};
-			~table() noexcept;
+			~table() noexcept {}
 
 #define UNS_LUA_TABLE_IDX_DECLARATOR(type_identifier)											\
 			::uns::lua::value operator[] (const ::uns::lua::type::##type_identifier& key) const noexcept {\
@@ -488,7 +486,7 @@ namespace uns::lua {
 					return ::uns::lua::nil;														\
 				};																				\
 			};																					\
-			::uns::lua::value& operator[] (const ::uns::lua::type::number& key) noexcept { return m_key_number[key]; };\
+			::uns::lua::value& operator[] (const ::uns::lua::type::##type_identifier& key) noexcept { return m_key_##type_identifier[key]; };\
 
 			UNS_LUA_TABLE_IDX_DECLARATOR(number);
 			UNS_LUA_TABLE_IDX_DECLARATOR(integer);
@@ -521,7 +519,8 @@ namespace uns::lua {
 				};
 			};
 			::uns::lua::value& operator[] (const ::uns::lua::value& key) noexcept {
-				nil_replacer = ::uns::lua::nil;
+				auto nil_replacer = ::uns::lua::value{ ::uns::lua::nil };
+
 				switch(key.type()) {
 					default:
 					case ::uns::lua::value_type::nil:
@@ -570,19 +569,18 @@ namespace uns::lua {
 			template<>																			\
 			::uns::lua::type::table::iterator<::uns::lua::type::##type_identifier> end<::uns::lua::type::##type_identifier>() noexcept { return m_key_##type_identifier.end(); };
 
-			
+
 			UNS_LUA_TABLE_ITERATION_METHODS_DECLARATOR(number);
 			UNS_LUA_TABLE_ITERATION_METHODS_DECLARATOR(integer);
 			UNS_LUA_TABLE_ITERATION_METHODS_DECLARATOR(boolean);
 			UNS_LUA_TABLE_ITERATION_METHODS_DECLARATOR(string);
 
 #undef UNS_LUA_TABLE_ITERATION_METHODS_DECLARATOR
-
-
 		};
 	};
 
 	//definitions of ::uns::lua::type::table methods =>
+	::uns::lua::type::table::table() noexcept : m_ptr(::std::unique_ptr<::uns::lua::auxiliary::table>{ new ::uns::lua::auxiliary::table{} }) {};
 	::uns::lua::type::table::table(const ::uns::lua::type::table& obj) noexcept : m_ptr(new ::uns::lua::auxiliary::table{ *obj.m_ptr}) {};
 	::uns::lua::type::table& ::uns::lua::type::table::operator=(const ::uns::lua::type::table& obj) noexcept {
 		if(this != &obj) {
@@ -621,7 +619,6 @@ namespace uns::lua {
 	::uns::lua::type::table::iterator<key_t> uns::lua::type::table::end() noexcept { return m_ptr->end<key_t>(); };
 	//<= definitions of ::uns::lua::type::table methods 
 
-	//definition of ::uns::lua::value::to_value
 	::uns::lua::value uns::lua::value::make_from(::uns::lua::auxiliary::state& lua_state, int idx) noexcept {
 		switch(lua_type(lua_state.get(), idx)) {
 			default:
@@ -705,8 +702,8 @@ namespace uns::lua {
 	protected:
 		function(const ::std::shared_ptr<::uns::lua::auxiliary::state>& lua_script, const ::std::string& lua_global_function_name) noexcept :
 			m_function_name(lua_global_function_name),
-			m_stack(::std::shared_ptr<::uns::lua::auxiliary::state>{})
-		{//TODO to rewrite this constructor with script first argument eliminating friend directive
+			m_stack(::std::shared_ptr<::uns::lua::auxiliary::state>{ new ::uns::lua::auxiliary::state{} })
+		{
 			if(lua_script != nullptr) {
 				*m_stack = *lua_script;
 			};
@@ -797,7 +794,7 @@ namespace uns::lua {
 	protected:
 		global(const ::std::shared_ptr<::uns::lua::auxiliary::state>& lua_script, const ::std::string& lua_global_variable_name) noexcept :
 			m_global_name(lua_global_variable_name),
-			m_stack(::std::shared_ptr<::uns::lua::auxiliary::state>{})
+			m_stack(::std::shared_ptr<::uns::lua::auxiliary::state>{ new ::uns::lua::auxiliary::state})
 		{//TODO to rewrite this constructor with script first argument eliminating friend directive
 			if(lua_script != nullptr) {
 				*m_stack = *lua_script;
@@ -855,6 +852,131 @@ namespace uns::lua {
 			return result;
 		};
 
+		void set(const ::uns::lua::value& value) noexcept {
+			m_err = ::uns::lua::error{};
+
+			if(!valid()) {
+				m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid };
+				return;
+			};
+
+			value.push_to(*m_stack);
+			lua_setglobal(m_stack->get(), m_global_name.c_str());
+		};
+
+		void gc() noexcept {
+			lua_gc(m_stack->get(), LUA_GCCOLLECT);
+		};
+	};
+
+
+	class script {
+	protected:
+		::std::shared_ptr<::uns::lua::auxiliary::state> m_stack = nullptr;
+		::uns::lua::error m_err;
+	public:
+		script() noexcept : m_stack(new ::uns::lua::auxiliary::state{}) {};
+		script(const ::std::u8string& text) noexcept : m_stack(new ::uns::lua::auxiliary::state{}) {
+			auto narrow_text = ::uns::string::u8_cast<::std::string>(text);
+
+			if(int lua_retcode = luaL_loadstring(m_stack->get(), narrow_text.c_str()); lua_retcode != LUA_OK) {
+				std::string err_str = "";
+
+				if(lua_isstring(m_stack->get(), -1)) {
+					err_str = lua_tostring(m_stack->get(), -1);
+					lua_pop(m_stack->get(), -1);
+				};
+
+				m_err = { static_cast<::uns::lua::errcode::_enumerated>(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
+				m_stack = nullptr;
+			};
+		};
+		script(const ::std::filesystem::path& file) noexcept : m_stack(new ::uns::lua::auxiliary::state{}) {
+			auto narrow_path = ::uns::string::u8_cast<::std::string>(::uns::string::u8_cast<::std::u8string>(file.lexically_normal().native()));
+
+			if(int lua_retcode = luaL_loadfile(m_stack->get(), narrow_path.c_str()); lua_retcode != LUA_OK) {
+				std::string err_str = "";
+
+				if(lua_isstring(m_stack->get(), -1)) {
+					err_str = lua_tostring(m_stack->get(), -1);
+					lua_pop(m_stack->get(), -1);
+				};
+
+				m_err = { static_cast<::uns::lua::errcode::_enumerated>(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
+				m_stack = nullptr;
+			};
+		};
+		script(const ::uns::lua::script& obj) noexcept :
+			m_stack(obj.m_stack),
+			m_err(obj.m_err)
+		{};
+		::uns::lua::script operator=(const ::uns::lua::script& obj) noexcept {
+			if(this != &obj) {
+				m_stack = obj.m_stack;
+				m_err = obj.m_err;
+			};
+			return *this;
+		};
+		script(::uns::lua::script&& obj) noexcept :
+			m_stack(::std::move(obj.m_stack)),
+			m_err(::std::move(obj.m_err))
+		{};
+		::uns::lua::script operator=(::uns::lua::script&& obj) noexcept {
+			if(this != &obj) {
+				m_stack = ::std::move(obj.m_stack);
+				m_err = ::std::move(obj.m_err);
+			};
+			return *this;
+		};
+		~script() noexcept {};
+
+		bool valid() const noexcept { return m_stack != nullptr; };
+
+		const ::uns::lua::error& error() const noexcept { return m_err; };
+		::uns::lua::error& error() noexcept { return m_err; };
+
+		::uns::lua::function get_function(const ::std::u8string& lua_global_function_name) noexcept {
+			if(!valid()) {
+				m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid, ::uns::string::u8_cast<::std::string>(lua_global_function_name)};
+				return ::uns::lua::function{};
+			}
+			else {
+				return ::uns::lua::function{ m_stack, ::uns::string::u8_cast<::std::string>(lua_global_function_name) };
+			};
+		};
+		::uns::lua::global get_global(const ::std::u8string& lua_global_variable_name) noexcept {
+			if(!valid()) {
+				m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid, ::uns::string::u8_cast<::std::string>(lua_global_variable_name) };
+				return ::uns::lua::global{};
+			}
+			else {
+				return ::uns::lua::global{ m_stack, ::uns::string::u8_cast<::std::string>(lua_global_variable_name) };
+			};
+		};
+
+		void run() noexcept {
+			m_err = ::uns::lua::error{};
+
+			if(!valid()) {
+				m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid };
+				return;
+			};
+
+			if(int lua_retcode = lua_pcall(m_stack->get(), 0, 0, 0); lua_retcode != LUA_OK) {
+				std::string err_str = "";
+				if(lua_isstring(m_stack->get(), -1)) {
+					err_str = lua_tostring(m_stack->get(), -1);
+				};
+
+				lua_pop(m_stack->get(), -1);
+
+				m_err = { static_cast<::uns::lua::errcode::_enumerated>(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
+				return;
+			};
+
+			return;
+		};
+		
 		void gc() noexcept {
 			lua_gc(m_stack->get(), LUA_GCCOLLECT);
 		};
