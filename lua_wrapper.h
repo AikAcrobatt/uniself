@@ -256,24 +256,9 @@ namespace uns::lua {
 		push_function_type m_push_function = push_nil;
 	public:
 		value() noexcept {};
-		/*
-#define UNS_LUA_VALUE_INIT_DECLARATOR(type_identifier)											\
-		value(const ::uns::lua::type::##type_identifier& obj) noexcept :						\
-			m_type(::uns::lua::value_type::##type_identifier),									\
-			m_##type_identifier(obj),															\
-			m_push_function(push_##type_identifier)												\
-		{};																						\
-
-		UNS_LUA_VALUE_INIT_DECLARATOR(boolean);
-		UNS_LUA_VALUE_INIT_DECLARATOR(number);
-		UNS_LUA_VALUE_INIT_DECLARATOR(integer);
-		UNS_LUA_VALUE_INIT_DECLARATOR(string);
-		UNS_LUA_VALUE_INIT_DECLARATOR(table);
-#undef UNS_LUA_VALUE_INIT_DECLARATOR
-*/
 		template<typename val_t>
-		requires(::std::integral<val_t> && !::std::same_as<bool, val_t>)
-		value(val_t obj) noexcept : 
+			requires(::std::integral<val_t> && !::std::same_as<bool, val_t>)
+		value(val_t obj) noexcept :
 			m_type(::uns::lua::value_type::integer), 
 			m_integer(static_cast<::uns::lua::type::integer>(obj)), 
 			m_push_function(push_integer)												
@@ -322,7 +307,7 @@ namespace uns::lua {
 			m_push_function(obj.m_push_function)
 		{};
 		::uns::lua::value& operator=(const ::uns::lua::value& obj) noexcept {
-			if(this == &obj) {
+			if(this != &obj) {
 				m_type = obj.m_type;
 				m_boolean = obj.m_boolean;
 				m_number = obj.m_number;
@@ -343,7 +328,7 @@ namespace uns::lua {
 			m_push_function(std::move(obj.m_push_function))
 		{};
 		::uns::lua::value& operator=(::uns::lua::value&& obj) noexcept {
-			if(this == &obj) {
+			if(this != &obj) {
 				m_type = std::move(obj.m_type);
 				m_boolean = std::move(obj.m_boolean);
 				m_number = std::move(obj.m_number);
@@ -355,6 +340,51 @@ namespace uns::lua {
 			return *this;
 		};
 		~value() noexcept {};
+
+		template<typename val_t>
+			requires(::std::integral<val_t> && !::std::same_as<bool, val_t>)
+		::uns::lua::value& operator=(const val_t& obj) noexcept {
+			auto val = ::uns::lua::value{ obj };
+			return (*this = val);
+		};
+		template<::std::floating_point val_t>
+		::uns::lua::value& operator=(const val_t& obj) noexcept {
+			auto val = ::uns::lua::value{ obj };
+			return (*this = val);
+		};
+		template<::std::same_as<bool> val_t>
+		::uns::lua::value& operator=(const val_t& obj) noexcept {
+			auto val = ::uns::lua::value{ obj };
+			return (*this = val);
+		};
+		::uns::lua::value& operator=(const ::std::string& obj) noexcept {
+			auto val = ::uns::lua::value{ obj };
+			return (*this = val);
+		};
+		::uns::lua::value& operator=(const ::std::string_view& obj) noexcept {
+			auto val = ::uns::lua::value{ obj };
+			return (*this = val);
+		};
+		::uns::lua::value& operator=(const char* obj) noexcept {
+			auto val = ::uns::lua::value{ obj };
+			return (*this = val);
+		};
+		::uns::lua::value& operator=(const ::std::u8string& obj) noexcept {
+			auto val = ::uns::lua::value{ obj };
+			return (*this = val);
+		};
+		::uns::lua::value& operator=(const char8_t* obj) noexcept {
+			auto val = ::uns::lua::value{ obj };
+			return (*this = val);
+		};
+		::uns::lua::value& operator=(const ::uns::lua::type::table& obj) noexcept {
+			auto val = ::uns::lua::value{ obj };
+			return (*this = val);
+		};
+		::uns::lua::value& operator=(const ::uns::lua::type::nil& obj) noexcept {
+			auto val = ::uns::lua::value{ obj };
+			return (*this = val);
+		};
 
 		bool operator==(const ::uns::lua::value& obj) const noexcept {
 			return (m_type == obj.m_type)
@@ -717,6 +747,8 @@ namespace uns::lua {
 							break;
 						}
 					};
+
+					lua_pop(lua_state.get(), 1);
 				};
 
 				return ::uns::lua::value{ res };
@@ -838,10 +870,10 @@ namespace uns::lua {
 			};
 		};
 	public:
-		global(const global&) noexcept = default;
-		global& operator=(const global&) noexcept = default;
-		global(global&& obj) noexcept = default;
-		global& operator=(global&& obj) noexcept = default;
+		global(const ::uns::lua::global&) noexcept = default;
+		::uns::lua::global& operator=(const ::uns::lua::global&) noexcept = default;
+		global(::uns::lua::global&& obj) noexcept = default;
+		::uns::lua::global& operator=(::uns::lua::global&& obj) noexcept = default;
 		~global() noexcept {
 			lua_gc(m_stack->get(), LUA_GCCOLLECT);
 		};
@@ -947,7 +979,7 @@ namespace uns::lua {
 			m_stack(obj.m_stack),
 			m_err(obj.m_err)
 		{};
-		::uns::lua::script operator=(const ::uns::lua::script& obj) noexcept {
+		::uns::lua::script& operator=(const ::uns::lua::script& obj) noexcept {
 			if(this != &obj) {
 				m_stack = obj.m_stack;
 				m_err = obj.m_err;
@@ -958,7 +990,7 @@ namespace uns::lua {
 			m_stack(::std::move(obj.m_stack)),
 			m_err(::std::move(obj.m_err))
 		{};
-		::uns::lua::script operator=(::uns::lua::script&& obj) noexcept {
+		::uns::lua::script& operator=(::uns::lua::script&& obj) noexcept {
 			if(this != &obj) {
 				m_stack = ::std::move(obj.m_stack);
 				m_err = ::std::move(obj.m_err);
@@ -1018,4 +1050,7 @@ namespace uns::lua {
 			lua_gc(m_stack->get(), LUA_GCCOLLECT);
 		};
 	};
+
+
+	::uns::lua::value make_table() noexcept { return ::uns::lua::type::table{}; };
 };
