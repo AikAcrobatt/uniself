@@ -354,10 +354,51 @@ void lib2_test() {
     };
 };
 
+void script_loading_test() {
+    auto script = ::uns::lua::script{};
+    if(script.error().is()) {
+        ::std::cout << script.error().to_string() << "\n";
+        return;
+    };
+
+    script.load(::std::filesystem::path{ L"G:/Visual Studio/uniself/lua_wrapper/script_loading_test.lua" });
+    if(script.error().is()) {
+        ::std::cout << script.error().to_string() << "\n";
+        return;
+    };
+
+    script.run();
+    if(script.error().is()) {
+        ::std::cout << script.error().to_string() << "\n";
+        return;
+    };
+
+    auto print_args = script.get_function(u8"print_args");
+
+    ::std::cout << print_args.error().to_string() << "\n";
+
+    if(!print_args.error().is()) {
+        auto arg1 = ::uns::lua::make_table();
+        auto arg2 = ::uns::lua::value{ 0.0045006 };
+        auto arg3 = ::uns::lua::value{ true };
+        auto arg4 = ::uns::lua::value{ u8"It's working!" };
+
+        static_cast<::uns::lua::type::table&>(arg1)[arg2] = arg3;
+        static_cast<::uns::lua::type::table&>(arg1)[::uns::lua::value{ "What?" }] = arg4;
+        static_cast<::uns::lua::type::table&>(arg1)[u8"Some subtable"] = ::uns::lua::make_table();
+        static_cast<::uns::lua::type::table&>(static_cast<::uns::lua::type::table&>(arg1)["Some subtable"])[123] = "Yeah baby!";
+
+        auto results = print_args(3, { arg1, arg2, arg3, arg4 });
+
+        print_vals(results);
+    };
+    ::std::cout << print_args.error().to_string() << "\n";
+};
+
 int main() {
     ::std::cout << "START\n";
 
-    lib2_test();
+    script_loading_test();
 
     ::std::cout << "FINISH\n";
 };
