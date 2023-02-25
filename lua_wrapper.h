@@ -960,34 +960,13 @@ namespace uns::lua {
 	public:
 		script() noexcept : m_stack(new ::uns::lua::auxiliary::state{}) {};
 		script(const ::std::u8string& text) noexcept : m_stack(new ::uns::lua::auxiliary::state{}) {
-			auto narrow_text = ::uns::string::u8_cast<::std::string>(text);
-
-			if(int lua_retcode = luaL_loadstring(m_stack->get(), narrow_text.c_str()); lua_retcode != LUA_OK) {
-				std::string err_str = "";
-
-				if(lua_isstring(m_stack->get(), -1)) {
-					err_str = lua_tostring(m_stack->get(), -1);
-					lua_pop(m_stack->get(), -1);
-				};
-
-				m_err = { static_cast<::uns::lua::errcode::_enumerated>(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
-				m_stack = nullptr;
-			};
+			load(text);
 		};
 		script(const ::std::filesystem::path& file) noexcept : m_stack(new ::uns::lua::auxiliary::state{}) {
-			auto narrow_path = ::uns::string::u8_cast<::std::string>(::uns::string::u8_cast<::std::u8string>(file.lexically_normal().native()));
-
-			if(int lua_retcode = luaL_loadfile(m_stack->get(), narrow_path.c_str()); lua_retcode != LUA_OK) {
-				std::string err_str = "";
-
-				if(lua_isstring(m_stack->get(), -1)) {
-					err_str = lua_tostring(m_stack->get(), -1);
-					lua_pop(m_stack->get(), -1);
-				};
-
-				m_err = { static_cast<::uns::lua::errcode::_enumerated>(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
-				m_stack = nullptr;
-			};
+			load(file);
+		};
+		script(const ::uns::lua::library& library) noexcept : m_stack(new ::uns::lua::auxiliary::state{}) {
+			load(library);
 		};
 		script(const ::uns::lua::script& obj) noexcept :
 			m_stack(obj.m_stack),
@@ -1068,6 +1047,36 @@ namespace uns::lua {
 					lua_setglobal(m_stack->get(), lua_entry.name);
 
 				};
+			};
+		};
+		void load(const ::std::u8string& text) noexcept {
+			auto narrow_text = ::uns::string::u8_cast<::std::string>(text);
+
+			if(int lua_retcode = luaL_loadstring(m_stack->get(), narrow_text.c_str()); lua_retcode != LUA_OK) {
+				std::string err_str = "";
+
+				if(lua_isstring(m_stack->get(), -1)) {
+					err_str = lua_tostring(m_stack->get(), -1);
+					lua_pop(m_stack->get(), -1);
+				};
+
+				m_err = { static_cast<::uns::lua::errcode::_enumerated>(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
+				m_stack = nullptr;
+			};
+		};
+		void load(const ::std::filesystem::path& file) noexcept {
+			auto narrow_path = ::uns::string::u8_cast<::std::string>(::uns::string::u8_cast<::std::u8string>(file.lexically_normal().native()));
+
+			if(int lua_retcode = luaL_loadfile(m_stack->get(), narrow_path.c_str()); lua_retcode != LUA_OK) {
+				std::string err_str = "";
+
+				if(lua_isstring(m_stack->get(), -1)) {
+					err_str = lua_tostring(m_stack->get(), -1);
+					lua_pop(m_stack->get(), -1);
+				};
+
+				m_err = { static_cast<::uns::lua::errcode::_enumerated>(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
+				m_stack = nullptr;
 			};
 		};
 
