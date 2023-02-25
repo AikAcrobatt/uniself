@@ -215,14 +215,28 @@ namespace uns::lua {
 			bool operator==(const ::uns::lua::type::table&) const noexcept { return false; };
 			bool operator!=(const ::uns::lua::type::table&) const noexcept { return true; };
 
-			::uns::lua::value operator[] (const ::uns::lua::type::number&) const noexcept;
-			::uns::lua::value& operator[] (const ::uns::lua::type::number&) noexcept;
-			::uns::lua::value operator[] (const ::uns::lua::type::integer&) const noexcept;
-			::uns::lua::value& operator[] (const ::uns::lua::type::integer&) noexcept;
-			::uns::lua::value operator[] (const ::uns::lua::type::boolean&) const noexcept;
-			::uns::lua::value& operator[] (const ::uns::lua::type::boolean&) noexcept;
+			template<::std::floating_point key_t>
+			::uns::lua::value operator[] (const key_t&) const noexcept;
+			template<::std::floating_point key_t>
+			::uns::lua::value& operator[] (const key_t&) noexcept;
+			template<typename key_t>
+				requires(::std::integral<key_t> && !::std::same_as<::uns::lua::type::boolean, key_t>)
+			::uns::lua::value operator[] (const key_t&) const noexcept;
+			template<typename key_t>
+				requires(::std::integral<key_t> && !::std::same_as<::uns::lua::type::boolean, key_t>)
+			::uns::lua::value& operator[] (const key_t&) noexcept;
+			template<::std::same_as<::uns::lua::type::boolean> key_t>
+			::uns::lua::value operator[] (const key_t&) const noexcept;
+			template<::std::same_as<::uns::lua::type::boolean> key_t>
+			::uns::lua::value& operator[] (const key_t&) noexcept;
 			::uns::lua::value operator[] (const ::uns::lua::type::string&) const noexcept;
 			::uns::lua::value& operator[] (const ::uns::lua::type::string&) noexcept;
+			::uns::lua::value operator[] (const char*) const noexcept;
+			::uns::lua::value& operator[] (const char*) noexcept;
+			::uns::lua::value operator[] (const ::std::u8string&) const noexcept;
+			::uns::lua::value& operator[] (const ::std::u8string&) noexcept;
+			::uns::lua::value operator[] (const char8_t*) const noexcept;
+			::uns::lua::value& operator[] (const char8_t*) noexcept;
 			::uns::lua::value operator[] (const ::uns::lua::value&) const noexcept;
 			::uns::lua::value& operator[] (const ::uns::lua::value&) noexcept;
 
@@ -342,48 +356,8 @@ namespace uns::lua {
 		~value() noexcept {};
 
 		template<typename val_t>
-			requires(::std::integral<val_t> && !::std::same_as<bool, val_t>)
 		::uns::lua::value& operator=(const val_t& obj) noexcept {
-			auto val = ::uns::lua::value{ obj };
-			return (*this = val);
-		};
-		template<::std::floating_point val_t>
-		::uns::lua::value& operator=(const val_t& obj) noexcept {
-			auto val = ::uns::lua::value{ obj };
-			return (*this = val);
-		};
-		template<::std::same_as<bool> val_t>
-		::uns::lua::value& operator=(const val_t& obj) noexcept {
-			auto val = ::uns::lua::value{ obj };
-			return (*this = val);
-		};
-		::uns::lua::value& operator=(const ::std::string& obj) noexcept {
-			auto val = ::uns::lua::value{ obj };
-			return (*this = val);
-		};
-		::uns::lua::value& operator=(const ::std::string_view& obj) noexcept {
-			auto val = ::uns::lua::value{ obj };
-			return (*this = val);
-		};
-		::uns::lua::value& operator=(const char* obj) noexcept {
-			auto val = ::uns::lua::value{ obj };
-			return (*this = val);
-		};
-		::uns::lua::value& operator=(const ::std::u8string& obj) noexcept {
-			auto val = ::uns::lua::value{ obj };
-			return (*this = val);
-		};
-		::uns::lua::value& operator=(const char8_t* obj) noexcept {
-			auto val = ::uns::lua::value{ obj };
-			return (*this = val);
-		};
-		::uns::lua::value& operator=(const ::uns::lua::type::table& obj) noexcept {
-			auto val = ::uns::lua::value{ obj };
-			return (*this = val);
-		};
-		::uns::lua::value& operator=(const ::uns::lua::type::nil& obj) noexcept {
-			auto val = ::uns::lua::value{ obj };
-			return (*this = val);
+			return (*this = ::uns::lua::value{ obj });
 		};
 
 		bool operator==(const ::uns::lua::value& obj) const noexcept {
@@ -415,22 +389,6 @@ namespace uns::lua {
 		UNS_LUA_VALUE_CONVERT_DECLARATOR(string);
 		UNS_LUA_VALUE_CONVERT_DECLARATOR(table);
 #undef UNS_LUA_VALUE_CONVERT_DECLARATOR
-
-#define UNS_LUA_VALUE_COMPARISON_DECLARATOR(type_identifier)									\
-		bool operator==(const ::uns::lua::type::##type_identifier& obj) const noexcept {		\
-			return (m_type == ::uns::lua::value_type::##type_identifier)						\
-				&& (m_##type_identifier == obj);												\
-		};			\
-		bool operator!=(const ::uns::lua::type::##type_identifier& obj) const noexcept {		\
-			return !(*this == obj);																\
-		};			\
-
-		UNS_LUA_VALUE_COMPARISON_DECLARATOR(boolean);
-		UNS_LUA_VALUE_COMPARISON_DECLARATOR(number);
-		UNS_LUA_VALUE_COMPARISON_DECLARATOR(integer);
-		UNS_LUA_VALUE_COMPARISON_DECLARATOR(string);
-		UNS_LUA_VALUE_COMPARISON_DECLARATOR(table);
-#undef UNS_LUA_VALUE_COMPARISON_DECLARATOR
 
 		::uns::lua::value_type type() const noexcept { return m_type; };
 
@@ -663,14 +621,28 @@ namespace uns::lua {
 		return *this;
 	};
 
-	::uns::lua::value uns::lua::type::table::operator[] (const ::uns::lua::type::number& key) const noexcept { return m_ptr->operator[](key); };
-	::uns::lua::value& ::uns::lua::type::table::operator[] (const ::uns::lua::type::number& key) noexcept { return m_ptr->operator[](key); };
-	::uns::lua::value uns::lua::type::table::operator[] (const ::uns::lua::type::integer& key) const noexcept { return m_ptr->operator[](key); };
-	::uns::lua::value& ::uns::lua::type::table::operator[] (const ::uns::lua::type::integer& key) noexcept { return m_ptr->operator[](key); };
-	::uns::lua::value uns::lua::type::table::operator[] (const ::uns::lua::type::boolean& key) const noexcept { return m_ptr->operator[](key); };
-	::uns::lua::value& ::uns::lua::type::table::operator[] (const ::uns::lua::type::boolean& key) noexcept { return m_ptr->operator[](key); };
+	template<::std::floating_point key_t>
+	::uns::lua::value uns::lua::type::table::operator[] (const key_t& key) const noexcept { return m_ptr->operator[](static_cast<::uns::lua::type::number>(key)); };
+	template<::std::floating_point key_t>
+	::uns::lua::value& ::uns::lua::type::table::operator[] (const key_t& key) noexcept { return m_ptr->operator[](static_cast<::uns::lua::type::number>(key)); };
+	template<typename key_t>
+		requires(::std::integral<key_t> && !::std::same_as<::uns::lua::type::boolean, key_t>)
+	::uns::lua::value uns::lua::type::table::operator[] (const key_t& key) const noexcept { return m_ptr->operator[](static_cast<::uns::lua::type::integer>(key)); };
+	template<typename key_t>
+		requires(::std::integral<key_t> && !::std::same_as<::uns::lua::type::boolean, key_t>)
+	::uns::lua::value& ::uns::lua::type::table::operator[] (const key_t& key) noexcept { return m_ptr->operator[](static_cast<::uns::lua::type::integer>(key)); };
+	template<::std::same_as<::uns::lua::type::boolean> key_t>
+	::uns::lua::value uns::lua::type::table::operator[] (const key_t& key) const noexcept { return m_ptr->operator[](static_cast<::uns::lua::type::boolean>(key)); };
+	template<::std::same_as<::uns::lua::type::boolean> key_t>
+	::uns::lua::value& ::uns::lua::type::table::operator[] (const key_t& key) noexcept { return m_ptr->operator[](static_cast<::uns::lua::type::boolean>(key)); };
 	::uns::lua::value uns::lua::type::table::operator[] (const ::uns::lua::type::string& key) const noexcept { return m_ptr->operator[](key); };
 	::uns::lua::value& ::uns::lua::type::table::operator[] (const ::uns::lua::type::string& key) noexcept { return m_ptr->operator[](key); };
+	::uns::lua::value uns::lua::type::table::operator[] (const char* key) const noexcept { return m_ptr->operator[](::uns::lua::type::string{ key }); };
+	::uns::lua::value& ::uns::lua::type::table::operator[] (const char* key) noexcept { return m_ptr->operator[](::uns::lua::type::string{ key }); };
+	::uns::lua::value uns::lua::type::table::operator[] (const ::std::u8string& key) const noexcept { return m_ptr->operator[](::uns::string::u8_cast<::uns::lua::type::string>(key)); };
+	::uns::lua::value& ::uns::lua::type::table::operator[] (const ::std::u8string& key) noexcept { return m_ptr->operator[](::uns::string::u8_cast<::uns::lua::type::string>(key)); };
+	::uns::lua::value uns::lua::type::table::operator[] (const char8_t* key) const noexcept { return this->operator[](::std::u8string{ key }); };
+	::uns::lua::value& ::uns::lua::type::table::operator[] (const char8_t* key) noexcept { return this->operator[](::std::u8string{ key }); };
 	::uns::lua::value uns::lua::type::table::operator[] (const ::uns::lua::value& key) const noexcept { return m_ptr->operator[](key); };
 	::uns::lua::value& ::uns::lua::type::table::operator[] (const ::uns::lua::value& key) noexcept { return m_ptr->operator[](key); };
 
@@ -783,7 +755,9 @@ namespace uns::lua {
 		function(::uns::lua::function&& obj) noexcept = default;
 		::uns::lua::function& operator=(::uns::lua::function&& obj) noexcept = default;
 		~function() noexcept {
-			lua_gc(m_stack->get(), LUA_GCCOLLECT);
+			if(valid()) {
+				lua_gc(m_stack->get(), LUA_GCCOLLECT);
+			};
 		};
 
 		const ::uns::lua::error& error() const noexcept { return m_err; };
@@ -864,7 +838,7 @@ namespace uns::lua {
 		global(const ::std::shared_ptr<::uns::lua::auxiliary::state>& lua_script, const ::std::string& lua_global_variable_name) noexcept :
 			m_global_name(lua_global_variable_name),
 			m_stack(::std::shared_ptr<::uns::lua::auxiliary::state>{ new ::uns::lua::auxiliary::state})
-		{//TODO to rewrite this constructor with script first argument eliminating friend directive
+		{
 			if(lua_script != nullptr) {
 				*m_stack = *lua_script;
 			};
@@ -875,7 +849,9 @@ namespace uns::lua {
 		global(::uns::lua::global&& obj) noexcept = default;
 		::uns::lua::global& operator=(::uns::lua::global&& obj) noexcept = default;
 		~global() noexcept {
-			lua_gc(m_stack->get(), LUA_GCCOLLECT);
+			if(valid()) {
+				lua_gc(m_stack->get(), LUA_GCCOLLECT);
+			};
 		};
 
 		const ::uns::lua::error& error() const noexcept { return m_err; };
@@ -939,6 +915,44 @@ namespace uns::lua {
 	};
 
 
+	class lib_entry {
+	protected:
+		::std::string m_name;
+		lua_CFunction m_function = nullptr;
+	public:
+		lib_entry() noexcept {};
+		lib_entry(
+			const ::std::u8string& name,
+			const lua_CFunction lua_function
+		) noexcept :
+			m_name(::uns::string::u8_cast<::std::string>(name)),
+			m_function(lua_function)
+		{};
+		lib_entry(const ::uns::lua::lib_entry&) noexcept = default;
+		::uns::lua::lib_entry& operator=(const ::uns::lua::lib_entry&) noexcept = default;
+		lib_entry(::uns::lua::lib_entry&&) noexcept = default;
+		::uns::lua::lib_entry& operator=(::uns::lua::lib_entry&&) noexcept = default;
+		~lib_entry() noexcept = default;
+
+		operator luaL_Reg() const noexcept {
+			if(!m_name.empty() && m_function != nullptr) {
+				return { m_name.c_str(), m_function };
+			}
+			else {
+				return { nullptr, nullptr };
+			};
+		};
+	};
+
+
+	class library {
+	public:
+		::std::u8string name_space;
+		::std::vector<::uns::lua::lib_entry> api;
+		::std::u8string text;
+	};
+
+
 	class script {
 	protected:
 		::std::shared_ptr<::uns::lua::auxiliary::state> m_stack = nullptr;
@@ -998,6 +1012,64 @@ namespace uns::lua {
 			return *this;
 		};
 		~script() noexcept {};
+
+		void load(const ::uns::lua::library& library) noexcept {
+			m_err = ::uns::lua::error{};
+
+			if(!valid()) {
+				m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid };
+				return;
+			};
+
+			if(!library.text.empty()) {
+				auto narrow_text = ::uns::string::u8_cast<::std::string>(library.text);
+
+				if(int lua_retcode = luaL_loadstring(m_stack->get(), narrow_text.c_str()); lua_retcode != LUA_OK) {
+					std::string err_str = "";
+
+					if(lua_isstring(m_stack->get(), -1)) {
+						err_str = lua_tostring(m_stack->get(), -1);
+						lua_pop(m_stack->get(), -1);
+					};
+
+					m_err = { static_cast<::uns::lua::errcode::_enumerated>(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
+					m_stack = nullptr;
+					return;
+				};
+			};
+
+			if(!library.name_space.empty()) {
+				lua_newtable(m_stack->get());
+
+				for(const auto& entry : library.api) {
+					auto lua_entry = static_cast<luaL_Reg>(entry);
+
+					if(lua_entry.name == nullptr || lua_entry.func == nullptr) {
+						break;
+					};
+
+					lua_pushstring(m_stack->get(), lua_entry.name);
+					lua_pushcfunction(m_stack->get(), lua_entry.func);
+					lua_settable(m_stack->get(), -3);
+
+				};
+
+				lua_setglobal(m_stack->get(), ::uns::string::u8_cast<::std::string>(library.name_space).c_str());
+			}
+			else {
+				for(const auto& entry : library.api) {
+					auto lua_entry = static_cast<luaL_Reg>(entry);
+
+					if(lua_entry.name == nullptr || lua_entry.func == nullptr) {
+						break;
+					};
+
+					lua_pushcfunction(m_stack->get(), lua_entry.func);
+					lua_setglobal(m_stack->get(), lua_entry.name);
+
+				};
+			};
+		};
 
 		bool valid() const noexcept { return m_stack != nullptr; };
 

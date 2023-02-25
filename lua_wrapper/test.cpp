@@ -102,9 +102,7 @@ void print_vals(const ::std::vector<::uns::lua::value>& vals, const ::std::strin
     };
 };
 
-int main() {
-    ::std::cout << "START\n";
-
+void function_n_value_test() {
     auto script = ::uns::lua::script{
         ::std::u8string{
             u8R"^^(
@@ -128,14 +126,89 @@ int main() {
 
         static_cast<::uns::lua::type::table&>(arg1)[arg2] = arg3;
         static_cast<::uns::lua::type::table&>(arg1)[::uns::lua::value{ "What?" }] = arg4;
-        static_cast<::uns::lua::type::table&>(arg1)[::uns::lua::value{ "Some subtable" }] = ::uns::lua::make_table();
-        static_cast<::uns::lua::type::table&>(static_cast<::uns::lua::type::table&>(arg1)[::uns::lua::value{ "Some subtable" }])[::uns::lua::value{ 123 }] = "Yah baby!";
+        static_cast<::uns::lua::type::table&>(arg1)[u8"Some subtable"] = ::uns::lua::make_table();
+        static_cast<::uns::lua::type::table&>(static_cast<::uns::lua::type::table&>(arg1)["Some subtable"])[123] = "Yeah baby!";
 
         auto results = print_args(3, { arg1 });
 
         print_vals(results);
     };
     ::std::cout << print_args.error().to_string() << "\n";
+};
+
+void global1_test() {
+    auto script = ::uns::lua::script{
+        ::std::u8string{
+            u8R"^^(
+            )^^"
+    }
+    };
+
+    script.run();
+    auto global1 = script.get_global(u8"global1");
+
+    ::std::cout << global1.error().to_string() << "\n";
+
+    if(!global1.error().is()) {
+        auto arg1 = ::uns::lua::make_table();
+        auto arg2 = ::uns::lua::value{ 0.0045006 };
+        auto arg3 = ::uns::lua::value{ true };
+        auto arg4 = ::uns::lua::value{ u8"It's working!" };
+
+        static_cast<::uns::lua::type::table&>(arg1)[arg2] = arg3;
+        static_cast<::uns::lua::type::table&>(arg1)[::uns::lua::value{ "What?" }] = arg4;
+        static_cast<::uns::lua::type::table&>(arg1)[u8"Some subtable"] = ::uns::lua::make_table();
+        static_cast<::uns::lua::type::table&>(static_cast<::uns::lua::type::table&>(arg1)["Some subtable"])[123] = "Yeah baby!";
+
+        global1.set(arg1);
+
+        auto result = global1.get();
+
+        print_vals(result);
+    };
+    ::std::cout << global1.error().to_string() << "\n";
+};
+
+void global2_test() {
+    auto script = ::uns::lua::script{
+        ::std::u8string{
+            u8R"^^(
+                global2 = {}
+
+                global2["field1"] = "value1"
+                global2["field2"] = -404
+                global2.field3 = true
+            )^^"
+        }
+    };
+    if(script.error().is()) {
+        ::std::cout << script.error().to_string() << "\n";
+        return;
+    };
+
+    script.run();
+    if(script.error().is()) {
+        ::std::cout << script.error().to_string() << "\n";
+        return;
+    };
+
+    auto global2 = script.get_global(u8"global2");
+
+    ::std::cout << global2.error().to_string() << "\n";
+
+    if(!global2.error().is()) {
+
+        auto result = global2.get();
+
+        print_vals(result);
+    };
+    ::std::cout << global2.error().to_string() << "\n";
+};
+
+int main() {
+    ::std::cout << "START\n";
+
+    global2_test();
 
     ::std::cout << "FINISH\n";
 };
