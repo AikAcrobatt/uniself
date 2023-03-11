@@ -22,7 +22,7 @@
 #include <boost/mpl/list.hpp>
 #pragma warning(pop)
 
-#include "uniself/strings.h"
+#include "uniself/strings.hpp"
 
 BOOST_AUTO_TEST_SUITE(u8_cast_testing)
 

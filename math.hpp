@@ -1,9 +1,11 @@
 #pragma once
 
-#define UNS_HEADER_MATH "math.h"
-
 #include <concepts>
 #include <limits>
+
+
+#ifndef UNS_LIB_MATH
+#define UNS_LIB_MATH "math.hpp"
 
 namespace uns::math {
 
@@ -116,3 +118,5 @@ namespace uns::math {
 	};
 
 };
+
+#endif

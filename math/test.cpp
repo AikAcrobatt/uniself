@@ -2,7 +2,7 @@
 #include <iostream>
 #include <limits>
 
-#include "uniself/math.h"
+#include "uniself/math.hpp"
 
 #pragma warning(push)
 #pragma warning(    \

@@ -2,8 +2,8 @@
 #include <iostream>
 #include <chrono>
 
-#include "uniself/math.h"
-#include "uniself/population.h"
+#include "uniself/math.hpp"
+#include "uniself/population.hpp"
 
 class unit : public ::uns::population::unit<float, float> {
 protected:

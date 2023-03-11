@@ -1,20 +1,17 @@
 #pragma once
 
-#define UNS_HEADER_MATRIX "matrix.h"
-
 #include <concepts>
 #include <initializer_list>
 
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/io.hpp>
 
-#ifndef UNS_HEADER_MATH
-#include "uniself/math.h"
-#endif
-#ifndef UNS_HEADER_STRINGS
-#include "uniself/strings.h"
-#endif
+#include "uniself/math.hpp"
+#include "uniself/strings.hpp"
 
+
+#ifndef UNS_LIB_MATRIX
+#define UNS_LIB_MATRIX "matrix.hpp"
 
 namespace ublas = ::boost::numeric::ublas;
 
@@ -762,3 +759,5 @@ namespace uns::math {
 
 
 };
+
+#endif

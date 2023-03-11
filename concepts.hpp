@@ -1,8 +1,10 @@
 #pragma once
 
-#define UNS_HEADER_CONCEPTS "concepts.h"
-
 #include <concepts>
+
+
+#ifndef UNS_LIB_CONCEPTS
+#define UNS_LIB_CONCEPTS "concepts.hpp"
 
 namespace uns {
 
@@ -27,3 +29,5 @@ namespace uns {
 		};
 
 };
+
+#endif

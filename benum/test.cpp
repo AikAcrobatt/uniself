@@ -38,7 +38,7 @@
 #include <boost/mpl/list.hpp>
 #pragma warning(pop)
 
-#include "uniself/benum.h"
+#include "uniself/benum.hpp"
 
 namespace abyss {
 

@@ -1,16 +1,15 @@
 ﻿#pragma once
 
-#define UNS_HEADER_STRINGS "strings.h"
-
 #include <string>
 #include <charconv>
 #include <type_traits>
 #include <concepts>
-#include <exception>
 
-#ifndef UNS_HEADER_CONCEPTS
-#include "uniself/concepts.h"
-#endif
+#include "uniself/concepts.hpp"
+
+
+#ifndef UNS_LIB_STRINGS
+#define UNS_LIB_STRINGS "strings.hpp"
 
 namespace uns::test {
 
@@ -23,15 +22,15 @@ namespace uns::test {
 			};
 		};
 
-		constexpr operator const ::std::u8string& () const& noexcept { return dynamic_cast<const ::std::u8string&>(*this); };
-		constexpr operator ::std::u8string& () & noexcept { return dynamic_cast<::std::u8string&>(*this); };
-		constexpr operator ::std::u8string_view() const noexcept { return dynamic_cast<const ::std::u8string&>(*this).operator ::std::u8string_view(); };
+		inline constexpr operator const ::std::u8string& () const& noexcept { return dynamic_cast<const ::std::u8string&>(*this); };
+		inline constexpr operator ::std::u8string& () & noexcept { return dynamic_cast<::std::u8string&>(*this); };
+		inline constexpr operator ::std::u8string_view() const noexcept { return dynamic_cast<const ::std::u8string&>(*this).operator ::std::u8string_view(); };
 	};
 
-	constexpr ::uns::test::u8string_wrapper make_u8(const char8_t* cstr) noexcept {
+	inline constexpr ::uns::test::u8string_wrapper make_u8(const char8_t* cstr) noexcept {
 		return ::uns::test::u8string_wrapper(cstr);
 	};
-	constexpr ::uns::test::u8string_wrapper make_u8(const ::std::u8string& str) noexcept {
+	inline constexpr ::uns::test::u8string_wrapper make_u8(const ::std::u8string& str) noexcept {
 		return static_cast<::uns::test::u8string_wrapper>(str);
 	};
 };
@@ -432,7 +431,7 @@ namespace uns::string {
 
 	//CAST FUNCTIONS FOR NUMERICS TO FORMATTED STRING
 	//cast of integer to string contain it's hexadecimal representation
-	::std::u8string hex_cast(long long int val) {
+	inline ::std::u8string hex_cast(long long int val) {
 		auto res = ::std::string(64, '\0');
 
 		auto* begin = &(*res.begin());
@@ -459,7 +458,7 @@ namespace uns::string {
 	};
 
 	//cast of integer to string contain it's binary representation
-	::std::u8string bin_cast(long long int val) {
+	inline ::std::u8string bin_cast(long long int val) {
 		auto res = ::std::string(128, '\0');
 
 		auto* begin = &(*res.begin());
@@ -1011,3 +1010,5 @@ namespace uns::string {
 	};
 
 };
+
+#endif

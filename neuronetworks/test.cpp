@@ -4,10 +4,12 @@
 #include <vector>
 #include <array>
 
+/*
 #include <boost/property_tree/ptree.hpp>
 #include "boost/property_tree/json_parser.hpp"
+*/
 
-#include "uniself/neuronetworks.h"
+#include "uniself/neuronetworks.hpp"
 /*
 #pragma warning(default: 4668; default: 4365)
 

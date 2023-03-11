@@ -1,50 +1,22 @@
-﻿#pragma once
 
-#define UNS_HEADER_NEURONETWORKS "neuronetworks.h"
+#include "uniself/neuronetworks.hpp"
 
-#include <iostream>
-#include <string>
-#include <limits>
-#include <tuple>
-#include <functional>
 
-#ifndef UNS_HEADER_MATH
-#include "uniself/math.h"
-#endif
-#ifndef UNS_HEADER_STRINGS
-#include "uniself/strings.h"
-#endif
 
-#define UNS_DEV_EXCEPTION_MSG ::std::string{ __FUNCTION__ } + "[" + ::std::to_string(__LINE__) + "]"
+bool ::uns::nn::adress::operator==(const ::uns::nn::adress& obj) const noexcept {
+	return layer == obj.layer && index == obj.index;
+};
+bool ::uns::nn::adress::operator!=(const ::uns::nn::adress& obj) const noexcept {
+	return !(*this == obj);
+};
+
+::std::size_t uns::nn::adress::capacity() const noexcept { return sizeof(*this); };
+
+::std::size_t uns::nn::adress::hash::operator()(const ::uns::nn::adress& adress) const noexcept {
+	return subhash((static_cast<long long int>(adress.layer) << sizeof(int) * 8) + static_cast<long long int>(adress.index));
+};
 
 namespace uns::nn {
-
-
-	//an adress of neuron in every neuronetwork
-	class adress {
-	public:
-		int layer = 0;
-		int index = 0;
-
-		bool operator==(const ::uns::nn::adress& obj) const noexcept {
-			return layer == obj.layer && index == obj.index;
-		};
-		bool operator!=(const ::uns::nn::adress& obj) const noexcept {
-			return !(*this == obj);
-		};
-
-		::std::size_t capacity() const noexcept { return sizeof(*this); };
-
-		class hash {
-		protected:
-			::std::hash<long long int> subhash;
-		public:
-			::std::size_t operator()(const ::uns::nn::adress& adress) const noexcept {
-				return subhash((static_cast<long long int>(adress.layer) << sizeof(int) * 8) + static_cast<long long int>(adress.index));
-			};
-		};
-	};
-
 
 	namespace representation {
 
@@ -69,9 +41,8 @@ namespace uns::nn {
 				links(obj.links),
 				params(obj.params),
 				r(obj.r),
-				c(obj.c)
-			{};
-			neuron& operator=(const neuron & obj) {
+				c(obj.c) {};
+			neuron& operator=(const neuron& obj) {
 				if(this == &obj) return *this;
 
 				activator = obj.activator;
@@ -89,8 +60,7 @@ namespace uns::nn {
 				links(::std::move(obj.links)),
 				params(::std::move(obj.params)),
 				r(::std::move(obj.r)),
-				c(::std::move(obj.c))
-			{};
+				c(::std::move(obj.c)) {};
 			neuron& operator=(neuron&& obj) {
 				if(this == &obj) return *this;
 
@@ -122,8 +92,7 @@ namespace uns::nn {
 			network() noexcept {};
 			network(const network& obj) noexcept :
 				layers(obj.layers),
-				outputs(obj.outputs)
-			{};
+				outputs(obj.outputs) {};
 			network& operator=(const network& obj) {
 				if(this == &obj) return *this;
 
@@ -134,8 +103,7 @@ namespace uns::nn {
 			};
 			network(network&& obj) noexcept :
 				layers(::std::move(obj.layers)),
-				outputs(::std::move(obj.outputs))
-			{};
+				outputs(::std::move(obj.outputs)) {};
 			network& operator=(network&& obj) {
 				if(this == &obj) return *this;
 
@@ -382,7 +350,7 @@ namespace uns::nn {
 		using param_type = signal_t;
 		using base = ::uns::nn::general::neuron<signal_t>;
 	public:
-		enum part{
+		enum part {
 			_neuron_ = 0,
 			_weight_ = 1
 		};
@@ -424,9 +392,9 @@ namespace uns::nn {
 			for(auto link : m_links) {
 				res.links.emplace_back(
 					::std::pair<::uns::nn::adress, weight_type>{
-						::std::get<part::_neuron_>(link)->adress(),
+					::std::get<part::_neuron_>(link)->adress(),
 						::std::get<part::_weight_>(link)
-					}
+				}
 				);
 			};
 
@@ -478,7 +446,7 @@ namespace uns::nn {
 					if(
 						adress.layer >= 0 && adress.layer < main_body.size()
 						&& adress.index >= 0 && adress.index < main_body[adress.layer].size()
-					) {
+						) {
 						::std::get<part::_neuron_>(link) = main_body[adress.layer][adress.index];
 					}
 					else {
@@ -695,7 +663,7 @@ namespace uns::nn {
 
 			return res;
 		};
-		
+
 		void set(
 			const typename ::uns::nn::general::network<neuron_type>::repr_type& repr,
 			const typename ::uns::nn::general::activator<signal_type>::caster& activator_cast,
@@ -715,7 +683,7 @@ namespace uns::nn {
 				if(
 					output.layer >= 0 && output.layer < m_layers.size()
 					&& output.index >= 0 && output.index < m_layers[output.layer].size()
-				) {
+					) {
 					base::m_outputs.push_back(m_layers[output.layer][output.index]);
 				}
 				else {
@@ -801,10 +769,10 @@ namespace uns::nn {
 		::std::size_t inputs_total() const { return base::m_inputs.size(); };
 	};
 
-	
+
 	//a class of network introduces the reversable neural network
 	template<class signal_t, class inputs_allocator_t, class outputs_allocator_t>
-	class nonrecursive_reverse_network: public ::uns::nn::sequential_base_network<::uns::nn::nonrecursive_reverse_neuron<signal_t>, inputs_allocator_t> {
+	class nonrecursive_reverse_network : public ::uns::nn::sequential_base_network<::uns::nn::nonrecursive_reverse_neuron<signal_t>, inputs_allocator_t> {
 	protected:
 		using this_type = nonrecursive_reverse_network<signal_t, inputs_allocator_t, outputs_allocator_t>;
 	public:
@@ -872,5 +840,3 @@ namespace uns::nn {
 		signal_type _I(::std::size_t index) const { return base::m_inputs[index]->_R(); };
 	};
 };
-
-

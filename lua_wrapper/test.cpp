@@ -1,7 +1,7 @@
 ﻿
 #include <iostream>
 
-#include "uniself/lua_wrapper.h"
+#include "uniself/lua_wrapper.hpp"
 
 void print_vals(const ::uns::lua::value&, const ::std::string);
 void print_vals(const ::uns::lua::type::table&, const ::std::string);

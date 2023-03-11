@@ -2,8 +2,8 @@
 #include <iostream>
 #include <limits>
 
-#include "uniself/math.h"
-#include "uniself/matrix.h"
+#include "uniself/math.hpp"
+#include "uniself/matrix.hpp"
 
 #pragma warning(push)
 #pragma warning(    \

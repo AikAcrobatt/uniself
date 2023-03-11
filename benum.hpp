@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#define UNS_HEADER_BENUM "benum.h"
 
 #include <concepts>
 #include <type_traits>
@@ -8,10 +7,11 @@
 #define BETTER_ENUMS_CONSTEXPR_TO_STRING
 #include "better_enums/enum.h"
 
+#include "uniself/strings.hpp"
 
-#ifndef UNS_HEADER_STRINGS
-#include "uniself/strings.h"
-#endif
+
+#ifndef UNS_LIB_BENUM
+#define UNS_LIB_BENUM "benum.hpp"
 
 //BENUM DECLARATOR
 #define UNS_BENUM_DECLARATOR(BENUM_NAME, SPECIFICATION_TYPE, ...)																	        \
@@ -73,3 +73,5 @@ namespace uns::string {
 		return out_t::_from_string(::uns::string::u8_cast<::std::string>(obj).c_str());
 	};
 };
+
+#endif

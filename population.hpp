@@ -1,11 +1,12 @@
 #pragma once
 
-#define UNS_HEADER_POPULATION "population.h"
-
 #include <iostream>
 #include <algorithm>
 #include <vector>
 #include <random>
+
+#ifndef UNS_LIB_POPULATION
+#define UNS_LIB_POPULATION "population.hpp"
 
 namespace uns::population {
 
@@ -436,3 +437,5 @@ namespace uns::population {
 		};
 	};
 };
+
+#endif
