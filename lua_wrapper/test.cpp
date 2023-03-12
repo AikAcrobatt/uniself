@@ -398,7 +398,7 @@ void script_loading_test() {
 int main() {
     ::std::cout << "START\n";
 
-    script_loading_test();
+    function_n_value_test();
 
     ::std::cout << "FINISH\n";
 };
