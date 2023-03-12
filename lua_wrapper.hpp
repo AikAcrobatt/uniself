@@ -5,15 +5,8 @@
 #include <filesystem>
 #include <unordered_map>
 
-extern "C" {
-#include "lua.h"
-#include "lauxlib.h"
-#include "lualib.h"
-}
-
 #include "uniself/strings.hpp"
 #include "uniself/benum.hpp"
-
 
 #ifndef UNS_LIB_LUA_WRAPPER
 #define UNS_LIB_LUA_WRAPPER "lua_wrapper.hpp"
@@ -406,20 +399,29 @@ namespace uns::lua {
 	};
 
 
+
+
 	class lib_entry {
 	protected:
+		using cfunction = int(*)(void*);
+
 		::std::string m_name;
-		lua_CFunction m_function = nullptr;
+		cfunction m_function = nullptr;
 	public:
 		inline lib_entry() noexcept {};
-		lib_entry(const ::std::u8string& name, const lua_CFunction lua_function) noexcept;
+		template<typename lua_state>
+		lib_entry(const ::std::u8string& name, int(*lua_function)(lua_state*)) noexcept :
+			m_name(::uns::string::u8_cast<::std::string>(name)),
+			m_function(reinterpret_cast<cfunction>(lua_function))
+		{};
 		lib_entry(const ::uns::lua::lib_entry&) noexcept = default;
 		::uns::lua::lib_entry& operator=(const ::uns::lua::lib_entry&) noexcept = default;
 		lib_entry(::uns::lua::lib_entry&&) noexcept = default;
 		::uns::lua::lib_entry& operator=(::uns::lua::lib_entry&&) noexcept = default;
 		~lib_entry() noexcept = default;
 
-		operator luaL_Reg() const noexcept;
+		inline const char* name() const noexcept { return m_name.c_str(); };
+		inline cfunction func() const noexcept { return m_function; };
 	};
 
 

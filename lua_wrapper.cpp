@@ -1,4 +1,10 @@
 
+extern "C" {
+#include "lua.h"
+#include "lauxlib.h"
+#include "lualib.h"
+}
+
 #include "uniself/lua_wrapper.hpp"
 
 
@@ -357,7 +363,7 @@ bool ::uns::lua::type::table::operator!=(const ::uns::lua::type::table&) const n
 ::uns::lua::auxiliary::table::~table() noexcept {}
 
 #define UNS_LUA_TABLE_IDX_DESCRIPTOR(type_identifier)											\
-			::uns::lua::value uns::lua::auxiliary::table::operator[] (const ::uns::lua::type::##type_identifier& key) const noexcept {\
+	::uns::lua::value uns::lua::auxiliary::table::operator[] (const ::uns::lua::type::##type_identifier& key) const noexcept {\
 				if(auto value_iter = m_key_##type_identifier.find(key); value_iter != m_key_##type_identifier.end()) {\
 					return value_iter->second;													\
 				}																				\
@@ -365,7 +371,7 @@ bool ::uns::lua::type::table::operator!=(const ::uns::lua::type::table&) const n
 					return ::uns::lua::nil;														\
 				};																				\
 			};								\
-			::uns::lua::value& ::uns::lua::auxiliary::table::operator[] (const ::uns::lua::type::##type_identifier& key) noexcept { return m_key_##type_identifier[key]; };\
+	::uns::lua::value& ::uns::lua::auxiliary::table::operator[] (const ::uns::lua::type::##type_identifier& key) noexcept { return m_key_##type_identifier[key]; };\
 
 UNS_LUA_TABLE_IDX_DESCRIPTOR(number);
 UNS_LUA_TABLE_IDX_DESCRIPTOR(integer);
@@ -398,6 +404,8 @@ UNS_LUA_TABLE_IDX_DESCRIPTOR(string);
 		}
 	};
 };
+#pragma warning(push)
+#pragma warning(disable: 4172)
 ::uns::lua::value& ::uns::lua::auxiliary::table::operator[] (const ::uns::lua::value& key) noexcept {
 	auto nil_replacer = ::uns::lua::value{ ::uns::lua::nil };
 
@@ -425,6 +433,7 @@ UNS_LUA_TABLE_IDX_DESCRIPTOR(string);
 		}
 	};
 };
+#pragma warning(pop)
 
 ::std::size_t uns::lua::auxiliary::table::size() const noexcept {
 	return m_key_number.size() + m_key_integer.size() + m_key_boolean.size() + m_key_string.size();
@@ -545,7 +554,7 @@ UNS_LUA_TABLE_IDX_DESCRIPTOR(string);
 		arg.push_to(*m_stack);
 	};
 
-	if(int lua_retcode = lua_pcall(m_stack->get(), args.size(), expected_results, 0); lua_retcode != LUA_OK) {
+	if(int lua_retcode = lua_pcall(m_stack->get(), static_cast<int>(args.size()), expected_results, 0); lua_retcode != LUA_OK) {//TODO args.size() must be < than int.max()
 		std::string err_str = "";
 		if(lua_isstring(m_stack->get(), -1)) {
 			err_str = lua_tostring(m_stack->get(), -1);
@@ -647,26 +656,6 @@ void uns::lua::global::gc() noexcept {
 //<= class ::uns::lua::global
 
 
-//class ::uns::lua::lib_entry =>
-::uns::lua::lib_entry::lib_entry(
-	const ::std::u8string& name,
-	const lua_CFunction lua_function
-) noexcept :
-	m_name(::uns::string::u8_cast<::std::string>(name)),
-	m_function(lua_function)
-{};
-
-::uns::lua::lib_entry::operator luaL_Reg() const noexcept {
-	if(!m_name.empty() && m_function != nullptr) {
-		return { m_name.c_str(), m_function };
-	}
-	else {
-		return { nullptr, nullptr };
-	};
-};
-//<= class ::uns::lua::lib_entry
-
-
 //class ::uns::lua::script =>
 ::uns::lua::script::script() noexcept : m_stack(new ::uns::lua::auxiliary::state{}) {};
 ::uns::lua::script::script(const ::std::u8string& text) noexcept : m_stack(new ::uns::lua::auxiliary::state{}) {
@@ -731,30 +720,25 @@ void ::uns::lua::script::load(const ::uns::lua::library& library) noexcept {
 		lua_newtable(m_stack->get());
 
 		for(const auto& entry : library.api) {
-			auto lua_entry = static_cast<luaL_Reg>(entry);
-
-			if(lua_entry.name == nullptr || lua_entry.func == nullptr) {
+			if(entry.name() == nullptr || entry.func() == nullptr) {
 				break;
 			};
 
-			lua_pushstring(m_stack->get(), lua_entry.name);
-			lua_pushcfunction(m_stack->get(), lua_entry.func);
+			lua_pushstring(m_stack->get(), entry.name());
+			lua_pushcfunction(m_stack->get(), reinterpret_cast<lua_CFunction>(entry.func()));
 			lua_settable(m_stack->get(), -3);
-
 		};
 
 		lua_setglobal(m_stack->get(), ::uns::string::u8_cast<::std::string>(library.name_space).c_str());
 	}
 	else {
 		for(const auto& entry : library.api) {
-			auto lua_entry = static_cast<luaL_Reg>(entry);
-
-			if(lua_entry.name == nullptr || lua_entry.func == nullptr) {
+			if(entry.name() == nullptr || entry.func() == nullptr) {
 				break;
 			};
 
-			lua_pushcfunction(m_stack->get(), lua_entry.func);
-			lua_setglobal(m_stack->get(), lua_entry.name);
+			lua_pushcfunction(m_stack->get(), reinterpret_cast<lua_CFunction>(entry.func()));
+			lua_setglobal(m_stack->get(), entry.name());
 
 		};
 	};

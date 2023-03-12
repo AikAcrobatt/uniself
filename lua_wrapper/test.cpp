@@ -1,6 +1,12 @@
 ﻿
 #include <iostream>
 
+extern "C" {
+#include "lua.h"
+#include "lauxlib.h"
+#include "lualib.h"
+}
+
 #include "uniself/lua_wrapper.hpp"
 
 void print_vals(const ::uns::lua::value&, const ::std::string);
@@ -398,7 +404,7 @@ void script_loading_test() {
 int main() {
     ::std::cout << "START\n";
 
-    function_n_value_test();
+    lib1_test();
 
     ::std::cout << "FINISH\n";
 };
