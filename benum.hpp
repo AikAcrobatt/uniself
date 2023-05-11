@@ -21,6 +21,8 @@
 	inline bool operator!=(const BENUM_NAME& arg1, const BENUM_NAME::_enumerated& arg2) { return !(arg1 == static_cast<BENUM_NAME>(arg2)); };		\
 	inline bool operator!=(const BENUM_NAME::_enumerated& arg1, const BENUM_NAME& arg2) { return !(static_cast<BENUM_NAME>(arg1) == arg2); };		
 
+//TODO benums are strongly dependent on the code page of initial file especially when they do have default values
+//TODO so there is a strong demand in independent realization of benums
 
 namespace uns {
 
@@ -73,5 +75,6 @@ namespace uns::string {
 		return out_t::_from_string(::uns::string::u8_cast<::std::string>(obj).c_str());
 	};
 };
+//TODO it does not work with explicit enumerators
 
 #endif

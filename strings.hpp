@@ -425,6 +425,7 @@ istream_t& operator>>(istream_t& is, ::std::u8string& str) {
 		return res;
 	};
 };
+//TODO it does not work with fstreams
 	
 
 namespace uns::string {
