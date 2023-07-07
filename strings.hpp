@@ -242,6 +242,7 @@ namespace uns::string {
 	out_t u8_cast(const ::std::u8string_view& from) {
 		return ::uns::string::u32_cast<::std::wstring>(::uns::string::u8_cast<::std::u32string>(from));
 	};
+	//TODO there is an issue with texts that contains "::"
 
 	//convertions of numeric (spreadly) types with ::std::u8string
 	template<::std::same_as<bool> out_t>
