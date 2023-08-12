@@ -4,6 +4,8 @@
 #include <charconv>
 #include <type_traits>
 #include <concepts>
+#include <exception>
+#include <stdexcept>
 
 #include "uniself/concepts.hpp"
 
