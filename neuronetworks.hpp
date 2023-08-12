@@ -44,7 +44,7 @@ namespace uns::nn {
 	};
 
 
-	namespace representation {
+	namespace description {
 
 		template<typename signal_t>
 		class neuron {
@@ -291,7 +291,7 @@ namespace uns::nn {
 		class neuron {
 		public:
 			using signal_type = signal_t;
-			using repr_type = ::uns::nn::representation::neuron<signal_type>;
+			using repr_type = ::uns::nn::description::neuron<signal_type>;
 
 			virtual ::std::u8string type() const noexcept = 0;
 
@@ -335,7 +335,7 @@ namespace uns::nn {
 		public:
 			using signal_type = typename neuron_t::signal_type;
 			using neuron_type = neuron_t;
-			using repr_type = ::uns::nn::representation::network<typename neuron_type::repr_type>;
+			using repr_type = ::uns::nn::description::network<typename neuron_type::repr_type>;
 		protected:
 			::std::vector<::uns::nn::general::neuron<signal_type>*> m_outputs;
 			::std::vector<::uns::nn::general::neuron<signal_type>*> m_inputs;

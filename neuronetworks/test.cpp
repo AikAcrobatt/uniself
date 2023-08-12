@@ -110,7 +110,7 @@ template<typename signal_type>
 class input_neuron: public ::uns::nn::general::neuron<signal_type> {
 public:
 	using base = ::uns::nn::general::neuron<signal_type>;
-	using repr_type = ::uns::nn::representation::neuron<signal_type>;
+	using repr_type = ::uns::nn::description::neuron<signal_type>;
 
 	::uns::nn::adress m_adress;
 	signal_type* data = nullptr;
@@ -210,15 +210,15 @@ public:
 int main() {
     ::std::cout << "START\n";
 
-	auto repr = ::uns::nn::representation::network<::uns::nn::representation::neuron<double>>{};
+	auto repr = ::uns::nn::description::network<::uns::nn::description::neuron<double>>{};
 
 	auto act = _activator_cast<double>{};
 	auto col = _collector_cast<double>{};
 	auto ido = _input_data_object<double>{};
 
-	repr.layers.push_back(::std::vector<::uns::nn::representation::neuron<double>>{});
+	repr.layers.push_back(::std::vector<::uns::nn::description::neuron<double>>{});
 
-	repr.layers.back().push_back(::uns::nn::representation::neuron<double>{});
+	repr.layers.back().push_back(::uns::nn::description::neuron<double>{});
 	repr.layers.back().back().activator = u8"Line";
 	repr.layers.back().back().collector = u8"Perc";
 	repr.layers.back().back().r = 0.12;
@@ -230,7 +230,7 @@ int main() {
 	};
 	repr.layers.back().back().params = { 1, 3, 5 };
 
-	repr.layers.back().push_back(::uns::nn::representation::neuron<double>{});
+	repr.layers.back().push_back(::uns::nn::description::neuron<double>{});
 	repr.layers.back().back().activator = u8"Sigma";
 	repr.layers.back().back().collector = u8"Perc";
 	repr.layers.back().back().r = 50.21;
@@ -240,9 +240,9 @@ int main() {
 	};
 	repr.layers.back().back().params = { 1 };
 
-	repr.layers.push_back(::std::vector<::uns::nn::representation::neuron<double>>{});
+	repr.layers.push_back(::std::vector<::uns::nn::description::neuron<double>>{});
 
-	repr.layers.back().push_back(::uns::nn::representation::neuron<double>{});
+	repr.layers.back().push_back(::uns::nn::description::neuron<double>{});
 	repr.layers.back().back().activator = u8"Line";
 	repr.layers.back().back().collector = u8"Perc";
 	repr.layers.back().back().r = 0;
