@@ -109,12 +109,12 @@ namespace uns::nn {
 		};
 
 
-		template<typename neuron_repr_t>
+		template<typename neuron_descr_t>
 		class network {
 		public:
-			using neuron_repr_type = neuron_repr_t;
+			using neuron_descr_type = neuron_descr_t;
 
-			::std::vector<::std::vector<neuron_repr_t>> layers;
+			::std::vector<::std::vector<neuron_descr_t>> layers;
 			::std::vector<::uns::nn::adress> outputs;
 
 			network() noexcept {};
@@ -291,13 +291,13 @@ namespace uns::nn {
 		class neuron {
 		public:
 			using signal_type = signal_t;
-			using repr_type = ::uns::nn::description::neuron<signal_type>;
+			using descr_type = ::uns::nn::description::neuron<signal_type>;
 
 			virtual ::std::u8string type() const noexcept = 0;
 
-			virtual repr_type represent() const noexcept = 0;
+			virtual descr_type represent() const noexcept = 0;
 			virtual void set(
-				const repr_type&,
+				const descr_type&,
 				const ::uns::nn::adress&,
 				const typename ::uns::nn::general::activator<signal_type>::caster&,
 				const typename ::uns::nn::general::collector<signal_type>::caster&
@@ -335,14 +335,14 @@ namespace uns::nn {
 		public:
 			using signal_type = typename neuron_t::signal_type;
 			using neuron_type = neuron_t;
-			using repr_type = ::uns::nn::description::network<typename neuron_type::repr_type>;
+			using descr_type = ::uns::nn::description::network<typename neuron_type::descr_type>;
 		protected:
 			::std::vector<::uns::nn::general::neuron<signal_type>*> m_outputs;
 			::std::vector<::uns::nn::general::neuron<signal_type>*> m_inputs;
 		public:
-			virtual repr_type represent() const noexcept = 0;
+			virtual descr_type represent() const noexcept = 0;
 			virtual void set(
-				const repr_type&,
+				const descr_type&,
 				const typename ::uns::nn::general::activator<signal_type>::caster&,
 				const typename ::uns::nn::general::collector<signal_type>::caster&,
 				::uns::nn::general::input_data_object<signal_type>&
@@ -400,8 +400,8 @@ namespace uns::nn {
 		sequential_neuron& operator=(::uns::nn::sequential_neuron<signal_t>&&) = delete;
 		~sequential_neuron() noexcept {};
 
-		::uns::nn::general::neuron<signal_type>::repr_type represent() const noexcept override {
-			auto res = typename ::uns::nn::general::neuron<signal_type>::repr_type{};
+		::uns::nn::general::neuron<signal_type>::descr_type represent() const noexcept override {
+			auto res = typename ::uns::nn::general::neuron<signal_type>::descr_type{};
 
 			if(m_F != nullptr) {
 				res.activator = m_F->type();
@@ -432,7 +432,7 @@ namespace uns::nn {
 		};
 
 		void set(
-			const ::uns::nn::general::neuron<signal_type>::repr_type& repr,
+			const ::uns::nn::general::neuron<signal_type>::descr_type& repr,
 			const ::uns::nn::adress& adress,
 			const typename ::uns::nn::general::activator<signal_type>::caster& activator_cast,
 			const typename ::uns::nn::general::collector<signal_type>::caster& collector_cast
@@ -677,11 +677,11 @@ namespace uns::nn {
 			};
 		};
 
-		typename ::uns::nn::general::network<neuron_t>::repr_type represent() const noexcept override {
-			auto res = typename ::uns::nn::general::network<neuron_t>::repr_type{};
+		typename ::uns::nn::general::network<neuron_t>::descr_type represent() const noexcept override {
+			auto res = typename ::uns::nn::general::network<neuron_t>::descr_type{};
 
 			for(const auto& layer : m_layers) {
-				res.layers.push_back(::std::vector<typename neuron_type::repr_type>{});
+				res.layers.push_back(::std::vector<typename neuron_type::descr_type>{});
 				for(auto neuron_ptr : layer) {
 					res.layers.back().emplace_back(neuron_ptr->represent());
 				};
@@ -695,7 +695,7 @@ namespace uns::nn {
 		};
 		
 		void set(
-			const typename ::uns::nn::general::network<neuron_type>::repr_type& repr,
+			const typename ::uns::nn::general::network<neuron_type>::descr_type& repr,
 			const typename ::uns::nn::general::activator<signal_type>::caster& activator_cast,
 			const typename ::uns::nn::general::collector<signal_type>::caster& collector_cast,
 			::uns::nn::general::input_data_object<signal_type>& ido
