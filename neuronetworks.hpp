@@ -295,7 +295,7 @@ namespace uns::nn {
 
 			virtual ::std::u8string type() const noexcept = 0;
 
-			virtual descr_type represent() const noexcept = 0;
+			virtual descr_type descript() const noexcept = 0;
 			virtual void set(
 				const descr_type&,
 				const ::uns::nn::adress&,
@@ -340,7 +340,7 @@ namespace uns::nn {
 			::std::vector<::uns::nn::general::neuron<signal_type>*> m_outputs;
 			::std::vector<::uns::nn::general::neuron<signal_type>*> m_inputs;
 		public:
-			virtual descr_type represent() const noexcept = 0;
+			virtual descr_type descript() const noexcept = 0;
 			virtual void set(
 				const descr_type&,
 				const typename ::uns::nn::general::activator<signal_type>::caster&,
@@ -400,7 +400,7 @@ namespace uns::nn {
 		sequential_neuron& operator=(::uns::nn::sequential_neuron<signal_t>&&) = delete;
 		~sequential_neuron() noexcept {};
 
-		::uns::nn::general::neuron<signal_type>::descr_type represent() const noexcept override {
+		::uns::nn::general::neuron<signal_type>::descr_type descript() const noexcept override {
 			auto res = typename ::uns::nn::general::neuron<signal_type>::descr_type{};
 
 			if(m_F != nullptr) {
@@ -432,25 +432,25 @@ namespace uns::nn {
 		};
 
 		void set(
-			const ::uns::nn::general::neuron<signal_type>::descr_type& repr,
+			const ::uns::nn::general::neuron<signal_type>::descr_type& descriptor,
 			const ::uns::nn::adress& adress,
 			const typename ::uns::nn::general::activator<signal_type>::caster& activator_cast,
 			const typename ::uns::nn::general::collector<signal_type>::caster& collector_cast
 		) override {
 			m_adress = adress;
 
-			m_F = activator_cast(repr.activator);
+			m_F = activator_cast(descriptor.activator);
 			if(m_F == nullptr) throw ::std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-			*m_F = repr.r;
+			*m_F = descriptor.r;
 
-			m_S = collector_cast(repr.collector);
+			m_S = collector_cast(descriptor.collector);
 			if(m_S == nullptr) throw ::std::runtime_error(UNS_DEV_EXCEPTION_MSG);
-			*m_S = repr.c;
+			*m_S = descriptor.c;
 
-			m_params = repr.params;
+			m_params = descriptor.params;
 
 			m_adresses = ::std::unique_ptr<::std::vector<::std::pair<::uns::nn::adress, weight_type>>>(new ::std::vector<::std::pair<::uns::nn::adress, weight_type>>{});
-			*m_adresses = repr.links;
+			*m_adresses = descriptor.links;
 		};
 
 		void link(
@@ -677,13 +677,13 @@ namespace uns::nn {
 			};
 		};
 
-		typename ::uns::nn::general::network<neuron_t>::descr_type represent() const noexcept override {
+		typename ::uns::nn::general::network<neuron_t>::descr_type descript() const noexcept override {
 			auto res = typename ::uns::nn::general::network<neuron_t>::descr_type{};
 
 			for(const auto& layer : m_layers) {
 				res.layers.push_back(::std::vector<typename neuron_type::descr_type>{});
 				for(auto neuron_ptr : layer) {
-					res.layers.back().emplace_back(neuron_ptr->represent());
+					res.layers.back().emplace_back(neuron_ptr->descript());
 				};
 			};
 
@@ -695,12 +695,12 @@ namespace uns::nn {
 		};
 		
 		void set(
-			const typename ::uns::nn::general::network<neuron_type>::descr_type& repr,
+			const typename ::uns::nn::general::network<neuron_type>::descr_type& descriptor,
 			const typename ::uns::nn::general::activator<signal_type>::caster& activator_cast,
 			const typename ::uns::nn::general::collector<signal_type>::caster& collector_cast,
 			::uns::nn::general::input_data_object<signal_type>& ido
 		) override {
-			for(const auto& layer : repr.layers) {
+			for(const auto& layer : descriptor.layers) {
 				m_layers.push_back(::std::vector<neuron_type*>{});
 				for(const auto& neuron : layer) {
 					auto neuron_ptr = new neuron_type{};
@@ -709,7 +709,7 @@ namespace uns::nn {
 			};
 
 			base::m_outputs.clear();
-			for(const auto& output : repr.outputs) {
+			for(const auto& output : descriptor.outputs) {
 				if(
 					output.layer >= 0 && output.layer < m_layers.size()
 					&& output.index >= 0 && output.index < m_layers[output.layer].size()
@@ -723,9 +723,9 @@ namespace uns::nn {
 
 			for(::std::size_t layer_idx = 0; layer_idx < m_layers.size(); ++layer_idx) {
 				for(::std::size_t neuron_idx = 0; neuron_idx < m_layers[layer_idx].size(); ++neuron_idx) {
-					if(layer_idx < repr.layers.size() && neuron_idx < repr.layers[layer_idx].size()) {
+					if(layer_idx < descriptor.layers.size() && neuron_idx < descriptor.layers[layer_idx].size()) {
 						m_layers[layer_idx][neuron_idx]->set(
-							repr.layers[layer_idx][neuron_idx],
+							descriptor.layers[layer_idx][neuron_idx],
 							::uns::nn::adress{ static_cast<int>(layer_idx), static_cast<int>(neuron_idx) },
 							activator_cast,
 							collector_cast
