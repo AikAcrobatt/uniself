@@ -169,12 +169,13 @@ namespace uns::nn {
 
 
 		//an interface of input-data provider
-		template<typename signal_t>
+		template<typename signal_t, class allocator_t = ::std::allocator<neuron<signal_t>>>
 		class input_data_object {
 		public:
 			virtual ::std::size_t size() const = 0;
 			virtual neuron<signal_t>* get(const ::uns::nn::adress&) = 0;
 			virtual bool has_it(const ::uns::nn::adress&) const noexcept = 0;
+			virtual allocator_t get_allocator() noexcept;
 		};
 
 
@@ -649,7 +650,7 @@ namespace uns::nn {
 
 
 	//a class of network introduces the sequential neural network
-	template<class neuron_t, class inputs_allocator_t>
+	template<class neuron_t, class inputs_allocator_t = ::std::allocator<neuron_t>>
 	class sequential_base_network : public ::uns::nn::general::network<neuron_t> {
 	protected:
 		using this_type = sequential_base_network<neuron_t, inputs_allocator_t>;
@@ -659,6 +660,7 @@ namespace uns::nn {
 		using base = ::uns::nn::general::network<neuron_t>;
 	protected:
 		::std::vector<::std::vector<neuron_type*>> m_layers;
+		inputs_allocator_t m_inputs_allocator;
 	public:
 		sequential_base_network() {};
 		sequential_base_network(const sequential_base_network& net) = delete;
@@ -673,7 +675,7 @@ namespace uns::nn {
 			};
 
 			for(auto input : base::m_inputs) {
-				inputs_allocator_t::dealloc(input);
+				m_inputs_allocator.deallocate(input, 1);
 			};
 		};
 
@@ -698,7 +700,7 @@ namespace uns::nn {
 			const typename ::uns::nn::general::network<neuron_type>::descr_type& descriptor,
 			const typename ::uns::nn::general::activator<signal_type>::caster& activator_cast,
 			const typename ::uns::nn::general::collector<signal_type>::caster& collector_cast,
-			::uns::nn::general::input_data_object<signal_type>& ido
+			::uns::nn::general::input_data_object<signal_type, inputs_allocator_t>& ido
 		) override {
 			for(const auto& layer : descriptor.layers) {
 				m_layers.push_back(::std::vector<neuron_type*>{});
@@ -755,6 +757,8 @@ namespace uns::nn {
 			for(const auto& [adress, input_ptr] : inputs_map) {
 				base::m_inputs.push_back(input_ptr);
 			};
+
+			m_inputs_allocator = ido.get_allocator();
 		};
 
 		::std::size_t capacity() const noexcept override {
@@ -769,6 +773,8 @@ namespace uns::nn {
 					result += neuron_ptr->capacity();
 				};
 			};
+
+			result += sizeof(m_inputs_allocator);
 
 			return result;
 		};
@@ -801,7 +807,7 @@ namespace uns::nn {
 
 	
 	//a class of network introduces the reversable neural network
-	template<class signal_t, class inputs_allocator_t, class outputs_allocator_t>
+	template<class signal_t, class inputs_allocator_t = ::std::allocator<::uns::nn::nonrecursive_reverse_neuron<signal_t>>, class outputs_allocator_t = ::std::allocator<::uns::nn::nonrecursive_reverse_neuron<signal_t>>>
 	class nonrecursive_reverse_network: public ::uns::nn::sequential_base_network<::uns::nn::nonrecursive_reverse_neuron<signal_t>, inputs_allocator_t> {
 	protected:
 		using this_type = nonrecursive_reverse_network<signal_t, inputs_allocator_t, outputs_allocator_t>;
@@ -811,6 +817,7 @@ namespace uns::nn {
 		using base = ::uns::nn::sequential_base_network<::uns::nn::nonrecursive_reverse_neuron<signal_t>, inputs_allocator_t>;
 	protected:
 		::std::vector<::uns::nn::general::neuron<signal_type>*> m_reverse_inputs;
+		outputs_allocator_t m_outputs_allocator;
 	public:
 		nonrecursive_reverse_network() {};
 		nonrecursive_reverse_network(const nonrecursive_reverse_network& net) = delete;
@@ -819,11 +826,11 @@ namespace uns::nn {
 		nonrecursive_reverse_network& operator=(nonrecursive_reverse_network&& net) = delete;
 		~nonrecursive_reverse_network() {
 			for(auto neuron_ptr : m_reverse_inputs) {
-				outputs_allocator_t::dealloc(neuron_ptr);
+				m_outputs_allocator.deallocate(neuron_ptr, 1);
 			};
 		};
 
-		void _link(::uns::nn::general::input_data_object<signal_type>& odo) {
+		void _link(::uns::nn::general::input_data_object<signal_type, outputs_allocator_t>& odo) {
 			auto reverse_inputs = ::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<typename base::signal_type>*, ::uns::nn::adress::hash>{};
 
 			for(const auto& layer : base::m_layers) {
@@ -835,6 +842,8 @@ namespace uns::nn {
 			for(auto& [adress, reverse_input_ptr] : reverse_inputs) {
 				m_reverse_inputs.push_back(reverse_input_ptr);
 			};
+
+			m_outputs_allocator = odo.get_allocator();
 		};
 
 		::std::size_t capacity() const noexcept override {
@@ -845,6 +854,8 @@ namespace uns::nn {
 			for(auto neuron_ptr : m_reverse_inputs) {
 				result += neuron_ptr->capacity();
 			};
+
+			result += sizeof(m_outputs_allocator);
 
 			return result;
 		};
