@@ -168,6 +168,12 @@ namespace uns::population {
 			};
 		};
 
+		void reserve(size_type new_capacity) noexcept {
+			try {
+				m_container.reserve(new_capacity);
+			}
+			catch(const ::std::exception&) {};
+		};
 	};
 
 
@@ -358,6 +364,7 @@ namespace uns::population {
 			};
 
 			units.clear();
+			units.reserve(living_units.size());
 
 			for(auto living : living_units) {
 				units.push(living);
