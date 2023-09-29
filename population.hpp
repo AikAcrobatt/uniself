@@ -37,7 +37,7 @@ namespace uns::population {
 		using index_type = typename order_t::size_type;
 	protected:
 		::std::shared_ptr<unit_type> m_unit_ptr = nullptr;
-		order_type* m_order_ptr;
+		order_type* m_order_ptr = nullptr;
 		index_type m_index = 0;
 	public:
 		order_element() = delete;
@@ -113,30 +113,18 @@ namespace uns::population {
 		mutable ::std::mt19937 m_engine;
 		mutable ::std::uniform_real_distribution<float> m_distribution;
 	public:
-		linear_order(int seed = 0) :
+		linear_order(int seed = 0) noexcept :
 			m_engine(seed),
 			m_distribution(0.0F, 1.0F)
 		{};
-		linear_order(const linear_order& obj) :
-			m_container(obj.m_container),
-			m_engine(obj.m_engine),
-			m_distribution(obj.m_distribution)
-		{};
-		linear_order& operator=(const linear_order& obj) {
-			if(this == &obj) return *this;
-
-			m_container = obj.m_container;
-			m_engine = obj.m_engine;
-			m_distribution = obj.m_distribution;
-
-			return *this;
-		};
-		linear_order(linear_order&& obj) :
+		linear_order(const linear_order& obj) = delete;
+		linear_order& operator=(const linear_order& obj) = delete;
+		linear_order(linear_order&& obj) noexcept :
 			m_container(::std::move(obj.m_container)),
 			m_engine(::std::move(obj.m_engine)),
 			m_distribution(::std::move(obj.m_distribution))
 		{};
-		linear_order& operator=(linear_order&& obj) {
+		linear_order& operator=(linear_order&& obj) noexcept {
 			if(this == &obj) return *this;
 
 			m_container = ::std::move(obj.m_container);
@@ -147,33 +135,33 @@ namespace uns::population {
 		};
 		~linear_order() noexcept {};
 
-		const_iterator_type cbegin() const { return m_container.cbegin(); };
-		iterator_type begin() { return m_container.begin(); };
+		const_iterator_type cbegin() const noexcept { return m_container.cbegin(); };
+		iterator_type begin() noexcept { return m_container.begin(); };
 
-		const_iterator_type cend() const { return m_container.cend(); };
-		iterator_type end() { return m_container.end(); };
+		const_iterator_type cend() const noexcept { return m_container.cend(); };
+		iterator_type end() noexcept { return m_container.end(); };
 
-		size_type size() const { return m_container.size(); };
+		size_type size() const noexcept { return m_container.size(); };
 
-		auto operator[](size_type index) const { return m_container[index]; };
-		auto& operator[](size_type index) { return m_container[index]; };
+		auto operator[](size_type index) const noexcept { return m_container[index]; };
+		auto& operator[](size_type index) noexcept { return m_container[index]; };
 
-		void clear() {
+		void clear() noexcept {
 			m_container.clear();
 		};
 
-		void push(const ::std::shared_ptr<unit_type>& unit_to_add) {
+		void push(const ::std::shared_ptr<unit_type>& unit_to_add) noexcept {
 			m_container.push_back(element_type{ unit_to_add, *static_cast<order_type*>(this), m_container.size() });
 		};
 
-		void pop(const iterator_type& iter) {
+		void pop(const iterator_type& iter) noexcept {
 			m_container.erase(iter);
 		};
-		void pop(size_type index) {
+		void pop(size_type index) noexcept {
 			m_container.erase(m_container.begin() + index);
 		};
 
-		void indexate() {
+		void indexate() noexcept {
 			size_t index = 0;
 			for(auto& unit : m_container) {
 				unit.index() = index++;
@@ -194,26 +182,14 @@ namespace uns::population {
 		using size_type = typename base::size_type;
 		using unit_type = typename base::unit_type;
 	public:
-		unordered_order(int seed = 0) : base(seed) {};
-		unordered_order(const unordered_order& obj) :
-			base::m_container(obj.m_container),
-			base::m_engine(obj.m_engine),
-			base::m_distribution(obj.m_distribution)
-		{};
-		unordered_order& operator=(const unordered_order& obj) {
-			if(this == &obj) return *this;
-
-			base::m_container = obj.m_container;
-			base::m_engine = obj.m_engine;
-			base::m_distribution = obj.m_distribution;
-
-			return *this;
-		};
-		unordered_order(unordered_order&& obj) :
+		unordered_order(int seed = 0) noexcept : base(seed) {};
+		unordered_order(const unordered_order& obj) = delete;
+		unordered_order& operator=(const unordered_order& obj) = delete;
+		unordered_order(unordered_order&& obj) noexcept :
 			base::m_container(::std::move(obj.m_container)),
 			base::m_engine(::std::move(obj.m_engine)),
 			base::m_distribution(::std::move(obj.m_distribution)) {};
-		unordered_order& operator=(unordered_order&& obj) {
+		unordered_order& operator=(unordered_order&& obj) noexcept {
 			if(this == &obj) return *this;
 
 			base::m_container = ::std::move(obj.m_container);
@@ -224,7 +200,7 @@ namespace uns::population {
 		};
 		~unordered_order() noexcept {};
 
-		const_iterator_type pick() const {
+		const_iterator_type pick() const noexcept {
 			size_type index = 0;
 			if(!(base::m_container.size() > 0)) return base::m_container.cbegin();
 
@@ -236,7 +212,7 @@ namespace uns::population {
 	};
 
 
-	template<typename unit_t, bool(*m_predicate)(unit_t&, unit_t&)>
+	template<typename unit_t, bool(*m_predicate)(unit_t&, unit_t&) noexcept>
 	class ordered_order : public linear_order<unit_t, ordered_order<unit_t, m_predicate>> {
 	protected:
 		using base = linear_order<unit_t, ordered_order<unit_t, m_predicate>>;
@@ -248,26 +224,14 @@ namespace uns::population {
 		using unit_type = typename base::unit_type;
 	public:
 		ordered_order(int seed = 0) : base(seed) {};
-		ordered_order(const ordered_order& obj) :
-			base::m_container(obj.m_container),
-			base::m_engine(obj.m_engine),
-			base::m_distribution(obj.m_distribution)
-		{};
-		ordered_order& operator=(const ordered_order& obj) {
-			if(this == &obj) return *this;
-
-			base::m_container = obj.m_container;
-			base::m_engine = obj.m_engine;
-			base::m_distribution = obj.m_distribution;
-
-			return *this;
-		};
-		ordered_order(ordered_order&& obj) :
+		ordered_order(const ordered_order& obj) = delete;
+		ordered_order& operator=(const ordered_order& obj) = delete;
+		ordered_order(ordered_order&& obj) noexcept :
 			base::m_container(::std::move(obj.m_container)),
 			base::m_engine(::std::move(obj.m_engine)),
 			base::m_distribution(::std::move(obj.m_distribution))
 		{};
-		ordered_order& operator=(ordered_order&& obj) {
+		ordered_order& operator=(ordered_order&& obj) noexcept {
 			if(this == &obj) return *this;
 
 			base::m_container = ::std::move(obj.m_container);
@@ -277,7 +241,7 @@ namespace uns::population {
 		};
 		~ordered_order() noexcept {};
 
-		const_iterator_type pick_less(const element_type& elem) const {
+		const_iterator_type pick_less(const element_type& elem) const noexcept {
 			size_type index = 0;
 			if(!(base::m_container.size() - 1 - elem.index() > 0)) return base::m_container.cbegin();
 
@@ -289,7 +253,7 @@ namespace uns::population {
 			return (base::m_container.cbegin() + index);
 		};
 
-		const_iterator_type pick_more(const element_type& elem) const {
+		const_iterator_type pick_more(const element_type& elem) const noexcept {
 			size_type index = 0;
 			if(!(elem.index() > 1)) return base::m_container.cbegin();
 
@@ -299,7 +263,7 @@ namespace uns::population {
 			return (base::m_container.cbegin() + index);
 		};
 
-		virtual void sort() {
+		virtual void sort() noexcept {
 			::std::sort(base::m_container.begin(), base::m_container.end(), m_predicate);
 			base::indexate();
 		};
@@ -362,7 +326,7 @@ namespace uns::population {
 		using order_type = typename order_t;
 		using unit_type = typename order_type::unit_type;
 		using index_type = typename order_type::size_type;
-		using order_elemnt_type = typename order_type::element_type;
+		using order_element_type = typename order_type::element_type;
 		using points_type = typename unit_type::points_type;
 		using health_type = typename unit_type::health_type;
 		using ration_source_type = ration_source_t;
@@ -377,7 +341,7 @@ namespace uns::population {
 		size_control_type barrier;
 		health_type life_decrease = 0.0F;
 	public:
-		machine(int random_seed, health_type life_decrement) : units(random_seed), life_decrease(life_decrement) {};
+		machine(int random_seed, health_type life_decrement) : units(random_seed), life_decrease(life_decrement) noexcept {};
 	protected:
 		void sanitation() {
 			OnSanitationStart();
@@ -403,21 +367,21 @@ namespace uns::population {
 		};
 
 		virtual void OnConditionStart() {};
-		virtual void OnConditionUnitStart(order_elemnt_type& elem) {};
-		virtual void OnConditionUnitFinish(order_elemnt_type& elem) {};
+		virtual void OnConditionUnitStart(order_element_type& elem) {};
+		virtual void OnConditionUnitFinish(order_element_type& elem) {};
 		virtual void OnConditionFinish() {};
 		virtual void OnSanitationStart() {};
-		virtual void OnSanitationUnitStart(order_elemnt_type& elem) {};
-		virtual void OnSanitationUnitFinish(order_elemnt_type& elem) {};
+		virtual void OnSanitationUnitStart(order_element_type& elem) {};
+		virtual void OnSanitationUnitFinish(order_element_type& elem) {};
 		virtual void OnSanitationFinish() { units.indexate(); };
 	public:
 		void condition() {
 			OnConditionStart();
 
-			auto units_list = std::vector<order_elemnt_type>{};
+			auto units_list = std::vector<order_element_type>{};
 			units_list.reserve(units.size());
 			for(auto one_unit : units) {
-				units_list.push_back(one_unit);
+				units_list.emplace_back(one_unit);
 
 				OnConditionUnitStart(one_unit);
 				ration_source.feed(one_unit);
