@@ -172,7 +172,7 @@ namespace uns::nn {
 		template<typename signal_t, class allocator_t = ::std::allocator<neuron<signal_t>>>
 		class input_data_object {
 		public:
-			virtual ::std::size_t size() const = 0;
+			virtual ::std::size_t size() const noexcept = 0;
 			virtual neuron<signal_t>* get(const ::uns::nn::adress&) = 0;
 			virtual bool has_it(const ::uns::nn::adress&) const noexcept = 0;
 			virtual allocator_t get_allocator() noexcept;
