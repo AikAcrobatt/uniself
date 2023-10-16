@@ -405,7 +405,7 @@ namespace uns::nn {
 		::uns::nn::sequential_neuron& operator=(::uns::nn::sequential_neuron<signal_t>&&) = delete;
 		~sequential_neuron() noexcept {};
 
-		::uns::nn::general::neuron<signal_type>::descr_type descript() const noexcept override {
+		virtual ::uns::nn::general::neuron<signal_type>::descr_type descript() const noexcept override {
 			auto res = typename ::uns::nn::general::neuron<signal_type>::descr_type{};
 
 			if(m_F != nullptr) {
@@ -436,7 +436,7 @@ namespace uns::nn {
 			return res;
 		};
 
-		void set(
+		virtual void set(
 			const ::uns::nn::general::neuron<signal_type>::descr_type& descriptor,
 			const ::uns::nn::adress& adress,
 			const typename ::uns::nn::general::activator<signal_type>::caster& activator_cast,
@@ -458,7 +458,7 @@ namespace uns::nn {
 			*m_adresses = descriptor.links;
 		};
 
-		void link(
+		virtual void link(
 			::std::vector<::std::vector<::uns::nn::general::neuron<signal_t>*>>& main_body,
 			::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<signal_type>*, ::uns::nn::adress::hash>& inputs,
 			::uns::nn::general::input_data_object<signal_type>& ido
@@ -495,7 +495,7 @@ namespace uns::nn {
 			m_adresses = nullptr;
 		};
 
-		::std::size_t capacity() const noexcept override {
+		virtual ::std::size_t capacity() const noexcept override {
 			::std::size_t result = base::capacity();
 
 			result += m_adress.capacity();
@@ -507,12 +507,12 @@ namespace uns::nn {
 			return result;
 		};
 
-		::std::u8string type() const noexcept override { return m_F->type() + u8"." + m_S->type(); };
+		virtual ::std::u8string type() const noexcept override { return m_F->type() + u8"." + m_S->type(); };
 
-		::uns::nn::adress adress() const noexcept override { return m_adress; };
+		virtual ::uns::nn::adress adress() const noexcept override { return m_adress; };
 
-		int subneurons_total() const noexcept override { return static_cast<int>(m_links.size()); };
-		const ::uns::nn::general::neuron<signal_type>* subneuron(int connection_idx) const noexcept override {
+		virtual int subneurons_total() const noexcept override { return static_cast<int>(m_links.size()); };
+		virtual const ::uns::nn::general::neuron<signal_type>* subneuron(int connection_idx) const noexcept override {
 			if(connection_idx >= 0 && connection_idx < m_links.size()) {
 				return ::std::get<part::_neuron_>(m_links[connection_idx]);
 			}
@@ -520,7 +520,7 @@ namespace uns::nn {
 				return nullptr;
 			};
 		};
-		::uns::nn::general::neuron<signal_type>* subneuron(int connection_idx) noexcept override {
+		virtual ::uns::nn::general::neuron<signal_type>* subneuron(int connection_idx) noexcept override {
 			if(connection_idx >= 0 && connection_idx < m_links.size()) {
 				return ::std::get<part::_neuron_>(static_cast<::std::pair<::uns::nn::general::neuron<signal_type>*, weight_type>>(m_links[connection_idx]));
 			}
@@ -529,15 +529,15 @@ namespace uns::nn {
 			};
 		};
 
-		signal_type R() const noexcept override { return m_F->value(); };
-		void R(const signal_type R) noexcept override { *m_F = R; };
+		virtual signal_type R() const noexcept override { return m_F->value(); };
+		virtual void R(const signal_type R) noexcept override { *m_F = R; };
 
-		signal_type C() const noexcept { return m_S->value(); };
-		void C(const signal_type c) noexcept { *m_S = c; };
+		virtual signal_type C() const noexcept override { return m_S->value(); };
+		virtual void C(const signal_type c) noexcept override { *m_S = c; };
 
-		void react(const ::uns::nn::general::network_params<signal_type>& common_params) override { (*m_F)(m_S->value(), common_params.forward(m_params)); };
+		virtual void react(const ::uns::nn::general::network_params<signal_type>& common_params) override { (*m_F)(m_S->value(), common_params.forward(m_params)); };
 
-		void collect(const ::uns::nn::general::network_params<signal_type>& common_params) override { (*m_S)(m_links, common_params.forward(m_params)); };
+		virtual void collect(const ::uns::nn::general::network_params<signal_type>& common_params) override { (*m_S)(m_links, common_params.forward(m_params)); };
 	};
 
 
@@ -564,7 +564,7 @@ namespace uns::nn {
 		::uns::nn::nonrecursive_reverse_neuron<signal_t>& operator=(::uns::nn::nonrecursive_reverse_neuron<signal_t>&&) = delete;
 		~nonrecursive_reverse_neuron() {};
 
-		void _link(
+		virtual void _link(
 			::std::vector<::std::vector<::uns::nn::nonrecursive_reverse_neuron<typename base::signal_type>*>>& main_body,
 			::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<typename base::signal_type>*, ::uns::nn::adress::hash>& reverse_inputs,
 			::uns::nn::general::input_data_object<typename base::signal_type>& odo
@@ -595,7 +595,7 @@ namespace uns::nn {
 			};
 		};
 
-		::std::size_t capacity() const noexcept override {
+		virtual ::std::size_t capacity() const noexcept override {
 			::std::size_t result = base::capacity();
 
 			result += sizeof(m_r);
@@ -608,24 +608,24 @@ namespace uns::nn {
 			return result;
 		};
 
-		bool is_reversible() const noexcept override { return true; };
+		virtual bool is_reversible() const noexcept override { return true; };
 
-		signal_t dropout() const noexcept override { return m_dropout; };
-		void dropout(signal_t new_dropout) noexcept override { m_dropout = (::uns::math::more(new_dropout, signal_t(1)) ? signal_t(1) : (::uns::math::less(new_dropout, signal_t(0)) ? signal_t(0) : new_dropout)); };
+		virtual signal_t dropout() const noexcept override { return m_dropout; };
+		virtual void dropout(signal_t new_dropout) noexcept override { m_dropout = (::uns::math::more(new_dropout, signal_t(1)) ? signal_t(1) : (::uns::math::less(new_dropout, signal_t(0)) ? signal_t(0) : new_dropout)); };
 
-		signal_t _R() const noexcept { return m_r; };
+		virtual signal_t _R() const noexcept { return m_r; };
 
-		void _R(const signal_t R) noexcept { m_r = R; };
+		virtual void _R(const signal_t R) noexcept { m_r = R; };
 
-		signal_t _C() const noexcept { return m_s; };
+		virtual signal_t _C() const noexcept { return m_s; };
 
-		void _C(const signal_t c) noexcept { m_s = c; };
+		virtual void _C(const signal_t c) noexcept { m_s = c; };
 
-		void _react(const ::uns::nn::general::network_params<signal_t>& common_params) {
+		virtual void _react(const ::uns::nn::general::network_params<signal_t>& common_params) {
 			m_r = dF_dS(common_params) * m_s;
 		};
 
-		void _collect(const ::uns::nn::general::network_params<signal_t>& common_params) {
+		virtual void _collect(const ::uns::nn::general::network_params<signal_t>& common_params) {
 			using neuron_type = ::uns::nn::nonrecursive_reverse_neuron<typename base::signal_type>;
 
 			m_s = 0;
@@ -637,19 +637,19 @@ namespace uns::nn {
 			};
 		};
 
-		bool is_learning() const noexcept { return m_is_learning; };
+		virtual bool is_learning() const noexcept { return m_is_learning; };
 
-		void set_learning(bool islearning) noexcept { m_is_learning = islearning; };
+		virtual void set_learning(bool islearning) noexcept { m_is_learning = islearning; };
 
-		signal_t dS_dr(int index, const ::uns::nn::general::network_params<signal_t>& common_params) const { return base::S->_dr(index, base::m_links, common_params.forward(base::m_params)); };	//TODO to think: forwarding params of this neuron can unintendedly replace params of subneurons
+		virtual signal_t dS_dr(int index, const ::uns::nn::general::network_params<signal_t>& common_params) const { return base::S->_dr(index, base::m_links, common_params.forward(base::m_params)); };	//TODO to think: forwarding params of this neuron can unintendedly replace params of subneurons
 
-		signal_t dS_dw(int index, const ::uns::nn::general::network_params<signal_t>& common_params) const { return base::S->_dw(index, base::m_links, common_params.forward(base::m_params)); };
+		virtual signal_t dS_dw(int index, const ::uns::nn::general::network_params<signal_t>& common_params) const { return base::S->_dw(index, base::m_links, common_params.forward(base::m_params)); };
 
-		signal_t dS_dp(int index, const ::uns::nn::general::network_params<signal_t>& common_params) const { return base::S->_dp(index, base::m_links, common_params.forward(base::m_params)); };
+		virtual signal_t dS_dp(int index, const ::uns::nn::general::network_params<signal_t>& common_params) const { return base::S->_dp(index, base::m_links, common_params.forward(base::m_params)); };
 
-		signal_t dF_dS(const ::uns::nn::general::network_params<signal_t>& common_params) const { return base::F->_dS(base::C(), common_params.forward(base::m_params)); };
+		virtual signal_t dF_dS(const ::uns::nn::general::network_params<signal_t>& common_params) const { return base::F->_dS(base::C(), common_params.forward(base::m_params)); };
 
-		signal_t dF_dp(int index, const ::uns::nn::general::network_params<signal_t>& common_params) const { return base::F->_dp(index, base::C(), common_params.forward(base::m_params)); };
+		virtual signal_t dF_dp(int index, const ::uns::nn::general::network_params<signal_t>& common_params) const { return base::F->_dp(index, base::C(), common_params.forward(base::m_params)); };
 	};
 
 
@@ -683,7 +683,7 @@ namespace uns::nn {
 			};
 		};
 
-		typename ::uns::nn::general::network<neuron_t>::descr_type descript() const noexcept override {
+		virtual typename ::uns::nn::general::network<neuron_t>::descr_type descript() const noexcept override {
 			auto res = typename ::uns::nn::general::network<neuron_t>::descr_type{};
 
 			for(const auto& layer : m_layers) {
@@ -700,7 +700,7 @@ namespace uns::nn {
 			return res;
 		};
 		
-		void set(
+		virtual void set(
 			const typename ::uns::nn::general::network<neuron_type>::descr_type& descriptor,
 			const typename ::uns::nn::general::activator<signal_type>::caster& activator_cast,
 			const typename ::uns::nn::general::collector<signal_type>::caster& collector_cast,
@@ -765,7 +765,7 @@ namespace uns::nn {
 			m_inputs_allocator = ido.get_allocator();
 		};
 
-		::std::size_t capacity() const noexcept override {
+		virtual ::std::size_t capacity() const noexcept override {
 			::std::size_t result = base::capacity();
 
 			result += m_layers.capacity() * sizeof(typename decltype(m_layers)::value_type);
@@ -783,7 +783,7 @@ namespace uns::nn {
 			return result;
 		};
 
-		void react(const ::uns::nn::general::network_params<signal_type>& common_params) override {
+		virtual void react(const ::uns::nn::general::network_params<signal_type>& common_params) override {
 			for(auto input : base::m_inputs) {
 				input->react(common_params);
 			};
@@ -795,18 +795,18 @@ namespace uns::nn {
 			};
 		};
 
-		signal_type R(::std::size_t layer_index, ::std::size_t index) const { return m_layers[layer_index][index]->R(); };
+		virtual signal_type R(::std::size_t layer_index, ::std::size_t index) const { return m_layers[layer_index][index]->R(); };
 
-		signal_type C(::std::size_t layer_index, ::std::size_t index) const { return m_layers[layer_index][index]->C(); };
+		virtual signal_type C(::std::size_t layer_index, ::std::size_t index) const { return m_layers[layer_index][index]->C(); };
 
-		signal_type O(::std::size_t index) const { return base::m_outputs[index]->R(); };
+		virtual signal_type O(::std::size_t index) const { return base::m_outputs[index]->R(); };
 
-		signal_type I(::std::size_t index) const { return base::m_inputs[index]->R(); };
+		virtual signal_type I(::std::size_t index) const { return base::m_inputs[index]->R(); };
 
-		::std::size_t layers_total() const { return m_layers.size(); };
-		::std::size_t neurons_total(size_t index) const { return m_layers[index].size(); };
-		::std::size_t outputs_total() const { return base::m_outputs.size(); };
-		::std::size_t inputs_total() const { return base::m_inputs.size(); };
+		virtual ::std::size_t layers_total() const { return m_layers.size(); };
+		virtual ::std::size_t neurons_total(size_t index) const { return m_layers[index].size(); };
+		virtual ::std::size_t outputs_total() const { return base::m_outputs.size(); };
+		virtual ::std::size_t inputs_total() const { return base::m_inputs.size(); };
 	};
 
 	
@@ -834,7 +834,7 @@ namespace uns::nn {
 			};
 		};
 
-		void _link(::uns::nn::general::input_data_object<signal_type, outputs_allocator_t>& odo) {
+		virtual void _link(::uns::nn::general::input_data_object<signal_type, outputs_allocator_t>& odo) {
 			auto reverse_inputs = ::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<typename base::signal_type>*, ::uns::nn::adress::hash>{};
 
 			for(const auto& layer : base::m_layers) {
@@ -850,7 +850,7 @@ namespace uns::nn {
 			m_outputs_allocator = odo.get_allocator();
 		};
 
-		::std::size_t capacity() const noexcept override {
+		virtual ::std::size_t capacity() const noexcept override {
 			::std::size_t result = base::capacity();
 
 			result += m_reverse_inputs.capacity() * sizeof(typename decltype(m_reverse_inputs)::value_type);
@@ -864,7 +864,7 @@ namespace uns::nn {
 			return result;
 		};
 
-		void _react(const ::uns::nn::general::network_params<signal_type>& common_params) {
+		virtual void _react(const ::uns::nn::general::network_params<signal_type>& common_params) {
 			for(auto m_reverse_input : m_reverse_inputs) {
 				m_reverse_input->_react(common_params);
 			};
@@ -876,13 +876,13 @@ namespace uns::nn {
 			};
 		};
 
-		signal_type _R(::std::size_t layer_index, ::std::size_t index) const { return base::m_layers[layer_index][index]->_R(); };
+		virtual signal_type _R(::std::size_t layer_index, ::std::size_t index) const { return base::m_layers[layer_index][index]->_R(); };
 
-		signal_type _C(::std::size_t layer_index, ::std::size_t index) const { return base::m_layers[layer_index][index]->_C(); };
+		virtual signal_type _C(::std::size_t layer_index, ::std::size_t index) const { return base::m_layers[layer_index][index]->_C(); };
 
-		signal_type _O(::std::size_t index) const { return base::m_outputs[index]->_R(); };
+		virtual signal_type _O(::std::size_t index) const { return base::m_outputs[index]->_R(); };
 
-		signal_type _I(::std::size_t index) const { return base::m_inputs[index]->_R(); };
+		virtual signal_type _I(::std::size_t index) const { return base::m_inputs[index]->_R(); };
 	};
 };
 
