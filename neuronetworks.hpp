@@ -298,8 +298,6 @@ namespace uns::nn {
 			using signal_type = signal_t;
 			using descr_type = ::uns::nn::description::neuron<signal_type>;
 
-			virtual ::std::u8string type() const noexcept = 0;
-
 			virtual descr_type descript() const noexcept = 0;
 			virtual void set(
 				const descr_type&,
@@ -506,9 +504,7 @@ namespace uns::nn {
 
 			return result;
 		};
-
-		virtual ::std::u8string type() const noexcept override { return m_F->type() + u8"." + m_S->type(); };
-
+		
 		virtual ::uns::nn::adress adress() const noexcept override { return m_adress; };
 
 		virtual int subneurons_total() const noexcept override { return static_cast<int>(m_links.size()); };
