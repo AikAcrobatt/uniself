@@ -317,15 +317,15 @@ namespace uns::nn {
 			virtual const ::uns::nn::general::neuron* subneuron(int connection_idx) const noexcept { return nullptr; };
 			virtual ::uns::nn::general::neuron* subneuron(int connection_idx) noexcept { return nullptr; };
 
-			virtual signal_type R() const noexcept { return signal_type{ 0 }; };
-			virtual void R(signal_type) noexcept {};
-			virtual signal_type C() const noexcept { return signal_type{ 0 }; };
-			virtual void C(signal_type) noexcept {};
+			virtual const signal_type& R() const noexcept = 0;
+			virtual signal_type& R() noexcept = 0;
+			virtual const signal_type& C() const noexcept = 0;
+			virtual signal_type& C() noexcept = 0;
 
 			virtual ::uns::nn::adress adress() const noexcept = 0;
 			virtual bool is_reversible() const noexcept { return false; };
-			virtual signal_type dropout() const noexcept { return signal_type{ 0 }; };
-			virtual void dropout(signal_type) noexcept {};
+			virtual const signal_type& dropout() const noexcept = 0;
+			virtual signal_type& dropout() noexcept = 0;
 
 			virtual void react(const ::uns::nn::general::network_params<signal_type>&) {};
 			virtual void collect(const ::uns::nn::general::network_params<signal_t>& common_params) {};
@@ -393,6 +393,7 @@ namespace uns::nn {
 		::std::unique_ptr<::uns::nn::general::collector<signal_type>> m_S = nullptr;
 		::std::vector<::std::pair<::uns::nn::general::neuron<signal_type>*, weight_type>> m_links;
 		::std::vector<param_type> m_params;
+		signal_type m_dropout = 0;
 
 		::std::unique_ptr<::std::vector<::std::pair<::uns::nn::adress, weight_type>>> m_adresses = nullptr;
 	public:
@@ -506,6 +507,8 @@ namespace uns::nn {
 		};
 		
 		virtual ::uns::nn::adress adress() const noexcept override { return m_adress; };
+		virtual const signal_type& dropout() const noexcept override { return m_dropout; };
+		virtual signal_type& dropout() noexcept override { return m_dropout; };
 
 		virtual int subneurons_total() const noexcept override { return static_cast<int>(m_links.size()); };
 		virtual const ::uns::nn::general::neuron<signal_type>* subneuron(int connection_idx) const noexcept override {
@@ -525,11 +528,10 @@ namespace uns::nn {
 			};
 		};
 
-		virtual signal_type R() const noexcept override { return m_F->value(); };
-		virtual void R(const signal_type R) noexcept override { *m_F = R; };
-
-		virtual signal_type C() const noexcept override { return m_S->value(); };
-		virtual void C(const signal_type c) noexcept override { *m_S = c; };
+		virtual const signal_type& R() const noexcept override { return m_F->value(); };
+		virtual signal_type& R() noexcept override { return m_F->value(); };
+		virtual const signal_type& C() const noexcept override { return m_S->value(); };
+		virtual signal_type& C() noexcept override { return m_S->value(); };
 
 		virtual void react(const ::uns::nn::general::network_params<signal_type>& common_params) override { (*m_F)(m_S->value(), common_params.forward(m_params)); };
 
@@ -551,7 +553,6 @@ namespace uns::nn {
 		::std::vector<::std::pair<nonrecursive_reverse_neuron<typename base::signal_type>*, place_type>> m__links;
 		::uns::nn::general::neuron<typename base::signal_type>* m_input = nullptr;
 		bool m_is_learning = true;
-		base::signal_type m_dropout = base::signal_type{ 0 };
 	public:
 		nonrecursive_reverse_neuron() {};
 		nonrecursive_reverse_neuron(const ::uns::nn::nonrecursive_reverse_neuron<signal_t>&) = delete;
@@ -606,16 +607,10 @@ namespace uns::nn {
 
 		virtual bool is_reversible() const noexcept override { return true; };
 
-		virtual signal_t dropout() const noexcept override { return m_dropout; };
-		virtual void dropout(signal_t new_dropout) noexcept override { m_dropout = (::uns::math::more(new_dropout, signal_t(1)) ? signal_t(1) : (::uns::math::less(new_dropout, signal_t(0)) ? signal_t(0) : new_dropout)); };
-
-		virtual signal_t _R() const noexcept { return m_r; };
-
-		virtual void _R(const signal_t R) noexcept { m_r = R; };
-
-		virtual signal_t _C() const noexcept { return m_s; };
-
-		virtual void _C(const signal_t c) noexcept { m_s = c; };
+		virtual const signal_t& _R() const noexcept { return m_r; };
+		virtual signal_t& _R() const noexcept { return m_r; };
+		virtual const signal_t& _C() const noexcept { return m_s; };
+		virtual signal_t& _C() const noexcept { return m_s; };
 
 		virtual void _react(const ::uns::nn::general::network_params<signal_t>& common_params) {
 			m_r = dF_dS(common_params) * m_s;
