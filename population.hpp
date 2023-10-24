@@ -218,7 +218,7 @@ namespace uns::population {
 	};
 
 
-	template<typename unit_t, bool(*m_predicate)(unit_t&, unit_t&) noexcept>
+	template<typename unit_t, bool(*m_predicate)(const unit_t&, const unit_t&) noexcept>
 	class ordered_order : public linear_order<unit_t, ordered_order<unit_t, m_predicate>> {
 	protected:
 		using base = linear_order<unit_t, ordered_order<unit_t, m_predicate>>;
@@ -279,7 +279,7 @@ namespace uns::population {
 	template<typename order_element_t>
 	class ration_source {
 	public:
-		virtual void feed(order_element_t& order_element) {};
+		virtual void feed(order_element_t& order_element) noexcept {};
 	};
 
 
@@ -288,7 +288,7 @@ namespace uns::population {
 	public:
 		using unit_type = typename order_element_t::unit_type;
 
-		virtual ::std::size_t breed(order_element_t& order_element) {
+		virtual ::std::size_t breed(order_element_t& order_element) noexcept {
 			auto counter = 0;
 
 			if(::uns::math::moreeq(order_element.unit().points(), static_cast<typename unit_type::points_type>(1))) {
@@ -315,14 +315,14 @@ namespace uns::population {
 	template<typename order_element_t>
 	class fatal_act_operator {
 	public:
-		virtual void operator()(order_element_t& order_element) {};
+		virtual void operator()(order_element_t& order_element) noexcept {};
 	};
 
 
 	class population_size_controller {
 	public:
 		template<typename population_t>
-		void operator()(population_t& pop_obj) {};
+		void operator()(population_t& pop_obj) noexcept {};
 	};
 
 
@@ -345,9 +345,9 @@ namespace uns::population {
 		breeder_type breeder;
 		fatal_actor_type fatal_actor;
 		size_control_type barrier;
-		health_type life_decrease = 0.0F;
+		health_type life_decrement = 0.0F;//life_decrement
 	public:
-		machine(int random_seed, health_type life_decrement) : units(random_seed), life_decrease(life_decrement) noexcept {};
+		machine(int random_seed, health_type life_decrease_per_iteration) noexcept : units(random_seed), life_decrement(life_decrease_per_iteration) {};
 	protected:
 		void sanitation() {
 			OnSanitationStart();
@@ -392,7 +392,7 @@ namespace uns::population {
 
 				OnConditionUnitStart(one_unit);
 				ration_source.feed(one_unit);
-				one_unit.unit().damage(life_decrease);
+				one_unit.unit().damage(life_decrement);
 				fatal_actor(one_unit);
 				OnConditionUnitFinish(one_unit);
 			};
