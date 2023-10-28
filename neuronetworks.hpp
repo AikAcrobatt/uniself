@@ -158,8 +158,8 @@ namespace uns::nn {
 		template<typename signal_t>
 		class network_params {
 		public:
-			virtual signal_t get(int) const = 0;
-			virtual const ::uns::nn::general::network_params& forward(const ::std::vector<signal_t>&) const = 0;
+			virtual signal_t get(int) const noexcept = 0;
+			virtual const ::uns::nn::general::network_params& forward(const ::std::vector<signal_t>&) const noexcept = 0;
 		};
 
 
