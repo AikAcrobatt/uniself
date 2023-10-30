@@ -154,15 +154,6 @@ namespace uns::nn {
 	namespace general {
 		//this namespace is intended to contain prototypes and interfaces
 
-		//class that introduces a paramaters' container that is fit for the whole network but also for a particular neuron
-		template<typename signal_t>
-		class network_params {
-		public:
-			virtual signal_t get(int) const noexcept = 0;
-			virtual const ::uns::nn::general::network_params& forward(const ::std::vector<signal_t>&) const noexcept = 0;
-		};
-
-
 		//an interface of general neuron (a preliminary declaration)
 		template<typename signal_t>
 		class neuron;
@@ -175,7 +166,7 @@ namespace uns::nn {
 			virtual ::std::size_t size() const noexcept = 0;
 			virtual ::uns::nn::general::neuron<signal_t>* get(const ::uns::nn::adress&) = 0;
 			virtual bool has_it(const ::uns::nn::adress&) const noexcept = 0;
-			virtual allocator_t get_allocator() noexcept;
+			virtual allocator_t get_allocator() noexcept { return allocator_t{}; };
 		};
 
 
@@ -219,11 +210,11 @@ namespace uns::nn {
 
 			virtual ::std::u8string type() const noexcept { return u8"Zero"; };
 
-			virtual signal_t operator()(signal_t, const ::uns::nn::general::network_params<signal_t>&) { return signal_t(0); };
+			virtual signal_t operator()(signal_t, const ::std::vector<signal_t>&, const ::std::vector<signal_t>&) { return signal_t(0); };
 
-			virtual signal_t _dS(signal_t, const ::uns::nn::general::network_params<signal_t>&) const { return signal_t(0); };
+			virtual signal_t _dS(signal_t, const ::std::vector<signal_t>&, const ::std::vector<signal_t>&) const { return signal_t(0); };
 
-			virtual signal_t _dp(int, signal_t, const ::uns::nn::general::network_params<signal_t>&) const { return signal_t(0); };
+			virtual signal_t _dp(int, signal_t, const ::std::vector<signal_t>&, const ::std::vector<signal_t>&) const { return signal_t(0); };
 
 			//basic auxiliary class intended to create activators from string
 			//	actually it's a map from string to activator
@@ -274,13 +265,13 @@ namespace uns::nn {
 
 			virtual ::std::u8string type() const noexcept { return u8"Zero"; };
 
-			virtual signal_t operator()(const ::std::vector<::std::pair<::uns::nn::general::neuron<signal_t>*, signal_t>>&, const ::uns::nn::general::network_params<signal_t>&) { return signal_t(0); };
+			virtual signal_t operator()(const ::std::vector<::std::pair<::uns::nn::general::neuron<signal_t>*, signal_t>>&, const ::std::vector<signal_t>&, const ::std::vector<signal_t>&) { return signal_t(0); };
 
-			virtual signal_t _dr(int, const ::std::vector<::std::pair<::uns::nn::general::neuron<signal_t>*, signal_t>>&, const ::uns::nn::general::network_params<signal_t>&) { return signal_t(0); };
+			virtual signal_t _dr(int, const ::std::vector<::std::pair<::uns::nn::general::neuron<signal_t>*, signal_t>>&, const ::std::vector<signal_t>&, const ::std::vector<signal_t>&) { return signal_t(0); };
 
-			virtual signal_t _dw(int, const ::std::vector<::std::pair<::uns::nn::general::neuron<signal_t>*, signal_t>>&, const ::uns::nn::general::network_params<signal_t>&) { return signal_t(0); };
+			virtual signal_t _dw(int, const ::std::vector<::std::pair<::uns::nn::general::neuron<signal_t>*, signal_t>>&, const ::std::vector<signal_t>&, const ::std::vector<signal_t>&) { return signal_t(0); };
 
-			virtual signal_t _dp(int, const ::std::vector<::std::pair<::uns::nn::general::neuron<signal_t>*, signal_t>>&, const ::uns::nn::general::network_params<signal_t>&) { return signal_t(0); };
+			virtual signal_t _dp(int, const ::std::vector<::std::pair<::uns::nn::general::neuron<signal_t>*, signal_t>>&, const ::std::vector<signal_t>&, const ::std::vector<signal_t>&) { return signal_t(0); };
 
 			//basic auxiliary class intended to create collector from string
 			//	actually it's a map from string to collector
@@ -327,8 +318,8 @@ namespace uns::nn {
 			virtual const signal_type& dropout() const noexcept = 0;
 			virtual signal_type& dropout() noexcept = 0;
 
-			virtual void react(const ::uns::nn::general::network_params<signal_type>&) {};
-			virtual void collect(const ::uns::nn::general::network_params<signal_t>& common_params) {};
+			virtual void react(const ::std::vector<signal_t>& common_params) {};
+			virtual void collect(const ::std::vector<signal_t>& common_params) {};
 		};
 
 
@@ -350,7 +341,7 @@ namespace uns::nn {
 				const typename ::uns::nn::general::collector<signal_type>::caster&,
 				::uns::nn::general::input_data_object<signal_type>&
 			) = 0;
-			virtual void react(const ::uns::nn::general::network_params<signal_type>&) {};
+			virtual void react(const ::std::vector<signal_t>& common_params) {};
 
 			virtual ::std::size_t capacity() const noexcept {
 				::std::size_t result = sizeof(*this)
@@ -380,7 +371,6 @@ namespace uns::nn {
 	public:
 		using signal_type = signal_t;
 		using weight_type = signal_t;
-		using param_type = signal_t;
 		using base = ::uns::nn::general::neuron<signal_t>;
 	public:
 		enum part{
@@ -392,7 +382,7 @@ namespace uns::nn {
 		::std::unique_ptr<::uns::nn::general::activator<signal_type>> m_F = nullptr;
 		::std::unique_ptr<::uns::nn::general::collector<signal_type>> m_S = nullptr;
 		::std::vector<::std::pair<::uns::nn::general::neuron<signal_type>*, weight_type>> m_links;
-		::std::vector<param_type> m_params;
+		::std::vector<signal_type> m_params;
 		signal_type m_dropout = 0;
 
 		::std::unique_ptr<::std::vector<::std::pair<::uns::nn::adress, weight_type>>> m_adresses = nullptr;
@@ -533,9 +523,9 @@ namespace uns::nn {
 		virtual const signal_type& C() const noexcept override { return m_S->value(); };
 		virtual signal_type& C() noexcept override { return m_S->value(); };
 
-		virtual void react(const ::uns::nn::general::network_params<signal_type>& common_params) override { (*m_F)(m_S->value(), common_params.forward(m_params)); };
+		virtual void react(const ::std::vector<signal_type>& common_params) override { (*m_F)(m_S->value(), m_params, common_params); };
 
-		virtual void collect(const ::uns::nn::general::network_params<signal_type>& common_params) override { (*m_S)(m_links, common_params.forward(m_params)); };
+		virtual void collect(const ::std::vector<signal_type>& common_params) override { (*m_S)(m_links, m_params, common_params); };
 	};
 
 
@@ -612,16 +602,16 @@ namespace uns::nn {
 		virtual const signal_t& _C() const noexcept { return m_s; };
 		virtual signal_t& _C() const noexcept { return m_s; };
 
-		virtual void _react(const ::uns::nn::general::network_params<signal_t>& common_params) {
-			m_r = dF_dS(common_params) * m_s;
+		virtual void _react(const ::std::vector<signal_t>& common_params) {
+			m_r = dF_dS(m_params, common_params) * m_s;
 		};
 
-		virtual void _collect(const ::uns::nn::general::network_params<signal_t>& common_params) {
+		virtual void _collect(const ::std::vector<signal_t>& common_params) {
 			using neuron_type = ::uns::nn::nonrecursive_reverse_neuron<typename base::signal_type>;
 
 			m_s = 0;
 			for(auto _link : m__links) {
-				m_s += ::std::get<neuron_type::neuron>(_link)->m_r * ::std::get<neuron_type::neuron>(_link)->dS_dr(::std::get<neuron_type::place>(_link), common_params);
+				m_s += ::std::get<neuron_type::neuron>(_link)->m_r * ::std::get<neuron_type::neuron>(_link)->dS_dr(::std::get<neuron_type::place>(_link), m_params, common_params);
 			};
 			if(m_input != nullptr) {
 				m_s += m_input->R();
@@ -632,15 +622,15 @@ namespace uns::nn {
 
 		virtual void set_learning(bool islearning) noexcept { m_is_learning = islearning; };
 
-		virtual signal_t dS_dr(int index, const ::uns::nn::general::network_params<signal_t>& common_params) const { return base::S->_dr(index, base::m_links, common_params.forward(base::m_params)); };	//TODO to think: forwarding params of this neuron can unintendedly replace params of subneurons
+		virtual signal_t dS_dr(int index, const ::std::vector<signal_t>& common_params) const { return base::S->_dr(index, base::m_links, base::m_params, common_params); };
 
-		virtual signal_t dS_dw(int index, const ::uns::nn::general::network_params<signal_t>& common_params) const { return base::S->_dw(index, base::m_links, common_params.forward(base::m_params)); };
+		virtual signal_t dS_dw(int index, const ::std::vector<signal_t>& common_params) const { return base::S->_dw(index, base::m_links, base::m_params, common_params); };
 
-		virtual signal_t dS_dp(int index, const ::uns::nn::general::network_params<signal_t>& common_params) const { return base::S->_dp(index, base::m_links, common_params.forward(base::m_params)); };
+		virtual signal_t dS_dp(int index, const ::std::vector<signal_t>& common_params) const { return base::S->_dp(index, base::m_links, base::m_params, common_params); };
 
-		virtual signal_t dF_dS(const ::uns::nn::general::network_params<signal_t>& common_params) const { return base::F->_dS(base::C(), common_params.forward(base::m_params)); };
+		virtual signal_t dF_dS(const ::std::vector<signal_t>& common_params) const { return base::F->_dS(base::C(), base::m_params, common_params); };
 
-		virtual signal_t dF_dp(int index, const ::uns::nn::general::network_params<signal_t>& common_params) const { return base::F->_dp(index, base::C(), common_params.forward(base::m_params)); };
+		virtual signal_t dF_dp(int index, const ::std::vector<signal_t>& common_params) const { return base::F->_dp(index, base::C(), base::m_params, common_params); };
 	};
 
 
@@ -774,7 +764,7 @@ namespace uns::nn {
 			return result;
 		};
 
-		virtual void react(const ::uns::nn::general::network_params<signal_type>& common_params) override {
+		virtual void react(const ::std::vector<signal_type>& common_params) override {
 			for(auto input : base::m_inputs) {
 				input->react(common_params);
 			};
@@ -855,7 +845,7 @@ namespace uns::nn {
 			return result;
 		};
 
-		virtual void _react(const ::uns::nn::general::network_params<signal_type>& common_params) {
+		virtual void _react(const ::std::vector<signal_type>& common_params) {
 			for(auto m_reverse_input : m_reverse_inputs) {
 				m_reverse_input->_react(common_params);
 			};
