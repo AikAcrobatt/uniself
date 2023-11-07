@@ -102,10 +102,6 @@ namespace uns::nn {
 				return *this;
 			};
 			~neuron() {};
-
-			::std::u8string to_string() const noexcept { return u8""; };
-
-			void set(const ::std::u8string_view& str) {};
 		};
 
 
@@ -143,10 +139,6 @@ namespace uns::nn {
 				return *this;
 			};
 			~network() {};
-
-			::std::u8string to_string() const noexcept { return u8""; };
-
-			void set(const ::std::u8string_view& str) {};
 		};
 	};
 
@@ -160,12 +152,14 @@ namespace uns::nn {
 
 
 		//an interface of input-data provider
-		template<typename signal_t, class allocator_t = ::std::allocator<neuron<signal_t>>>
+		template<typename signal_t, typename iterator_t, class allocator_t = ::std::allocator<neuron<signal_t>>>
 		class input_data_object {
 		public:
 			virtual ::std::size_t size() const noexcept = 0;
-			virtual ::uns::nn::general::neuron<signal_t>* get(const ::uns::nn::adress&) = 0;
-			virtual bool has_it(const ::uns::nn::adress&) const noexcept = 0;
+			virtual ::uns::nn::general::neuron<signal_t>* get(const ::uns::nn::adress&) noexcept = 0;
+			virtual iterator_t find(const ::uns::nn::adress&) noexcept = 0;
+			virtual iterator_t begin() noexcept = 0;
+			virtual iterator_t end() noexcept = 0;
 			virtual allocator_t get_allocator() noexcept { return allocator_t{}; };
 		};
 
@@ -298,8 +292,7 @@ namespace uns::nn {
 			) = 0;
 			virtual void link(
 				::std::vector<::std::vector<::uns::nn::general::neuron<signal_type>*>>&,
-				::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<signal_type>*, ::uns::nn::adress::hash>&,
-				::uns::nn::general::input_data_object<signal_type>&
+				::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<signal_type>*, ::uns::nn::adress::hash>&
 			) = 0;
 
 			virtual ::std::size_t capacity() const noexcept { return sizeof(*this); };
@@ -339,7 +332,7 @@ namespace uns::nn {
 				const descr_type&,
 				const typename ::uns::nn::general::activator<signal_type>::caster&,
 				const typename ::uns::nn::general::collector<signal_type>::caster&,
-				::uns::nn::general::input_data_object<signal_type>&
+				::uns::nn::general::input_data_object<signal_type, iterator_t>&
 			) = 0;
 			virtual void react(const ::std::vector<signal_t>& common_params) {};
 
@@ -449,8 +442,7 @@ namespace uns::nn {
 
 		virtual void link(
 			::std::vector<::std::vector<::uns::nn::general::neuron<signal_t>*>>& main_body,
-			::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<signal_type>*, ::uns::nn::adress::hash>& inputs,
-			::uns::nn::general::input_data_object<signal_type>& ido
+			::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<signal_type>*, ::uns::nn::adress::hash>& inputs
 		) override {
 			if(m_adresses == nullptr) throw ::std::runtime_error(UNS_DEV_EXCEPTION_MSG);
 
@@ -458,13 +450,8 @@ namespace uns::nn {
 
 			for(const auto& [adress, weight] : *m_adresses) {
 				auto link = ::std::pair<::uns::nn::general::neuron<signal_t>*, weight_type>{};
-				if(ido.has_it(adress)) {
-					if(inputs.find(adress) == inputs.end()) {
-						::std::get<part::_neuron_>(link) = inputs[adress] = ido.get(adress);
-					}
-					else {
-						::std::get<part::_neuron_>(link) = inputs[adress];
-					};
+				if(auto iter = inputs.find(adress); iter != inputs.end()) {
+					::std::get<part::_neuron_>(link) = iter.second;
 				}
 				else {
 					if(
@@ -553,8 +540,7 @@ namespace uns::nn {
 
 		virtual void _link(
 			::std::vector<::std::vector<::uns::nn::nonrecursive_reverse_neuron<typename base::signal_type>*>>& main_body,
-			::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<typename base::signal_type>*, ::uns::nn::adress::hash>& reverse_inputs,
-			::uns::nn::general::input_data_object<typename base::signal_type>& odo
+			::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<typename base::signal_type>*, ::uns::nn::adress::hash>& reverse_inputs
 		) {
 			m__links.clear();
 
@@ -572,13 +558,8 @@ namespace uns::nn {
 				};
 			};
 
-			if(odo.has_it(this->adress())) {
-				if(reverse_inputs.find(this->adress()) == reverse_inputs.end()) {
-					m_input = reverse_inputs[this->adress()] = odo.get(this->adress());
-				}
-				else {
-					m_input = reverse_inputs[this->adress()];
-				};
+			if(auto iter = reverse_inputs.find(this->adress()); iter != reverse_inputs.end()) {
+				m_input = iter.second;
 			};
 		};
 
@@ -685,7 +666,7 @@ namespace uns::nn {
 			const typename ::uns::nn::general::network<neuron_type>::descr_type& descriptor,
 			const typename ::uns::nn::general::activator<signal_type>::caster& activator_cast,
 			const typename ::uns::nn::general::collector<signal_type>::caster& collector_cast,
-			::uns::nn::general::input_data_object<signal_type, inputs_allocator_t>& ido
+			::uns::nn::general::input_data_object<signal_type, iterator_t, inputs_allocator_t>& ido
 		) override {
 			for(const auto& layer : descriptor.layers) {
 				m_layers.push_back(::std::vector<neuron_type*>{});
@@ -732,9 +713,12 @@ namespace uns::nn {
 				};
 			};
 			auto inputs_map = ::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<signal_type>*, ::uns::nn::adress::hash>{};
+			for(auto [input_adress, input_neuron] : ido) {
+				inputs_map[input_adress] = input_neuron;
+			};
 			for(const auto& layer : m_layers) {
 				for(auto neuron_ptr : layer) {
-					neuron_ptr->link(layers, inputs_map, ido);
+					neuron_ptr->link(layers, inputs_map);
 				};
 			};
 
@@ -815,12 +799,21 @@ namespace uns::nn {
 			};
 		};
 
-		virtual void _link(::uns::nn::general::input_data_object<signal_type, outputs_allocator_t>& odo) {
+		virtual void _link(::uns::nn::general::input_data_object<signal_type, iterator_t, outputs_allocator_t>& odo) {
 			auto reverse_inputs = ::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<typename base::signal_type>*, ::uns::nn::adress::hash>{};
+			
+			for(auto reverse_input : base::m_outputs) {
+				if(auto iter = odo.find(reverse_input->adress()); iter != odo.end()) {
+					reverse_inputs[iter.first] = iter.second;
+				}
+				else {
+					throw ::std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+				};
+			};
 
 			for(const auto& layer : base::m_layers) {
 				for(auto neuron_ptr : layer) {
-					neuron_ptr->_link(base::m_layers, reverse_inputs, odo);
+					neuron_ptr->_link(base::m_layers, reverse_inputs);
 				};
 			};
 
