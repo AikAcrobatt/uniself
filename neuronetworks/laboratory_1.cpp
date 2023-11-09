@@ -1,0 +1,1185 @@
+﻿#pragma once
+
+#include <iostream>
+#include <string>
+#include <limits>
+#include <tuple>
+#include <functional>
+#include <concepts>
+#include <unordered_map>
+
+
+#ifndef UNS_LIB_NEURONETWORKS
+#define UNS_LIB_NEURONETWORKS "neuronetworks.hpp"
+
+
+#define UNS_DEV_EXCEPTION_MSG ::std::string{ __FUNCTION__ } + "[" + ::std::to_string(__LINE__) + "]"
+
+namespace uns::nn::traitset {
+
+	template<typename signal_t, typename weight_t, typename params_t>
+	class signal {
+	public:
+		using signal_type = signal_t;
+		using weight_type = weight_t;
+		using params_type = params_t;
+	};
+
+
+	template<typename signal_traitset_t, typename iterator_t, typename input_allocator_t>
+		requires ::std::derived_from<
+			signal_traitset_t,
+			::uns::nn::traitset::signal<
+				typename signal_traitset_t::signal_type,
+				typename signal_traitset_t::weight_type,
+				typename signal_traitset_t::params_type
+			>
+		>
+		&& ::std::derived_from<input_allocator_t, ::std::allocator<typename input_allocator_t::value_type>>
+		&& ::std::same_as<typename input_allocator_t::value_type::neuron_traitset::signal_traitset, signal_traitset_t>
+	class input {
+	public:
+		using signal_traitset = signal_traitset_t;
+		using iterator_type = iterator_t;
+		using input_neuron_type = input_allocator_t::value_type;
+		using input_allocator_type = input_allocator_t;
+	};
+
+
+	template<typename signal_traitset_t, typename description_neuron_t, typename activator_caster_t, typename collector_caster_t>
+		requires ::std::derived_from<
+			signal_traitset_t,
+			::uns::nn::traitset::signal<
+				typename signal_traitset_t::signal_type,
+				typename signal_traitset_t::weight_type,
+				typename signal_traitset_t::params_type
+			>
+		>
+		&& ::std::same_as<typename description_neuron_t::signal_traitset, signal_traitset_t>
+		&& ::std::same_as<typename activator_caster_t::signal_traitset, signal_traitset_t>
+		&& ::std::same_as<typename collector_caster_t::signal_traitset, signal_traitset_t>
+	class neuron {
+	public:
+		using signal_traitset = signal_traitset_t;
+		using description_type = description_neuron_t;
+		using activator_caster_type = activator_caster_t;
+		using collector_caster_type = collector_caster_t;
+	};
+
+
+	template<typename neuron_t, typename description_network_t, typename input_data_object_t>
+		requires ::std::derived_from<
+			typename neuron_t::neuron_traitset,
+			::uns::nn::traitset::neuron<
+				typename neuron_t::neuron_traitset::signal_traitset,
+				typename neuron_t::neuron_traitset::description_type,
+				typename neuron_t::neuron_traitset::activator_caster_type,
+				typename neuron_t::neuron_traitset::collector_caster_type
+			>
+		>
+		&& ::std::derived_from<
+			typename input_data_object_t::input_traitset,
+			::uns::nn::traitset::input<
+				typename input_data_object_t::input_traitset::signal_traitset,
+				typename input_data_object_t::input_traitset::iterator_type,
+				typename input_data_object_t::input_traitset::input_allocator_type
+			>
+		>
+		&& ::std::same_as<
+			typename neuron_t::neuron_traitset,
+			typename description_network_t::neuron_traitset
+		>
+	class network {
+	public:
+		using neuron_type = neuron_t;
+		using description_type = description_network_t;
+		using input_data_object_type = input_data_object_t;
+	};
+};
+
+namespace uns::nn {
+
+
+	//an adress of neuron in every neuronetwork
+	class adress {
+	public:
+		int layer = 0;
+		int index = 0;
+
+		inline bool operator==(const ::uns::nn::adress& obj) const noexcept {
+			return layer == obj.layer && index == obj.index;
+		};
+		inline bool operator!=(const ::uns::nn::adress& obj) const noexcept {
+			return !(*this == obj);
+		};
+
+		inline ::std::size_t capacity() const noexcept { return sizeof(*this); };
+
+		class hash {
+		protected:
+			::std::hash<long long int> m_subhash;
+		public:
+			inline ::std::size_t operator()(const ::uns::nn::adress& adress) const noexcept {
+				return m_subhash((static_cast<long long int>(adress.layer) << sizeof(int) * 8) + static_cast<long long int>(adress.index));
+			};
+		};
+	};
+
+
+	namespace description {
+
+		template<typename signal_traitset_t>
+			requires ::std::derived_from<
+				signal_traitset_t,
+				::uns::nn::traitset::signal<
+					typename signal_traitset_t::signal_type,
+					typename signal_traitset_t::weight_type,
+					typename signal_traitset_t::params_type
+				>
+			>
+		class neuron {
+		public:
+			using signal_traitset = signal_traitset_t;
+
+			::std::u8string activator = u8"";
+			signal_traitset::signal_type r = typename signal_traitset::signal_type{ 0 };
+			::std::u8string collector = u8"";
+			signal_traitset::signal_type c = typename signal_traitset::signal_type{ 0 };
+			::std::vector<::std::pair<::uns::nn::adress, typename signal_traitset::weight_type>> links;
+			::std::vector<typename signal_traitset::params_type> params;
+
+			neuron() noexcept {};
+			neuron(const ::uns::nn::description::neuron<signal_traitset>& obj) noexcept :
+				activator(obj.activator),
+				collector(obj.collector),
+				links(obj.links),
+				params(obj.params),
+				r(obj.r),
+				c(obj.c) {};
+			::uns::nn::description::neuron<signal_traitset>& operator=(const ::uns::nn::description::neuron<signal_traitset>& obj) {
+				if(this == &obj) return *this;
+
+				activator = obj.activator;
+				collector = obj.collector;
+				links = obj.links;
+				params = obj.params;
+				r = obj.r;
+				c = obj.c;
+
+				return *this;
+			};
+			neuron(::uns::nn::description::neuron<signal_traitset>&& obj) noexcept :
+				activator(::std::move(obj.activator)),
+				collector(::std::move(obj.collector)),
+				links(::std::move(obj.links)),
+				params(::std::move(obj.params)),
+				r(::std::move(obj.r)),
+				c(::std::move(obj.c)) {};
+			::uns::nn::description::neuron<signal_traitset>& operator=(::uns::nn::description::neuron<signal_traitset>&& obj) {
+				if(this == &obj) return *this;
+
+				activator = ::std::move(obj.activator);
+				collector = ::std::move(obj.collector);
+				links = ::std::move(obj.links);
+				params = ::std::move(obj.params);
+				r = ::std::move(obj.r);
+				c = ::std::move(obj.c);
+
+				return *this;
+			};
+			~neuron() {};
+		};
+
+
+		template<typename neuron_traitset_t>
+			requires ::std::derived_from<
+				neuron_traitset_t,
+				::uns::nn::traitset::neuron<
+					typename neuron_traitset_t::signal_traitset,
+					typename neuron_traitset_t::description_type,
+					typename neuron_traitset_t::activator_caster_type,
+					typename neuron_traitset_t::collector_caster_type
+				>
+			>
+		class network {
+		public:
+			using neuron_traitset = neuron_traitset_t;
+
+			::std::vector<::std::vector<typename neuron_traitset::description_type>> layers;
+			::std::vector<::uns::nn::adress> outputs;
+
+			network() noexcept {};
+			network(const ::uns::nn::description::network<neuron_traitset>& obj) noexcept :
+				layers(obj.layers),
+				outputs(obj.outputs) {};
+			::uns::nn::description::network<neuron_traitset>& operator=(const ::uns::nn::description::network<neuron_traitset>& obj) {
+				if(this == &obj) return *this;
+
+				layers = obj.layers;
+				outputs = obj.outputs;
+
+				return *this;
+			};
+			network(::uns::nn::description::network<neuron_traitset>&& obj) noexcept :
+				layers(::std::move(obj.layers)),
+				outputs(::std::move(obj.outputs)) {};
+			::uns::nn::description::network<neuron_traitset>& operator=(::uns::nn::description::network<neuron_traitset>&& obj) {
+				if(this == &obj) return *this;
+
+				layers = ::std::move(obj.layers);
+				outputs = ::std::move(obj.outputs);
+
+				return *this;
+			};
+			~network() {};
+		};
+	};
+
+
+	namespace general {
+		//this namespace is intended to contain prototypes and interfaces
+
+
+		template<typename signal_traitset_t>
+			requires ::std::derived_from<
+				signal_traitset_t,
+				::uns::nn::traitset::signal<
+					typename signal_traitset_t::signal_type,
+					typename signal_traitset_t::weight_type,
+					typename signal_traitset_t::params_type
+				>
+			>
+		class neuron_view {
+		public:
+			using signal_traitset = signal_traitset_t;
+		protected:
+			::uns::nn::adress m_adress;
+			signal_traitset::signal_type m_dropout = typename signal_traitset::signal_type{ 0 };
+		public:
+			virtual ::std::size_t capacity() const noexcept {
+				::std::size_t result = 0;
+
+				result += m_adress.capacity();
+				result += sizeof(m_dropout);
+
+				return result;
+			};
+
+			virtual int subneurons_total() const noexcept { return 0; };
+			virtual const ::uns::nn::general::neuron_view<signal_traitset>* subneuron(int connection_idx) const noexcept { return nullptr; };
+			virtual ::uns::nn::general::neuron_view<signal_traitset>* subneuron(int connection_idx) noexcept { return nullptr; };
+
+			virtual const typename signal_traitset::signal_type& R() const noexcept { return typename signal_traitset::signal_type{ 0 }; };
+			virtual const typename signal_traitset::signal_type& C() const noexcept { return typename signal_traitset::signal_type{ 0 }; };
+
+			virtual const ::uns::nn::adress& adress() const noexcept { return m_adress; };
+			virtual ::uns::nn::adress& adress() noexcept { return m_adress; };
+			virtual bool is_reversible() const noexcept { return false; };
+			virtual const typename signal_traitset::signal_type& dropout() const noexcept { return m_dropout; };
+			virtual typename signal_traitset::signal_type& dropout() noexcept { return m_dropout; };
+
+			virtual void react(const ::std::vector<typename signal_traitset::params_type>& common_params) noexcept {};
+			virtual void collect(const ::std::vector<typename signal_traitset::params_type>& common_params) noexcept {};
+		};
+
+
+		//basic activator class can be used as default activator
+		template<typename signal_traitset_t>
+			requires ::std::derived_from<
+				signal_traitset_t,
+				::uns::nn::traitset::signal<
+					typename signal_traitset_t::signal_type,
+					typename signal_traitset_t::weight_type,
+					typename signal_traitset_t::params_type
+				>
+			>
+		class activator {
+		public:
+			using signal_traitset = signal_traitset_t;
+		protected:
+			typename signal_traitset::signal_type m_value = typename signal_traitset::signal_type{ 0 };
+		public:
+			activator() noexcept {};
+			activator(const ::uns::nn::general::activator<signal_traitset>& obj) noexcept :
+				m_value(obj.m_value) {};
+			::uns::nn::general::activator<signal_traitset>& operator=(const ::uns::nn::general::activator<signal_traitset>& obj) noexcept {
+				if(this == &obj) return *this;
+
+				m_value = obj.m_value;
+
+				return *this;
+			};
+			activator(::uns::nn::general::activator<signal_traitset>&& obj) noexcept :
+				m_value(::std::move(obj.m_value)) {};
+			::uns::nn::general::activator<signal_traitset>& operator=(::uns::nn::general::activator<signal_traitset>&& obj) noexcept {
+				if(this == &obj) return *this;
+
+				m_value = ::std::move(obj.m_value);
+
+				return *this;
+			};
+			::uns::nn::general::activator<signal_traitset>& operator=(signal_traitset::signal_type value) noexcept {
+				m_value = value;
+				return *this;
+			};
+			~activator() noexcept {};
+
+			virtual ::std::size_t capacity() const noexcept { return sizeof(*this); };
+
+			const typename signal_traitset::signal_type& value() const noexcept { return m_value; };
+			typename signal_traitset::signal_type& value() noexcept { return m_value; };
+
+			virtual ::std::u8string type() const noexcept { return u8"Zero"; };
+
+			virtual typename signal_traitset::signal_type operator()(typename signal_traitset::signal_type, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) const noexcept { return typename signal_traitset::signal_type{ 0 }; };
+
+			virtual typename signal_traitset::signal_type _dS(typename signal_traitset::signal_type, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) const noexcept { return typename signal_traitset::signal_type{ 0 }; };
+
+			virtual typename signal_traitset::signal_type _dp(int, typename signal_traitset::signal_type, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) const noexcept { return typename signal_traitset::signal_type{ 0 }; };
+
+			//basic auxiliary class intended to create activators from string
+			//	actually it's a map from string to activator
+			class caster {
+			public:
+				using signal_traitset = signal_traitset_t;
+
+				virtual ::std::unique_ptr<::uns::nn::general::activator<signal_traitset_t>> operator()(const ::std::u8string_view&) const = 0;
+			};
+		};
+
+
+		//basic collector class can be used as default collector
+		template<typename signal_traitset_t>
+			requires ::std::derived_from<
+				signal_traitset_t,
+					::uns::nn::traitset::signal<
+					typename signal_traitset_t::signal_type,
+					typename signal_traitset_t::weight_type,
+					typename signal_traitset_t::params_type
+				>
+			>
+		class collector {
+		public:
+			using signal_traitset = signal_traitset_t;
+		protected:
+			typename signal_traitset::signal_type m_value = typename signal_traitset::signal_type{ 0 };
+		public:
+			collector() noexcept {};
+			collector(const ::uns::nn::general::collector<signal_traitset>& obj) noexcept :
+				m_value(obj.m_value) {};
+			::uns::nn::general::collector<signal_traitset>& operator=(const ::uns::nn::general::collector<signal_traitset>& obj) noexcept {
+				if(this == &obj) return *this;
+
+				m_value = obj.m_value;
+
+				return *this;
+			};
+			collector(::uns::nn::general::collector<signal_traitset>&& obj) noexcept :
+				m_value(::std::move(obj.m_value)) {};
+			::uns::nn::general::collector<signal_traitset>& operator=(::uns::nn::general::collector<signal_traitset>&& obj) noexcept {
+				if(this == &obj) return *this;
+
+				m_value = ::std::move(obj.m_value);
+
+				return *this;
+			};
+			::uns::nn::general::collector<signal_traitset>& operator=(typename signal_traitset::signal_type value) noexcept {
+				m_value = value;
+				return *this;
+			};
+			~collector() noexcept {};
+
+			virtual ::std::size_t capacity() const noexcept { return sizeof(*this); };
+
+			const typename signal_traitset::signal_type& value() const noexcept { return m_value; };
+			typename signal_traitset::signal_type& value() noexcept { return m_value; };
+
+			virtual ::std::u8string type() const noexcept { return u8"Zero"; };
+
+			virtual typename signal_traitset::signal_type operator()(const ::std::vector<::std::pair<::uns::nn::general::neuron_view<signal_traitset>*, typename signal_traitset::weight_type>>&, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) const noexcept { return typename signal_traitset::signal_type{ 0 }; };
+
+			virtual typename signal_traitset::signal_type _dr(int, const ::std::vector<::std::pair<::uns::nn::general::neuron_view<signal_traitset>*, typename signal_traitset::weight_type>>&, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) const noexcept { return typename signal_traitset::signal_type{ 0 }; };
+
+			virtual typename signal_traitset::signal_type _dw(int, const ::std::vector<::std::pair<::uns::nn::general::neuron_view<signal_traitset>*, typename signal_traitset::weight_type>>&, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) const noexcept { return typename signal_traitset::signal_type{ 0 }; };
+
+			virtual typename signal_traitset::signal_type _dp(int, const ::std::vector<::std::pair<::uns::nn::general::neuron_view<signal_traitset>*, typename signal_traitset::weight_type>>&, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) const noexcept { return typename signal_traitset::signal_type{ 0 }; };
+
+			//basic auxiliary class intended to create collector from string
+			//	actually it's a map from string to collector
+			class caster {
+			public:
+				using signal_traitset = signal_traitset_t;
+
+				virtual ::std::unique_ptr<::uns::nn::general::collector<signal_traitset>> operator()(const ::std::u8string_view&) const = 0;
+			};
+		};
+
+
+		//an interface of general neuron
+		template<typename neuron_traitset_t>
+			requires ::std::derived_from<
+				neuron_traitset_t,
+				::uns::nn::traitset::neuron<
+					typename neuron_traitset_t::signal_traitset,
+					typename neuron_traitset_t::description_type,
+					typename neuron_traitset_t::activator_caster_type,
+					typename neuron_traitset_t::collector_caster_type
+				>
+			>
+		class neuron : public ::uns::nn::general::neuron_view<typename neuron_traitset_t::signal_traitset> {
+		protected:
+			using base = ::uns::nn::general::neuron_view<typename neuron_traitset_t::signal_traitset>;
+		public:
+			using neuron_traitset = neuron_traitset_t;
+
+			virtual typename neuron_traitset::description_type descript() const noexcept = 0;
+			virtual void set(
+				const typename neuron_traitset::description_type&,
+				const ::uns::nn::adress&
+			) = 0;
+			virtual void link(
+				::std::vector<::std::vector<::uns::nn::general::neuron<neuron_traitset>*>>&,
+				::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<neuron_traitset>*, ::uns::nn::adress::hash>&
+			) = 0;
+
+			virtual ::std::size_t capacity() const noexcept override {
+				return base::capacity();
+			};
+
+			virtual int subneurons_total() const noexcept override { return 0; };
+			virtual const ::uns::nn::general::neuron<neuron_traitset>* subneuron(int connection_idx) const noexcept override { return nullptr; };
+			virtual ::uns::nn::general::neuron<neuron_traitset>* subneuron(int connection_idx) noexcept override { return nullptr; };
+
+			virtual const typename neuron_traitset::signal_traitset::signal_type& R() const noexcept override { return typename neuron_traitset::signal_traitset::signal_type{ 0 }; };
+			virtual const typename neuron_traitset::signal_traitset::signal_type& C() const noexcept override { return typename neuron_traitset::signal_traitset::signal_type{ 0 }; };
+
+			virtual bool is_reversible() const noexcept override { return false; };
+
+			virtual void react(const ::std::vector<typename neuron_traitset::signal_traitset::params_type>& common_params) noexcept override {};
+			virtual void collect(const ::std::vector<typename neuron_traitset::signal_traitset::params_type>& common_params) noexcept override {};
+		};
+
+
+		//an interface of input-data provider
+		template<typename input_data_object_traitset_t>
+			requires ::std::derived_from<
+				input_data_object_traitset_t,
+				::uns::nn::traitset::input<
+					typename input_data_object_traitset_t::signal_traitset,
+					typename input_data_object_traitset_t::iterator_type,
+					typename input_data_object_traitset_t::input_allocator_type
+				>
+			>
+		class input_data_object {
+		public:
+			using input_traitset = input_data_object_traitset_t;
+			using iterator_type = input_data_object_traitset_t::iterator_type;
+			using input_allocator_type = input_data_object_traitset_t::input_allocator_type;
+
+			virtual ::std::size_t size() const noexcept = 0;
+			virtual typename input_traitset::input_neuron_type* get(const ::uns::nn::adress&) noexcept = 0;
+			virtual iterator_type begin() noexcept = 0;
+			virtual iterator_type end() noexcept = 0;
+			virtual void clear() noexcept = 0;
+		};
+
+
+		//an interface of general neuro network
+		template<typename network_traitset_t>
+			requires ::std::derived_from<
+				network_traitset_t,
+				::uns::nn::traitset::network<
+					typename network_traitset_t::neuron_type,
+					typename network_traitset_t::description_type,
+					typename network_traitset_t::input_data_object_type
+				>
+			>
+		class network {
+		public:
+			using network_traitset = network_traitset_t;
+		protected:
+			::std::vector<typename network_traitset::neuron_type*> m_outputs;
+			::std::vector<typename network_traitset::input_data_object_type::input_traitset::input_neuron_type*> m_inputs;
+		public:
+			virtual typename network_traitset::description_type descript() const noexcept = 0;
+			virtual void set(
+				const typename network_traitset::description_type&,
+				typename network_traitset::input_data_object_type&
+			) = 0;
+			virtual void react(const ::std::vector<typename network_traitset::neuron_type::neuron_traitset::signal_traitset::params_type>& common_params) noexcept {};
+
+			virtual ::std::size_t capacity() const noexcept {
+				::std::size_t result = sizeof(*this)
+					+ sizeof(m_outputs)
+					+ m_outputs.capacity() * sizeof(typename decltype(m_outputs)::value_type)
+					+ sizeof(m_inputs)
+					+ m_inputs.capacity() * sizeof(typename decltype(m_inputs)::value_type);
+
+				for(auto output_ptr : m_outputs) {
+					result += output_ptr->capacity();
+				};
+				for(auto input_ptr : m_inputs) {
+					result += input_ptr->capacity();
+				};
+
+				return result;
+			};
+		};
+
+	};
+
+
+	//a class of neuron introduces the neurons supposed to consist sequential neural network's body
+	template<typename neuron_traitset_t>
+		requires ::std::derived_from<
+			neuron_traitset_t,
+			::uns::nn::traitset::neuron<
+				typename neuron_traitset_t::signal_traitset,
+				typename neuron_traitset_t::description_type,
+				typename neuron_traitset_t::activator_caster_type,
+				typename neuron_traitset_t::collector_caster_type
+			>
+		>
+	class sequential_neuron : public ::uns::nn::general::neuron<neuron_traitset_t> {
+	public:
+		using base = ::uns::nn::general::neuron<neuron_traitset_t>;
+		using signal_type = typename base::neuron_traitset::signal_traitset::signal_type;
+		using weight_type = typename base::neuron_traitset::signal_traitset::weight_type;
+	public:
+		enum part {
+			_neuron_ = 0,
+			_weight_ = 1
+		};
+	protected:
+		::std::unique_ptr<::uns::nn::general::activator<typename base::neuron_traitset::signal_traitset>> m_F = nullptr;
+		::std::unique_ptr<::uns::nn::general::collector<typename base::neuron_traitset::signal_traitset>> m_S = nullptr;
+		::std::vector<::std::pair<::uns::nn::general::neuron_view<typename base::neuron_traitset::signal_traitset>*, typename base::neuron_traitset::signal_traitset::weight_type>> m_links;
+		::std::vector<typename base::neuron_traitset::signal_traitset::params_type> m_params;
+
+		::std::unique_ptr<::std::vector<::std::pair<::uns::nn::adress, typename base::neuron_traitset::signal_traitset::weight_type>>> m_adresses = nullptr;
+	public:
+		sequential_neuron() noexcept : m_F(nullptr), m_S(nullptr), m_adresses(nullptr) {};
+		sequential_neuron(const ::uns::nn::sequential_neuron<typename base::neuron_traitset>&) = delete;
+		::uns::nn::sequential_neuron<typename base::neuron_traitset>& operator=(const ::uns::nn::sequential_neuron<typename base::neuron_traitset>&) = delete;
+		sequential_neuron(::uns::nn::sequential_neuron<typename base::neuron_traitset>&&) = delete;
+		::uns::nn::sequential_neuron<typename base::neuron_traitset>& operator=(::uns::nn::sequential_neuron<typename base::neuron_traitset>&&) = delete;
+		~sequential_neuron() noexcept { clear(); };
+	protected:
+		virtual void clear() noexcept {
+			m_F = nullptr;
+			m_S = nullptr;
+
+			m_links.clear();
+			m_params.clear();
+
+			m_adresses = nullptr;
+		};
+	public:
+
+		virtual typename base::neuron_traitset::description_type descript() const noexcept override {
+			auto res = typename base::neuron_traitset::description_type{};
+
+			if(m_F != nullptr) {
+				res.activator = m_F->type();
+			}
+			else {
+				res.activator = u8"";
+			};
+
+			if(m_S != nullptr) {
+				res.collector = m_F->type();
+			}
+			else {
+				res.collector = u8"";
+			};
+
+			res.params = m_params;
+
+			for(auto link : m_links) {
+				res.links.emplace_back(
+					::std::pair<::uns::nn::adress, typename base::neuron_traitset::signal_traitset::weight_type>{
+						::std::get<part::_neuron_>(link)->adress(),
+							::std::get<part::_weight_>(link)
+					}
+				);
+			};
+
+			return res;
+		};
+
+		virtual void set(
+			const typename base::neuron_traitset::description_type& descriptor,
+			const ::uns::nn::adress& adr
+		) override {
+			auto activator_cast = typename base::neuron_traitset::activator_caster_type{};
+			auto collector_cast = typename base::neuron_traitset::collector_caster_type{};
+
+			adress() = adr;
+
+			m_F = activator_cast(descriptor.activator);
+			if(m_F == nullptr) {
+				clear();
+				throw ::std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+			};
+
+			m_S = collector_cast(descriptor.collector);
+			if(m_S == nullptr) {
+				clear();
+				throw ::std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+			};
+
+			*m_F = descriptor.r;
+			*m_S = descriptor.c;
+
+			m_params = descriptor.params;
+
+			m_adresses = ::std::unique_ptr<::std::vector<::std::pair<::uns::nn::adress, typename base::neuron_traitset::signal_traitset::weight_type>>>{
+				new ::std::vector<::std::pair<::uns::nn::adress, typename base::neuron_traitset::signal_traitset::weight_type>>{}
+			};
+			*m_adresses = descriptor.links;
+		};
+
+		virtual void link(
+			::std::vector<::std::vector<::uns::nn::general::neuron<typename base::neuron_traitset>*>>& main_body,
+			::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<typename base::neuron_traitset>*, ::uns::nn::adress::hash>& inputs
+		) override {
+			if(m_adresses == nullptr) {
+				throw ::std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+			};
+
+			m_links.clear();
+
+			for(const auto& [adress, weight] : *m_adresses) {
+				auto link = ::std::pair<::uns::nn::general::neuron_view<typename base::neuron_traitset::signal_traitset>*, typename base::neuron_traitset::signal_traitset::weight_type>{};
+				if(auto iter = inputs.find(adress); iter != inputs.end()) {
+					::std::get<part::_neuron_>(link) = iter->second;
+				}
+				else {
+					if(
+						adress.layer >= 0 && adress.layer < main_body.size()
+						&& adress.index >= 0 && adress.index < main_body[adress.layer].size()
+					) {
+						::std::get<part::_neuron_>(link) = main_body[adress.layer][adress.index];
+					}
+					else {
+						clear();
+						throw ::std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+					};
+				};
+				::std::get<part::_weight_>(link) = weight;
+				m_links.push_back(link);
+			};
+
+			m_adresses = nullptr;
+		};
+
+		virtual ::std::size_t capacity() const noexcept override {
+			::std::size_t result = base::capacity();
+
+			result += sizeof(m_F) + m_F->capacity();
+			result += sizeof(m_S) + m_S->capacity();
+			result += m_links.capacity() * sizeof(typename decltype(m_links)::value_type);
+			result += m_params.capacity() * sizeof(typename decltype(m_params)::value_type);
+
+			return result;
+		};
+
+		virtual int subneurons_total() const noexcept override { return static_cast<int>(m_links.size()); };
+		virtual const ::uns::nn::general::neuron<typename base::neuron_traitset>* subneuron(int connection_idx) const noexcept override {
+			if(connection_idx >= 0 && connection_idx < m_links.size()) {
+				return static_cast<::uns::nn::general::neuron<typename base::neuron_traitset>*>(::std::get<part::_neuron_>(m_links[connection_idx]));
+			}
+			else {
+				return nullptr;
+			};
+		};
+		virtual ::uns::nn::general::neuron<typename base::neuron_traitset>* subneuron(int connection_idx) noexcept override {
+			if(connection_idx >= 0 && connection_idx < m_links.size()) {
+				return static_cast<::uns::nn::general::neuron<typename base::neuron_traitset>*>(::std::get<part::_neuron_>(m_links[connection_idx]));
+			}
+			else {
+				return nullptr;
+			};
+		};
+
+		virtual const typename base::neuron_traitset::signal_traitset::signal_type& R() const noexcept override { return m_F->value(); };
+		virtual typename base::neuron_traitset::signal_traitset::signal_type& R() noexcept { return m_F->value(); };
+		virtual const typename base::neuron_traitset::signal_traitset::signal_type& C() const noexcept override { return m_S->value(); };
+		virtual typename base::neuron_traitset::signal_traitset::signal_type& C() noexcept { return m_S->value(); };
+
+		virtual void react(const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params) noexcept override { (*m_F)(m_S->value(), m_params, common_params); };
+
+		virtual void collect(const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params) noexcept override { (*m_S)(m_links, m_params, common_params); };
+	};
+
+
+	//a class of neuron introduces the nonrecursive reversation neuron used for learning by gradient-down method
+	template<typename neuron_traitset_t>
+	class nonrecursive_reverse_neuron : public ::uns::nn::sequential_neuron<neuron_traitset_t> {
+	protected:
+		using base = ::uns::nn::sequential_neuron<neuron_traitset_t>;
+		using place_type = int;
+	public:
+	protected:
+		static const int _place_ = 1;
+		typename base::neuron_traitset::signal_traitset::signal_type m_r = 0;
+		typename base::neuron_traitset::signal_traitset::signal_type m_s = 0;
+		::std::vector<::std::pair<::uns::nn::nonrecursive_reverse_neuron<typename base::neuron_traitset>*, place_type>> m__links;
+		::uns::nn::general::neuron<typename base::neuron_traitset>* m_input = nullptr;
+		bool m_is_learning = true;
+	public:
+		nonrecursive_reverse_neuron() {};
+		nonrecursive_reverse_neuron(const ::uns::nn::nonrecursive_reverse_neuron<typename base::neuron_traitset>&) = delete;
+		::uns::nn::nonrecursive_reverse_neuron<typename base::neuron_traitset>& operator=(const ::uns::nn::nonrecursive_reverse_neuron<typename base::neuron_traitset>&) = delete;
+		nonrecursive_reverse_neuron(::uns::nn::nonrecursive_reverse_neuron<typename base::neuron_traitset>&&) = delete;
+		::uns::nn::nonrecursive_reverse_neuron<typename base::neuron_traitset>& operator=(::uns::nn::nonrecursive_reverse_neuron<typename base::neuron_traitset>&&) = delete;
+		~nonrecursive_reverse_neuron() { clear(); };
+	protected:
+		virtual void clear() noexcept {
+			base::clear();
+
+			m__links.clear();
+			m_input = false;
+		};
+	public:
+		virtual void _link(
+			::std::vector<::std::vector<::uns::nn::nonrecursive_reverse_neuron<typename base::neuron_traitset>*>>& main_body,
+			::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<typename base::neuron_traitset>*, ::uns::nn::adress::hash>& reverse_inputs
+		) noexcept {
+			m__links.clear();
+
+			for(const auto& layer : main_body) {
+				for(const auto& neuron_ptr : layer) {
+					if(neuron_ptr == nullptr) {
+						clear();
+						throw ::std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+					};
+
+					for(int subneuron_idx = 0; subneuron_idx < neuron_ptr->subneurons_total(); ++subneuron_idx) {
+						if(neuron_ptr->subneuron(subneuron_idx)->adress() == this->adress()) {
+							m__links.emplace_back(::std::pair<::uns::nn::nonrecursive_reverse_neuron<typename base::neuron_traitset>*, place_type>{ neuron_ptr, subneuron_idx });
+						};
+					};
+				};
+			};
+
+			if(auto iter = reverse_inputs.find(this->adress()); iter != reverse_inputs.end()) {
+				m_input = iter.second;
+			};
+		};
+
+		virtual ::std::size_t capacity() const noexcept override {
+			::std::size_t result = base::capacity();
+
+			result += sizeof(m_r);
+			result += sizeof(m_s);
+			result += m__links.capacity() * sizeof(typename decltype(m__links)::value_type);
+			result += sizeof(m_input);
+			result += sizeof(m_is_learning);
+
+			return result;
+		};
+
+		virtual bool is_reversible() const noexcept override { return true; };
+
+		virtual const typename base::neuron_traitset::signal_traitset::signal_type& _R() const noexcept { return m_r; };
+		virtual typename base::neuron_traitset::signal_traitset::signal_type& _R() const noexcept { return m_r; };
+		virtual const typename base::neuron_traitset::signal_traitset::signal_type& _C() const noexcept { return m_s; };
+		virtual typename base::neuron_traitset::signal_traitset::signal_type& _C() const noexcept { return m_s; };
+
+		virtual void _react(const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params) noexcept {
+			m_r = dF_dS(base::m_params, common_params) * m_s;
+		};
+
+		virtual void _collect(const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params) noexcept {
+			m_s = 0;
+			for(auto _link : m__links) {
+				m_s += ::std::get<base::part::_neuron_>(_link)->m_r * ::std::get<base::part::_neuron_>(_link)->dS_dr(::std::get<_place_>(_link), base::m_params, common_params);
+			};
+			if(m_input != nullptr) {
+				m_s += m_input->R();
+			};
+		};
+
+		virtual bool is_learning() const noexcept { return m_is_learning; };
+		virtual bool& is_learning() noexcept { return m_is_learning; };
+
+		virtual typename base::neuron_traitset::signal_traitset::signal_type dS_dr(int index, const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params) const noexcept { return base::S->_dr(index, base::m_links, base::m_params, common_params); };
+
+		virtual typename base::neuron_traitset::signal_traitset::signal_type dS_dw(int index, const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params) const noexcept { return base::S->_dw(index, base::m_links, base::m_params, common_params); };
+
+		virtual typename base::neuron_traitset::signal_traitset::signal_type dS_dp(int index, const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params) const noexcept { return base::S->_dp(index, base::m_links, base::m_params, common_params); };
+
+		virtual typename base::neuron_traitset::signal_traitset::signal_type dF_dS(const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params) const noexcept { return base::F->_dS(base::C(), base::m_params, common_params); };
+
+		virtual typename base::neuron_traitset::signal_traitset::signal_type dF_dp(int index, const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params) const noexcept { return base::F->_dp(index, base::C(), base::m_params, common_params); };
+	};
+
+
+	//a class of network introduces the sequential neural network
+	template<class network_traitset_t>
+	class sequential_base_network : public ::uns::nn::general::network<network_traitset_t> {
+	protected:
+		using base = ::uns::nn::general::network<network_traitset_t>;
+
+		::std::vector<::std::vector<typename base::network_traitset::neuron_type*>> m_layers;
+	public:
+		sequential_base_network() {};
+		sequential_base_network(const ::uns::nn::sequential_base_network<typename base::network_traitset>& net) = delete;
+		::uns::nn::sequential_base_network<typename base::network_traitset>& operator=(const ::uns::nn::sequential_base_network<typename base::network_traitset>& net) = delete;
+		sequential_base_network(::uns::nn::sequential_base_network<typename base::network_traitset>&& net) = delete;
+		::uns::nn::sequential_base_network<typename base::network_traitset>& operator=(::uns::nn::sequential_base_network<typename base::network_traitset>&& net) = delete;
+		~sequential_base_network() {
+			clear();
+		};
+	protected:
+		void clear() noexcept {
+			for(auto& layer : m_layers) {
+				for(auto neuron : layer) {
+					delete neuron;
+				};
+			};
+			m_layers.clear();
+
+			auto inputs_allocator = typename base::network_traitset::input_data_object_type::input_allocator_type{};
+			for(auto input : base::m_inputs) {
+				inputs_allocator.deallocate(input, 1);
+			};
+			base::m_inputs.clear();
+
+			base::m_outputs.clear();
+		};
+	public:
+		virtual typename base::network_traitset::description_type descript() const noexcept override {
+			auto res = typename base::network_traitset::description_type{};
+
+			for(const auto& layer : m_layers) {
+				res.layers.push_back(::std::vector<typename base::network_traitset::neuron_type::neuron_traitset::description_type>{});
+				for(auto neuron_ptr : layer) {
+					res.layers.back().emplace_back(neuron_ptr->descript());
+				};
+			};
+
+			for(const auto output_ptr : base::m_outputs) {
+				res.outputs.push_back(output_ptr->adress());
+			};
+
+			return res;
+		};
+
+		virtual void set(
+			const typename base::network_traitset::description_type& descriptor,
+			typename base::network_traitset::input_data_object_type& ido
+		) override {
+			clear();
+
+			for(const auto& layer : descriptor.layers) {
+				m_layers.push_back(::std::vector<typename base::network_traitset::neuron_type*>{});
+				for(const auto& neuron : layer) {
+					auto neuron_ptr = new typename base::network_traitset::neuron_type{};
+					m_layers.back().push_back(neuron_ptr);
+				};
+			};
+
+			for(const auto& output : descriptor.outputs) {
+				if(
+					output.layer >= 0 && output.layer < m_layers.size()
+					&& output.index >= 0 && output.index < m_layers[output.layer].size()
+				) {
+					base::m_outputs.push_back(m_layers[output.layer][output.index]);
+				}
+				else {
+					clear();
+					throw ::std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+				};
+			};
+
+			for(::std::size_t layer_idx = 0; layer_idx < m_layers.size(); ++layer_idx) {
+				for(::std::size_t neuron_idx = 0; neuron_idx < m_layers[layer_idx].size(); ++neuron_idx) {
+					if(layer_idx < descriptor.layers.size() && neuron_idx < descriptor.layers[layer_idx].size()) {
+						try {
+							m_layers[layer_idx][neuron_idx]->set(
+								descriptor.layers[layer_idx][neuron_idx],
+								::uns::nn::adress{ static_cast<int>(layer_idx), static_cast<int>(neuron_idx) }
+							);
+						}
+						catch(const ::std::exception& e) {
+							clear();
+							throw e;
+						};
+					}
+					else {
+						clear();
+						throw ::std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+					};
+				};
+			};
+
+			auto layers = ::std::vector<::std::vector<::uns::nn::general::neuron<typename base::network_traitset::neuron_type::neuron_traitset>*>>{};
+			for(const auto& layer : m_layers) {
+				layers.push_back(::std::vector<::uns::nn::general::neuron<typename base::network_traitset::neuron_type::neuron_traitset>*>{});
+				for(auto neuron_ptr : layer) {
+					layers.back().push_back(neuron_ptr);
+				};
+			};
+			auto inputs_map = ::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<typename base::network_traitset::neuron_type::neuron_traitset>*, ::uns::nn::adress::hash>{};
+			for(auto adress_input_iter = ido.begin(); adress_input_iter != ido.end(); adress_input_iter++) {
+				auto [input_adress, input_neuron] = *adress_input_iter;
+				inputs_map[input_adress] = input_neuron;
+				base::m_inputs.push_back(input_neuron);
+			};
+			for(const auto& layer : m_layers) {
+				for(auto neuron_ptr : layer) {
+					try {
+						neuron_ptr->link(layers, inputs_map);
+					}
+					catch(const ::std::exception& e) {
+						clear();
+						throw e;
+					};
+				};
+			};
+		};
+
+		virtual ::std::size_t capacity() const noexcept override {
+			::std::size_t result = base::capacity();
+
+			result += m_layers.capacity() * sizeof(typename decltype(m_layers)::value_type);
+
+			for(const auto& layer : m_layers) {
+				result += layer.capacity() * sizeof(typename base::network_traitset::neuron_type*);
+
+				for(auto neuron_ptr : layer) {
+					result += neuron_ptr->capacity();
+				};
+			};
+
+			return result;
+		};
+
+		virtual void react(const ::std::vector<typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::params_type>& common_params) noexcept override {
+			for(auto input : base::m_inputs) {
+				input->react(common_params);
+			};
+			for(auto& layer : m_layers) {
+				for(auto neuron : layer) {
+					neuron->collect(common_params);
+					neuron->react(common_params);
+				};
+			};
+		};
+
+		virtual typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::signal_type R(::std::size_t layer_index, ::std::size_t index) const noexcept { return m_layers[layer_index][index]->R(); };
+
+		virtual typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::signal_type C(::std::size_t layer_index, ::std::size_t index) const noexcept { return m_layers[layer_index][index]->C(); };
+
+		virtual typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::signal_type O(::std::size_t index) const noexcept { return base::m_outputs[index]->R(); };
+
+		virtual typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::signal_type I(::std::size_t index) const noexcept { return base::m_inputs[index]->R(); };
+
+		virtual ::std::size_t layers_total() const noexcept { return m_layers.size(); };
+		virtual ::std::size_t neurons_total(size_t index) const noexcept { return m_layers[index].size(); };
+		virtual ::std::size_t outputs_total() const noexcept { return base::m_outputs.size(); };
+		virtual ::std::size_t inputs_total() const noexcept { return base::m_inputs.size(); };
+	};
+
+
+	//a class of network introduces the reversable neural network
+	template<class network_traitset_t>
+		requires ::std::derived_from<
+			network_traitset_t,
+			::uns::nn::traitset::network<
+				typename network_traitset_t::neuron_type,
+				typename network_traitset_t::description_type,
+				typename network_traitset_t::input_data_object_type
+			>	
+		>
+		&& ::std::derived_from<
+			typename network_traitset_t::neuron_type,
+			::uns::nn::nonrecursive_reverse_neuron<
+				typename network_traitset_t::neuron_type::neuron_traitset
+			>
+		>
+		&& ::std::derived_from<
+			typename network_traitset_t::output_data_object_type,
+			typename ::uns::nn::general::input_data_object<
+				typename network_traitset_t::output_data_object_type::input_data_object_traitset
+			>
+		>
+	class nonrecursive_reverse_network : public ::uns::nn::sequential_base_network<network_traitset_t> {
+		protected:
+			using base = ::uns::nn::sequential_base_network<network_traitset_t>;
+
+			::std::vector<::uns::nn::general::neuron<typename base::network_traitset_t::neuron_type::neuron_traitset>*> m_reverse_inputs;
+		public:
+			nonrecursive_reverse_network() {};
+			nonrecursive_reverse_network(const ::uns::nn::nonrecursive_reverse_network<typename base::network_traitset>& net) = delete;
+			::uns::nn::nonrecursive_reverse_network<typename base::network_traitset>& operator=(const ::uns::nn::nonrecursive_reverse_network<typename base::network_traitset>& net) = delete;
+			nonrecursive_reverse_network(::uns::nn::nonrecursive_reverse_network<typename base::network_traitset>&& net) = delete;
+			::uns::nn::nonrecursive_reverse_network<typename base::network_traitset>& operator=(::uns::nn::nonrecursive_reverse_network<typename base::network_traitset>&& net) = delete;
+			~nonrecursive_reverse_network() {
+				clear();
+			};
+		protected:
+			void clear() noexcept {
+				::uns::nn::sequential_base_network<typename base::network_traitset>::clear();
+
+				auto reverse_input_allocator = typename base::network_traitset::output_data_object_type::input_data_object_traitset::input_allocator_type{};
+				for(auto& reverse_input : m_reverse_inputs) {
+					reverse_input_allocator.deallocate(reverse_input, 1);
+				};
+
+				m_reverse_inputs.clear();
+			};
+		public:
+			virtual void _link(typename base::network_traitset::output_data_object_type& odo) {
+				auto reverse_inputs = ::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<typename base::network_traitset::neuron_type::neuron_traitset>*, ::uns::nn::adress::hash>{};
+
+				for(auto reverse_input : base::m_outputs) {
+					if(auto reverse_input_neuron = odo.get(reverse_input->adress()); reverse_input_neuron != nullptr) {
+						reverse_inputs[reverse_input->adress()] = reverse_input_neuron;
+					}
+					else {
+						clear();
+						odo.clear();
+						throw ::std::runtime_error(UNS_DEV_EXCEPTION_MSG);
+					};
+				};
+
+				for(const auto& layer : base::m_layers) {
+					for(auto neuron_ptr : layer) {
+						neuron_ptr->_link(base::m_layers, reverse_inputs);
+					};
+				};
+
+				for(auto& [adress, reverse_input_ptr] : reverse_inputs) {
+					m_reverse_inputs.push_back(reverse_input_ptr);
+				};
+			};
+
+			virtual ::std::size_t capacity() const noexcept override {
+				::std::size_t result = base::capacity();
+
+				result += m_reverse_inputs.capacity() * sizeof(typename decltype(m_reverse_inputs)::value_type);
+
+				for(auto neuron_ptr : m_reverse_inputs) {
+					result += neuron_ptr->capacity();
+				};
+
+				return result;
+			};
+
+			virtual void _react(const ::std::vector<typename base::network_traitset_t::neuron_type::neuron_traitset::signal_traitset::params_type>& common_params) noexcept {
+				for(auto m_reverse_input : m_reverse_inputs) {
+					m_reverse_input->_react(common_params);
+				};
+				for(auto layer_ptr = base::m_layers.rbegin(); layer_ptr < base::m_layers.rend(); ++layer_ptr) {
+					for(auto neuron_ptr = layer_ptr->rbegin(); neuron_ptr < layer_ptr.rend(); ++neuron_ptr) {
+						neuron_ptr->_collect(common_params);
+						neuron_ptr->_react(common_params);
+					};
+				};
+			};
+
+			virtual typename base::network_traitset_t::neuron_type::neuron_traitset::signal_traitset::signal_type _R(::std::size_t layer_index, ::std::size_t index) const { return base::m_layers[layer_index][index]->_R(); };
+
+			virtual typename base::network_traitset_t::neuron_type::neuron_traitset::signal_traitset::signal_type _C(::std::size_t layer_index, ::std::size_t index) const { return base::m_layers[layer_index][index]->_C(); };
+
+			virtual typename base::network_traitset_t::neuron_type::neuron_traitset::signal_traitset::signal_type _O(::std::size_t index) const { return base::m_outputs[index]->_R(); };
+
+			virtual typename base::network_traitset_t::neuron_type::neuron_traitset::signal_traitset::signal_type _I(::std::size_t index) const { return base::m_inputs[index]->_R(); };
+	};
+};
+
+
+#endif
+
+
+namespace test {
+
+	using signal = ::uns::nn::traitset::signal<float, float, float>;
+
+	class activator_caster : public ::uns::nn::general::activator<::test::signal>::caster {
+	public:
+		virtual ::std::unique_ptr<::uns::nn::general::activator<::test::signal>> operator()(const ::std::u8string_view&) const { return nullptr; };
+	};
+
+	class collector_caster : public ::uns::nn::general::collector<::test::signal>::caster {
+	public:
+		virtual ::std::unique_ptr<::uns::nn::general::collector<::test::signal>> operator()(const ::std::u8string_view&) const { return nullptr; };
+	};
+	
+	class neur_descr : public ::uns::nn::description::neuron<::test::signal>{};
+
+	using traitset_neuron = ::uns::nn::traitset::neuron<::test::signal, ::test::neur_descr, ::test::activator_caster, ::test::collector_caster>;
+	
+	class input_neuron : public ::uns::nn::general::neuron<::test::traitset_neuron> {
+	protected:
+		using base = ::uns::nn::general::neuron<::test::traitset_neuron>;
+	public:
+		virtual typename base::neuron_traitset::description_type descript() const noexcept override {
+			return typename base::neuron_traitset::description_type{};
+		};
+		virtual void set(
+			const typename base::neuron_traitset::description_type&,
+			const ::uns::nn::adress&
+		) override {};
+		virtual void link(
+			::std::vector<::std::vector<::uns::nn::general::neuron<typename base::neuron_traitset>*>>&,
+			::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<typename base::neuron_traitset>*, ::uns::nn::adress::hash>&
+		) override {};
+
+		virtual ::std::size_t capacity() const noexcept override { return sizeof(*this); };
+
+		virtual int subneurons_total() const noexcept override { return 0; };
+		virtual const ::uns::nn::general::neuron<typename base::neuron_traitset>* subneuron(int connection_idx) const noexcept override { return nullptr; };
+		virtual ::uns::nn::general::neuron<typename base::neuron_traitset>* subneuron(int connection_idx) noexcept override { return nullptr; };
+
+		virtual const typename base::neuron_traitset::signal_traitset::signal_type& R() const noexcept override { return 0; };
+		virtual typename base::neuron_traitset::signal_traitset::signal_type& R() noexcept {
+			static typename base::neuron_traitset::signal_traitset::signal_type s_res = 0;
+			return s_res;
+		};
+		virtual const typename base::neuron_traitset::signal_traitset::signal_type& C() const noexcept override { return 0; };
+		virtual typename base::neuron_traitset::signal_traitset::signal_type& C() noexcept {
+			static typename base::neuron_traitset::signal_traitset::signal_type s_res = 0;
+			return s_res;
+		};
+
+	};
+
+	using input = ::uns::nn::traitset::input<
+		::test::signal,
+		typename ::std::unordered_map<::uns::nn::adress, ::test::input_neuron*, ::uns::nn::adress::hash>::iterator,
+		::std::allocator<::test::input_neuron>
+	>;
+
+	class ido : public ::uns::nn::general::input_data_object<::test::input> {
+	protected:
+		::std::unordered_map<::uns::nn::adress, ::test::input_neuron*, ::uns::nn::adress::hash> m_map;
+	public:
+		using base = ::uns::nn::general::input_data_object<::test::input>;
+
+		virtual ::std::size_t size() const noexcept override {
+			return m_map.size();
+		};
+		virtual typename base::input_traitset::input_neuron_type* get(const ::uns::nn::adress& adress) noexcept override {
+			return m_map[adress];
+		};
+		virtual typename base::iterator_type begin() noexcept override { return m_map.begin(); };
+		virtual typename base::iterator_type end() noexcept override { return m_map.end(); };
+		virtual void clear() noexcept override { m_map.clear(); };
+	};
+
+	using traitset_network = ::uns::nn::traitset::network<::uns::nn::sequential_neuron<::test::traitset_neuron>, ::uns::nn::description::network<::test::traitset_neuron>, ::test::ido>;
+
+};
+
+
+int main() {
+	std::cout << "START\n";
+
+	auto t = ::uns::nn::sequential_base_network<::test::traitset_network>{};
+
+	std::cout << "FINISH\n";
+};
