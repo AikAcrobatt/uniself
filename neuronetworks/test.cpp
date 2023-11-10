@@ -84,7 +84,6 @@ namespace test {
 		};
 		virtual typename base::iterator_type begin() noexcept override { return m_map.begin(); };
 		virtual typename base::iterator_type end() noexcept override { return m_map.end(); };
-		virtual void clear() noexcept override { m_map.clear(); };
 	};
 
 
