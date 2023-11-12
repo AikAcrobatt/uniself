@@ -614,7 +614,7 @@ namespace uns::nn {
 			auto activator_cast = typename base::neuron_traitset::activator_caster_type{};
 			auto collector_cast = typename base::neuron_traitset::collector_caster_type{};
 
-			adress() = adr;
+			this->adress() = adr;
 
 			m_F = activator_cast(descriptor.activator);
 			if(m_F == nullptr) {
@@ -707,9 +707,9 @@ namespace uns::nn {
 		virtual const typename base::neuron_traitset::signal_traitset::signal_type& C() const noexcept override { return m_S->value(); };
 		virtual typename base::neuron_traitset::signal_traitset::signal_type& C() noexcept { return m_S->value(); };
 
-		virtual void react(const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params) noexcept override { (*m_F)(m_S->value(), m_params, common_params); };
+		virtual void react(const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params) noexcept override { *m_F = (*m_F)(m_S->value(), m_params, common_params); };
 
-		virtual void collect(const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params) noexcept override { (*m_S)(m_links, m_params, common_params); };
+		virtual void collect(const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params) noexcept override { *m_S = (*m_S)(m_links, m_params, common_params); };
 	};
 
 
@@ -916,7 +916,7 @@ namespace uns::nn {
 			};
 
 			auto layers = ::std::vector<::std::vector<::uns::nn::general::neuron<typename base::network_traitset::neuron_type::neuron_traitset>*>>{};
-			for(const auto& layer : m_layers) {
+			for(auto& layer : m_layers) {
 				layers.push_back(::std::vector<::uns::nn::general::neuron<typename base::network_traitset::neuron_type::neuron_traitset>*>{});
 				for(auto neuron_ptr : layer) {
 					layers.back().push_back(neuron_ptr);
@@ -928,7 +928,7 @@ namespace uns::nn {
 				inputs_map[input_adress] = input_neuron;
 				base::m_inputs.push_back(input_neuron);
 			};
-			for(const auto& layer : m_layers) {
+			for(auto& layer : m_layers) {
 				for(auto neuron_ptr : layer) {
 					try {
 						neuron_ptr->link(layers, inputs_map);
