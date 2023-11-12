@@ -332,7 +332,7 @@ namespace uns::nn {
 
 			virtual ::std::u8string type() const noexcept { return u8"Zero"; };
 
-			virtual typename signal_traitset::signal_type operator()(typename signal_traitset::signal_type, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) const noexcept { return typename signal_traitset::signal_type{ 0 }; };
+			virtual typename signal_traitset::signal_type operator()(typename signal_traitset::signal_type, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) noexcept { return m_value = typename signal_traitset::signal_type{ 0 }; };
 
 			virtual typename signal_traitset::signal_type _dS(typename signal_traitset::signal_type, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) const noexcept { return typename signal_traitset::signal_type{ 0 }; };
 
@@ -397,7 +397,7 @@ namespace uns::nn {
 
 			virtual ::std::u8string type() const noexcept { return u8"Zero"; };
 
-			virtual typename signal_traitset::signal_type operator()(const ::std::vector<::std::pair<::uns::nn::general::neuron_view<signal_traitset>*, typename signal_traitset::weight_type>>&, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) const noexcept { return typename signal_traitset::signal_type{ 0 }; };
+			virtual typename signal_traitset::signal_type operator()(const ::std::vector<::std::pair<::uns::nn::general::neuron_view<signal_traitset>*, typename signal_traitset::weight_type>>&, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) noexcept { return m_value = typename signal_traitset::signal_type{ 0 }; };
 
 			virtual typename signal_traitset::signal_type _dr(int, const ::std::vector<::std::pair<::uns::nn::general::neuron_view<signal_traitset>*, typename signal_traitset::weight_type>>&, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) const noexcept { return typename signal_traitset::signal_type{ 0 }; };
 
@@ -707,9 +707,9 @@ namespace uns::nn {
 		virtual const typename base::neuron_traitset::signal_traitset::signal_type& C() const noexcept override { return m_S->value(); };
 		virtual typename base::neuron_traitset::signal_traitset::signal_type& C() noexcept { return m_S->value(); };
 
-		virtual void react(const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params) noexcept override { *m_F = (*m_F)(m_S->value(), m_params, common_params); };
+		virtual void react(const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params) noexcept override { (*m_F)(m_S->value(), m_params, common_params); };
 
-		virtual void collect(const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params) noexcept override { *m_S = (*m_S)(m_links, m_params, common_params); };
+		virtual void collect(const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params) noexcept override { (*m_S)(m_links, m_params, common_params); };
 	};
 
 

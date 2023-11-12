@@ -1,12 +1,13 @@
 ﻿
 #include <iostream>
+#include <chrono>
 
 #include "uniself/neuronetworks.hpp"
 
 
 namespace test {
 
-	using signal = ::uns::nn::traitset::signal<float, float, float>;
+	using signal = ::uns::nn::traitset::signal<long double, float, float>;
 
 
 	template<typename signal_traitset_t>
@@ -16,12 +17,12 @@ namespace test {
 	public:
 		virtual ::std::u8string type() const noexcept override { return u8"Line"; };
 
-		virtual typename base::signal_traitset::signal_type operator()(
+		virtual typename base::signal_traitset::signal_type operator() (
 			typename base::signal_traitset::signal_type C,
 			const ::std::vector<typename base::signal_traitset::params_type>& lps,
 			const ::std::vector<typename base::signal_traitset::params_type>& gps
-		) const noexcept override {
-			return
+		) noexcept override {
+			return base::m_value =
 				static_cast<base::signal_traitset::signal_type>(lps[0]) * C
 				+ static_cast<base::signal_traitset::signal_type>(lps[1]);
 		};
@@ -74,14 +75,14 @@ namespace test {
 			const ::std::vector<::std::pair<::uns::nn::general::neuron_view<typename base::signal_traitset>*, typename base::signal_traitset::weight_type>>& conns,
 			const ::std::vector<typename base::signal_traitset::params_type>& lps,
 			const ::std::vector<typename base::signal_traitset::params_type>& gps
-		) const noexcept override {
-			auto res = typename base::signal_traitset::signal_type{ 0 };
+		) noexcept override {
+			base::m_value = typename base::signal_traitset::signal_type{ 0 };
 
 			for(const auto& conn : conns) {
-				res += conn.first->R() * static_cast<typename base::signal_traitset::signal_type>(conn.second);
+				base::m_value += conn.first->R() * static_cast<typename base::signal_traitset::signal_type>(conn.second);
 			};
 
-			return res + lps[2];
+			return base::m_value += lps[2];
 		};
 
 		virtual typename base::signal_traitset::signal_type _dr(
@@ -332,6 +333,14 @@ int main() {
 		nn._react({});
 		_all_print(nn);
 	};
+
+
+	auto t1 = ::std::chrono::steady_clock::now();
+	for(int i = 0; i < 40000000; ++i) {
+		nn.react({});
+	};
+	auto t2 = ::std::chrono::steady_clock::now();
+	::std::cout << ::std::chrono::duration_cast<::std::chrono::microseconds>(t2 - t1).count() << "\n";
 
     ::std::cout << "FINISH\n";
 };
