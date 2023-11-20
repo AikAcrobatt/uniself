@@ -173,11 +173,11 @@ namespace test {
 		};
 		virtual void set(
 			const typename base::neuron_traitset::description_type&,
-			const ::uns::nn::adress&
+			const ::uns::nn::address&
 		) override {};
 		virtual void link(
 			::std::vector<::std::vector<::uns::nn::general::neuron<typename base::neuron_traitset>*>>&,
-			::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<typename base::neuron_traitset>*, ::uns::nn::adress::hash>&
+			::std::unordered_map<::uns::nn::address, ::uns::nn::general::neuron<typename base::neuron_traitset>*, ::uns::nn::address::hash>&
 		) override {};
 
 		virtual ::std::size_t capacity() const noexcept override { return sizeof(*this); };
@@ -197,25 +197,25 @@ namespace test {
 
 	using input = ::uns::nn::traitset::input<
 		::test::signal,
-		typename ::std::unordered_map<::uns::nn::adress, ::test::input_neuron*, ::uns::nn::adress::hash>::iterator,
+		typename ::std::unordered_map<::uns::nn::address, ::test::input_neuron*, ::uns::nn::address::hash>::iterator,
 		::std::allocator<::test::input_neuron>
 	>;
 
 
 	class ido : public ::uns::nn::general::input_data_object<::test::input> {
 	protected:
-		::std::unordered_map<::uns::nn::adress, ::test::input_neuron*, ::uns::nn::adress::hash> m_map;
+		::std::unordered_map<::uns::nn::address, ::test::input_neuron*, ::uns::nn::address::hash> m_map;
 	public:
 		using base = ::uns::nn::general::input_data_object<::test::input>;
 
 		virtual ::std::size_t size() const noexcept override {
 			return m_map.size();
 		};
-		virtual typename base::input_traitset::input_neuron_type* get(const ::uns::nn::adress& adress) noexcept override {
-			if(auto iter = m_map.find(adress); iter == m_map.end()) {
-				m_map[adress] = new ::test::input_neuron{};
+		virtual typename base::input_traitset::input_neuron_type* get(const ::uns::nn::address& address) noexcept override {
+			if(auto iter = m_map.find(address); iter == m_map.end()) {
+				m_map[address] = new ::test::input_neuron{};
 			};
-			return m_map[adress];
+			return m_map[address];
 		};
 		virtual typename base::iterator_type begin() noexcept override { return m_map.begin(); };
 		virtual typename base::iterator_type end() noexcept override { return m_map.end(); };
@@ -246,15 +246,15 @@ int main() {
 
 	auto ido = ::test::ido{};
 	auto ido_set = [&ido] (int i) {
-		ido.get(::uns::nn::adress{ -1, 0 })->adress() = ::uns::nn::adress{ -1, 0 };
-		ido.get(::uns::nn::adress{ -1, 1 })->adress() = ::uns::nn::adress{ -1, 1 };
-		ido.get(::uns::nn::adress{ -2, 0 })->adress() = ::uns::nn::adress{ -2, 0 };
-		ido.get(::uns::nn::adress{ -2, 1 })->adress() = ::uns::nn::adress{ -2, 1 };
+		ido.get(::uns::nn::address{ -1, 0 })->address() = ::uns::nn::address{ -1, 0 };
+		ido.get(::uns::nn::address{ -1, 1 })->address() = ::uns::nn::address{ -1, 1 };
+		ido.get(::uns::nn::address{ -2, 0 })->address() = ::uns::nn::address{ -2, 0 };
+		ido.get(::uns::nn::address{ -2, 1 })->address() = ::uns::nn::address{ -2, 1 };
 
-		ido.get(::uns::nn::adress{ -1, 0 })->R() = 2.0 * static_cast<long double>(i) + 0.5;
-		ido.get(::uns::nn::adress{ -1, 1 })->R() = 2.0 * static_cast<long double>(i) + 1.0;
-		ido.get(::uns::nn::adress{ -2, 0 })->R() = 2.0 * static_cast<long double>(i) + 1.5;
-		ido.get(::uns::nn::adress{ -2, 1 })->R() = 2.0 * static_cast<long double>(i) + 2.0;
+		ido.get(::uns::nn::address{ -1, 0 })->R() = 2.0 * static_cast<long double>(i) + 0.5;
+		ido.get(::uns::nn::address{ -1, 1 })->R() = 2.0 * static_cast<long double>(i) + 1.0;
+		ido.get(::uns::nn::address{ -2, 0 })->R() = 2.0 * static_cast<long double>(i) + 1.5;
+		ido.get(::uns::nn::address{ -2, 1 })->R() = 2.0 * static_cast<long double>(i) + 2.0;
 	};
 
 
@@ -299,7 +299,7 @@ int main() {
 	};
 	repr.layers.back().back().params = { 1, -1, 0 };
 
-	repr.outputs.push_back(::uns::nn::adress{ 1, 0 });
+	repr.outputs.push_back(::uns::nn::address{ 1, 0 });
 
 	ido_set(0);
 
@@ -329,7 +329,7 @@ int main() {
 		nn.react({});
 		all_print(nn);
 
-		odo.get(::uns::nn::adress{ 1, 0 })->R() = static_cast<long double>(i);
+		odo.get(::uns::nn::address{ 1, 0 })->R() = static_cast<long double>(i);
 		nn._react({});
 		_all_print(nn);
 	};

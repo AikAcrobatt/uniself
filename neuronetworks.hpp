@@ -99,16 +99,16 @@ namespace uns::nn::traitset {
 namespace uns::nn {
 
 
-	//an adress of neuron in every neuronetwork
-	class adress {
+	//an address of neuron in every neuronetwork
+	class address {
 	public:
 		int layer = 0;
 		int index = 0;
 
-		inline bool operator==(const ::uns::nn::adress& obj) const noexcept {
+		inline bool operator==(const ::uns::nn::address& obj) const noexcept {
 			return layer == obj.layer && index == obj.index;
 		};
-		inline bool operator!=(const ::uns::nn::adress& obj) const noexcept {
+		inline bool operator!=(const ::uns::nn::address& obj) const noexcept {
 			return !(*this == obj);
 		};
 
@@ -118,8 +118,8 @@ namespace uns::nn {
 		protected:
 			::std::hash<long long int> m_subhash;
 		public:
-			inline ::std::size_t operator()(const ::uns::nn::adress& adress) const noexcept {
-				return m_subhash((static_cast<long long int>(adress.layer) << sizeof(int) * 8) + static_cast<long long int>(adress.index));
+			inline ::std::size_t operator()(const ::uns::nn::address& address) const noexcept {
+				return m_subhash((static_cast<long long int>(address.layer) << sizeof(int) * 8) + static_cast<long long int>(address.index));
 			};
 		};
 	};
@@ -144,7 +144,7 @@ namespace uns::nn {
 			signal_traitset::signal_type r = typename signal_traitset::signal_type{ 0 };
 			::std::u8string collector = u8"";
 			signal_traitset::signal_type c = typename signal_traitset::signal_type{ 0 };
-			::std::vector<::std::pair<::uns::nn::adress, typename signal_traitset::weight_type>> links;
+			::std::vector<::std::pair<::uns::nn::address, typename signal_traitset::weight_type>> links;
 			::std::vector<typename signal_traitset::params_type> params;
 
 			neuron() noexcept {};
@@ -205,7 +205,7 @@ namespace uns::nn {
 			using neuron_traitset = neuron_traitset_t;
 
 			::std::vector<::std::vector<typename neuron_traitset::description_type>> layers;
-			::std::vector<::uns::nn::adress> outputs;
+			::std::vector<::uns::nn::address> outputs;
 
 			network() noexcept {};
 			network(const ::uns::nn::description::network<neuron_traitset>& obj) noexcept :
@@ -254,13 +254,13 @@ namespace uns::nn {
 		public:
 			using signal_traitset = signal_traitset_t;
 		protected:
-			::uns::nn::adress m_adress;
+			::uns::nn::address m_addresss;
 			signal_traitset::signal_type m_dropout = typename signal_traitset::signal_type{ 0 };
 		public:
 			virtual ::std::size_t capacity() const noexcept {
 				::std::size_t result = 0;
 
-				result += m_adress.capacity();
+				result += m_addresss.capacity();
 				result += sizeof(m_dropout);
 
 				return result;
@@ -273,8 +273,8 @@ namespace uns::nn {
 			virtual const typename signal_traitset::signal_type& R() const noexcept { return typename signal_traitset::signal_type{ 0 }; };
 			virtual const typename signal_traitset::signal_type& C() const noexcept { return typename signal_traitset::signal_type{ 0 }; };
 
-			virtual const ::uns::nn::adress& adress() const noexcept { return m_adress; };
-			virtual ::uns::nn::adress& adress() noexcept { return m_adress; };
+			virtual const ::uns::nn::address& address() const noexcept { return m_addresss; };
+			virtual ::uns::nn::address& address() noexcept { return m_addresss; };
 			virtual bool is_reversible() const noexcept { return false; };
 			virtual const typename signal_traitset::signal_type& dropout() const noexcept { return m_dropout; };
 			virtual typename signal_traitset::signal_type& dropout() noexcept { return m_dropout; };
@@ -436,11 +436,11 @@ namespace uns::nn {
 			virtual typename neuron_traitset::description_type descript() const noexcept = 0;
 			virtual void set(
 				const typename neuron_traitset::description_type&,
-				const ::uns::nn::adress&
+				const ::uns::nn::address&
 			) = 0;
 			virtual void link(
 				::std::vector<::std::vector<::uns::nn::general::neuron<neuron_traitset>*>>&,
-				::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<neuron_traitset>*, ::uns::nn::adress::hash>&
+				::std::unordered_map<::uns::nn::address, ::uns::nn::general::neuron<neuron_traitset>*, ::uns::nn::address::hash>&
 			) = 0;
 
 			virtual ::std::size_t capacity() const noexcept override {
@@ -478,7 +478,7 @@ namespace uns::nn {
 			using input_allocator_type = input_data_object_traitset_t::input_allocator_type;
 
 			virtual ::std::size_t size() const noexcept = 0;
-			virtual typename input_traitset::input_neuron_type* get(const ::uns::nn::adress&) noexcept = 0;
+			virtual typename input_traitset::input_neuron_type* get(const ::uns::nn::address&) noexcept = 0;
 			virtual iterator_type begin() noexcept = 0;
 			virtual iterator_type end() noexcept = 0;
 		};
@@ -556,9 +556,9 @@ namespace uns::nn {
 		::std::vector<::std::pair<::uns::nn::general::neuron_view<typename base::neuron_traitset::signal_traitset>*, typename base::neuron_traitset::signal_traitset::weight_type>> m_links;
 		::std::vector<typename base::neuron_traitset::signal_traitset::params_type> m_params;
 
-		::std::unique_ptr<::std::vector<::std::pair<::uns::nn::adress, typename base::neuron_traitset::signal_traitset::weight_type>>> m_adresses = nullptr;
+		::std::unique_ptr<::std::vector<::std::pair<::uns::nn::address, typename base::neuron_traitset::signal_traitset::weight_type>>> m_addressses = nullptr;
 	public:
-		sequential_neuron() noexcept : m_F(nullptr), m_S(nullptr), m_adresses(nullptr) {};
+		sequential_neuron() noexcept : m_F(nullptr), m_S(nullptr), m_addressses(nullptr) {};
 		sequential_neuron(const ::uns::nn::sequential_neuron<typename base::neuron_traitset>&) = delete;
 		::uns::nn::sequential_neuron<typename base::neuron_traitset>& operator=(const ::uns::nn::sequential_neuron<typename base::neuron_traitset>&) = delete;
 		sequential_neuron(::uns::nn::sequential_neuron<typename base::neuron_traitset>&&) = delete;
@@ -572,7 +572,7 @@ namespace uns::nn {
 			m_links.clear();
 			m_params.clear();
 
-			m_adresses = nullptr;
+			m_addressses = nullptr;
 		};
 	public:
 
@@ -597,8 +597,8 @@ namespace uns::nn {
 
 			for(auto link : m_links) {
 				res.links.emplace_back(
-					::std::pair<::uns::nn::adress, typename base::neuron_traitset::signal_traitset::weight_type>{
-						::std::get<part::_neuron_>(link)->adress(),
+					::std::pair<::uns::nn::address, typename base::neuron_traitset::signal_traitset::weight_type>{
+						::std::get<part::_neuron_>(link)->address(),
 						::std::get<part::_weight_>(link)
 					}
 				);
@@ -609,12 +609,12 @@ namespace uns::nn {
 
 		virtual void set(
 			const typename base::neuron_traitset::description_type& descriptor,
-			const ::uns::nn::adress& adr
+			const ::uns::nn::address& adr
 		) override {
 			auto activator_cast = typename base::neuron_traitset::activator_caster_type{};
 			auto collector_cast = typename base::neuron_traitset::collector_caster_type{};
 
-			this->adress() = adr;
+			this->address() = adr;
 
 			m_F = activator_cast(descriptor.activator);
 			if(m_F == nullptr) {
@@ -633,33 +633,33 @@ namespace uns::nn {
 
 			m_params = descriptor.params;
 
-			m_adresses = ::std::unique_ptr<::std::vector<::std::pair<::uns::nn::adress, typename base::neuron_traitset::signal_traitset::weight_type>>>{
-				new ::std::vector<::std::pair<::uns::nn::adress, typename base::neuron_traitset::signal_traitset::weight_type>>{}
+			m_addressses = ::std::unique_ptr<::std::vector<::std::pair<::uns::nn::address, typename base::neuron_traitset::signal_traitset::weight_type>>>{
+				new ::std::vector<::std::pair<::uns::nn::address, typename base::neuron_traitset::signal_traitset::weight_type>>{}
 			};
-			*m_adresses = descriptor.links;
+			*m_addressses = descriptor.links;
 		};
 
 		virtual void link(
 			::std::vector<::std::vector<::uns::nn::general::neuron<typename base::neuron_traitset>*>>& main_body,
-			::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<typename base::neuron_traitset>*, ::uns::nn::adress::hash>& inputs
+			::std::unordered_map<::uns::nn::address, ::uns::nn::general::neuron<typename base::neuron_traitset>*, ::uns::nn::address::hash>& inputs
 		) override {
-			if(m_adresses == nullptr) {
+			if(m_addressses == nullptr) {
 				throw ::std::runtime_error(UNS_DEV_EXCEPTION_MSG);
 			};
 
 			m_links.clear();
 
-			for(const auto& [adress, weight] : *m_adresses) {
+			for(const auto& [address, weight] : *m_addressses) {
 				auto link = ::std::pair<::uns::nn::general::neuron_view<typename base::neuron_traitset::signal_traitset>*, typename base::neuron_traitset::signal_traitset::weight_type>{};
-				if(auto iter = inputs.find(adress); iter != inputs.end()) {
+				if(auto iter = inputs.find(address); iter != inputs.end()) {
 					::std::get<part::_neuron_>(link) = iter->second;
 				}
 				else {
 					if(
-						adress.layer >= 0 && adress.layer < main_body.size()
-						&& adress.index >= 0 && adress.index < main_body[adress.layer].size()
+						address.layer >= 0 && address.layer < main_body.size()
+						&& address.index >= 0 && address.index < main_body[address.layer].size()
 					) {
-						::std::get<part::_neuron_>(link) = main_body[adress.layer][adress.index];
+						::std::get<part::_neuron_>(link) = main_body[address.layer][address.index];
 					}
 					else {
 						clear();
@@ -670,7 +670,7 @@ namespace uns::nn {
 				m_links.push_back(link);
 			};
 
-			m_adresses = nullptr;
+			m_addressses = nullptr;
 		};
 
 		virtual ::std::size_t capacity() const noexcept override {
@@ -744,7 +744,7 @@ namespace uns::nn {
 	public:
 		virtual void _link(
 			::std::vector<::std::vector<::uns::nn::nonrecursive_reversive_neuron<typename base::neuron_traitset>*>>& main_body,
-			::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<typename base::neuron_traitset>*, ::uns::nn::adress::hash>& reverse_inputs
+			::std::unordered_map<::uns::nn::address, ::uns::nn::general::neuron<typename base::neuron_traitset>*, ::uns::nn::address::hash>& reverse_inputs
 		) {
 			m__links.clear();
 
@@ -756,14 +756,14 @@ namespace uns::nn {
 					};
 
 					for(int subneuron_idx = 0; subneuron_idx < neuron_ptr->subneurons_total(); ++subneuron_idx) {
-						if(neuron_ptr->subneuron(subneuron_idx)->adress() == this->adress()) {
+						if(neuron_ptr->subneuron(subneuron_idx)->address() == this->address()) {
 							m__links.emplace_back(::std::pair<::uns::nn::nonrecursive_reversive_neuron<typename base::neuron_traitset>*, place_type>{ neuron_ptr, subneuron_idx });
 						};
 					};
 				};
 			};
 
-			if(auto iter = reverse_inputs.find(this->adress()); iter != reverse_inputs.end()) {
+			if(auto iter = reverse_inputs.find(this->address()); iter != reverse_inputs.end()) {
 				m_input = iter->second;
 			};
 		};
@@ -861,7 +861,7 @@ namespace uns::nn {
 			};
 
 			for(const auto output_ptr : base::m_outputs) {
-				res.outputs.push_back(output_ptr->adress());
+				res.outputs.push_back(output_ptr->address());
 			};
 
 			return res;
@@ -900,7 +900,7 @@ namespace uns::nn {
 						try {
 							m_layers[layer_idx][neuron_idx]->set(
 								descriptor.layers[layer_idx][neuron_idx],
-								::uns::nn::adress{ static_cast<int>(layer_idx), static_cast<int>(neuron_idx) }
+								::uns::nn::address{ static_cast<int>(layer_idx), static_cast<int>(neuron_idx) }
 							);
 						}
 						catch(const ::std::exception& e) {
@@ -922,10 +922,10 @@ namespace uns::nn {
 					layers.back().push_back(neuron_ptr);
 				};
 			};
-			auto inputs_map = ::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<typename base::network_traitset::neuron_type::neuron_traitset>*, ::uns::nn::adress::hash>{};
-			for(auto adress_input_iter = ido.begin(); adress_input_iter != ido.end(); adress_input_iter++) {
-				auto [input_adress, input_neuron] = *adress_input_iter;
-				inputs_map[input_adress] = input_neuron;
+			auto inputs_map = ::std::unordered_map<::uns::nn::address, ::uns::nn::general::neuron<typename base::network_traitset::neuron_type::neuron_traitset>*, ::uns::nn::address::hash>{};
+			for(auto addresss_input_iter = ido.begin(); addresss_input_iter != ido.end(); addresss_input_iter++) {
+				auto [input_addresss, input_neuron] = *addresss_input_iter;
+				inputs_map[input_addresss] = input_neuron;
 				base::m_inputs.push_back(input_neuron);
 			};
 			for(auto& layer : m_layers) {
@@ -1033,11 +1033,11 @@ namespace uns::nn {
 		};
 	public:
 		virtual void _link(typename base::network_traitset::output_data_object_type& odo) {
-			auto reverse_inputs = ::std::unordered_map<::uns::nn::adress, ::uns::nn::general::neuron<typename base::network_traitset::neuron_type::neuron_traitset>*, ::uns::nn::adress::hash>{};
+			auto reverse_inputs = ::std::unordered_map<::uns::nn::address, ::uns::nn::general::neuron<typename base::network_traitset::neuron_type::neuron_traitset>*, ::uns::nn::address::hash>{};
 
 			for(auto reverse_input : base::m_outputs) {
-				if(auto reverse_input_neuron = odo.get(reverse_input->adress()); reverse_input_neuron != nullptr) {
-					reverse_inputs[reverse_input->adress()] = reverse_input_neuron;
+				if(auto reverse_input_neuron = odo.get(reverse_input->address()); reverse_input_neuron != nullptr) {
+					reverse_inputs[reverse_input->address()] = reverse_input_neuron;
 					m_reversive_inputs.push_back(reverse_input_neuron);
 				}
 				else {
