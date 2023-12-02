@@ -1,12 +1,12 @@
 ﻿
 #include <iostream>
-
+/*
 extern "C" {
 #include "lua.h"
 #include "lauxlib.h"
 #include "lualib.h"
 }
-
+*/
 #include "uniself/lua_wrapper.hpp"
 
 void print_vals(const ::uns::lua::value&, const ::std::string);
