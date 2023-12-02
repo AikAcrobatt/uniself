@@ -1,11 +1,12 @@
 
+#include "lua_wrapper.hpp"
+
 extern "C" {
 #include "lua.h"
 #include "lauxlib.h"
 #include "lualib.h"
 }
 
-#include "uniself/lua_wrapper.hpp"
 
 
 //class ::uns::lua::error =>
@@ -52,7 +53,7 @@ void ::uns::lua::error::swap(::uns::lua::error& obj) noexcept {
 	::std::swap(m_type, obj.m_type);
 };
 
-bool ::uns::lua::error::is() const noexcept { return (m_code != ::uns::lua::errcode::ok) || (m_type != ::uns::lua::errtype::ok); };
+bool ::uns::lua::error::is() const noexcept { return (m_code != ::uns::lua::errcode{ ::uns::lua::errcode::ok }) || (m_type != ::uns::lua::errtype{ ::uns::lua::errtype::ok }); };
 
 ::uns::lua::errcode uns::lua::error::code() const noexcept { return m_code; };
 ::uns::lua::errtype uns::lua::error::type() const noexcept { return m_type; };
@@ -73,32 +74,57 @@ bool ::uns::lua::error::is() const noexcept { return (m_code != ::uns::lua::errc
 
 
 namespace uns::lua::auxiliary {
+
+	::uns::lua::errcode lua_native_error_to_wrapper(int lua_native_error_code) noexcept {
+		if(lua_native_error_code == LUA_OK) {
+			return ::uns::lua::errcode::ok;
+		}
+		else if(lua_native_error_code == LUA_YIELD) {
+			return ::uns::lua::errcode::yeld;
+		}
+		else if(lua_native_error_code == LUA_ERRRUN) {
+			return ::uns::lua::errcode::errrun;
+		}
+		else if(lua_native_error_code == LUA_ERRSYNTAX) {
+			return ::uns::lua::errcode::errsyntax;
+		}
+		else if(lua_native_error_code == LUA_ERRMEM) {
+			return ::uns::lua::errcode::errmem;
+		}
+		else if(lua_native_error_code == LUA_ERRERR) {
+			return ::uns::lua::errcode::errerr;
+		}
+		else {
+			return ::uns::lua::errcode::errcall;
+		};
+	};
+
 	class table;
 
 	class state {
 	protected:
-		lua_State* m_state = nullptr;
+		::uns::lua::alias::lua_state m_state = nullptr;
 		bool m_copied = false;
 	public:
 		state() noexcept :
 			m_state(luaL_newstate()),
 			m_copied(false) {
-			luaL_openlibs(m_state);
+			luaL_openlibs(reinterpret_cast<lua_State*>(m_state));
 		};
 		state(const ::uns::lua::auxiliary::state& obj) noexcept :
-			m_state(lua_newthread(obj.m_state)),
+			m_state(lua_newthread(reinterpret_cast<lua_State*>(obj.m_state))),
 			m_copied(true) {};
 		::uns::lua::auxiliary::state& operator=(const ::uns::lua::auxiliary::state& obj) noexcept {
 			if(this != &obj) {
 				reset();
-				m_state = lua_newthread(obj.m_state);
+				m_state = lua_newthread(reinterpret_cast<lua_State*>(obj.m_state));
 				m_copied = true;
 			};
 			return *this;
 		};
 		state(::uns::lua::auxiliary::state&& obj) noexcept :
 			m_state(obj.m_state),
-			m_copied(true) {
+			m_copied(obj.m_copied) {//recently here was 'm_copied(false)'
 			obj.m_state = nullptr;
 			obj.m_copied = false;
 		};
@@ -113,13 +139,13 @@ namespace uns::lua::auxiliary {
 			reset();
 		};
 
-		const lua_State* get() const noexcept { return m_state; };
-		lua_State* get() noexcept { return m_state; };
+		const ::uns::lua::alias::lua_state get() const noexcept { return m_state; };
+		::uns::lua::alias::lua_state get() noexcept { return m_state; };
 	protected:
 		void reset() noexcept {
 			if(m_state != nullptr) {
 				if(!m_copied) {
-					lua_close(m_state);
+					lua_close(reinterpret_cast<lua_State*>(m_state));
 				};
 			};
 		};
@@ -198,13 +224,13 @@ namespace uns::lua::auxiliary {
 bool ::uns::lua::value::operator==(const ::uns::lua::value& obj) const noexcept {
 	return (m_type == obj.m_type)
 		&& (
-			(m_type == ::uns::lua::value_type::nil)
-			|| ((m_type == ::uns::lua::value_type::boolean) && (m_boolean == static_cast<::uns::lua::type::boolean>(obj)))
-			|| ((m_type == ::uns::lua::value_type::number) && (m_number == static_cast<::uns::lua::type::number>(obj)))
-			|| ((m_type == ::uns::lua::value_type::integer) && (m_integer == static_cast<::uns::lua::type::integer>(obj)))
-			|| ((m_type == ::uns::lua::value_type::string) && (m_string == static_cast<::uns::lua::type::string>(obj)))
-			|| ((m_type == ::uns::lua::value_type::table) && (m_table == static_cast<::uns::lua::type::table>(obj)))
-			);
+			(m_type == ::uns::lua::value_type{ ::uns::lua::value_type::nil })
+			|| ((m_type == ::uns::lua::value_type{ ::uns::lua::value_type::boolean }) && (m_boolean == static_cast<::uns::lua::type::boolean>(obj)))
+			|| ((m_type == ::uns::lua::value_type{ ::uns::lua::value_type::number }) && (m_number == static_cast<::uns::lua::type::number>(obj)))
+			|| ((m_type == ::uns::lua::value_type{ ::uns::lua::value_type::integer }) && (m_integer == static_cast<::uns::lua::type::integer>(obj)))
+			|| ((m_type == ::uns::lua::value_type{ ::uns::lua::value_type::string }) && (m_string == static_cast<::uns::lua::type::string>(obj)))
+			|| ((m_type == ::uns::lua::value_type{ ::uns::lua::value_type::table }) && (m_table == static_cast<::uns::lua::type::table>(obj)))
+		);
 };
 bool ::uns::lua::value::operator!=(const ::uns::lua::value& obj) const noexcept {
 	return !(*this == obj);
@@ -225,66 +251,69 @@ UNS_LUA_VALUE_CONVERT_DESCRIPTOR(string);
 UNS_LUA_VALUE_CONVERT_DESCRIPTOR(table);
 #undef UNS_LUA_VALUE_CONVERT_DESCRIPTOR
 
-void ::uns::lua::value::push_to(::uns::lua::auxiliary::state& lua_state) const noexcept {
-	m_push_function(lua_state, *this);
+void ::uns::lua::value::push_to(::uns::lua::auxiliary::state& thread) const noexcept {
+	push_to(thread.get());
+};
+void ::uns::lua::value::push_to(::uns::lua::alias::lua_state stack) const noexcept {
+	m_push_function(stack, *this);
 };
 
-void ::uns::lua::value::push_nil(::uns::lua::auxiliary::state& lua_state, const ::uns::lua::value& value) noexcept {
-	lua_pushnil(lua_state.get());
+void ::uns::lua::value::push_nil(::uns::lua::alias::lua_state stack, const ::uns::lua::value& value) noexcept {
+	lua_pushnil(reinterpret_cast<lua_State*>(stack));
 };
 #define UNS_LUA_VALUE_PUSH_DESCRIPTOR(type_identifier)											\
-		void ::uns::lua::value::push_##type_identifier(::uns::lua::auxiliary::state& lua_state, const ::uns::lua::value& value) noexcept {\
-			lua_push##type_identifier(lua_state.get(), static_cast<::uns::lua::type::##type_identifier>(value));\
+		void ::uns::lua::value::push_##type_identifier(::uns::lua::alias::lua_state stack, const ::uns::lua::value& value) noexcept {\
+			lua_push##type_identifier(reinterpret_cast<lua_State*>(stack), static_cast<::uns::lua::type::##type_identifier>(value));\
 		};																						\
 
 UNS_LUA_VALUE_PUSH_DESCRIPTOR(boolean);
 UNS_LUA_VALUE_PUSH_DESCRIPTOR(number);
 UNS_LUA_VALUE_PUSH_DESCRIPTOR(integer);
 
-void ::uns::lua::value::push_string(::uns::lua::auxiliary::state& lua_state, const ::uns::lua::value& value) noexcept {
-	lua_pushstring(lua_state.get(), static_cast<::uns::lua::type::string>(value).c_str());
+void ::uns::lua::value::push_string(::uns::lua::alias::lua_state stack, const ::uns::lua::value& value) noexcept {
+	lua_pushstring(reinterpret_cast<lua_State*>(stack), static_cast<::uns::lua::type::string>(value).c_str());
 };
-void ::uns::lua::value::push_table(::uns::lua::auxiliary::state& lua_state, const ::uns::lua::value& value) noexcept {
-	lua_newtable(lua_state.get());
+void ::uns::lua::value::push_table(::uns::lua::alias::lua_state stack, const ::uns::lua::value& value) noexcept {
+	lua_newtable(reinterpret_cast<lua_State*>(stack));
 
 	for(
 		auto iterator = static_cast<const ::uns::lua::type::table&>(value).cbegin<::uns::lua::type::number>();
 		iterator != static_cast<const ::uns::lua::type::table&>(value).cend<::uns::lua::type::number>();
 		++iterator
-		) {
-		lua_pushnumber(lua_state.get(), iterator->first);
-		iterator->second.push_to(lua_state);
-		lua_settable(lua_state.get(), -3);
+	) {
+		lua_pushnumber(reinterpret_cast<lua_State*>(stack), iterator->first);
+		iterator->second.push_to(stack);
+		lua_settable(reinterpret_cast<lua_State*>(stack), -3);
 	};
 
 	for(
 		auto iterator = static_cast<const ::uns::lua::type::table&>(value).cbegin<::uns::lua::type::integer>();
 		iterator != static_cast<const ::uns::lua::type::table&>(value).cend<::uns::lua::type::integer>();
 		++iterator
-		) {
-		lua_pushinteger(lua_state.get(), iterator->first);
-		iterator->second.push_to(lua_state);
-		lua_settable(lua_state.get(), -3);
+	) {
+		lua_pushinteger(reinterpret_cast<lua_State*>(stack), iterator->first);
+		iterator->second.push_to(stack);
+		lua_settable(reinterpret_cast<lua_State*>(stack), -3);
 	};
 
 	for(
 		auto iterator = static_cast<const ::uns::lua::type::table&>(value).cbegin<::uns::lua::type::boolean>();
 		iterator != static_cast<const ::uns::lua::type::table&>(value).cend<::uns::lua::type::boolean>();
 		++iterator
-		) {
-		lua_pushboolean(lua_state.get(), iterator->first);
-		iterator->second.push_to(lua_state);
-		lua_settable(lua_state.get(), -3);
+	) {
+		lua_pushboolean(reinterpret_cast<lua_State*>(stack), iterator->first);
+		iterator->second.push_to(stack);
+		lua_settable(reinterpret_cast<lua_State*>(stack), -3);
 	};
 
 	for(
 		auto iterator = static_cast<const ::uns::lua::type::table&>(value).cbegin<::uns::lua::type::string>();
 		iterator != static_cast<const ::uns::lua::type::table&>(value).cend<::uns::lua::type::string>();
 		++iterator
-		) {
-		lua_pushstring(lua_state.get(), iterator->first.c_str());
-		iterator->second.push_to(lua_state);
-		lua_settable(lua_state.get(), -3);
+	) {
+		lua_pushstring(reinterpret_cast<lua_State*>(stack), iterator->first.c_str());
+		iterator->second.push_to(stack);
+		lua_settable(reinterpret_cast<lua_State*>(stack), -3);
 	};
 };
 #undef UNS_LUA_VALUE_PUSH_DESCRIPTOR
@@ -364,13 +393,13 @@ bool ::uns::lua::type::table::operator!=(const ::uns::lua::type::table&) const n
 
 #define UNS_LUA_TABLE_IDX_DESCRIPTOR(type_identifier)											\
 	::uns::lua::value uns::lua::auxiliary::table::operator[] (const ::uns::lua::type::##type_identifier& key) const noexcept {\
-				if(auto value_iter = m_key_##type_identifier.find(key); value_iter != m_key_##type_identifier.end()) {\
-					return value_iter->second;													\
-				}																				\
-				else {																			\
-					return ::uns::lua::nil;														\
-				};																				\
-			};								\
+		if(auto value_iter = m_key_##type_identifier.find(key); value_iter != m_key_##type_identifier.end()) {\
+			return value_iter->second;													\
+		}																				\
+		else {																			\
+			return ::uns::lua::nil;														\
+		};																				\
+	};								\
 	::uns::lua::value& ::uns::lua::auxiliary::table::operator[] (const ::uns::lua::type::##type_identifier& key) noexcept { return m_key_##type_identifier[key]; };\
 
 UNS_LUA_TABLE_IDX_DESCRIPTOR(number);
@@ -441,8 +470,8 @@ UNS_LUA_TABLE_IDX_DESCRIPTOR(string);
 //<= class ::uns::lua::type::table
 
 
-::uns::lua::value uns::lua::value::make_from(::uns::lua::auxiliary::state& lua_state, int idx) noexcept {
-	switch(lua_type(lua_state.get(), idx)) {
+::uns::lua::value uns::lua::value::make_from(::uns::lua::alias::lua_state stack, int idx) noexcept {
+	switch(lua_type(reinterpret_cast<lua_State*>(stack), idx)) {
 		default:
 		case LUA_TNIL:
 		{
@@ -450,31 +479,31 @@ UNS_LUA_TABLE_IDX_DESCRIPTOR(string);
 		}
 		case LUA_TNUMBER:
 		{
-			if(lua_isinteger(lua_state.get(), idx)) {
-				return ::uns::lua::value{ lua_tointeger(lua_state.get(), idx) };
+			if(lua_isinteger(reinterpret_cast<lua_State*>(stack), idx)) {
+				return ::uns::lua::value{ lua_tointeger(reinterpret_cast<lua_State*>(stack), idx) };
 			}
 			else {
-				return ::uns::lua::value{ lua_tonumber(lua_state.get(), idx) };
+				return ::uns::lua::value{ lua_tonumber(reinterpret_cast<lua_State*>(stack), idx) };
 			};
 		}
 		case LUA_TSTRING:
 		{
-			return ::uns::lua::value{ static_cast<::uns::lua::type::string>(lua_tostring(lua_state.get(), idx)) };
+			return ::uns::lua::value{ static_cast<::uns::lua::type::string>(lua_tostring(reinterpret_cast<lua_State*>(stack), idx)) };
 		}
 		case LUA_TBOOLEAN:
 		{
-			return ::uns::lua::value{ static_cast<::uns::lua::type::boolean>(lua_toboolean(lua_state.get(), idx)) };
+			return ::uns::lua::value{ static_cast<::uns::lua::type::boolean>(lua_toboolean(reinterpret_cast<lua_State*>(stack), idx)) };
 		}
 		case LUA_TTABLE:
 		{
 			auto res = ::uns::lua::type::table{};
 
-			lua_pushnil(lua_state.get());
-			while(lua_next(lua_state.get(), idx) != 0) {
-				auto key_idx = lua_gettop(lua_state.get()) - 1;
-				auto val_idx = lua_gettop(lua_state.get());
+			lua_pushnil(reinterpret_cast<lua_State*>(stack));
+			while(lua_next(reinterpret_cast<lua_State*>(stack), idx) != 0) {
+				auto key_idx = lua_gettop(reinterpret_cast<lua_State*>(stack)) - 1;
+				auto val_idx = lua_gettop(reinterpret_cast<lua_State*>(stack));
 
-				switch(lua_type(lua_state.get(), key_idx)) {
+				switch(lua_type(reinterpret_cast<lua_State*>(stack), key_idx)) {
 					default:
 					case LUA_TNIL:
 					{
@@ -482,32 +511,248 @@ UNS_LUA_TABLE_IDX_DESCRIPTOR(string);
 					}
 					case LUA_TNUMBER:
 					{
-						if(lua_isinteger(lua_state.get(), key_idx)) {
-							res[lua_tointeger(lua_state.get(), key_idx)] = ::uns::lua::value::make_from(lua_state, val_idx);
+						if(lua_isinteger(reinterpret_cast<lua_State*>(stack), key_idx)) {
+							res[lua_tointeger(reinterpret_cast<lua_State*>(stack), key_idx)] = ::uns::lua::value::make_from(stack, val_idx);
 						}
 						else {
-							res[lua_tonumber(lua_state.get(), key_idx)] = ::uns::lua::value::make_from(lua_state, val_idx);
+							res[lua_tonumber(reinterpret_cast<lua_State*>(stack), key_idx)] = ::uns::lua::value::make_from(stack, val_idx);
 						};
 
 						break;
 					}
 					case LUA_TSTRING:
 					{
-						res[static_cast<::uns::lua::type::string>(lua_tostring(lua_state.get(), key_idx))] = ::uns::lua::value::make_from(lua_state, val_idx);
+						res[static_cast<::uns::lua::type::string>(lua_tostring(reinterpret_cast<lua_State*>(stack), key_idx))] = ::uns::lua::value::make_from(stack, val_idx);
 						break;
 					}
 					case LUA_TBOOLEAN:
 					{
-						res[static_cast<::uns::lua::type::boolean>(lua_toboolean(lua_state.get(), key_idx))] = ::uns::lua::value::make_from(lua_state, val_idx);
+						res[static_cast<::uns::lua::type::boolean>(lua_toboolean(reinterpret_cast<lua_State*>(stack), key_idx))] = ::uns::lua::value::make_from(stack, val_idx);
 						break;
 					}
 				};
 
-				lua_pop(lua_state.get(), 1);
+				lua_pop(reinterpret_cast<lua_State*>(stack), 1);
 			};
 
 			return ::uns::lua::value{ res };
 		}
+	};
+};
+::uns::lua::value uns::lua::value::make_from(::uns::lua::auxiliary::state& thread, int idx) noexcept {
+	return ::uns::lua::value::make_from(thread.get(), idx);
+};
+
+
+
+namespace uns::lua::auxiliary {
+
+	::std::pair<::uns::lua::error, ::std::vector<::uns::lua::value>> execute(::uns::lua::alias::lua_state stack, const ::std::string& function_name, const ::std::size_t expected_results, const ::std::vector<::uns::lua::value>& args) noexcept {
+		using result_t = ::std::pair<::uns::lua::error, ::std::vector<::uns::lua::value>>;
+		
+		if(stack == nullptr) {
+			return result_t{
+				::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid },
+				::std::vector<::uns::lua::value>{}
+			};
+		};
+
+		lua_getglobal(reinterpret_cast<lua_State*>(stack), function_name.c_str());
+		const auto function_idx = lua_gettop(reinterpret_cast<lua_State*>(stack));
+
+		if(!lua_isfunction(reinterpret_cast<lua_State*>(stack), function_idx)) {
+			if(!lua_isnil(reinterpret_cast<lua_State*>(stack), function_idx)) {
+				return result_t{
+					::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::uncallable },
+					::std::vector<::uns::lua::value>{}
+				};
+			}
+			else {
+				return result_t{
+					::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::not_found },
+					::std::vector<::uns::lua::value>{}
+				};
+			};
+		};
+
+		for(const auto& arg : args) {
+			arg.push_to(stack);
+		};
+
+		if(int lua_retcode = lua_pcall(reinterpret_cast<lua_State*>(stack), static_cast<int>(args.size()), static_cast<int>(expected_results), 0); lua_retcode != LUA_OK) {//TODO args.size() must be < than int.max()
+			std::string err_str = "";
+			if(lua_isstring(reinterpret_cast<lua_State*>(stack), -1)) {
+				err_str = lua_tostring(reinterpret_cast<lua_State*>(stack), -1);
+			};
+
+			if(function_idx - lua_gettop(reinterpret_cast<lua_State*>(stack)) < 0) {
+				lua_pop(reinterpret_cast<lua_State*>(stack), function_idx - lua_gettop(reinterpret_cast<lua_State*>(stack)));
+			};
+
+			return result_t{
+				::uns::lua::error{ ::uns::lua::auxiliary::lua_native_error_to_wrapper(lua_retcode), ::uns::lua::errtype::lua_specific, err_str },
+				::std::vector<::uns::lua::value>{}
+			};
+		};
+
+		auto results = ::std::vector<::uns::lua::value>{};
+		results.reserve(expected_results);
+		for(auto idx = function_idx; idx <= lua_gettop(reinterpret_cast<lua_State*>(stack)) && idx <= function_idx + expected_results - 1; ++idx) {
+			results.push_back(::uns::lua::value::make_from(stack, idx));
+		};
+
+		if(function_idx - lua_gettop(reinterpret_cast<lua_State*>(stack)) < 0) {
+			lua_pop(reinterpret_cast<lua_State*>(stack), function_idx - lua_gettop(reinterpret_cast<lua_State*>(stack)));
+		};
+
+		return result_t{
+			::uns::lua::error{ ::uns::lua::errcode::ok, ::uns::lua::errtype::ok },
+			results
+		};
+	};
+
+	::uns::lua::error load(::uns::lua::alias::lua_state stack, const ::uns::lua::library& library) noexcept {
+		if(stack == nullptr) {
+			return ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid };
+		};
+
+		if(!library.text.empty()) {
+			auto narrow_text = ::uns::string::u8_cast<::std::string>(library.text);
+
+			if(int lua_retcode = luaL_loadstring(reinterpret_cast<lua_State*>(stack), narrow_text.c_str()); lua_retcode != LUA_OK) {
+				std::string err_str = "";
+
+				if(lua_isstring(reinterpret_cast<lua_State*>(stack), -1)) {
+					err_str = lua_tostring(reinterpret_cast<lua_State*>(stack), -1);
+					lua_pop(reinterpret_cast<lua_State*>(stack), -1);
+				};
+
+				return ::uns::lua::error{ ::uns::lua::auxiliary::lua_native_error_to_wrapper(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
+			};
+		};
+
+		if(!library.name_space.empty()) {
+			lua_newtable(reinterpret_cast<lua_State*>(stack));
+
+			for(const auto& entry : library.api) {
+				if(entry.name() == nullptr || entry.func() == nullptr) {
+					break;
+				};
+
+				lua_pushstring(reinterpret_cast<lua_State*>(stack), entry.name());
+				lua_pushcfunction(reinterpret_cast<lua_State*>(stack), reinterpret_cast<lua_CFunction>(entry.func()));
+				lua_settable(reinterpret_cast<lua_State*>(stack), -3);
+			};
+
+			lua_setglobal(reinterpret_cast<lua_State*>(stack), ::uns::string::u8_cast<::std::string>(library.name_space).c_str());
+		}
+		else {
+			for(const auto& entry : library.api) {
+				if(entry.name() == nullptr || entry.func() == nullptr) {
+					break;
+				};
+
+				lua_pushcfunction(reinterpret_cast<lua_State*>(stack), reinterpret_cast<lua_CFunction>(entry.func()));
+				lua_setglobal(reinterpret_cast<lua_State*>(stack), entry.name());
+
+			};
+		};
+
+		return ::uns::lua::error{ ::uns::lua::errcode::ok, ::uns::lua::errtype::ok };
+	};
+	::uns::lua::error load(::uns::lua::alias::lua_state stack, const ::std::u8string& text) noexcept {
+		if(stack == nullptr) {
+			return ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid };
+		};
+
+		auto narrow_text = ::uns::string::u8_cast<::std::string>(text);
+
+		if(int lua_retcode = luaL_loadstring(reinterpret_cast<lua_State*>(stack), narrow_text.c_str()); lua_retcode != LUA_OK) {
+			std::string err_str = "";
+
+			if(lua_isstring(reinterpret_cast<lua_State*>(stack), -1)) {
+				err_str = lua_tostring(reinterpret_cast<lua_State*>(stack), -1);
+				lua_pop(reinterpret_cast<lua_State*>(stack), -1);
+			};
+
+			return ::uns::lua::error{ ::uns::lua::auxiliary::lua_native_error_to_wrapper(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
+		};
+
+		return ::uns::lua::error{ ::uns::lua::errcode::ok, ::uns::lua::errtype::ok };
+	};
+	::uns::lua::error load(::uns::lua::alias::lua_state stack, const ::std::filesystem::path& file) noexcept {
+		auto narrow_path = ::uns::string::u8_cast<::std::string>(::uns::string::u8_cast<::std::u8string>(file.lexically_normal().native()));
+
+		if(int lua_retcode = luaL_loadfile(reinterpret_cast<lua_State*>(stack), narrow_path.c_str()); lua_retcode != LUA_OK) {
+			std::string err_str = "";
+
+			if(lua_isstring(reinterpret_cast<lua_State*>(stack), -1)) {
+				err_str = lua_tostring(reinterpret_cast<lua_State*>(stack), -1);
+				lua_pop(reinterpret_cast<lua_State*>(stack), -1);
+			};
+
+			return ::uns::lua::error{ ::uns::lua::auxiliary::lua_native_error_to_wrapper(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
+		};
+
+		return ::uns::lua::error{ ::uns::lua::errcode::ok, ::uns::lua::errtype::ok };
+	};
+
+	::std::pair<::uns::lua::error, ::uns::lua::value> global_get(::uns::lua::alias::lua_state stack, const ::std::string& global_name) noexcept {
+		using result_t = ::std::pair<::uns::lua::error, ::uns::lua::value>;
+
+		if(stack == nullptr) {
+			return result_t{
+				::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid },
+				::uns::lua::nil
+			};
+		};
+
+		lua_getglobal(reinterpret_cast<lua_State*>(stack), global_name.c_str());
+		auto global_idx = lua_gettop(reinterpret_cast<lua_State*>(stack));
+
+		if(lua_isnil(reinterpret_cast<lua_State*>(stack), global_idx)) {
+			return result_t{
+				::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::not_found },
+				::uns::lua::nil
+			};
+		};
+
+		if(
+			!(
+				lua_isnil(reinterpret_cast<lua_State*>(stack), global_idx)
+				|| lua_isnumber(reinterpret_cast<lua_State*>(stack), global_idx)
+				|| lua_isinteger(reinterpret_cast<lua_State*>(stack), global_idx)
+				|| lua_isboolean(reinterpret_cast<lua_State*>(stack), global_idx)
+				|| lua_isstring(reinterpret_cast<lua_State*>(stack), global_idx)
+				|| lua_istable(reinterpret_cast<lua_State*>(stack), global_idx)
+				)
+		) {
+			return result_t{
+				::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::unrepresentable },
+				::uns::lua::nil
+			};
+		};
+
+		return result_t{
+			::uns::lua::error{ ::uns::lua::errcode::ok, ::uns::lua::errtype::ok },
+			::uns::lua::value::make_from(stack, global_idx)
+		};
+	};
+	::uns::lua::error global_set(::uns::lua::alias::lua_state stack, const ::std::string& global_name, const ::uns::lua::value& value) noexcept {
+		if(stack == nullptr) {
+			return ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid };
+		};
+
+		value.push_to(stack);
+		lua_setglobal(reinterpret_cast<lua_State*>(stack), global_name.c_str());
+
+		return ::uns::lua::error{ ::uns::lua::errcode::ok, ::uns::lua::errtype::ok };
+	};
+
+	void gc(::uns::lua::alias::lua_state stack) noexcept {
+		if(stack != nullptr) {
+			lua_gc(reinterpret_cast<lua_State*>(stack), LUA_GCCOLLECT);
+		};
 	};
 };
 
@@ -515,74 +760,51 @@ UNS_LUA_TABLE_IDX_DESCRIPTOR(string);
 //class ::uns::lua::function =>
 ::uns::lua::function::function(const ::std::shared_ptr<::uns::lua::auxiliary::state>& lua_script, const ::std::string& lua_global_function_name) noexcept :
 	m_function_name(lua_global_function_name),
-	m_stack(::std::shared_ptr<::uns::lua::auxiliary::state>{ new ::uns::lua::auxiliary::state{} }) {
+	m_stack_wrapper(),
+	m_stack(::std::shared_ptr<::uns::lua::auxiliary::state>{ new ::uns::lua::auxiliary::state{} }) 
+{
 	if(lua_script != nullptr) {
 		*m_stack = *lua_script;
 	};
 };
+::uns::lua::function::function(::uns::lua::auxiliary::state_wrapper& lua_script, const ::std::string& lua_global_function_name) noexcept :
+	m_function_name(lua_global_function_name),
+	m_stack_wrapper(lua_script),
+	m_stack(nullptr) 
+{};
 ::uns::lua::function::~function() noexcept {
 	if(valid()) {
-		lua_gc(m_stack->get(), LUA_GCCOLLECT);
+		gc();
 	};
 };
-
 ::std::u8string uns::lua::function::name() const noexcept { return ::uns::string::u8_cast<::std::u8string>(m_function_name); };
 
 ::std::vector<::uns::lua::value> uns::lua::function::operator() (const ::std::size_t expected_results, const ::std::vector<::uns::lua::value>& args) noexcept {
-	m_err = ::uns::lua::error{};
-
-	if(!valid()) {
-		m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid };
-		return ::std::vector<::uns::lua::value>{};
+	::uns::lua::alias::lua_state state = nullptr;
+	if(m_stack != nullptr) {
+		state = m_stack->get();
+	}
+	else if(m_stack_wrapper.valid()) {
+		state = m_stack_wrapper.get();
 	};
-
-	lua_getglobal(m_stack->get(), m_function_name.c_str());
-	const auto function_idx = lua_gettop(m_stack->get());
-
-	if(!lua_isfunction(m_stack->get(), function_idx)) {
-		if(!lua_isnil(m_stack->get(), function_idx)) {
-			m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::uncallable };
-			return ::std::vector<::uns::lua::value>{};
-		}
-		else {
-			m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::not_found };
-			return ::std::vector<::uns::lua::value>{};
-		};
-	};
-
-	for(const auto& arg : args) {
-		arg.push_to(*m_stack);
-	};
-
-	if(int lua_retcode = lua_pcall(m_stack->get(), static_cast<int>(args.size()), expected_results, 0); lua_retcode != LUA_OK) {//TODO args.size() must be < than int.max()
-		std::string err_str = "";
-		if(lua_isstring(m_stack->get(), -1)) {
-			err_str = lua_tostring(m_stack->get(), -1);
-		};
-
-		if(function_idx - lua_gettop(m_stack->get()) < 0) {
-			lua_pop(m_stack->get(), function_idx - lua_gettop(m_stack->get()));
-		};
-
-		m_err = { static_cast<::uns::lua::errcode::_enumerated>(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
-		return ::std::vector<::uns::lua::value>{};
-	};
-
-	auto results = ::std::vector<::uns::lua::value>{};
-	results.reserve(expected_results);
-	for(auto idx = function_idx; idx <= lua_gettop(m_stack->get()) && idx <= function_idx + expected_results - 1; ++idx) {
-		results.push_back(::uns::lua::value::make_from(*m_stack, idx));
-	};
-
-	if(function_idx - lua_gettop(m_stack->get()) < 0) {
-		lua_pop(m_stack->get(), function_idx - lua_gettop(m_stack->get()));
-	};
+	
+	auto [l_err, results] = ::uns::lua::auxiliary::execute(state, m_function_name, expected_results, args);
+	
+	m_err = l_err;
 
 	return results;
 };
 
 void uns::lua::function::gc() noexcept {
-	lua_gc(m_stack->get(), LUA_GCCOLLECT);
+	::uns::lua::alias::lua_state state = nullptr;
+	if(m_stack != nullptr) {
+		state = m_stack->get();
+	}
+	else if(m_stack_wrapper.valid()) {
+		state = m_stack_wrapper.get();
+	};
+
+	::uns::lua::auxiliary::gc(state);
 };
 //<= class ::uns::lua::function
 
@@ -590,70 +812,145 @@ void uns::lua::function::gc() noexcept {
 //class ::uns::lua::global =>
 ::uns::lua::global::global(const ::std::shared_ptr<::uns::lua::auxiliary::state>& lua_script, const ::std::string& lua_global_variable_name) noexcept :
 	m_global_name(lua_global_variable_name),
+	m_stack_wrapper(),
 	m_stack(::std::shared_ptr<::uns::lua::auxiliary::state>{ new ::uns::lua::auxiliary::state}) {
 	if(lua_script != nullptr) {
 		*m_stack = *lua_script;
 	};
 };
+::uns::lua::global::global(::uns::lua::auxiliary::state_wrapper& lua_script, const ::std::string& lua_global_variable_name) noexcept :
+	m_global_name(lua_global_variable_name),
+	m_stack_wrapper(lua_script),
+	m_stack(nullptr)
+{};
 ::uns::lua::global::~global() noexcept {
 	if(valid()) {
-		lua_gc(m_stack->get(), LUA_GCCOLLECT);
+		gc();
 	};
 };
-
 ::std::u8string uns::lua::global::name() const noexcept { return ::uns::string::u8_cast<::std::u8string>(m_global_name); };
 
 ::uns::lua::value uns::lua::global::get() noexcept {
-	m_err = ::uns::lua::error{};
-
-	if(!valid()) {
-		m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid };
-		return ::uns::lua::value{};
+	::uns::lua::alias::lua_state state = nullptr;
+	if(m_stack != nullptr) {
+		state = m_stack->get();
+	}
+	else if(m_stack_wrapper.valid()) {
+		state = m_stack_wrapper.get();
 	};
 
-	lua_getglobal(m_stack->get(), m_global_name.c_str());
-	auto global_idx = lua_gettop(m_stack->get());
+	auto [l_err, result] = ::uns::lua::auxiliary::global_get(state, m_global_name);
 
-	if(lua_isnil(m_stack->get(), global_idx)) {
-		m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::not_found };
-		return ::uns::lua::value{};
-	};
-
-	if(
-		!(
-			lua_isnil(m_stack->get(), global_idx)
-			|| lua_isnumber(m_stack->get(), global_idx)
-			|| lua_isinteger(m_stack->get(), global_idx)
-			|| lua_isboolean(m_stack->get(), global_idx)
-			|| lua_isstring(m_stack->get(), global_idx)
-			|| lua_istable(m_stack->get(), global_idx)
-			)
-		) {
-		m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::unrepresentable };
-		return ::uns::lua::value{};
-	};
-
-	auto result = ::uns::lua::value::make_from(*m_stack, global_idx);
-	lua_pop(m_stack->get(), -1);
+	m_err = l_err;
 
 	return result;
 };
 void uns::lua::global::set(const ::uns::lua::value& value) noexcept {
-	m_err = ::uns::lua::error{};
-
-	if(!valid()) {
-		m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid };
-		return;
+	::uns::lua::alias::lua_state state = nullptr;
+	if(m_stack != nullptr) {
+		state = m_stack->get();
+	}
+	else if(m_stack_wrapper.valid()) {
+		state = m_stack_wrapper.get();
 	};
 
-	value.push_to(*m_stack);
-	lua_setglobal(m_stack->get(), m_global_name.c_str());
+	m_err = ::uns::lua::auxiliary::global_set(state, m_global_name, value);
 };
 
 void uns::lua::global::gc() noexcept {
-	lua_gc(m_stack->get(), LUA_GCCOLLECT);
+	::uns::lua::alias::lua_state state = nullptr;
+	if(m_stack != nullptr) {
+		state = m_stack->get();
+	}
+	else if(m_stack_wrapper.valid()) {
+		state = m_stack_wrapper.get();
+	};
+
+	::uns::lua::auxiliary::gc(state);
 };
 //<= class ::uns::lua::global
+
+
+//class ::uns::lua::thread =>
+::uns::lua::thread::thread(::uns::lua::alias::lua_state stack) noexcept :
+	m_stack(stack)
+{};
+::uns::lua::thread::thread(const ::uns::lua::thread& obj) noexcept :
+	m_stack(obj.m_stack)
+{};
+::uns::lua::thread& ::uns::lua::thread::operator=(const ::uns::lua::thread& obj) noexcept {
+	if(this == &obj) return *this;
+
+	m_stack = obj.m_stack;
+
+	return *this;
+};
+::uns::lua::thread::thread(::uns::lua::thread&& obj) noexcept :
+	m_stack(::std::move(obj.m_stack))
+{};
+::uns::lua::thread& ::uns::lua::thread::operator=(::uns::lua::thread&& obj) noexcept {
+	if(this == &obj) return *this;
+
+	m_stack = ::std::move(obj.m_stack);
+
+	return *this;
+};
+
+void ::uns::lua::thread::load(const ::uns::lua::library& library) noexcept {
+	m_err = ::uns::lua::auxiliary::load(m_stack.get(), library);
+};
+void ::uns::lua::thread::load(const ::std::u8string& text) noexcept {
+	m_err = ::uns::lua::auxiliary::load(m_stack.get(), text);
+};
+
+::uns::lua::function uns::lua::thread::get_function(const ::std::u8string& lua_global_function_name) noexcept {
+	if(!valid()) {
+		m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid, ::uns::string::u8_cast<::std::string>(lua_global_function_name) };
+		return ::uns::lua::function{};
+	}
+	else {
+		return ::uns::lua::function{ m_stack, ::uns::string::u8_cast<::std::string>(lua_global_function_name) };
+	};
+};
+::uns::lua::global uns::lua::thread::get_global(const ::std::u8string& lua_global_variable_name) noexcept {
+	if(!valid()) {
+		m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid, ::uns::string::u8_cast<::std::string>(lua_global_variable_name) };
+		return ::uns::lua::global{};
+	}
+	else {
+		return ::uns::lua::global{ m_stack, ::uns::string::u8_cast<::std::string>(lua_global_variable_name) };
+	};
+};
+
+::std::size_t uns::lua::thread::size() const noexcept {
+	if(valid()) {
+		return static_cast<::std::size_t>(lua_gettop(reinterpret_cast<lua_State*>(m_stack.get())));
+	}
+	else {
+		return 0;
+	};
+};
+::uns::lua::value uns::lua::thread::get_value(int input_index) noexcept {
+	if(valid()) {
+		return ::uns::lua::value::make_from(m_stack.get(), input_index);
+	}
+	else {
+		return 0;
+	};
+};
+
+void ::uns::lua::thread::gc() noexcept {
+	if(valid()) {
+		lua_gc(reinterpret_cast<lua_State*>(m_stack.get()), LUA_GCCOLLECT);
+	};
+};
+//<= ::uns::lua::thread
+
+
+::uns::lua::lib_entry::lib_entry(const ::std::u8string& name, ::uns::lua::alias::lua_cfunction lua_function) noexcept :
+	m_name(::uns::string::u8_cast<::std::string>(name)),
+	m_function(lua_function)
+{};
 
 
 //class ::uns::lua::script =>
@@ -692,87 +989,15 @@ void uns::lua::global::gc() noexcept {
 ::uns::lua::script::~script() noexcept {};
 
 void ::uns::lua::script::load(const ::uns::lua::library& library) noexcept {
-	m_err = ::uns::lua::error{};
-
-	if(!valid()) {
-		m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid };
-		return;
-	};
-
-	if(!library.text.empty()) {
-		auto narrow_text = ::uns::string::u8_cast<::std::string>(library.text);
-
-		if(int lua_retcode = luaL_loadstring(m_stack->get(), narrow_text.c_str()); lua_retcode != LUA_OK) {
-			std::string err_str = "";
-
-			if(lua_isstring(m_stack->get(), -1)) {
-				err_str = lua_tostring(m_stack->get(), -1);
-				lua_pop(m_stack->get(), -1);
-			};
-
-			m_err = { static_cast<::uns::lua::errcode::_enumerated>(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
-			m_stack = nullptr;
-			return;
-		};
-	};
-
-	if(!library.name_space.empty()) {
-		lua_newtable(m_stack->get());
-
-		for(const auto& entry : library.api) {
-			if(entry.name() == nullptr || entry.func() == nullptr) {
-				break;
-			};
-
-			lua_pushstring(m_stack->get(), entry.name());
-			lua_pushcfunction(m_stack->get(), reinterpret_cast<lua_CFunction>(entry.func()));
-			lua_settable(m_stack->get(), -3);
-		};
-
-		lua_setglobal(m_stack->get(), ::uns::string::u8_cast<::std::string>(library.name_space).c_str());
-	}
-	else {
-		for(const auto& entry : library.api) {
-			if(entry.name() == nullptr || entry.func() == nullptr) {
-				break;
-			};
-
-			lua_pushcfunction(m_stack->get(), reinterpret_cast<lua_CFunction>(entry.func()));
-			lua_setglobal(m_stack->get(), entry.name());
-
-		};
-	};
+	m_err = ::uns::lua::auxiliary::load(m_stack->get(), library);
 };
 void ::uns::lua::script::load(const ::std::u8string& text) noexcept {
-	auto narrow_text = ::uns::string::u8_cast<::std::string>(text);
-
-	if(int lua_retcode = luaL_loadstring(m_stack->get(), narrow_text.c_str()); lua_retcode != LUA_OK) {
-		std::string err_str = "";
-
-		if(lua_isstring(m_stack->get(), -1)) {
-			err_str = lua_tostring(m_stack->get(), -1);
-			lua_pop(m_stack->get(), -1);
-		};
-
-		m_err = { static_cast<::uns::lua::errcode::_enumerated>(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
-		m_stack = nullptr;
-	};
+	m_err = ::uns::lua::auxiliary::load(m_stack->get(), text);
 };
 void ::uns::lua::script::load(const ::std::filesystem::path& file) noexcept {
-	auto narrow_path = ::uns::string::u8_cast<::std::string>(::uns::string::u8_cast<::std::u8string>(file.lexically_normal().native()));
-
-	if(int lua_retcode = luaL_loadfile(m_stack->get(), narrow_path.c_str()); lua_retcode != LUA_OK) {
-		std::string err_str = "";
-
-		if(lua_isstring(m_stack->get(), -1)) {
-			err_str = lua_tostring(m_stack->get(), -1);
-			lua_pop(m_stack->get(), -1);
-		};
-
-		m_err = { static_cast<::uns::lua::errcode::_enumerated>(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
-		m_stack = nullptr;
-	};
+	m_err = ::uns::lua::auxiliary::load(m_stack->get(), file);
 };
+
 
 ::uns::lua::function uns::lua::script::get_function(const ::std::u8string& lua_global_function_name) noexcept {
 	if(!valid()) {
@@ -801,13 +1026,13 @@ void uns::lua::script::run() noexcept {
 		return;
 	};
 
-	if(int lua_retcode = lua_pcall(m_stack->get(), 0, 0, 0); lua_retcode != LUA_OK) {
+	if(int lua_retcode = lua_pcall(reinterpret_cast<lua_State*>(m_stack->get()), 0, 0, 0); lua_retcode != LUA_OK) {
 		std::string err_str = "";
-		if(lua_isstring(m_stack->get(), -1)) {
-			err_str = lua_tostring(m_stack->get(), -1);
+		if(lua_isstring(reinterpret_cast<lua_State*>(m_stack->get()), -1)) {
+			err_str = lua_tostring(reinterpret_cast<lua_State*>(m_stack->get()), -1);
 		};
 
-		lua_pop(m_stack->get(), -1);
+		lua_pop(reinterpret_cast<lua_State*>(m_stack->get()), -1);
 
 		m_err = { static_cast<::uns::lua::errcode::_enumerated>(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
 		return;
@@ -817,7 +1042,20 @@ void uns::lua::script::run() noexcept {
 };
 
 void uns::lua::script::gc() noexcept {
-	lua_gc(m_stack->get(), LUA_GCCOLLECT);
+	if(valid()) {
+		lua_gc(reinterpret_cast<lua_State*>(m_stack->get()), LUA_GCCOLLECT);
+	};
+};
+
+long double uns::lua::script::total_memory() const noexcept {
+	if(valid()) {
+		long double res = lua_gc(reinterpret_cast<lua_State*>(m_stack->get()), LUA_GCCOUNT);
+		res += static_cast<long double>(lua_gc(reinterpret_cast<lua_State*>(m_stack->get()), LUA_GCCOUNTB)) / 1024.0;
+		return res;
+	}
+	else {
+		return 0;
+	};
 };
 //<= class ::uns::lua::script
 

@@ -1,12 +1,6 @@
 ﻿
 #include <iostream>
-/*
-extern "C" {
-#include "lua.h"
-#include "lauxlib.h"
-#include "lualib.h"
-}
-*/
+
 #include "uniself/lua_wrapper.hpp"
 
 void print_vals(const ::uns::lua::value&, const ::std::string);
@@ -108,40 +102,15 @@ void print_vals(const ::std::vector<::uns::lua::value>& vals, const ::std::strin
     };
 };
 
-int test_print(lua_State* L) {
-    int total = lua_gettop(L);
 
-    for(int i = -total; i < 0; ++i) {
-        switch(lua_type(L, i)) {
-            default:
-            {
-                ::std::cout << "unknown\n";
-                break;
-            }
-            case LUA_TNIL:
-            {
-                ::std::cout << "nil\n";
-                break;
-            }
-            case LUA_TNUMBER:
-            {
-                ::std::cout << lua_tonumber(L, i) << "\n";
-                break;
-            }
-            case LUA_TBOOLEAN:
-            {
-                ::std::cout << ::std::boolalpha << static_cast<bool>(lua_toboolean(L, i)) << "\n";
-                break;
-            }
-            case LUA_TSTRING:
-            {
-                ::std::cout << lua_tostring(L, i) << "\n";
-                break;
-            }
-        };
+::std::tuple<> test_print(::uns::lua::thread& th) noexcept {
+    auto values_on_stack_total = th.size();
+    for(::std::size_t i = 1; i <= values_on_stack_total; ++i) {
+        print_vals(th.get_value(i));
+        ::std::cout << ::std::endl;
     };
 
-    return 0;
+    return {};
 };
 
 
@@ -172,7 +141,7 @@ void function_n_value_test() {
         static_cast<::uns::lua::type::table&>(arg1)[u8"Some subtable"] = ::uns::lua::make_table();
         static_cast<::uns::lua::type::table&>(static_cast<::uns::lua::type::table&>(arg1)["Some subtable"])[123] = "Yeah baby!";
 
-        auto results = print_args(3, { arg1 });
+        auto results = print_args(4, { arg1, arg2, arg3, arg4 });
 
         print_vals(results);
     };
@@ -250,7 +219,7 @@ void global2_test() {
 
 void lib1_test() {
     auto script = ::uns::lua::script{
-        ::uns::lua::library{ u8"test1", { { u8"func1", test_print } }, u8"" }
+        ::uns::lua::library{ u8"test1", { ::uns::lua::lib_entry::make<::std::tuple<>, test_print>(::std::u8string{ u8"func1" }) }, u8"" }
     };
     if(script.error().is()) {
         ::std::cout << script.error().to_string() << "\n";
@@ -262,6 +231,8 @@ void lib1_test() {
             u8R"^^(
                 function print_args(...)
                     test1.func1(...)
+
+                    return "!!!", { true, 17 }
                 end
             )^^"
         }
@@ -290,7 +261,7 @@ void lib1_test() {
         static_cast<::uns::lua::type::table&>(arg1)[u8"Some subtable"] = ::uns::lua::make_table();
         static_cast<::uns::lua::type::table&>(static_cast<::uns::lua::type::table&>(arg1)["Some subtable"])[123] = "Yeah baby!";
 
-        auto results = print_args(4, { arg1, arg2, arg3, arg4 });
+        auto results = print_args(2, { arg1, arg2, arg3, arg4 });
 
         if(print_args.error().is()) {
             ::std::cout << print_args.error().to_string() << "\n";
@@ -306,7 +277,7 @@ void lib1_test() {
 
 void lib2_test() {
     auto script = ::uns::lua::script{
-        ::uns::lua::library{ u8"", { { u8"func1", test_print } }, u8"" }
+        ::uns::lua::library{ u8"", { ::uns::lua::lib_entry::make<::std::tuple<>, test_print>(::std::u8string{ u8"func1" }) }, u8"" }
     };
     if(script.error().is()) {
         ::std::cout << script.error().to_string() << "\n";
@@ -346,7 +317,7 @@ void lib2_test() {
         static_cast<::uns::lua::type::table&>(arg1)[u8"Some subtable"] = ::uns::lua::make_table();
         static_cast<::uns::lua::type::table&>(static_cast<::uns::lua::type::table&>(arg1)["Some subtable"])[123] = "Yeah baby!";
 
-        auto results = print_args(4, { arg1, arg2, arg3, arg4 });
+        auto results = print_args(2, { arg1, arg2, arg3, arg4 });
 
         if(print_args.error().is()) {
             ::std::cout << print_args.error().to_string() << "\n";
@@ -367,7 +338,7 @@ void script_loading_test() {
         return;
     };
 
-    script.load(::std::filesystem::path{ L"G:/Visual Studio/uniself/lua_wrapper/script_loading_test.lua" });
+    script.load(::std::filesystem::path{ L"G:/Visual_Studio/uniself/lua_wrapper/script_loading_test.lua" });
     if(script.error().is()) {
         ::std::cout << script.error().to_string() << "\n";
         return;
@@ -378,6 +349,8 @@ void script_loading_test() {
         ::std::cout << script.error().to_string() << "\n";
         return;
     };
+
+    ::std::cout << "total memory used = " << script.total_memory() << "\n";
 
     auto print_args = script.get_function(u8"print_args");
 
@@ -394,7 +367,7 @@ void script_loading_test() {
         static_cast<::uns::lua::type::table&>(arg1)[u8"Some subtable"] = ::uns::lua::make_table();
         static_cast<::uns::lua::type::table&>(static_cast<::uns::lua::type::table&>(arg1)["Some subtable"])[123] = "Yeah baby!";
 
-        auto results = print_args(3, { arg1, arg2, arg3, arg4 });
+        auto results = print_args(4, { arg1, arg2, arg3, arg4 });
 
         print_vals(results);
     };
@@ -404,7 +377,7 @@ void script_loading_test() {
 int main() {
     ::std::cout << "START\n";
 
-    lib1_test();
+    script_loading_test();
 
     ::std::cout << "FINISH\n";
 };

@@ -1,26 +1,27 @@
 #pragma once
 
+
 #include <iostream>
-#include <concepts>
-#include <filesystem>
 #include <unordered_map>
+#include <filesystem>
+#include <tuple>
 
 #include "uniself/strings.hpp"
 #include "uniself/benum.hpp"
 
 #ifndef UNS_LIB_LUA_WRAPPER
-#define UNS_LIB_LUA_WRAPPER "lua_wrapper.hpp"
+#define UNS_LIB_LUA_WRAPPER
 
 namespace uns::lua {
 
-
+	
 	UNS_BENUM_DECLARATOR(errcode, int,
-		ok = LUA_OK,
-		yeld = LUA_YIELD,
-		errrun = LUA_ERRRUN,
-		errsyntax = LUA_ERRSYNTAX,
-		errmem = LUA_ERRMEM,
-		errerr = LUA_ERRERR,
+		ok,
+		yeld,
+		errrun,
+		errsyntax,
+		errmem,
+		errerr,
 		errcall
 	);
 
@@ -64,12 +65,52 @@ namespace uns::lua {
 	};
 
 
+	namespace alias {
+		using lua_state = void*;
+		using lua_cfunction = int(*)(::uns::lua::alias::lua_state);
+	};
+
+
 	namespace auxiliary {
 		class table;
 
 		class state;
 
-		class lib_entry;
+		class state_wrapper {
+		protected:
+			::uns::lua::alias::lua_state m_state = nullptr;
+		public:
+			inline state_wrapper() noexcept :
+				m_state(nullptr) {};
+			inline state_wrapper(::uns::lua::alias::lua_state state) noexcept :
+				m_state(state) {};
+			inline state_wrapper(const ::uns::lua::auxiliary::state_wrapper& obj) noexcept :
+				m_state(obj.m_state) {};
+			inline ::uns::lua::auxiliary::state_wrapper& operator=(const ::uns::lua::auxiliary::state_wrapper& obj) noexcept {
+				if(this == &obj) return *this;
+
+				m_state = obj.m_state;
+
+				return *this;
+			};
+			inline state_wrapper(::uns::lua::auxiliary::state_wrapper&& obj) noexcept :
+				m_state(obj.m_state) {};
+			inline ::uns::lua::auxiliary::state_wrapper& operator=(::uns::lua::auxiliary::state_wrapper&& obj) noexcept {
+				if(this == &obj) return *this;
+
+				m_state = obj.m_state;
+
+				return *this;
+			};
+			inline ~state_wrapper() {};
+
+			inline bool valid() const noexcept { return m_state != nullptr; };
+
+			inline const ::uns::lua::alias::lua_state get() const noexcept { return m_state; };
+			inline ::uns::lua::alias::lua_state get() noexcept { return m_state; };
+		};
+
+
 	};
 
 
@@ -90,8 +131,8 @@ namespace uns::lua {
 		class nil {};
 
 		using boolean = bool;
-		using number = lua_Number;
-		using integer = lua_Integer;
+		using number = long double;
+		using integer = long long int;
 		using string = ::std::string;
 
 		class table {
@@ -162,12 +203,12 @@ namespace uns::lua {
 	};
 
 
-	static constexpr auto nil = ::uns::lua::type::nil{};	
+	static constexpr auto nil = ::uns::lua::type::nil{};
 
 
 	class value {
 	protected:
-		using push_function_type = void(*)(::uns::lua::auxiliary::state&, const ::uns::lua::value&) noexcept;
+		using push_function_type = void(*)(::uns::lua::alias::lua_state, const ::uns::lua::value&) noexcept;
 		::uns::lua::value_type m_type = ::uns::lua::value_type::nil;
 		::uns::lua::type::boolean m_boolean = false;
 		::uns::lua::type::number m_number = static_cast<::uns::lua::type::number>(0);
@@ -180,8 +221,8 @@ namespace uns::lua {
 		template<typename val_t>
 			requires(::std::integral<val_t> && !::std::same_as<bool, val_t>)
 		value(val_t obj) noexcept :
-			m_type(::uns::lua::value_type::integer), 
-			m_integer(static_cast<::uns::lua::type::integer>(obj)), 
+			m_type(::uns::lua::value_type::integer),
+			m_integer(static_cast<::uns::lua::type::integer>(obj)),
 			m_push_function(push_integer)												
 		{};
 		template<::std::floating_point val_t>
@@ -230,20 +271,22 @@ namespace uns::lua {
 
 		inline ::uns::lua::value_type type() const noexcept { return m_type; };
 
-		void push_to(::uns::lua::auxiliary::state& lua_state) const noexcept;
+		void push_to(::uns::lua::auxiliary::state& thread) const noexcept;
+		void push_to(::uns::lua::alias::lua_state stack) const noexcept;
 
-		static ::uns::lua::value make_from(::uns::lua::auxiliary::state& lua_state, int idx) noexcept;
+		static ::uns::lua::value make_from(::uns::lua::auxiliary::state& thread, int idx) noexcept;
+		static ::uns::lua::value make_from(::uns::lua::alias::lua_state stack, int idx) noexcept;
 	protected:
-		static void push_nil(::uns::lua::auxiliary::state& lua_state, const ::uns::lua::value& value) noexcept;
+		static void push_nil(::uns::lua::alias::lua_state stack, const ::uns::lua::value& value) noexcept;
 #define UNS_LUA_VALUE_PUSH_DECLARATOR(type_identifier)											\
-		static void push_##type_identifier(::uns::lua::auxiliary::state& lua_state, const ::uns::lua::value& value) noexcept;																						\
+		static void push_##type_identifier(::uns::lua::alias::lua_state stack, const ::uns::lua::value& value) noexcept;																						\
 
 		UNS_LUA_VALUE_PUSH_DECLARATOR(boolean);
 		UNS_LUA_VALUE_PUSH_DECLARATOR(number);
 		UNS_LUA_VALUE_PUSH_DECLARATOR(integer);
 
-		static void push_string(::uns::lua::auxiliary::state& lua_state, const ::uns::lua::value& value) noexcept;
-		static void push_table(::uns::lua::auxiliary::state& lua_state, const ::uns::lua::value& value) noexcept;
+		static void push_string(::uns::lua::alias::lua_state stack, const ::uns::lua::value& value) noexcept;
+		static void push_table(::uns::lua::alias::lua_state stack, const ::uns::lua::value& value) noexcept;
 #undef UNS_LUA_VALUE_PUSH_DECLARATOR
 	};
 
@@ -308,7 +351,7 @@ namespace uns::lua {
 	};
 
 
-	//definitions of ::uns::lua::type::table methods =>
+	//definitions of ::uns::type::table methods =>
 	template<::std::floating_point key_t>
 	::uns::lua::value uns::lua::type::table::operator[] (const key_t& key) const noexcept { return m_ptr->operator[](static_cast<::uns::lua::type::number>(key)); };
 	template<::std::floating_point key_t>
@@ -332,15 +375,17 @@ namespace uns::lua {
 	::uns::lua::type::table::iterator<key_t> uns::lua::type::table::begin() noexcept { return m_ptr->begin<key_t>(); };
 	template<class key_t>
 	::uns::lua::type::table::iterator<key_t> uns::lua::type::table::end() noexcept { return m_ptr->end<key_t>(); };
-	//<= definitions of ::uns::lua::type::table methods 
+	//<= definitions of ::uns::type::table methods 
 
-
+	class thread;
 	class script;
 
 
 	class function {
 		friend ::uns::lua::script;
-
+		friend ::uns::lua::thread;
+	protected:
+		::uns::lua::auxiliary::state_wrapper m_stack_wrapper;
 		::std::shared_ptr<::uns::lua::auxiliary::state> m_stack = nullptr;
 		::std::string m_function_name = "";
 		::uns::lua::error m_err;
@@ -348,6 +393,7 @@ namespace uns::lua {
 		inline function() noexcept {};
 	protected:
 		function(const ::std::shared_ptr<::uns::lua::auxiliary::state>& lua_script, const ::std::string& lua_global_function_name) noexcept;
+		function(::uns::lua::auxiliary::state_wrapper& lua_script, const ::std::string& lua_global_function_name) noexcept;
 	public:
 		function(const ::uns::lua::function&) noexcept = default;
 		::uns::lua::function& operator=(const ::uns::lua::function&) noexcept = default;
@@ -360,7 +406,7 @@ namespace uns::lua {
 
 		::std::u8string name() const noexcept;
 
-		inline bool valid() const noexcept { return m_stack != nullptr; };
+		inline bool valid() const noexcept { return m_stack != nullptr || m_stack_wrapper.valid(); };
 
 		::std::vector<::uns::lua::value> operator() (const ::std::size_t expected_results, const ::std::vector<::uns::lua::value>& args) noexcept;
 
@@ -370,7 +416,9 @@ namespace uns::lua {
 
 	class global {
 		friend ::uns::lua::script;
-
+		friend ::uns::lua::thread;
+	protected:
+		::uns::lua::auxiliary::state_wrapper m_stack_wrapper;
 		::std::shared_ptr<::uns::lua::auxiliary::state> m_stack = nullptr;
 		::std::string m_global_name = "";
 		::uns::lua::error m_err;
@@ -378,6 +426,7 @@ namespace uns::lua {
 		inline global() noexcept {};
 	protected:
 		global(const ::std::shared_ptr<::uns::lua::auxiliary::state>& lua_script, const ::std::string& lua_global_variable_name) noexcept;
+		global(::uns::lua::auxiliary::state_wrapper& lua_script, const ::std::string& lua_global_variable_name) noexcept;
 	public:
 		global(const ::uns::lua::global&) noexcept = default;
 		::uns::lua::global& operator=(const ::uns::lua::global&) noexcept = default;
@@ -390,7 +439,7 @@ namespace uns::lua {
 
 		::std::u8string name() const noexcept;
 
-		inline bool valid() const noexcept { return m_stack != nullptr; };
+		inline bool valid() const noexcept { return m_stack != nullptr || m_stack_wrapper.valid(); };
 
 		::uns::lua::value get() noexcept;
 		void set(const ::uns::lua::value& value) noexcept;
@@ -399,21 +448,96 @@ namespace uns::lua {
 	};
 
 
+	class lib_entry;
+	class library;
+
+
+	class thread {
+		friend ::uns::lua::lib_entry;
+	protected:
+		mutable ::uns::lua::auxiliary::state_wrapper m_stack;
+		::uns::lua::error m_err;
+	protected:
+		thread() = delete;
+	public:
+		thread(::uns::lua::alias::lua_state) noexcept;
+		thread(const ::uns::lua::thread&) noexcept;
+		::uns::lua::thread& operator=(const ::uns::lua::thread&) noexcept;
+		thread(::uns::lua::thread&&) noexcept;
+		::uns::lua::thread& operator=(::uns::lua::thread&&) noexcept;
+		~thread() = default;
+
+		inline bool valid() const noexcept { return m_stack.valid(); };
+
+		inline const ::uns::lua::error& error() const noexcept { return m_err; };
+		inline ::uns::lua::error& error() noexcept { return m_err; };
+
+		void load(const ::uns::lua::library& library) noexcept;
+		void load(const ::std::u8string& text) noexcept;
+
+		::uns::lua::function get_function(const ::std::u8string& lua_global_function_name) noexcept;
+		::uns::lua::global get_global(const ::std::u8string& lua_global_variable_name) noexcept;
+
+		::std::size_t size() const noexcept;
+		::uns::lua::value get_value(int input_index) noexcept;
+
+		void gc() noexcept;
+	};
+
+
+	namespace auxiliary {
+
+		template<::std::size_t pos, typename ... uns_lua_value_t>
+		void results_push_recursive(::uns::lua::alias::lua_state stack, const ::std::tuple<uns_lua_value_t ...> results) {
+			if constexpr(
+				::std::tuple_size<::std::tuple<uns_lua_value_t ...>>::value > 0
+			) {
+				if constexpr(
+					pos <= ::std::tuple_size<::std::tuple<uns_lua_value_t ...>>::value
+					&& pos > 0
+				) {
+					::uns::lua::auxiliary::results_push_recursive<pos - 1>(stack, results);
+					::std::get<pos - 1>(results).push_to(stack);
+				}
+				else {
+					::std::get<0>(results).push_to(stack);
+				};
+			};
+		};
+
+		template<typename ::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&) noexcept>
+		int wrapper_returning_all(::uns::lua::alias::lua_state stack) noexcept {
+			auto l_thread = ::uns::lua::thread{ stack };
+			auto results = wrapped(l_thread);
+
+			for(const auto& result : results) {
+				result.push_to(stack);
+			};
+
+			return results.size();
+		};
+
+		template<typename tupled_lua_values, typename tupled_lua_values(*wrapped)(::uns::lua::thread&) noexcept>
+			requires (::std::tuple_size<tupled_lua_values>::value >= 0)
+		int wrapper_returning_some(::uns::lua::alias::lua_state stack) noexcept {
+			auto l_thread = ::uns::lua::thread{ stack };
+			auto results = wrapped(l_thread);
+
+			::uns::lua::auxiliary::results_push_recursive<::std::tuple_size<tupled_lua_values>::value>(stack, results);
+
+			return ::std::tuple_size<tupled_lua_values>::value;
+		};
+	
+	};
 
 
 	class lib_entry {
 	protected:
-		using cfunction = int(*)(void*);
-
 		::std::string m_name;
-		cfunction m_function = nullptr;
+		::uns::lua::alias::lua_cfunction m_function = nullptr;
 	public:
 		inline lib_entry() noexcept {};
-		template<typename lua_state>
-		lib_entry(const ::std::u8string& name, int(*lua_function)(lua_state*)) noexcept :
-			m_name(::uns::string::u8_cast<::std::string>(name)),
-			m_function(reinterpret_cast<cfunction>(lua_function))
-		{};
+		lib_entry(const ::std::u8string& name, ::uns::lua::alias::lua_cfunction lua_function) noexcept;
 		lib_entry(const ::uns::lua::lib_entry&) noexcept = default;
 		::uns::lua::lib_entry& operator=(const ::uns::lua::lib_entry&) noexcept = default;
 		lib_entry(::uns::lua::lib_entry&&) noexcept = default;
@@ -421,7 +545,28 @@ namespace uns::lua {
 		~lib_entry() noexcept = default;
 
 		inline const char* name() const noexcept { return m_name.c_str(); };
-		inline cfunction func() const noexcept { return m_function; };
+		inline ::uns::lua::alias::lua_cfunction func() const noexcept { return m_function; };
+
+		template<typename ::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = name;
+			res.m_function = ::uns::lua::auxiliary::wrapper_returning_all<wrapped>;
+
+			return res;
+		};
+		template<typename tupled_lua_values, typename tupled_lua_values(*wrapped)(::uns::lua::thread&) noexcept>
+			requires (::std::tuple_size<tupled_lua_values>::value >= 0)
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = ::uns::string::u8_cast<::std::string>(name);
+			res.m_function = ::uns::lua::auxiliary::wrapper_returning_some<tupled_lua_values, wrapped>;
+
+			return res;
+		};
+
 	};
 
 
@@ -463,6 +608,7 @@ namespace uns::lua {
 		void run() noexcept;
 		
 		void gc() noexcept;
+		long double total_memory() const noexcept;
 	};
 
 
