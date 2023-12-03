@@ -6,12 +6,44 @@
 #include <concepts>
 #include <unordered_map>
 
+#include "uniself/concepts.hpp"
 
 #ifndef UNS_LIB_NEURONETWORKS
 #define UNS_LIB_NEURONETWORKS "neuronetworks.hpp"
 
 
 #define UNS_DEV_EXCEPTION_MSG ::std::string{ __FUNCTION__ } + "[" + ::std::to_string(__LINE__) + "]"
+
+
+namespace uns::nn {
+
+
+	//an address of neuron in every neuronetwork
+	class address {
+	public:
+		int layer = 0;
+		int index = 0;
+
+		inline bool operator==(const ::uns::nn::address& obj) const noexcept {
+			return layer == obj.layer && index == obj.index;
+		};
+		inline bool operator!=(const ::uns::nn::address& obj) const noexcept {
+			return !(*this == obj);
+		};
+
+		inline ::std::size_t capacity() const noexcept { return sizeof(*this); };
+
+		class hash {
+		protected:
+			::std::hash<long long int> m_subhash;
+		public:
+			inline ::std::size_t operator()(const ::uns::nn::address& address) const noexcept {
+				return m_subhash((static_cast<long long int>(address.layer) << sizeof(int) * 8) + static_cast<long long int>(address.index));
+			};
+		};
+	};
+
+};
 
 namespace uns::nn::traitset {
 
@@ -35,6 +67,7 @@ namespace uns::nn::traitset {
 		>
 		&& ::std::derived_from<input_allocator_t, ::std::allocator<typename input_allocator_t::value_type>>
 		&& ::std::same_as<typename input_allocator_t::value_type::neuron_traitset::signal_traitset, signal_traitset_t>
+		&& ::uns::legacy_iterator<iterator_t, ::uns::nn::address>
 	class input {
 	public:
 		using signal_traitset = signal_traitset_t;
@@ -97,33 +130,6 @@ namespace uns::nn::traitset {
 
 
 namespace uns::nn {
-
-
-	//an address of neuron in every neuronetwork
-	class address {
-	public:
-		int layer = 0;
-		int index = 0;
-
-		inline bool operator==(const ::uns::nn::address& obj) const noexcept {
-			return layer == obj.layer && index == obj.index;
-		};
-		inline bool operator!=(const ::uns::nn::address& obj) const noexcept {
-			return !(*this == obj);
-		};
-
-		inline ::std::size_t capacity() const noexcept { return sizeof(*this); };
-
-		class hash {
-		protected:
-			::std::hash<long long int> m_subhash;
-		public:
-			inline ::std::size_t operator()(const ::uns::nn::address& address) const noexcept {
-				return m_subhash((static_cast<long long int>(address.layer) << sizeof(int) * 8) + static_cast<long long int>(address.index));
-			};
-		};
-	};
-
 
 	namespace description {
 
@@ -923,9 +929,9 @@ namespace uns::nn {
 				};
 			};
 			auto inputs_map = ::std::unordered_map<::uns::nn::address, ::uns::nn::general::neuron<typename base::network_traitset::neuron_type::neuron_traitset>*, ::uns::nn::address::hash>{};
-			for(auto addresss_input_iter = ido.begin(); addresss_input_iter != ido.end(); addresss_input_iter++) {
-				auto [input_addresss, input_neuron] = *addresss_input_iter;
-				inputs_map[input_addresss] = input_neuron;
+			for(auto input_addresss = ido.begin(); input_addresss != ido.end(); ++input_addresss) {
+				auto* input_neuron = ido.get(*input_addresss);
+				inputs_map[*input_addresss] = input_neuron;
 				base::m_inputs.push_back(input_neuron);
 			};
 			for(auto& layer : m_layers) {

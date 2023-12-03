@@ -28,6 +28,11 @@ namespace uns {
 			{ collection.size() } -> ::std::integral;
 		};
 
+	template<typename iterator_t, typename referencable_t>
+	concept legacy_iterator = requires (iterator_t iter) {
+		::std::convertible_to<decltype(*iter), referencable_t>;
+		::std::same_as<decltype(++iter), iterator_t&>;
+	};
 };
 
 #endif
