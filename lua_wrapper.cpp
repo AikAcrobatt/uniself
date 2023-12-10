@@ -60,15 +60,9 @@ bool ::uns::lua::error::is() const noexcept { return (m_code != ::uns::lua::errc
 ::std::string uns::lua::error::text() const noexcept { return m_text; };
 
 ::std::u8string uns::lua::error::to_string() const {
-	static const auto bracket_op = ::std::u8string{ u8"[" };
-	static const auto bracket_cl = ::std::u8string{ u8"] " };
-	static const auto comma = ::std::u8string{ u8", " };
-	static const auto err_w = ::std::u8string{ u8"err = " };
-	static const auto type_w = ::std::u8string{ u8"type = " };
-
-	return bracket_op + err_w + ::uns::string::u8_cast<::std::u8string>(m_code) + comma
-		+ type_w + ::uns::string::u8_cast<::std::u8string>(m_type) + bracket_cl
-		+ ::uns::string::u8_cast<::std::u8string>(m_text);
+	return u8"'" + ::uns::string::u8_cast<::std::u8string>(m_text)
+		+ u8"' [err = " + ::uns::string::u8_cast<::std::u8string>(m_code)
+		+ u8", type = " + ::uns::string::u8_cast<::std::u8string>(m_type) + u8"]";
 };
 //<= class ::uns::lua::error
 
