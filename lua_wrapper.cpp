@@ -311,6 +311,37 @@ void ::uns::lua::value::push_table(::uns::lua::alias::lua_state stack, const ::u
 	};
 };
 #undef UNS_LUA_VALUE_PUSH_DESCRIPTOR
+
+
+::std::u8string uns::lua::value::to_string() const noexcept {
+	switch(type()) {
+		default:
+		case ::uns::lua::value_type::nil:
+		{
+			return u8"nil";
+		}
+		case ::uns::lua::value_type::number:
+		{
+			return ::uns::string::u8_cast<::std::u8string>(static_cast<::uns::lua::type::number>(*this));
+		}
+		case ::uns::lua::value_type::integer:
+		{
+			return ::uns::string::u8_cast<::std::u8string>(static_cast<::uns::lua::type::integer>(*this));
+		}
+		case ::uns::lua::value_type::boolean:
+		{
+			return ::uns::string::u8_cast<::std::u8string>(static_cast<::uns::lua::type::boolean>(*this));
+		}
+		case ::uns::lua::value_type::string:
+		{
+			return u8"\"" + ::uns::string::u8_cast<::std::u8string>(static_cast<::uns::lua::type::string>(*this)) + u8"\"";
+		}
+		case ::uns::lua::value_type::table:
+		{
+			return u8"table " + ::uns::string::u8_cast<::std::u8string>(reinterpret_cast<uint64_t>(this));
+		}
+	};
+};
 //<= class ::uns::lua::value
 
 
@@ -536,6 +567,7 @@ UNS_LUA_TABLE_IDX_DESCRIPTOR(string);
 ::uns::lua::value uns::lua::value::make_from(::uns::lua::auxiliary::state& thread, int idx) noexcept {
 	return ::uns::lua::value::make_from(thread.get(), idx);
 };
+
 
 
 

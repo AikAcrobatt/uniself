@@ -19,7 +19,7 @@ namespace uns::population {
 
 		virtual void add_points(const points_type&) noexcept { /*pregnancy += points_gain;*/ };
 
-		virtual void damage(const health_type&) noexcept { /*health -= health_decrease;*/ };
+		virtual void set_damage(const health_type&) noexcept { /*health -= health_decrease;*/ };
 
 		virtual bool is_alive() const noexcept { return false; /*return ::uns::math::more(health, 0.0F);*/ };
 
@@ -392,7 +392,7 @@ namespace uns::population {
 
 				OnConditionUnitStart(one_unit);
 				ration_source.feed(one_unit);
-				one_unit.unit().damage(life_decrement);
+				one_unit.unit().set_damage(life_decrement);
 				fatal_actor(one_unit);
 				OnConditionUnitFinish(one_unit);
 			};

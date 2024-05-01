@@ -274,6 +274,8 @@ namespace uns::lua {
 		void push_to(::uns::lua::auxiliary::state& thread) const noexcept;
 		void push_to(::uns::lua::alias::lua_state stack) const noexcept;
 
+		::std::u8string to_string() const noexcept;
+
 		static ::uns::lua::value make_from(::uns::lua::auxiliary::state& thread, int idx) noexcept;
 		static ::uns::lua::value make_from(::uns::lua::alias::lua_state stack, int idx) noexcept;
 	protected:
