@@ -308,6 +308,9 @@ namespace uns::lua {
 			::uns::lua::auxiliary::table& operator=(::uns::lua::auxiliary::table&& obj) noexcept;
 			~table() noexcept;
 
+			bool operator==(const ::uns::lua::auxiliary::table&) const noexcept;
+			bool operator!=(const ::uns::lua::auxiliary::table&) const noexcept;
+
 #define UNS_LUA_TABLE_IDX_DECLARATOR(type_identifier)											\
 			::uns::lua::value operator[] (const ::uns::lua::type::##type_identifier& key) const noexcept;\
 			::uns::lua::value& operator[] (const ::uns::lua::type::##type_identifier& key) noexcept;\

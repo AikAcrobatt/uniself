@@ -260,13 +260,17 @@ namespace uns::nn {
 		public:
 			using signal_traitset = signal_traitset_t;
 		protected:
-			::uns::nn::address m_addresss;
+			::uns::nn::address m_address;
 			signal_traitset::signal_type m_dropout = typename signal_traitset::signal_type{ 0 };
 		public:
+			neuron_view(const ::uns::nn::address& address) noexcept :
+				m_address(address) 
+			{};
+
 			virtual ::std::size_t capacity() const noexcept {
 				::std::size_t result = 0;
 
-				result += m_addresss.capacity();
+				result += m_address.capacity();
 				result += sizeof(m_dropout);
 
 				return result;
@@ -279,8 +283,8 @@ namespace uns::nn {
 			virtual const typename signal_traitset::signal_type& R() const noexcept { return typename signal_traitset::signal_type{ 0 }; };
 			virtual const typename signal_traitset::signal_type& C() const noexcept { return typename signal_traitset::signal_type{ 0 }; };
 
-			virtual const ::uns::nn::address& address() const noexcept { return m_addresss; };
-			virtual ::uns::nn::address& address() noexcept { return m_addresss; };
+			virtual const ::uns::nn::address& address() const noexcept { return m_address; };
+			virtual ::uns::nn::address& address() noexcept { return m_address; };
 			virtual bool is_reversible() const noexcept { return false; };
 			virtual const typename signal_traitset::signal_type& dropout() const noexcept { return m_dropout; };
 			virtual typename signal_traitset::signal_type& dropout() noexcept { return m_dropout; };

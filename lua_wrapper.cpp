@@ -219,11 +219,11 @@ bool ::uns::lua::value::operator==(const ::uns::lua::value& obj) const noexcept 
 	return (m_type == obj.m_type)
 		&& (
 			(m_type == ::uns::lua::value_type{ ::uns::lua::value_type::nil })
-			|| ((m_type == ::uns::lua::value_type{ ::uns::lua::value_type::boolean }) && (m_boolean == static_cast<::uns::lua::type::boolean>(obj)))
-			|| ((m_type == ::uns::lua::value_type{ ::uns::lua::value_type::number }) && (m_number == static_cast<::uns::lua::type::number>(obj)))
-			|| ((m_type == ::uns::lua::value_type{ ::uns::lua::value_type::integer }) && (m_integer == static_cast<::uns::lua::type::integer>(obj)))
-			|| ((m_type == ::uns::lua::value_type{ ::uns::lua::value_type::string }) && (m_string == static_cast<::uns::lua::type::string>(obj)))
-			|| ((m_type == ::uns::lua::value_type{ ::uns::lua::value_type::table }) && (m_table == static_cast<::uns::lua::type::table>(obj)))
+			|| ((m_type == ::uns::lua::value_type{ ::uns::lua::value_type::boolean }) && (m_boolean == static_cast<const ::uns::lua::type::boolean&>(obj)))
+			|| ((m_type == ::uns::lua::value_type{ ::uns::lua::value_type::number }) && (m_number == static_cast<const ::uns::lua::type::number&>(obj)))
+			|| ((m_type == ::uns::lua::value_type{ ::uns::lua::value_type::integer }) && (m_integer == static_cast<const ::uns::lua::type::integer&>(obj)))
+			|| ((m_type == ::uns::lua::value_type{ ::uns::lua::value_type::string }) && (m_string == static_cast<const ::uns::lua::type::string&>(obj)))
+			|| ((m_type == ::uns::lua::value_type{ ::uns::lua::value_type::table }) && (m_table == static_cast<const ::uns::lua::type::table&>(obj)))
 		);
 };
 bool ::uns::lua::value::operator!=(const ::uns::lua::value& obj) const noexcept {
@@ -363,8 +363,8 @@ void ::uns::lua::value::push_table(::uns::lua::alias::lua_state stack, const ::u
 };
 ::uns::lua::type::table::~table() noexcept {};
 
-bool ::uns::lua::type::table::operator==(const ::uns::lua::type::table&) const noexcept { return false; };
-bool ::uns::lua::type::table::operator!=(const ::uns::lua::type::table&) const noexcept { return true; };
+bool ::uns::lua::type::table::operator==(const ::uns::lua::type::table& obj) const noexcept { return *m_ptr == *obj.m_ptr; };
+bool ::uns::lua::type::table::operator!=(const ::uns::lua::type::table& obj) const noexcept { return !(*this == obj); };
 
 ::uns::lua::value uns::lua::type::table::operator[] (const ::uns::lua::type::string& key) const noexcept { return m_ptr->operator[](key); };
 ::uns::lua::value& ::uns::lua::type::table::operator[] (const ::uns::lua::type::string& key) noexcept { return m_ptr->operator[](key); };
@@ -415,6 +415,15 @@ bool ::uns::lua::type::table::operator!=(const ::uns::lua::type::table&) const n
 	return *this;
 };
 ::uns::lua::auxiliary::table::~table() noexcept {}
+
+bool ::uns::lua::auxiliary::table::operator==(const ::uns::lua::auxiliary::table& obj) const noexcept {
+	return m_key_number == obj.m_key_number
+		&& m_key_integer == obj.m_key_integer
+		&& m_key_boolean == obj.m_key_boolean
+		&& m_key_string == obj.m_key_string
+	;
+};
+bool ::uns::lua::auxiliary::table::operator!=(const ::uns::lua::auxiliary::table& obj) const noexcept { return !(*this == obj); };
 
 #define UNS_LUA_TABLE_IDX_DESCRIPTOR(type_identifier)											\
 	::uns::lua::value uns::lua::auxiliary::table::operator[] (const ::uns::lua::type::##type_identifier& key) const noexcept {\
