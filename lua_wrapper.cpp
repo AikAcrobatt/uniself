@@ -366,15 +366,15 @@ void ::uns::lua::value::push_table(::uns::lua::alias::lua_state stack, const ::u
 bool ::uns::lua::type::table::operator==(const ::uns::lua::type::table& obj) const noexcept { return *m_ptr == *obj.m_ptr; };
 bool ::uns::lua::type::table::operator!=(const ::uns::lua::type::table& obj) const noexcept { return !(*this == obj); };
 
-::uns::lua::value uns::lua::type::table::operator[] (const ::uns::lua::type::string& key) const noexcept { return m_ptr->operator[](key); };
+::uns::lua::value uns::lua::type::table::operator[] (const ::uns::lua::type::string& key) const noexcept { return const_cast<const ::uns::lua::auxiliary::table&>(*m_ptr).operator[](key); };
 ::uns::lua::value& ::uns::lua::type::table::operator[] (const ::uns::lua::type::string& key) noexcept { return m_ptr->operator[](key); };
-::uns::lua::value uns::lua::type::table::operator[] (const char* key) const noexcept { return m_ptr->operator[](::uns::lua::type::string{ key }); };
+::uns::lua::value uns::lua::type::table::operator[] (const char* key) const noexcept { return const_cast<const ::uns::lua::auxiliary::table&>(*m_ptr).operator[](::uns::lua::type::string{ key }); };
 ::uns::lua::value& ::uns::lua::type::table::operator[] (const char* key) noexcept { return m_ptr->operator[](::uns::lua::type::string{ key }); };
-::uns::lua::value uns::lua::type::table::operator[] (const ::std::u8string& key) const noexcept { return m_ptr->operator[](::uns::string::u8_cast<::uns::lua::type::string>(key)); };
+::uns::lua::value uns::lua::type::table::operator[] (const ::std::u8string& key) const noexcept { return const_cast<const ::uns::lua::auxiliary::table&>(*m_ptr).operator[](::uns::string::u8_cast<::uns::lua::type::string>(key)); };
 ::uns::lua::value& ::uns::lua::type::table::operator[] (const ::std::u8string& key) noexcept { return m_ptr->operator[](::uns::string::u8_cast<::uns::lua::type::string>(key)); };
 ::uns::lua::value uns::lua::type::table::operator[] (const char8_t* key) const noexcept { return this->operator[](::std::u8string{ key }); };
 ::uns::lua::value& ::uns::lua::type::table::operator[] (const char8_t* key) noexcept { return this->operator[](::std::u8string{ key }); };
-::uns::lua::value uns::lua::type::table::operator[] (const ::uns::lua::value& key) const noexcept { return m_ptr->operator[](key); };
+::uns::lua::value uns::lua::type::table::operator[] (const ::uns::lua::value& key) const noexcept { return const_cast<const ::uns::lua::auxiliary::table&>(*m_ptr).operator[](key); };
 ::uns::lua::value& ::uns::lua::type::table::operator[] (const ::uns::lua::value& key) noexcept { return m_ptr->operator[](key); };
 
 ::std::size_t uns::lua::type::table::size() const noexcept { return m_ptr->size(); };
