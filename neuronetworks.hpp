@@ -484,8 +484,8 @@ namespace uns::nn {
 		class input_data_object {
 		public:
 			using input_traitset = input_data_object_traitset_t;
-			using iterator_type = input_data_object_traitset_t::iterator_type;
-			using input_allocator_type = input_data_object_traitset_t::input_allocator_type;
+			using iterator_type = typename input_data_object_traitset_t::iterator_type;
+			using input_allocator_type = typename input_data_object_traitset_t::input_allocator_type;
 
 			virtual ::std::size_t size() const noexcept = 0;
 			virtual typename input_traitset::input_neuron_type* get(const ::uns::nn::address&) noexcept = 0;
@@ -506,7 +506,7 @@ namespace uns::nn {
 			>
 		class network {
 		public:
-			using network_traitset = network_traitset_t;
+			using network_traitset = typename network_traitset_t;
 		protected:
 			::std::vector<typename network_traitset::neuron_type*> m_outputs;
 			::std::vector<typename network_traitset::input_data_object_type::input_traitset::input_neuron_type*> m_inputs;
