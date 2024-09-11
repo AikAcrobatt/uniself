@@ -167,6 +167,11 @@ namespace uns::lua::auxiliary {
 	m_table(obj),
 	m_push_function(push_table)
 {};
+::uns::lua::value::value(::uns::lua::type::userdata obj) noexcept :
+	m_type(::uns::lua::value_type::userdata),
+	m_userdata(obj),
+	m_push_function(push_userdata)
+{};
 ::uns::lua::value::value(const ::uns::lua::type::nil& obj) noexcept :
 	m_type(::uns::lua::value_type::nil),
 	m_push_function(push_nil)
@@ -178,6 +183,7 @@ namespace uns::lua::auxiliary {
 	m_integer(obj.m_integer),
 	m_string(obj.m_string),
 	m_table(obj.m_table),
+	m_userdata(obj.m_userdata),
 	m_push_function(obj.m_push_function)
 {};
 ::uns::lua::value& ::uns::lua::value::operator=(const ::uns::lua::value& obj) noexcept {
@@ -188,6 +194,7 @@ namespace uns::lua::auxiliary {
 		m_integer = obj.m_integer;
 		m_string = obj.m_string;
 		m_table = obj.m_table;
+		m_userdata = obj.m_userdata;
 		m_push_function = obj.m_push_function;
 	};
 	return *this;
@@ -199,6 +206,7 @@ namespace uns::lua::auxiliary {
 	m_integer(std::move(obj.m_integer)),
 	m_string(std::move(obj.m_string)),
 	m_table(std::move(obj.m_table)),
+	m_userdata(std::move(obj.m_userdata)),
 	m_push_function(std::move(obj.m_push_function))
 {};
 ::uns::lua::value& ::uns::lua::value::operator=(::uns::lua::value&& obj) noexcept {
@@ -209,6 +217,7 @@ namespace uns::lua::auxiliary {
 		m_integer = std::move(obj.m_integer);
 		m_string = std::move(obj.m_string);
 		m_table = std::move(obj.m_table);
+		m_userdata = std::move(obj.m_userdata);
 		m_push_function = std::move(obj.m_push_function);
 	};
 	return *this;
@@ -224,6 +233,7 @@ bool ::uns::lua::value::operator==(const ::uns::lua::value& obj) const noexcept 
 			|| ((m_type == ::uns::lua::value_type{ ::uns::lua::value_type::integer }) && (m_integer == static_cast<const ::uns::lua::type::integer&>(obj)))
 			|| ((m_type == ::uns::lua::value_type{ ::uns::lua::value_type::string }) && (m_string == static_cast<const ::uns::lua::type::string&>(obj)))
 			|| ((m_type == ::uns::lua::value_type{ ::uns::lua::value_type::table }) && (m_table == static_cast<const ::uns::lua::type::table&>(obj)))
+			|| ((m_type == ::uns::lua::value_type{ ::uns::lua::value_type::userdata }) && (m_userdata == static_cast<::uns::lua::type::userdata>(obj)))
 		);
 };
 bool ::uns::lua::value::operator!=(const ::uns::lua::value& obj) const noexcept {
@@ -231,18 +241,26 @@ bool ::uns::lua::value::operator!=(const ::uns::lua::value& obj) const noexcept 
 };
 
 #define UNS_LUA_VALUE_CONVERT_DESCRIPTOR(type_identifier)										\
-		::uns::lua::value::operator const ::uns::lua::type::##type_identifier&() const noexcept {\
-			return m_##type_identifier;															\
-		};																						\
-		::uns::lua::value::operator ::uns::lua::type::##type_identifier&() noexcept {			\
-			return m_##type_identifier;															\
-		};																						\
+::uns::lua::value::operator const ::uns::lua::type::##type_identifier&() const noexcept {		\
+	return m_##type_identifier;																	\
+};																								\
+::uns::lua::value::operator ::uns::lua::type::##type_identifier&() noexcept {					\
+	return m_##type_identifier;																	\
+};																								\
 
 UNS_LUA_VALUE_CONVERT_DESCRIPTOR(boolean);
 UNS_LUA_VALUE_CONVERT_DESCRIPTOR(number);
 UNS_LUA_VALUE_CONVERT_DESCRIPTOR(integer);
 UNS_LUA_VALUE_CONVERT_DESCRIPTOR(string);
 UNS_LUA_VALUE_CONVERT_DESCRIPTOR(table);
+
+::uns::lua::value::operator const ::uns::lua::type::userdata() const noexcept {
+	return m_userdata;
+};
+::uns::lua::value::operator ::uns::lua::type::userdata& () noexcept {
+	return m_userdata;
+};
+
 #undef UNS_LUA_VALUE_CONVERT_DESCRIPTOR
 
 void ::uns::lua::value::push_to(::uns::lua::auxiliary::state& thread) const noexcept {
@@ -255,10 +273,10 @@ void ::uns::lua::value::push_to(::uns::lua::alias::lua_state stack) const noexce
 void ::uns::lua::value::push_nil(::uns::lua::alias::lua_state stack, const ::uns::lua::value& value) noexcept {
 	lua_pushnil(reinterpret_cast<lua_State*>(stack));
 };
-#define UNS_LUA_VALUE_PUSH_DESCRIPTOR(type_identifier)											\
-		void ::uns::lua::value::push_##type_identifier(::uns::lua::alias::lua_state stack, const ::uns::lua::value& value) noexcept {\
-			lua_push##type_identifier(reinterpret_cast<lua_State*>(stack), static_cast<::uns::lua::type::##type_identifier>(value));\
-		};																						\
+#define UNS_LUA_VALUE_PUSH_DESCRIPTOR(type_identifier)																			\
+void ::uns::lua::value::push_##type_identifier(::uns::lua::alias::lua_state stack, const ::uns::lua::value& value) noexcept {	\
+	lua_push##type_identifier(reinterpret_cast<lua_State*>(stack), static_cast<::uns::lua::type::##type_identifier>(value));	\
+};																																\
 
 UNS_LUA_VALUE_PUSH_DESCRIPTOR(boolean);
 UNS_LUA_VALUE_PUSH_DESCRIPTOR(number);
@@ -310,6 +328,10 @@ void ::uns::lua::value::push_table(::uns::lua::alias::lua_state stack, const ::u
 		lua_settable(reinterpret_cast<lua_State*>(stack), -3);
 	};
 };
+void ::uns::lua::value::push_userdata(::uns::lua::alias::lua_state stack, const ::uns::lua::value& value) noexcept {
+	lua_pushlightuserdata(reinterpret_cast<lua_State*>(stack), static_cast<::uns::lua::type::userdata>(value));
+};
+
 #undef UNS_LUA_VALUE_PUSH_DESCRIPTOR
 
 
@@ -339,6 +361,10 @@ void ::uns::lua::value::push_table(::uns::lua::alias::lua_state stack, const ::u
 		case ::uns::lua::value_type::table:
 		{
 			return u8"table " + ::uns::string::u8_cast<::std::u8string>(reinterpret_cast<uint64_t>(this));
+		}
+		case ::uns::lua::value_type::userdata:
+		{
+			return u8"userdata " + ::uns::string::u8_cast<::std::u8string>(reinterpret_cast<uint64_t>(m_userdata));
 		}
 	};
 };
@@ -571,6 +597,10 @@ UNS_LUA_TABLE_IDX_DESCRIPTOR(string);
 
 			return ::uns::lua::value{ res };
 		}
+		case LUA_TLIGHTUSERDATA:
+		{
+			return ::uns::lua::value{ lua_touserdata(reinterpret_cast<lua_State*>(stack), idx) };
+		}
 	};
 };
 ::uns::lua::value uns::lua::value::make_from(::uns::lua::auxiliary::state& thread, int idx) noexcept {
@@ -760,7 +790,8 @@ namespace uns::lua::auxiliary {
 				|| lua_isboolean(reinterpret_cast<lua_State*>(stack), global_idx)
 				|| lua_isstring(reinterpret_cast<lua_State*>(stack), global_idx)
 				|| lua_istable(reinterpret_cast<lua_State*>(stack), global_idx)
-				)
+				|| lua_islightuserdata(reinterpret_cast<lua_State*>(stack), global_idx)
+			)
 		) {
 			return result_t{
 				::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::unrepresentable },
@@ -858,6 +889,10 @@ void uns::lua::function::gc() noexcept {
 	m_stack_wrapper(lua_script),
 	m_stack(nullptr)
 {};
+::uns::lua::global& ::uns::lua::global::operator=(const ::uns::lua::value & value) noexcept {
+	set(value);
+	return *this;
+};
 ::uns::lua::global::~global() noexcept {
 	if(valid()) {
 		gc();

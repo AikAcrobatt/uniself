@@ -120,7 +120,8 @@ namespace uns::lua {
 		number = 1,
 		integer = 2,
 		string = 3,
-		table = 4
+		table = 4,
+		userdata = 5
 	);
 
 
@@ -134,6 +135,7 @@ namespace uns::lua {
 		using number = long double;
 		using integer = long long int;
 		using string = ::std::string;
+		using userdata = void*;
 
 		class table {
 		public:
@@ -215,6 +217,7 @@ namespace uns::lua {
 		::uns::lua::type::integer m_integer = static_cast<::uns::lua::type::integer>(0);
 		::uns::lua::type::string m_string = ::uns::lua::type::string{};
 		::uns::lua::type::table m_table = ::uns::lua::type::table{};
+		::uns::lua::type::userdata m_userdata = nullptr;
 		push_function_type m_push_function = push_nil;
 	public:
 		inline value() noexcept {};
@@ -243,6 +246,7 @@ namespace uns::lua {
 		value(const ::std::u8string obj) noexcept;
 		value(const char8_t* obj) noexcept;
 		value(const ::uns::lua::type::table& obj) noexcept;
+		value(::uns::lua::type::userdata obj) noexcept;
 		value(const ::uns::lua::type::nil& obj) noexcept;
 		value(const ::uns::lua::value& obj) noexcept;
 		::uns::lua::value& operator=(const ::uns::lua::value& obj) noexcept;
@@ -267,6 +271,9 @@ namespace uns::lua {
 		UNS_LUA_VALUE_CONVERT_DECLARATOR(integer);
 		UNS_LUA_VALUE_CONVERT_DECLARATOR(string);
 		UNS_LUA_VALUE_CONVERT_DECLARATOR(table);
+
+		operator const ::uns::lua::type::userdata() const noexcept;
+		operator ::uns::lua::type::userdata& () noexcept;
 #undef UNS_LUA_VALUE_CONVERT_DECLARATOR
 
 		inline ::uns::lua::value_type type() const noexcept { return m_type; };
@@ -286,9 +293,9 @@ namespace uns::lua {
 		UNS_LUA_VALUE_PUSH_DECLARATOR(boolean);
 		UNS_LUA_VALUE_PUSH_DECLARATOR(number);
 		UNS_LUA_VALUE_PUSH_DECLARATOR(integer);
-
-		static void push_string(::uns::lua::alias::lua_state stack, const ::uns::lua::value& value) noexcept;
-		static void push_table(::uns::lua::alias::lua_state stack, const ::uns::lua::value& value) noexcept;
+		UNS_LUA_VALUE_PUSH_DECLARATOR(string);
+		UNS_LUA_VALUE_PUSH_DECLARATOR(table);
+		UNS_LUA_VALUE_PUSH_DECLARATOR(userdata);
 #undef UNS_LUA_VALUE_PUSH_DECLARATOR
 	};
 
@@ -437,6 +444,7 @@ namespace uns::lua {
 		::uns::lua::global& operator=(const ::uns::lua::global&) noexcept = default;
 		global(::uns::lua::global&& obj) noexcept = default;
 		::uns::lua::global& operator=(::uns::lua::global&& obj) noexcept = default;
+		::uns::lua::global& operator=(const ::uns::lua::value& value) noexcept;
 		~global() noexcept;
 
 		inline const ::uns::lua::error& error() const noexcept { return m_err; };
@@ -493,7 +501,7 @@ namespace uns::lua {
 	namespace auxiliary {
 
 		template<::std::size_t pos, typename ... uns_lua_value_t>
-		void results_push_recursive(::uns::lua::alias::lua_state stack, const ::std::tuple<uns_lua_value_t ...> results) {
+		void results_push_recursive(::uns::lua::alias::lua_state stack, const ::std::tuple<uns_lua_value_t ...>& results) noexcept {
 			if constexpr(
 				::std::tuple_size<::std::tuple<uns_lua_value_t ...>>::value > 0
 			) {
@@ -577,9 +585,9 @@ namespace uns::lua {
 
 	class library {
 	public:
-		::std::u8string name_space;
+		::std::u8string name_space = u8"";
 		::std::vector<::uns::lua::lib_entry> api;
-		::std::u8string text;
+		::std::u8string text = u8"";
 	};
 
 
