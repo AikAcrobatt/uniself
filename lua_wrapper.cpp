@@ -612,6 +612,214 @@ UNS_LUA_TABLE_IDX_DESCRIPTOR(string);
 
 namespace uns::lua::auxiliary {
 
+	::std::pair<::uns::lua::error, int> prepare(::uns::lua::alias::lua_state stack, const ::std::string& function_name, const ::std::vector<::uns::lua::value>& args) noexcept;
+	::std::pair<::uns::lua::error, int> prepare(::uns::lua::alias::lua_state stack, const ::std::string& function_name, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2, const ::uns::lua::value& arg3, const ::uns::lua::value& arg4, const ::uns::lua::value& arg5) noexcept;
+	::std::pair<::uns::lua::error, int> prepare(::uns::lua::alias::lua_state stack, const ::std::string& function_name, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2, const ::uns::lua::value& arg3, const ::uns::lua::value& arg4) noexcept;
+	::std::pair<::uns::lua::error, int> prepare(::uns::lua::alias::lua_state stack, const ::std::string& function_name, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2, const ::uns::lua::value& arg3) noexcept;
+	::std::pair<::uns::lua::error, int> prepare(::uns::lua::alias::lua_state stack, const ::std::string& function_name, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2) noexcept;
+	::std::pair<::uns::lua::error, int> prepare(::uns::lua::alias::lua_state stack, const ::std::string& function_name, const ::uns::lua::value& arg1) noexcept;
+
+	::uns::lua::error execute(::uns::lua::alias::lua_state stack, int function_idx, int expected_results) noexcept {
+		auto args_total = lua_gettop(reinterpret_cast<lua_State*>(stack)) - function_idx;
+		if(
+			int lua_retcode = lua_pcall(reinterpret_cast<lua_State*>(stack), args_total, expected_results, 0);
+			lua_retcode != LUA_OK
+		) {
+			std::string err_str = "";
+			if(lua_isstring(reinterpret_cast<lua_State*>(stack), -1)) {
+				err_str = lua_tostring(reinterpret_cast<lua_State*>(stack), -1);
+			};
+
+			if(
+				auto garbage = lua_gettop(reinterpret_cast<lua_State*>(stack)) - function_idx;
+				garbage > 0
+			) {
+				lua_pop(reinterpret_cast<lua_State*>(stack), -garbage);
+			};
+
+			return ::uns::lua::error{ ::uns::lua::auxiliary::lua_native_error_to_wrapper(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
+		};
+
+		return {};
+	};
+
+	::std::vector<::uns::lua::value> extract_expected_all(::uns::lua::alias::lua_state stack, int function_idx, int expected_results) noexcept {
+		auto result = ::std::vector<::uns::lua::value>{};
+		result.reserve(expected_results);
+		for(auto idx = function_idx; idx <= lua_gettop(reinterpret_cast<lua_State*>(stack)) && idx <= function_idx + expected_results - 1; ++idx) {
+			result.push_back(::uns::lua::value::make_from(stack, idx));
+		};
+
+		if(
+			auto garbage = lua_gettop(reinterpret_cast<lua_State*>(stack)) - function_idx;
+			garbage > 0
+		) {
+			lua_pop(reinterpret_cast<lua_State*>(stack), -garbage);
+		};
+
+		return result;
+	};
+	::uns::lua::value extract_expected_1(::uns::lua::alias::lua_state stack, int function_idx) noexcept {
+		auto result = ::uns::lua::value{};
+		if(
+			auto idx = function_idx;
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) >= idx
+		) {
+			result = ::uns::lua::value::make_from(stack, idx);
+		};
+
+		if(
+			auto garbage = lua_gettop(reinterpret_cast<lua_State*>(stack)) - function_idx;
+			garbage > 0
+		) {
+			lua_pop(reinterpret_cast<lua_State*>(stack), -garbage);
+		};
+
+		return result;
+	};
+	::std::tuple<::uns::lua::value, ::uns::lua::value> extract_expected_2(::uns::lua::alias::lua_state stack, int function_idx) noexcept {
+		auto result = ::std::tuple<::uns::lua::value, ::uns::lua::value>{};
+		if(
+			constexpr auto idx = 0;
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+		) {
+			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
+		};
+
+		if(
+			constexpr auto idx = 1;
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+		) {
+			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
+		};
+
+		if(
+			auto garbage = lua_gettop(reinterpret_cast<lua_State*>(stack)) - function_idx;
+			garbage > 0
+		) {
+			lua_pop(reinterpret_cast<lua_State*>(stack), -garbage);
+		};
+
+		return result;
+	};
+	::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value> extract_expected_3(::uns::lua::alias::lua_state stack, int function_idx) noexcept {
+		auto result = ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value>{};
+		if(
+			constexpr auto idx = 0;
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+		) {
+			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
+		};
+
+		if(
+			constexpr auto idx = 1;
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+		) {
+			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
+		};
+
+		if(
+			constexpr auto idx = 2;
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+		) {
+			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
+		};
+
+		if(
+			auto garbage = lua_gettop(reinterpret_cast<lua_State*>(stack)) - function_idx;
+			garbage > 0
+		) {
+			lua_pop(reinterpret_cast<lua_State*>(stack), -garbage);
+		};
+
+		return result;
+	};
+	::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value> extract_expected_4(::uns::lua::alias::lua_state stack, int function_idx) noexcept {
+		auto result = ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value>{};
+		if(
+			constexpr auto idx = 0;
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+		) {
+			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
+		};
+
+		if(
+			constexpr auto idx = 1;
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+		) {
+			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
+		};
+
+		if(
+			constexpr auto idx = 2;
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+		) {
+			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
+		};
+
+		if(
+			constexpr auto idx = 3;
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+		) {
+			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
+		};
+
+		if(
+			auto garbage = lua_gettop(reinterpret_cast<lua_State*>(stack)) - function_idx;
+			garbage > 0
+		) {
+			lua_pop(reinterpret_cast<lua_State*>(stack), -garbage);
+		};
+
+		return result;
+	};
+	::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value> extract_expected_5(::uns::lua::alias::lua_state stack, int function_idx) noexcept {
+		auto result = ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value>{};
+		if(
+			constexpr auto idx = 0;
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+		) {
+			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
+		};
+
+		if(
+			constexpr auto idx = 1;
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+		) {
+			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
+		};
+
+		if(
+			constexpr auto idx = 2;
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+		) {
+			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
+		};
+
+		if(
+			constexpr auto idx = 3;
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+			) {
+			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
+		};
+
+		if(
+			constexpr auto idx = 4;
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+		) {
+			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
+		};
+
+		if(
+			auto garbage = lua_gettop(reinterpret_cast<lua_State*>(stack)) - function_idx;
+			garbage > 0
+		) {
+			lua_pop(reinterpret_cast<lua_State*>(stack), -garbage);
+		};
+
+		return result;
+	};
+
 	::std::pair<::uns::lua::error, ::std::vector<::uns::lua::value>> execute(::uns::lua::alias::lua_state stack, const ::std::string& function_name, const ::std::size_t expected_results, const ::std::vector<::uns::lua::value>& args) noexcept {
 		using result_t = ::std::pair<::uns::lua::error, ::std::vector<::uns::lua::value>>;
 		

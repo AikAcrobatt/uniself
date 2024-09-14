@@ -225,6 +225,7 @@ namespace uns::lua {
 			requires(::std::integral<val_t> && !::std::same_as<bool, val_t>)
 		value(val_t obj) noexcept :
 			m_type(::uns::lua::value_type::integer),
+			m_number(static_cast<::uns::lua::type::number>(obj)),
 			m_integer(static_cast<::uns::lua::type::integer>(obj)),
 			m_push_function(push_integer)												
 		{};
@@ -232,6 +233,7 @@ namespace uns::lua {
 		value(val_t obj) noexcept :
 			m_type(::uns::lua::value_type::number),
 			m_number(static_cast<::uns::lua::type::number>(obj)),
+			m_integer(static_cast<::uns::lua::type::integer>(obj)),
 			m_push_function(push_number)
 		{};
 		template<::std::same_as<bool> val_t>
@@ -392,10 +394,24 @@ namespace uns::lua {
 	class thread;
 	class script;
 
-
 	class function {
 		friend ::uns::lua::script;
 		friend ::uns::lua::thread;
+	public:
+		class results {
+			friend ::uns::lua::function;
+		protected:
+			::uns::lua::auxiliary::state_wrapper m_stack_wrapper;
+			::std::shared_ptr<::uns::lua::auxiliary::state> m_stack = nullptr;
+			long int m_function_idx = 0;
+		public:
+			operator ::std::vector<::uns::lua::value>() const noexcept;
+			operator ::uns::lua::value() const noexcept;
+			operator ::std::pair<::uns::lua::value, ::uns::lua::value>() const noexcept;
+			operator ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value>() const noexcept;
+			operator ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value>() const noexcept;
+			operator ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value>() const noexcept;
+		};
 	protected:
 		::uns::lua::auxiliary::state_wrapper m_stack_wrapper;
 		::std::shared_ptr<::uns::lua::auxiliary::state> m_stack = nullptr;
@@ -420,7 +436,12 @@ namespace uns::lua {
 
 		inline bool valid() const noexcept { return m_stack != nullptr || m_stack_wrapper.valid(); };
 
-		::std::vector<::uns::lua::value> operator() (const ::std::size_t expected_results, const ::std::vector<::uns::lua::value>& args) noexcept;
+		::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::std::vector<::uns::lua::value>& args) noexcept;
+		::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2, const ::uns::lua::value& arg3, const ::uns::lua::value& arg4, const ::uns::lua::value& arg5) noexcept;
+		::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2, const ::uns::lua::value& arg3, const ::uns::lua::value& arg4) noexcept;
+		::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2, const ::uns::lua::value& arg3) noexcept;
+		::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2) noexcept;
+		::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::uns::lua::value& arg1) noexcept;
 
 		void gc() noexcept;
 	};
