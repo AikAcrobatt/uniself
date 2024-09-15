@@ -405,9 +405,11 @@ namespace uns::lua {
 			::std::shared_ptr<::uns::lua::auxiliary::state> m_stack = nullptr;
 			long int m_function_idx = 0;
 		public:
+			inline bool valid() const noexcept { return m_stack != nullptr || m_stack_wrapper.valid(); };
+
 			operator ::std::vector<::uns::lua::value>() const noexcept;
 			operator ::uns::lua::value() const noexcept;
-			operator ::std::pair<::uns::lua::value, ::uns::lua::value>() const noexcept;
+			operator ::std::tuple<::uns::lua::value, ::uns::lua::value>() const noexcept;
 			operator ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value>() const noexcept;
 			operator ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value>() const noexcept;
 			operator ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value>() const noexcept;
