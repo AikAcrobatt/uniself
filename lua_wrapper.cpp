@@ -1460,7 +1460,7 @@ void uns::lua::function::gc() noexcept {
 
 //class ::uns::lua::function::results =>
 ::uns::lua::function::results::operator::std::vector<::uns::lua::value>() const noexcept {
-	if(!valid) return {};
+	if(!valid()) return {};
 
 	::uns::lua::alias::lua_state state = nullptr;
 	if(m_stack != nullptr) {
@@ -1473,7 +1473,7 @@ void uns::lua::function::gc() noexcept {
 	return ::uns::lua::auxiliary::extract_expected_all(state, m_function_idx);
 };
 ::uns::lua::function::results::operator ::uns::lua::value() const noexcept {
-	if(!valid) return {};
+	if(!valid()) return {};
 
 	::uns::lua::alias::lua_state state = nullptr;
 	if(m_stack != nullptr) {
@@ -1486,7 +1486,7 @@ void uns::lua::function::gc() noexcept {
 	return ::uns::lua::auxiliary::extract_expected_1(state, m_function_idx);
 };
 ::uns::lua::function::results::operator ::std::tuple<::uns::lua::value, ::uns::lua::value>() const noexcept {
-	if(!valid) return {};
+	if(!valid()) return {};
 
 	::uns::lua::alias::lua_state state = nullptr;
 	if(m_stack != nullptr) {
@@ -1499,7 +1499,7 @@ void uns::lua::function::gc() noexcept {
 	return ::uns::lua::auxiliary::extract_expected_2(state, m_function_idx);
 };
 ::uns::lua::function::results::operator ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value>() const noexcept {
-	if(!valid) return {};
+	if(!valid()) return {};
 
 	::uns::lua::alias::lua_state state = nullptr;
 	if(m_stack != nullptr) {
@@ -1512,7 +1512,7 @@ void uns::lua::function::gc() noexcept {
 	return ::uns::lua::auxiliary::extract_expected_3(state, m_function_idx);
 };
 ::uns::lua::function::results::operator ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value>() const noexcept {
-	if(!valid) return {};
+	if(!valid()) return {};
 
 	::uns::lua::alias::lua_state state = nullptr;
 	if(m_stack != nullptr) {
@@ -1525,7 +1525,7 @@ void uns::lua::function::gc() noexcept {
 	return ::uns::lua::auxiliary::extract_expected_4(state, m_function_idx);
 };
 ::uns::lua::function::results::operator ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value>() const noexcept {
-	if(!valid) return {};
+	if(!valid()) return {};
 
 	::uns::lua::alias::lua_state state = nullptr;
 	if(m_stack != nullptr) {

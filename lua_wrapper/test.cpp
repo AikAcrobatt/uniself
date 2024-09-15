@@ -106,6 +106,7 @@ void print_vals(const ::std::vector<::uns::lua::value>& vals, const ::std::strin
 ::std::tuple<> test_print(::uns::lua::thread& th) noexcept {
     auto values_on_stack_total = th.size();
     for(::std::size_t i = 1; i <= values_on_stack_total; ++i) {
+
         print_vals(th.get_value(i));
         ::std::cout << ::std::endl;
     };
@@ -143,7 +144,7 @@ void function_n_value_test() {
 
         auto results = print_args(4, { arg1, arg2, arg3, arg4 });
 
-        print_vals(results);
+        print_vals(static_cast<::std::vector<::uns::lua::value>>(results));
     };
     ::std::cout << print_args.error().to_string() << "\n";
 };
@@ -268,7 +269,7 @@ void lib1_test() {
             return;
         };
 
-        print_vals(results);
+        print_vals(static_cast<::std::vector<::uns::lua::value>>(results));
     }
     else {
         ::std::cout << print_args.error().to_string() << "\n";
@@ -324,7 +325,7 @@ void lib2_test() {
             return;
         };
 
-        print_vals(results);
+        print_vals(static_cast<::std::vector<::uns::lua::value>>(results));
     }
     else {
         ::std::cout << print_args.error().to_string() << "\n";
@@ -367,9 +368,9 @@ void script_loading_test() {
         static_cast<::uns::lua::type::table&>(arg1)[u8"Some subtable"] = ::uns::lua::make_table();
         static_cast<::uns::lua::type::table&>(static_cast<::uns::lua::type::table&>(arg1)["Some subtable"])[123] = "Yeah baby!";
 
-        auto results = print_args(4, { arg1, arg2, arg3, arg4 });
+        auto results = print_args(5, { arg1, arg2, arg3, arg4 });
 
-        print_vals(results);
+        print_vals(static_cast<::std::vector<::uns::lua::value>>(results));
     };
     ::std::cout << print_args.error().to_string() << "\n";
 };
