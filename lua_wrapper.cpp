@@ -901,14 +901,14 @@ namespace uns::lua::auxiliary {
 		auto result = ::std::tuple<::uns::lua::value, ::uns::lua::value>{};
 		if(
 			constexpr auto idx = 0;
-			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) >= function_idx + idx
 		) {
 			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
 		};
 
 		if(
 			constexpr auto idx = 1;
-			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) >= function_idx + idx
 		) {
 			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
 		};
@@ -926,21 +926,21 @@ namespace uns::lua::auxiliary {
 		auto result = ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value>{};
 		if(
 			constexpr auto idx = 0;
-			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) >= function_idx + idx
 		) {
 			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
 		};
 
 		if(
 			constexpr auto idx = 1;
-			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) >= function_idx + idx
 		) {
 			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
 		};
 
 		if(
 			constexpr auto idx = 2;
-			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) >= function_idx + idx
 		) {
 			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
 		};
@@ -958,28 +958,28 @@ namespace uns::lua::auxiliary {
 		auto result = ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value>{};
 		if(
 			constexpr auto idx = 0;
-			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) >= function_idx + idx
 		) {
 			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
 		};
 
 		if(
 			constexpr auto idx = 1;
-			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) >= function_idx + idx
 		) {
 			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
 		};
 
 		if(
 			constexpr auto idx = 2;
-			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) >= function_idx + idx
 		) {
 			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
 		};
 
 		if(
 			constexpr auto idx = 3;
-			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) >= function_idx + idx
 		) {
 			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
 		};
@@ -997,35 +997,35 @@ namespace uns::lua::auxiliary {
 		auto result = ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value>{};
 		if(
 			constexpr auto idx = 0;
-			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) >= function_idx + idx
 		) {
 			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
 		};
 
 		if(
 			constexpr auto idx = 1;
-			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) >= function_idx + idx
 		) {
 			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
 		};
 
 		if(
 			constexpr auto idx = 2;
-			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) >= function_idx + idx
 		) {
 			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
 		};
 
 		if(
 			constexpr auto idx = 3;
-			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) >= function_idx + idx
 		) {
 			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
 		};
 
 		if(
 			constexpr auto idx = 4;
-			lua_gettop(reinterpret_cast<lua_State*>(stack)) <= function_idx + idx
+			lua_gettop(reinterpret_cast<lua_State*>(stack)) >= function_idx + idx
 		) {
 			::std::get<idx>(result) = ::uns::lua::value::make_from(stack, function_idx + idx);
 		};
