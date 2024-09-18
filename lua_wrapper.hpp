@@ -563,7 +563,16 @@ namespace uns::lua {
 
 			return ::std::tuple_size<tupled_lua_values>::value;
 		};
-	
+		
+		template<typename ::uns::lua::value(*wrapped)(::uns::lua::thread&) noexcept>
+		int wrapper_returning_one(::uns::lua::alias::lua_state stack) noexcept {
+			auto l_thread = ::uns::lua::thread{ stack };
+			auto result = wrapped(l_thread);
+
+			result.push_to(stack);
+
+			return 1;
+		};
 	};
 
 
@@ -599,6 +608,15 @@ namespace uns::lua {
 
 			res.m_name = ::uns::string::u8_cast<::std::string>(name);
 			res.m_function = ::uns::lua::auxiliary::wrapper_returning_some<tupled_lua_values, wrapped>;
+
+			return res;
+		};
+		template<typename ::uns::lua::value(*wrapped)(::uns::lua::thread&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = ::uns::string::u8_cast<::std::string>(name);
+			res.m_function = ::uns::lua::auxiliary::wrapper_returning_one<wrapped>;
 
 			return res;
 		};
