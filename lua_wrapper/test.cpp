@@ -16,7 +16,7 @@ void print_vals(const ::uns::lua::type::table& vals, const ::std::string shift =
         ++iterator
     ) {
         ::std::cout << shift + "\t" << iterator->first << " -- ";
-        print_vals(iterator->second, shift);
+        print_vals(iterator->second, shift + "\t");
         ::std::cout << "\n";
     };
 
@@ -26,7 +26,7 @@ void print_vals(const ::uns::lua::type::table& vals, const ::std::string shift =
         ++iterator
     ) {
         ::std::cout << shift + "\t" << iterator->first << " -- ";
-        print_vals(iterator->second, shift);
+        print_vals(iterator->second, shift + "\t");
         ::std::cout << "\n";
     };
 
@@ -36,7 +36,7 @@ void print_vals(const ::uns::lua::type::table& vals, const ::std::string shift =
         ++iterator
     ) {
         ::std::cout << shift + "\t" << ::std::boolalpha << iterator->first << " -- ";
-        print_vals(iterator->second, shift);
+        print_vals(iterator->second, shift + "\t");
         ::std::cout << "\n";
     };
 
@@ -46,7 +46,7 @@ void print_vals(const ::uns::lua::type::table& vals, const ::std::string shift =
         ++iterator
     ) {
         ::std::cout << shift + "\t" << iterator->first << " -- ";
-        print_vals(iterator->second, shift);
+        print_vals(iterator->second, shift + "\t");
         ::std::cout << "\n";
     };
 
@@ -112,6 +112,11 @@ void print_vals(const ::std::vector<::uns::lua::value>& vals, const ::std::strin
     };
 
     return {};
+};
+
+
+::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value> lib_func_5_5(::uns::lua::thread&, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2, const ::uns::lua::value& arg3, const ::uns::lua::value& arg4, const ::uns::lua::value& arg5) noexcept {
+    return { arg5, arg4, arg1, arg3, arg2 };
 };
 
 
@@ -332,6 +337,35 @@ void lib2_test() {
     };
 };
 
+void lib3_test() {
+    auto script = ::uns::lua::script{
+        ::uns::lua::library{ u8"", { ::uns::lua::lib_entry::make<::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value>, lib_func_5_5>(::std::u8string{ u8"lib_func" }) }, u8"" }
+    };
+    if(script.error().is()) {
+        ::std::cout << script.error().to_string() << "\n";
+        return;
+    };
+
+    script.load(
+        ::std::u8string{
+            u8R"^^(
+                print(lib_func(1, nil, 3))
+            )^^"
+        }
+    );
+    if(script.error().is()) {
+        ::std::cout << script.error().to_string() << "\n";
+        return;
+    };
+
+    script.run();
+    if(script.error().is()) {
+        ::std::cout << script.error().to_string() << "\n";
+        return;
+    };
+
+};
+
 void script_loading_test() {
     auto script = ::uns::lua::script{};
     if(script.error().is()) {
@@ -368,9 +402,11 @@ void script_loading_test() {
         static_cast<::uns::lua::type::table&>(arg1)[u8"Some subtable"] = ::uns::lua::make_table();
         static_cast<::uns::lua::type::table&>(static_cast<::uns::lua::type::table&>(arg1)["Some subtable"])[123] = "Yeah baby!";
 
-        auto results = print_args(5, { arg1, arg2, arg3, arg4 });
+        auto results = print_args(5, arg1, arg2, arg3, arg4);
 
-        print_vals(static_cast<::std::vector<::uns::lua::value>>(results));
+        auto [res1, res2, res3, res4, res5] = static_cast<::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value>>(results);
+        
+        print_vals({ res1, res2, res3, res4, res5 });
     };
     ::std::cout << print_args.error().to_string() << "\n";
 };
@@ -378,7 +414,7 @@ void script_loading_test() {
 int main() {
     ::std::cout << "START\n";
 
-    script_loading_test();
+    lib3_test();
 
     ::std::cout << "FINISH\n";
 };
