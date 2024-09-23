@@ -439,11 +439,12 @@ namespace uns::lua {
 		inline bool valid() const noexcept { return m_stack != nullptr || m_stack_wrapper.valid(); };
 
 		::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::std::vector<::uns::lua::value>& args) noexcept;
-		::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2, const ::uns::lua::value& arg3, const ::uns::lua::value& arg4, const ::uns::lua::value& arg5) noexcept;
-		::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2, const ::uns::lua::value& arg3, const ::uns::lua::value& arg4) noexcept;
-		::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2, const ::uns::lua::value& arg3) noexcept;
-		::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2) noexcept;
+		::uns::lua::function::results operator() (const ::std::size_t expected_results) noexcept;
 		::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::uns::lua::value& arg1) noexcept;
+		::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2) noexcept;
+		::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2, const ::uns::lua::value& arg3) noexcept;
+		::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2, const ::uns::lua::value& arg3, const ::uns::lua::value& arg4) noexcept;
+		::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2, const ::uns::lua::value& arg3, const ::uns::lua::value& arg4, const ::uns::lua::value& arg5) noexcept;
 
 		void gc() noexcept;
 	};
@@ -1037,9 +1038,6 @@ namespace uns::lua {
 			};
 
 		};
-
-
-
 
 	};
 
