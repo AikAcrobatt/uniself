@@ -916,10 +916,10 @@ namespace uns::lua::auxiliary {
 	::uns::lua::value extract_expected_1(::uns::lua::alias::lua_state stack, int function_idx) noexcept {
 		auto result = ::uns::lua::value{};
 		if(
-			auto idx = function_idx;
+			constexpr auto idx = 0;
 			lua_gettop(reinterpret_cast<lua_State*>(stack)) >= idx
 		) {
-			result = ::uns::lua::value::make_from(stack, idx);
+			result = ::uns::lua::value::make_from(stack, function_idx + idx);
 		};
 
 		if(
@@ -1518,7 +1518,7 @@ void uns::lua::function::gc() noexcept {
 	::uns::lua::auxiliary::gc(state);
 };
 //<= class ::uns::lua::function
-
+ 
 //class ::uns::lua::function::results =>
 ::uns::lua::function::results::operator std::vector<::uns::lua::value>() const noexcept {
 	if(!valid()) return {};
