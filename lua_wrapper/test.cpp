@@ -147,9 +147,9 @@ void function_n_value_test() {
         static_cast<::uns::lua::type::table&>(arg1)[u8"Some subtable"] = ::uns::lua::make_table();
         static_cast<::uns::lua::type::table&>(static_cast<::uns::lua::type::table&>(arg1)["Some subtable"])[123] = "Yeah baby!";
 
-        auto results = print_args(4, { arg1, arg2, arg3, arg4 });
+        auto results = print_args(4, arg1, arg2, arg3, arg4);
 
-        print_vals(static_cast<::std::vector<::uns::lua::value>>(results));
+        print_vals(results.get_all());
     };
     ::std::cout << print_args.error().to_string() << "\n";
 };
@@ -267,14 +267,14 @@ void lib1_test() {
         static_cast<::uns::lua::type::table&>(arg1)[u8"Some subtable"] = ::uns::lua::make_table();
         static_cast<::uns::lua::type::table&>(static_cast<::uns::lua::type::table&>(arg1)["Some subtable"])[123] = "Yeah baby!";
 
-        auto results = print_args(2, { arg1, arg2, arg3, arg4 });
+        auto results = print_args(2, arg1, arg2, arg3, arg4);
 
         if(print_args.error().is()) {
             ::std::cout << print_args.error().to_string() << "\n";
             return;
         };
 
-        print_vals(static_cast<::std::vector<::uns::lua::value>>(results));
+        print_vals(results.get_all());
     }
     else {
         ::std::cout << print_args.error().to_string() << "\n";
@@ -323,14 +323,14 @@ void lib2_test() {
         static_cast<::uns::lua::type::table&>(arg1)[u8"Some subtable"] = ::uns::lua::make_table();
         static_cast<::uns::lua::type::table&>(static_cast<::uns::lua::type::table&>(arg1)["Some subtable"])[123] = "Yeah baby!";
 
-        auto results = print_args(2, { arg1, arg2, arg3, arg4 });
+        auto results = print_args(2, arg1, arg2, arg3, arg4);
 
         if(print_args.error().is()) {
             ::std::cout << print_args.error().to_string() << "\n";
             return;
         };
 
-        print_vals(static_cast<::std::vector<::uns::lua::value>>(results));
+        print_vals(results.get_all());
     }
     else {
         ::std::cout << print_args.error().to_string() << "\n";
@@ -404,7 +404,7 @@ void script_loading_test() {
 
         auto results = print_args(5, arg1, arg2, arg3, arg4);
 
-        auto [res1, res2, res3, res4, res5] = static_cast<::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value>>(results);
+        auto [res1, res2, res3, res4, res5] = results.get<5>();
         
         print_vals({ res1, res2, res3, res4, res5 });
     };
@@ -414,7 +414,7 @@ void script_loading_test() {
 int main() {
     ::std::cout << "START\n";
 
-    lib3_test();
+    script_loading_test();
 
     ::std::cout << "FINISH\n";
 };

@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <filesystem>
 #include <tuple>
+#include <array>
 
 #include "uniself/strings.hpp"
 #include "uniself/benum.hpp"
@@ -407,12 +408,38 @@ namespace uns::lua {
 		public:
 			inline bool valid() const noexcept { return m_stack != nullptr || m_stack_wrapper.valid(); };
 
-			operator ::std::vector<::uns::lua::value>() const noexcept;
-			operator ::uns::lua::value() const noexcept;
-			operator ::std::tuple<::uns::lua::value, ::uns::lua::value>() const noexcept;
-			operator ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value>() const noexcept;
-			operator ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value>() const noexcept;
-			operator ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value>() const noexcept;
+			::std::vector<::uns::lua::value> get_all() const noexcept;
+			template<::std::size_t result_values_number>
+			::std::array<::uns::lua::value, result_values_number> get() const noexcept {
+				return {};
+			};
+			template<>
+			::std::array<::uns::lua::value, 1> get<1>() const noexcept {
+				return { get() };
+			};
+			template<>
+			::std::array<::uns::lua::value, 2> get<2>() const noexcept {
+				return get_2();
+			};
+			template<>
+			::std::array<::uns::lua::value, 3> get<3>() const noexcept {
+				return get_3();
+			};
+			template<>
+			::std::array<::uns::lua::value, 4> get<4>() const noexcept {
+				return get_4();
+			};
+			template<>
+			::std::array<::uns::lua::value, 5> get<5>() const noexcept {
+				return get_5();
+			};
+
+			::uns::lua::value get() const noexcept;
+		protected:
+			::std::array<::uns::lua::value, 2> get_2() const noexcept;
+			::std::array<::uns::lua::value, 3> get_3() const noexcept;
+			::std::array<::uns::lua::value, 4> get_4() const noexcept;
+			::std::array<::uns::lua::value, 5> get_5() const noexcept;
 		};
 	protected:
 		::uns::lua::auxiliary::state_wrapper m_stack_wrapper;

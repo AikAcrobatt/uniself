@@ -931,8 +931,8 @@ namespace uns::lua::auxiliary {
 
 		return result;
 	};
-	::std::tuple<::uns::lua::value, ::uns::lua::value> extract_expected_2(::uns::lua::alias::lua_state stack, int function_idx) noexcept {
-		auto result = ::std::tuple<::uns::lua::value, ::uns::lua::value>{};
+	::std::array<::uns::lua::value, 2> extract_expected_2(::uns::lua::alias::lua_state stack, int function_idx) noexcept {
+		auto result = ::std::array<::uns::lua::value, 2>{};
 		if(
 			constexpr auto idx = 0;
 			lua_gettop(reinterpret_cast<lua_State*>(stack)) >= function_idx + idx
@@ -956,8 +956,8 @@ namespace uns::lua::auxiliary {
 
 		return result;
 	};
-	::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value> extract_expected_3(::uns::lua::alias::lua_state stack, int function_idx) noexcept {
-		auto result = ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value>{};
+	::std::array<::uns::lua::value, 3> extract_expected_3(::uns::lua::alias::lua_state stack, int function_idx) noexcept {
+		auto result = ::std::array<::uns::lua::value, 3>{};
 		if(
 			constexpr auto idx = 0;
 			lua_gettop(reinterpret_cast<lua_State*>(stack)) >= function_idx + idx
@@ -988,8 +988,8 @@ namespace uns::lua::auxiliary {
 
 		return result;
 	};
-	::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value> extract_expected_4(::uns::lua::alias::lua_state stack, int function_idx) noexcept {
-		auto result = ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value>{};
+	::std::array<::uns::lua::value, 4> extract_expected_4(::uns::lua::alias::lua_state stack, int function_idx) noexcept {
+		auto result = ::std::array<::uns::lua::value, 4>{};
 		if(
 			constexpr auto idx = 0;
 			lua_gettop(reinterpret_cast<lua_State*>(stack)) >= function_idx + idx
@@ -1027,8 +1027,8 @@ namespace uns::lua::auxiliary {
 
 		return result;
 	};
-	::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value> extract_expected_5(::uns::lua::alias::lua_state stack, int function_idx) noexcept {
-		auto result = ::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value>{};
+	::std::array<::uns::lua::value, 5> extract_expected_5(::uns::lua::alias::lua_state stack, int function_idx) noexcept {
+		auto result = ::std::array<::uns::lua::value, 5>{};
 		if(
 			constexpr auto idx = 0;
 			lua_gettop(reinterpret_cast<lua_State*>(stack)) >= function_idx + idx
@@ -1520,7 +1520,7 @@ void uns::lua::function::gc() noexcept {
 //<= class ::uns::lua::function
  
 //class ::uns::lua::function::results =>
-::uns::lua::function::results::operator std::vector<::uns::lua::value>() const noexcept {
+::std::vector<::uns::lua::value> uns::lua::function::results::get_all() const noexcept {
 	if(!valid()) return {};
 
 	::uns::lua::alias::lua_state state = nullptr;
@@ -1533,7 +1533,7 @@ void uns::lua::function::gc() noexcept {
 
 	return ::uns::lua::auxiliary::extract_expected_all(state, m_function_idx);
 };
-::uns::lua::function::results::operator uns::lua::value() const noexcept {
+::uns::lua::value uns::lua::function::results::get() const noexcept {
 	if(!valid()) return {};
 
 	::uns::lua::alias::lua_state state = nullptr;
@@ -1545,8 +1545,9 @@ void uns::lua::function::gc() noexcept {
 	};
 
 	return ::uns::lua::auxiliary::extract_expected_1(state, m_function_idx);
+
 };
-::uns::lua::function::results::operator std::tuple<::uns::lua::value, ::uns::lua::value>() const noexcept {
+::std::array<::uns::lua::value, 2> uns::lua::function::results::get_2() const noexcept {
 	if(!valid()) return {};
 
 	::uns::lua::alias::lua_state state = nullptr;
@@ -1558,8 +1559,9 @@ void uns::lua::function::gc() noexcept {
 	};
 
 	return ::uns::lua::auxiliary::extract_expected_2(state, m_function_idx);
+
 };
-::uns::lua::function::results::operator std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value>() const noexcept {
+::std::array<::uns::lua::value, 3> uns::lua::function::results::get_3() const noexcept {
 	if(!valid()) return {};
 
 	::uns::lua::alias::lua_state state = nullptr;
@@ -1571,8 +1573,9 @@ void uns::lua::function::gc() noexcept {
 	};
 
 	return ::uns::lua::auxiliary::extract_expected_3(state, m_function_idx);
+
 };
-::uns::lua::function::results::operator std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value>() const noexcept {
+::std::array<::uns::lua::value, 4> uns::lua::function::results::get_4() const noexcept {
 	if(!valid()) return {};
 
 	::uns::lua::alias::lua_state state = nullptr;
@@ -1584,8 +1587,9 @@ void uns::lua::function::gc() noexcept {
 	};
 
 	return ::uns::lua::auxiliary::extract_expected_4(state, m_function_idx);
+
 };
-::uns::lua::function::results::operator std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value>() const noexcept {
+::std::array<::uns::lua::value, 5> uns::lua::function::results::get_5() const noexcept {
 	if(!valid()) return {};
 
 	::uns::lua::alias::lua_state state = nullptr;
