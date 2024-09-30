@@ -226,7 +226,6 @@ namespace uns::lua {
 			requires(::std::integral<val_t> && !::std::same_as<bool, val_t>)
 		value(val_t obj) noexcept :
 			m_type(::uns::lua::value_type::integer),
-			m_number(static_cast<::uns::lua::type::number>(obj)),
 			m_integer(static_cast<::uns::lua::type::integer>(obj)),
 			m_push_function(push_integer)												
 		{};
@@ -234,7 +233,6 @@ namespace uns::lua {
 		value(val_t obj) noexcept :
 			m_type(::uns::lua::value_type::number),
 			m_number(static_cast<::uns::lua::type::number>(obj)),
-			m_integer(static_cast<::uns::lua::type::integer>(obj)),
 			m_push_function(push_number)
 		{};
 		template<::std::same_as<bool> val_t>

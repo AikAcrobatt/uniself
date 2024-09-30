@@ -407,7 +407,7 @@ bool ::uns::lua::type::table::operator!=(const ::uns::lua::type::table& obj) con
 //<= class ::uns::lua::type::table
 
 
-//class ::uns::lua::type::table =>
+//class ::uns::lua::auxiliary::table =>
 ::uns::lua::auxiliary::table::table(const ::uns::lua::auxiliary::table& obj) noexcept :
 	m_key_number(obj.m_key_number),
 	m_key_integer(obj.m_key_integer),
@@ -527,7 +527,7 @@ UNS_LUA_TABLE_IDX_DESCRIPTOR(string);
 ::std::size_t uns::lua::auxiliary::table::size() const noexcept {
 	return m_key_number.size() + m_key_integer.size() + m_key_boolean.size() + m_key_string.size();
 };
-//<= class ::uns::lua::type::table
+//<= class ::uns::lua::auxiliary::table
 
 
 ::uns::lua::value uns::lua::value::make_from(::uns::lua::alias::lua_state stack, int idx) noexcept {
