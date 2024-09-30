@@ -549,29 +549,29 @@ namespace uns::lua {
 
 	namespace auxiliary {
 
-		template<::std::size_t pos, typename ... uns_lua_value_t>
-		void results_push_recursive(::uns::lua::alias::lua_state stack, const ::std::tuple<uns_lua_value_t ...>& results) noexcept {
-			if constexpr(
-				::std::tuple_size<::std::tuple<uns_lua_value_t ...>>::value > 0
-			) {
-				if constexpr(
-					pos <= ::std::tuple_size<::std::tuple<uns_lua_value_t ...>>::value
-					&& pos > 0
-				) {
-					::uns::lua::auxiliary::results_push_recursive<pos - 1>(stack, results);
-					::std::get<pos - 1>(results).push_to(stack);
-				}
-				else {
-					::std::get<0>(results).push_to(stack);
-				};
-			};
-		};
-
 		namespace wrappers::returning_all {
 
-			template<typename ::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&) noexcept>
+			template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
+
+				auto args = ::std::vector<::uns::lua::value>{};
+				for(::std::size_t arg_idx = 1; arg_idx < l_thread.size(); ++arg_idx) {
+					args.push_back(l_thread.get_value(arg_idx));
+				};
+
+				auto results = wrapped(l_thread, args);
+
+				for(const auto& result : results) {
+					result.push_to(stack);
+				};
+
+				return results.size();
+			};
+			template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&) noexcept>
+			int wrap(::uns::lua::alias::lua_state stack) noexcept {
+				auto l_thread = ::uns::lua::thread{ stack };
+
 				auto results = wrapped(l_thread);
 
 				for(const auto& result : results) {
@@ -580,7 +580,7 @@ namespace uns::lua {
 
 				return results.size();
 			};
-			template<typename ::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
+			template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 
@@ -598,7 +598,7 @@ namespace uns::lua {
 
 				return results.size();
 			};
-			template<typename ::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+			template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 
@@ -619,7 +619,7 @@ namespace uns::lua {
 
 				return results.size();
 			};
-			template<typename ::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+			template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 
@@ -643,7 +643,7 @@ namespace uns::lua {
 
 				return results.size();
 			};
-			template<typename ::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+			template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 
@@ -670,7 +670,7 @@ namespace uns::lua {
 
 				return results.size();
 			};
-			template<typename ::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+			template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 
@@ -705,22 +705,41 @@ namespace uns::lua {
 
 		namespace wrappers::returning_some {
 
-			template<typename tupled_lua_values, typename tupled_lua_values(*wrapped)(::uns::lua::thread&) noexcept>
-				requires (::std::tuple_size<tupled_lua_values>::value >= 0)
+			template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&) noexcept>
+			int wrap(::uns::lua::alias::lua_state stack) noexcept {
+				auto l_thread = ::uns::lua::thread{ stack };
+
+				auto args = ::std::vector<::uns::lua::value>{};
+				for(::std::size_t arg_idx = 1; arg_idx < l_thread.size(); ++arg_idx) {
+					args.push_back(l_thread.get_value(arg_idx));
+				};
+
+				auto results = wrapped(l_thread, args);
+
+				for(const auto& result : results) {
+					result.push_to(stack);
+				};
+
+				return results.size();
+			};
+			template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 				auto results = wrapped(l_thread);
 
-				::uns::lua::auxiliary::results_push_recursive<::std::tuple_size<tupled_lua_values>::value>(stack, results);
+				auto results = wrapped(l_thread);
 
-				return ::std::tuple_size<tupled_lua_values>::value;
+				for(const auto& result : results) {
+					result.push_to(stack);
+				};
+
+				return results.size();
 			};
-			template<typename tupled_lua_values, typename tupled_lua_values(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
-				requires (::std::tuple_size<tupled_lua_values>::value >= 0)
+			template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 
-				auto results = tupled_lua_values{};
+				auto results = ::std::array<::uns::lua::value, result_values_number>{};
 				if(l_thread.size() >= 1) {
 					results = wrapped(l_thread, l_thread.get_value(1));
 				}
@@ -728,16 +747,17 @@ namespace uns::lua {
 					results = wrapped(l_thread, ::uns::lua::nil);
 				};
 
-				::uns::lua::auxiliary::results_push_recursive<::std::tuple_size<tupled_lua_values>::value>(stack, results);
+				for(const auto& result : results) {
+					result.push_to(stack);
+				};
 
-				return ::std::tuple_size<tupled_lua_values>::value;
+				return results.size();
 			};
-			template<typename tupled_lua_values, typename tupled_lua_values(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
-				requires (::std::tuple_size<tupled_lua_values>::value >= 0)
+			template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 
-				auto results = tupled_lua_values{};
+				auto results = ::std::array<::uns::lua::value, result_values_number>{};
 				if(l_thread.size() >= 2) {
 					results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2));
 				}
@@ -748,16 +768,17 @@ namespace uns::lua {
 					results = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil);
 				};
 
-				::uns::lua::auxiliary::results_push_recursive<::std::tuple_size<tupled_lua_values>::value>(stack, results);
+				for(const auto& result : results) {
+					result.push_to(stack);
+				};
 
-				return ::std::tuple_size<tupled_lua_values>::value;
+				return results.size();
 			};
-			template<typename tupled_lua_values, typename tupled_lua_values(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
-				requires (::std::tuple_size<tupled_lua_values>::value >= 0)
+			template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 
-				auto results = tupled_lua_values{};
+				auto results = ::std::array<::uns::lua::value, result_values_number>{};
 				if(l_thread.size() >= 3) {
 					results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3));
 				}
@@ -771,16 +792,17 @@ namespace uns::lua {
 					results = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
 				};
 
-				::uns::lua::auxiliary::results_push_recursive<::std::tuple_size<tupled_lua_values>::value>(stack, results);
+				for(const auto& result : results) {
+					result.push_to(stack);
+				};
 
-				return ::std::tuple_size<tupled_lua_values>::value;
+				return results.size();
 			};
-			template<typename tupled_lua_values, typename tupled_lua_values(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
-				requires (::std::tuple_size<tupled_lua_values>::value >= 0)
+			template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 
-				auto results = tupled_lua_values{};
+				auto results = ::std::array<::uns::lua::value, result_values_number>{};
 				if(l_thread.size() >= 4) {
 					results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4));
 				}
@@ -797,16 +819,17 @@ namespace uns::lua {
 					results = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
 				};
 
-				::uns::lua::auxiliary::results_push_recursive<::std::tuple_size<tupled_lua_values>::value>(stack, results);
+				for(const auto& result : results) {
+					result.push_to(stack);
+				};
 
-				return ::std::tuple_size<tupled_lua_values>::value;
+				return results.size();
 			};
-			template<typename tupled_lua_values, typename tupled_lua_values(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
-				requires (::std::tuple_size<tupled_lua_values>::value >= 0)
+			template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 
-				auto results = tupled_lua_values{};
+				auto results = ::std::array<::uns::lua::value, result_values_number>{};
 				if(l_thread.size() >= 5) {
 					results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4), l_thread.get_value(5));
 				}
@@ -826,16 +849,32 @@ namespace uns::lua {
 					results = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
 				};
 
-				::uns::lua::auxiliary::results_push_recursive<::std::tuple_size<tupled_lua_values>::value>(stack, results);
+				for(const auto& result : results) {
+					result.push_to(stack);
+				};
 
-				return ::std::tuple_size<tupled_lua_values>::value;
+				return results.size();
 			};
 
 		};
 
 		namespace wrappers::returning_one {
 
-			template<typename ::uns::lua::value(*wrapped)(::uns::lua::thread&) noexcept>
+			template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&) noexcept>
+			int wrap(::uns::lua::alias::lua_state stack) noexcept {
+				auto l_thread = ::uns::lua::thread{ stack };
+
+				auto args = ::std::vector<::uns::lua::value>{};
+				for(::std::size_t arg_idx = 1; arg_idx < l_thread.size(); ++arg_idx) {
+					args.push_back(l_thread.get_value(arg_idx));
+				};
+
+				auto result = wrapped(l_thread, args);
+				result.push_to(stack);
+
+				return 1;
+			};
+			template<::uns::lua::value(*wrapped)(::uns::lua::thread&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 				auto result = wrapped(l_thread);
@@ -844,7 +883,7 @@ namespace uns::lua {
 
 				return 1;
 			};
-			template<typename ::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
+			template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 
@@ -860,7 +899,7 @@ namespace uns::lua {
 
 				return 1;
 			};
-			template<typename ::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+			template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 
@@ -879,7 +918,7 @@ namespace uns::lua {
 
 				return 1;
 			};
-			template<typename ::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+			template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 
@@ -901,7 +940,7 @@ namespace uns::lua {
 
 				return 1;
 			};
-			template<typename ::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+			template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 
@@ -926,7 +965,7 @@ namespace uns::lua {
 
 				return 1;
 			};
-			template<typename ::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+			template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 
@@ -959,14 +998,27 @@ namespace uns::lua {
 
 		namespace wrappers::returning_none {
 
-			template<typename void(*wrapped)(::uns::lua::thread&) noexcept>
+			template<void(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&) noexcept>
+			int wrap(::uns::lua::alias::lua_state stack) noexcept {
+				auto l_thread = ::uns::lua::thread{ stack };
+
+				auto args = ::std::vector<::uns::lua::value>{};
+				for(::std::size_t arg_idx = 1; arg_idx < l_thread.size(); ++arg_idx) {
+					args.push_back(l_thread.get_value(arg_idx));
+				};
+
+				wrapped(l_thread, args);
+
+				return 0;
+			};
+			template<void(*wrapped)(::uns::lua::thread&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 				wrapped(l_thread);
 
 				return 0;
 			};
-			template<typename void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
+			template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 
@@ -979,7 +1031,7 @@ namespace uns::lua {
 
 				return 0;
 			};
-			template<typename void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+			template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 
@@ -995,7 +1047,7 @@ namespace uns::lua {
 
 				return 0;
 			};
-			template<typename void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+			template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 
@@ -1014,7 +1066,7 @@ namespace uns::lua {
 
 				return 0;
 			};
-			template<typename void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+			template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 
@@ -1036,7 +1088,7 @@ namespace uns::lua {
 
 				return 0;
 			};
-			template<typename void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+			template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
 			int wrap(::uns::lua::alias::lua_state stack) noexcept {
 				auto l_thread = ::uns::lua::thread{ stack };
 
@@ -1083,7 +1135,7 @@ namespace uns::lua {
 		inline const char* name() const noexcept { return m_name.c_str(); };
 		inline ::uns::lua::alias::lua_cfunction func() const noexcept { return m_function; };
 
-		template<typename ::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&) noexcept>
+		template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&) noexcept>
 		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
 			auto res = ::uns::lua::lib_entry{};
 
@@ -1092,54 +1144,16 @@ namespace uns::lua {
 
 			return res;
 		};
-		template<typename tupled_lua_values, typename tupled_lua_values(*wrapped)(::uns::lua::thread&) noexcept>
-			requires (::std::tuple_size<tupled_lua_values>::value >= 0)
+		template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&) noexcept>
 		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
 			auto res = ::uns::lua::lib_entry{};
 
 			res.m_name = ::uns::string::u8_cast<::std::string>(name);
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_some::wrap<tupled_lua_values, wrapped>;
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_some::wrap<result_values_number, wrapped>;
 
 			return res;
 		};
-		template<typename ::uns::lua::value(*wrapped)(::uns::lua::thread&) noexcept>
-		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
-			auto res = ::uns::lua::lib_entry{};
-
-			res.m_name = ::uns::string::u8_cast<::std::string>(name);
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_one::wrap<wrapped>;
-
-			return res;
-		};
-		template<typename void(*wrapped)(::uns::lua::thread&) noexcept>
-		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
-			auto res = ::uns::lua::lib_entry{};
-
-			res.m_name = ::uns::string::u8_cast<::std::string>(name);
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_none::wrap<wrapped>;
-
-			return res;
-		};
-		template<typename ::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
-		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
-			auto res = ::uns::lua::lib_entry{};
-
-			res.m_name = name;
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_all::wrap<wrapped>;
-
-			return res;
-		};
-		template<typename tupled_lua_values, typename tupled_lua_values(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
-			requires (::std::tuple_size<tupled_lua_values>::value >= 0)
-		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
-			auto res = ::uns::lua::lib_entry{};
-
-			res.m_name = ::uns::string::u8_cast<::std::string>(name);
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_some::wrap<tupled_lua_values, wrapped>;
-
-			return res;
-		};
-		template<typename ::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
+		template<::uns::lua::value(*wrapped)(::uns::lua::thread&) noexcept>
 		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
 			auto res = ::uns::lua::lib_entry{};
 
@@ -1148,155 +1162,7 @@ namespace uns::lua {
 
 			return res;
 		};
-		template<typename void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
-		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
-			auto res = ::uns::lua::lib_entry{};
-
-			res.m_name = ::uns::string::u8_cast<::std::string>(name);
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_none::wrap<wrapped>;
-
-			return res;
-		};
-		template<typename ::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
-		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
-			auto res = ::uns::lua::lib_entry{};
-
-			res.m_name = name;
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_all::wrap<wrapped>;
-
-			return res;
-		};
-		template<typename tupled_lua_values, typename tupled_lua_values(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
-			requires (::std::tuple_size<tupled_lua_values>::value >= 0)
-		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
-			auto res = ::uns::lua::lib_entry{};
-
-			res.m_name = ::uns::string::u8_cast<::std::string>(name);
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_some::wrap<tupled_lua_values, wrapped>;
-
-			return res;
-		};
-		template<typename ::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
-		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
-			auto res = ::uns::lua::lib_entry{};
-
-			res.m_name = ::uns::string::u8_cast<::std::string>(name);
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_one::wrap<wrapped>;
-
-			return res;
-		};
-		template<typename void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
-		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
-			auto res = ::uns::lua::lib_entry{};
-
-			res.m_name = ::uns::string::u8_cast<::std::string>(name);
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_none::wrap<wrapped>;
-
-			return res;
-		};
-		template<typename ::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
-		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
-			auto res = ::uns::lua::lib_entry{};
-
-			res.m_name = name;
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_all::wrap<wrapped>;
-
-			return res;
-		};
-		template<typename tupled_lua_values, typename tupled_lua_values(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
-			requires (::std::tuple_size<tupled_lua_values>::value >= 0)
-		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
-			auto res = ::uns::lua::lib_entry{};
-
-			res.m_name = ::uns::string::u8_cast<::std::string>(name);
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_some::wrap<tupled_lua_values, wrapped>;
-
-			return res;
-		};
-		template<typename ::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
-		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
-			auto res = ::uns::lua::lib_entry{};
-
-			res.m_name = ::uns::string::u8_cast<::std::string>(name);
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_one::wrap<wrapped>;
-
-			return res;
-		};
-		template<typename void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
-		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
-			auto res = ::uns::lua::lib_entry{};
-
-			res.m_name = ::uns::string::u8_cast<::std::string>(name);
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_none::wrap<wrapped>;
-
-			return res;
-		};
-		template<typename ::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
-		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
-			auto res = ::uns::lua::lib_entry{};
-
-			res.m_name = name;
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_all::wrap<wrapped>;
-
-			return res;
-		};
-		template<typename tupled_lua_values, typename tupled_lua_values(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
-			requires (::std::tuple_size<tupled_lua_values>::value >= 0)
-		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
-			auto res = ::uns::lua::lib_entry{};
-
-			res.m_name = ::uns::string::u8_cast<::std::string>(name);
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_some::wrap<tupled_lua_values, wrapped>;
-
-			return res;
-		};
-		template<typename ::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
-		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
-			auto res = ::uns::lua::lib_entry{};
-
-			res.m_name = ::uns::string::u8_cast<::std::string>(name);
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_one::wrap<wrapped>;
-
-			return res;
-		};
-		template<typename void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
-		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
-			auto res = ::uns::lua::lib_entry{};
-
-			res.m_name = ::uns::string::u8_cast<::std::string>(name);
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_none::wrap<wrapped>;
-
-			return res;
-		};
-		template<typename ::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
-		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
-			auto res = ::uns::lua::lib_entry{};
-
-			res.m_name = name;
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_all::wrap<wrapped>;
-
-			return res;
-		};
-		template<typename tupled_lua_values, typename tupled_lua_values(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
-			requires (::std::tuple_size<tupled_lua_values>::value >= 0)
-		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
-			auto res = ::uns::lua::lib_entry{};
-
-			res.m_name = ::uns::string::u8_cast<::std::string>(name);
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_some::wrap<tupled_lua_values, wrapped>;
-
-			return res;
-		};
-		template<typename ::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
-		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
-			auto res = ::uns::lua::lib_entry{};
-
-			res.m_name = ::uns::string::u8_cast<::std::string>(name);
-			res.m_function = ::uns::lua::auxiliary::wrappers::returning_one::wrap<wrapped>;
-
-			return res;
-		};
-		template<typename void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+		template<void(*wrapped)(::uns::lua::thread&) noexcept>
 		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
 			auto res = ::uns::lua::lib_entry{};
 
@@ -1306,6 +1172,227 @@ namespace uns::lua {
 			return res;
 		};
 
+		template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = name;
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_all::wrap<wrapped>;
+
+			return res;
+		};
+		template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = ::uns::string::u8_cast<::std::string>(name);
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_some::wrap<result_values_number, wrapped>;
+
+			return res;
+		};
+		template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = ::uns::string::u8_cast<::std::string>(name);
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_one::wrap<wrapped>;
+
+			return res;
+		};
+		template<void(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = ::uns::string::u8_cast<::std::string>(name);
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_none::wrap<wrapped>;
+
+			return res;
+		};
+
+		template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = name;
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_all::wrap<wrapped>;
+
+			return res;
+		};
+		template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = ::uns::string::u8_cast<::std::string>(name);
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_some::wrap<result_values_number, wrapped>;
+
+			return res;
+		};
+		template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = ::uns::string::u8_cast<::std::string>(name);
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_one::wrap<wrapped>;
+
+			return res;
+		};
+		template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = ::uns::string::u8_cast<::std::string>(name);
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_none::wrap<wrapped>;
+
+			return res;
+		};
+
+		template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = name;
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_all::wrap<wrapped>;
+
+			return res;
+		};
+		template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = ::uns::string::u8_cast<::std::string>(name);
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_some::wrap<result_values_number, wrapped>;
+
+			return res;
+		};
+		template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = ::uns::string::u8_cast<::std::string>(name);
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_one::wrap<wrapped>;
+
+			return res;
+		};
+		template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = ::uns::string::u8_cast<::std::string>(name);
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_none::wrap<wrapped>;
+
+			return res;
+		};
+
+		template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = name;
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_all::wrap<wrapped>;
+
+			return res;
+		};
+		template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = ::uns::string::u8_cast<::std::string>(name);
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_some::wrap<result_values_number, wrapped>;
+
+			return res;
+		};
+		template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = ::uns::string::u8_cast<::std::string>(name);
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_one::wrap<wrapped>;
+
+			return res;
+		};
+		template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = ::uns::string::u8_cast<::std::string>(name);
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_none::wrap<wrapped>;
+
+			return res;
+		};
+
+		template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = name;
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_all::wrap<wrapped>;
+
+			return res;
+		};
+		template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = ::uns::string::u8_cast<::std::string>(name);
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_some::wrap<result_values_number, wrapped>;
+
+			return res;
+		};
+		template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = ::uns::string::u8_cast<::std::string>(name);
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_one::wrap<wrapped>;
+
+			return res;
+		};
+		template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = ::uns::string::u8_cast<::std::string>(name);
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_none::wrap<wrapped>;
+
+			return res;
+		};
+
+		template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = name;
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_all::wrap<wrapped>;
+
+			return res;
+		};
+		template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = ::uns::string::u8_cast<::std::string>(name);
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_some::wrap<result_values_number, wrapped>;
+
+			return res;
+		};
+		template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = ::uns::string::u8_cast<::std::string>(name);
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_one::wrap<wrapped>;
+
+			return res;
+		};
+		template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+		static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
+			auto res = ::uns::lua::lib_entry{};
+
+			res.m_name = ::uns::string::u8_cast<::std::string>(name);
+			res.m_function = ::uns::lua::auxiliary::wrappers::returning_none::wrap<wrapped>;
+
+			return res;
+		};
 	};
 
 

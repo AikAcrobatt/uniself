@@ -103,19 +103,17 @@ void print_vals(const ::std::vector<::uns::lua::value>& vals, const ::std::strin
 };
 
 
-::std::tuple<> test_print(::uns::lua::thread& th) noexcept {
+void test_print(::uns::lua::thread& th) noexcept {
     auto values_on_stack_total = th.size();
     for(::std::size_t i = 1; i <= values_on_stack_total; ++i) {
 
         print_vals(th.get_value(i));
         ::std::cout << ::std::endl;
     };
-
-    return {};
 };
 
 
-::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value> lib_func_5_5(::uns::lua::thread&, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2, const ::uns::lua::value& arg3, const ::uns::lua::value& arg4, const ::uns::lua::value& arg5) noexcept {
+::std::array<::uns::lua::value, 5> lib_func_5_5(::uns::lua::thread&, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2, const ::uns::lua::value& arg3, const ::uns::lua::value& arg4, const ::uns::lua::value& arg5) noexcept {
     return { arg5, arg4, arg1, arg3, arg2 };
 };
 
@@ -225,7 +223,7 @@ void global2_test() {
 
 void lib1_test() {
     auto script = ::uns::lua::script{
-        ::uns::lua::library{ u8"test1", { ::uns::lua::lib_entry::make<::std::tuple<>, test_print>(::std::u8string{ u8"func1" }) }, u8"" }
+        ::uns::lua::library{ u8"test1", { ::uns::lua::lib_entry::make<test_print>(::std::u8string{ u8"func1" }) }, u8"" }
     };
     if(script.error().is()) {
         ::std::cout << script.error().to_string() << "\n";
@@ -238,7 +236,7 @@ void lib1_test() {
                 function print_args(...)
                     test1.func1(...)
 
-                    return "!!!", { true, 17 }
+                    return "!!!", { true, 17, ... }
                 end
             )^^"
         }
@@ -283,7 +281,7 @@ void lib1_test() {
 
 void lib2_test() {
     auto script = ::uns::lua::script{
-        ::uns::lua::library{ u8"", { ::uns::lua::lib_entry::make<::std::tuple<>, test_print>(::std::u8string{ u8"func1" }) }, u8"" }
+        ::uns::lua::library{ u8"", { ::uns::lua::lib_entry::make<test_print>(::std::u8string{ u8"func1" }) }, u8"" }
     };
     if(script.error().is()) {
         ::std::cout << script.error().to_string() << "\n";
@@ -339,7 +337,7 @@ void lib2_test() {
 
 void lib3_test() {
     auto script = ::uns::lua::script{
-        ::uns::lua::library{ u8"", { ::uns::lua::lib_entry::make<::std::tuple<::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value, ::uns::lua::value>, lib_func_5_5>(::std::u8string{ u8"lib_func" }) }, u8"" }
+        ::uns::lua::library{ u8"", { ::uns::lua::lib_entry::make<5, lib_func_5_5>(::std::u8string{ u8"lib_func" }) }, u8"" }
     };
     if(script.error().is()) {
         ::std::cout << script.error().to_string() << "\n";
@@ -414,7 +412,7 @@ void script_loading_test() {
 int main() {
     ::std::cout << "START\n";
 
-    script_loading_test();
+    lib1_test();
 
     ::std::cout << "FINISH\n";
 };
