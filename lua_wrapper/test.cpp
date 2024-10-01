@@ -254,7 +254,7 @@ void lib1_test() {
 
     auto print_args = script.get_function(u8"print_args");
 
-    if(!print_args.error().is()) {
+    if(print_args.valid()) {
         auto arg1 = ::uns::lua::make_table();
         auto arg2 = ::uns::lua::value{ 0.0045006 };
         auto arg3 = ::uns::lua::value{ true };
@@ -275,7 +275,7 @@ void lib1_test() {
         print_vals(results.get_all());
     }
     else {
-        ::std::cout << print_args.error().to_string() << "\n";
+        ::std::cout << print_args.error().to_string() << " !!IS NOT VALID!!" << "\n";
     };
 };
 

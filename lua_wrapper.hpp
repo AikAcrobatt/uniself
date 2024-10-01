@@ -461,7 +461,7 @@ namespace uns::lua {
 
 		::std::u8string name() const noexcept;
 
-		inline bool valid() const noexcept { return m_stack != nullptr || m_stack_wrapper.valid(); };
+		bool valid() const noexcept;
 
 		::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::std::vector<::uns::lua::value>& args) noexcept;
 		::uns::lua::function::results operator() (const ::std::size_t expected_results) noexcept;

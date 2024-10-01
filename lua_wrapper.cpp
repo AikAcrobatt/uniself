@@ -1308,6 +1308,29 @@ namespace uns::lua::auxiliary {
 };
 ::std::u8string uns::lua::function::name() const noexcept { return ::uns::string::u8_cast<::std::u8string>(m_function_name); };
 
+bool ::uns::lua::function::valid() const noexcept {
+	bool result = (m_stack != nullptr || m_stack_wrapper.valid());
+	if(!result) return false;
+
+	::uns::lua::alias::lua_state state = nullptr;
+	if(m_stack != nullptr) {
+		state = m_stack->get();
+	}
+	else if(m_stack_wrapper.valid()) {
+		state = m_stack_wrapper.get();
+	};
+
+	lua_getglobal(reinterpret_cast<lua_State*>(state), m_function_name.c_str());
+	result = lua_isfunction(reinterpret_cast<lua_State*>(state), lua_gettop(reinterpret_cast<lua_State*>(state)));
+	lua_pop(reinterpret_cast<lua_State*>(state), -1);
+
+	return result;
+};
+/*
+function_idx = lua_gettop(reinterpret_cast<lua_State*>(stack));
+
+	*/
+
 /*::std::vector<::uns::lua::value> uns::lua::function::operator() (const ::std::size_t expected_results, const ::std::vector<::uns::lua::value>& args) noexcept {
 	::uns::lua::alias::lua_state state = nullptr;
 	if(m_stack != nullptr) {
