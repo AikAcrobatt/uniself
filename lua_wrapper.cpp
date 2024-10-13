@@ -1074,7 +1074,7 @@ namespace uns::lua::auxiliary {
 		return result;
 	};
 
-	::std::pair<::uns::lua::error, ::std::vector<::uns::lua::value>> execute(::uns::lua::alias::lua_state stack, const ::std::string& function_name, const ::std::size_t expected_results, const ::std::vector<::uns::lua::value>& args) noexcept {
+	[[deprecated]] ::std::pair<::uns::lua::error, ::std::vector<::uns::lua::value>> execute(::uns::lua::alias::lua_state stack, const ::std::string& function_name, const ::std::size_t expected_results, const ::std::vector<::uns::lua::value>& args) noexcept {
 		using result_t = ::std::pair<::uns::lua::error, ::std::vector<::uns::lua::value>>;
 		
 		if(stack == nullptr) {
@@ -1326,26 +1326,6 @@ bool ::uns::lua::function::valid() const noexcept {
 
 	return result;
 };
-/*
-function_idx = lua_gettop(reinterpret_cast<lua_State*>(stack));
-
-	*/
-
-/*::std::vector<::uns::lua::value> uns::lua::function::operator() (const ::std::size_t expected_results, const ::std::vector<::uns::lua::value>& args) noexcept {
-	::uns::lua::alias::lua_state state = nullptr;
-	if(m_stack != nullptr) {
-		state = m_stack->get();
-	}
-	else if(m_stack_wrapper.valid()) {
-		state = m_stack_wrapper.get();
-	};
-	
-	auto [l_err, results] = ::uns::lua::auxiliary::execute(state, m_function_name, expected_results, args);
-	
-	m_err = l_err;
-
-	return results;
-};*/
 ::uns::lua::function::results uns::lua::function::operator() (const ::std::size_t expected_results, const ::std::vector<::uns::lua::value>& args) noexcept {
 	auto result = ::uns::lua::function::results{};
 	::uns::lua::alias::lua_state state = nullptr;
@@ -1723,6 +1703,14 @@ void ::uns::lua::thread::load(const ::uns::lua::library& library) noexcept {
 };
 void ::uns::lua::thread::load(const ::std::u8string& text) noexcept {
 	m_err = ::uns::lua::auxiliary::load(m_stack.get(), text);
+};
+
+void ::uns::lua::thread::call() noexcept {
+	m_err = ::uns::lua::auxiliary::execute(
+		m_stack.get(),
+		lua_gettop(m_stack.get()),
+		0
+	);
 };
 
 ::uns::lua::function uns::lua::thread::get_function(const ::std::u8string& lua_global_function_name) noexcept {

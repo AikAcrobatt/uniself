@@ -13,6 +13,8 @@
 #ifndef UNS_LIB_LUA_WRAPPER
 #define UNS_LIB_LUA_WRAPPER
 
+struct lua_State;
+
 namespace uns::lua {
 
 	
@@ -67,7 +69,7 @@ namespace uns::lua {
 
 
 	namespace alias {
-		using lua_state = void*;
+		using lua_state = lua_State*;
 		using lua_cfunction = int(*)(::uns::lua::alias::lua_state);
 	};
 
@@ -536,6 +538,8 @@ namespace uns::lua {
 
 		void load(const ::uns::lua::library& library) noexcept;
 		void load(const ::std::u8string& text) noexcept;
+
+		void call() noexcept;
 
 		::uns::lua::function get_function(const ::std::u8string& lua_global_function_name) noexcept;
 		::uns::lua::global get_global(const ::std::u8string& lua_global_variable_name) noexcept;
@@ -1439,6 +1443,53 @@ namespace uns::lua {
 
 
 	::uns::lua::value make_table() noexcept;
+
+	namespace dll {
+
+		template<::uns::lua::library(*lualib_returning_function)()>
+		int libexport(::uns::lua::alias::lua_state L) {
+			auto lualib = lualib_returning_function();
+
+			auto thread = ::uns::lua::thread{ L };
+			thread.load(lualib.text);
+			thread.call();
+
+			if(thread.error().is()) {
+				auto error_msg = ::uns::lua::value{ thread.error().to_string() };
+				error_msg.push_string(thread);
+				return 1;
+			};
+
+			if(!lualib.name_space.empty()) {
+				thread.load(
+					u8R"^^(
+						local lualib_module = )^^" + lualib.name_space + u8R"^^(
+					)^^" + lualib.name_space + u8R"^^( = nil
+						return lualib_module
+					)^^"
+				);
+			}
+			else {
+				auto lualib_loading_procedure = ::std::u8string{};
+
+				for(auto [func_name, func_ptr] : lualib.api) {
+					lualib_loading_procedure += u8"\n" + u8"lualib_module." + func_name + u8" = " + func_name + u8";";
+					lualib_loading_procedure += u8"\n" + func_name + u8" = nil;";
+				};
+
+				thread.load(
+					u8R"^^(
+						local lualib_module = {})^^" + lualib_loading_procedure + u8R"^^(
+						return lualib_module
+					)^^"
+				);
+			};
+			thread.call();
+
+			return 1;
+		};
+
+	};
 };
 
 #endif
