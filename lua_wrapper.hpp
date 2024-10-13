@@ -69,7 +69,7 @@ namespace uns::lua {
 
 
 	namespace alias {
-		using lua_state = lua_State*;
+		using lua_state = ::lua_State*;
 		using lua_cfunction = int(*)(::uns::lua::alias::lua_state);
 	};
 
