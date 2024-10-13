@@ -7,8 +7,6 @@ extern "C" {
 #include "lualib.h"
 }
 
-
-
 //class ::uns::lua::error =>
 ::uns::lua::error::error(
 	const ::uns::lua::errcode& code,
@@ -263,6 +261,9 @@ UNS_LUA_VALUE_CONVERT_DESCRIPTOR(table);
 
 #undef UNS_LUA_VALUE_CONVERT_DESCRIPTOR
 
+void ::uns::lua::value::push_to(::uns::lua::thread& thread) const noexcept {
+	push_to(thread.m_stack.get());
+};
 void ::uns::lua::value::push_to(::uns::lua::auxiliary::state& thread) const noexcept {
 	push_to(thread.get());
 };
@@ -1705,11 +1706,11 @@ void ::uns::lua::thread::load(const ::std::u8string& text) noexcept {
 	m_err = ::uns::lua::auxiliary::load(m_stack.get(), text);
 };
 
-void ::uns::lua::thread::call() noexcept {
+void ::uns::lua::thread::call(int results_expected_total) noexcept {
 	m_err = ::uns::lua::auxiliary::execute(
 		m_stack.get(),
 		lua_gettop(m_stack.get()),
-		0
+		results_expected_total
 	);
 };
 

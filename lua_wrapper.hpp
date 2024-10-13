@@ -112,8 +112,6 @@ namespace uns::lua {
 			inline const ::uns::lua::alias::lua_state get() const noexcept { return m_state; };
 			inline ::uns::lua::alias::lua_state get() noexcept { return m_state; };
 		};
-
-
 	};
 
 
@@ -129,6 +127,7 @@ namespace uns::lua {
 
 
 	class value;
+	class thread;
 
 
 	namespace type {
@@ -281,6 +280,7 @@ namespace uns::lua {
 
 		inline ::uns::lua::value_type type() const noexcept { return m_type; };
 
+		void push_to(::uns::lua::thread& thread) const noexcept;
 		void push_to(::uns::lua::auxiliary::state& thread) const noexcept;
 		void push_to(::uns::lua::alias::lua_state stack) const noexcept;
 
@@ -517,6 +517,7 @@ namespace uns::lua {
 
 
 	class thread {
+		friend ::uns::lua::value;
 		friend ::uns::lua::lib_entry;
 	protected:
 		mutable ::uns::lua::auxiliary::state_wrapper m_stack;
@@ -539,7 +540,7 @@ namespace uns::lua {
 		void load(const ::uns::lua::library& library) noexcept;
 		void load(const ::std::u8string& text) noexcept;
 
-		void call() noexcept;
+		void call(int results_expected_total) noexcept;
 
 		::uns::lua::function get_function(const ::std::u8string& lua_global_function_name) noexcept;
 		::uns::lua::global get_global(const ::std::u8string& lua_global_variable_name) noexcept;
@@ -1447,16 +1448,15 @@ namespace uns::lua {
 	namespace dll {
 
 		template<::uns::lua::library(*lualib_returning_function)()>
-		int libexport(::uns::lua::alias::lua_state L) {
+		int libexport(::uns::lua::alias::lua_state L) noexcept {
+			auto thread = ::uns::lua::thread{ L };
+
 			auto lualib = lualib_returning_function();
 
-			auto thread = ::uns::lua::thread{ L };
-			thread.load(lualib.text);
-			thread.call();
-
+			thread.load(lualib);
 			if(thread.error().is()) {
 				auto error_msg = ::uns::lua::value{ thread.error().to_string() };
-				error_msg.push_string(thread);
+				error_msg.push_to(thread);
 				return 1;
 			};
 
@@ -1472,9 +1472,9 @@ namespace uns::lua {
 			else {
 				auto lualib_loading_procedure = ::std::u8string{};
 
-				for(auto [func_name, func_ptr] : lualib.api) {
-					lualib_loading_procedure += u8"\n" + u8"lualib_module." + func_name + u8" = " + func_name + u8";";
-					lualib_loading_procedure += u8"\n" + func_name + u8" = nil;";
+				for(const auto& api_entry : lualib.api) {
+					lualib_loading_procedure += u8"\n" + ::std::u8string{ u8"lualib_module." } + ::uns::string::u8_cast<::std::u8string>(api_entry.name()) + u8" = " + ::uns::string::u8_cast<::std::u8string>(api_entry.name()) + u8";";
+					lualib_loading_procedure += u8"\n" + ::uns::string::u8_cast<::std::u8string>(api_entry.name()) + u8" = nil;";
 				};
 
 				thread.load(
@@ -1484,7 +1484,7 @@ namespace uns::lua {
 					)^^"
 				);
 			};
-			thread.call();
+			thread.call(1);
 
 			return 1;
 		};
