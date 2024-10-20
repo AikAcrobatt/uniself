@@ -1139,55 +1139,6 @@ namespace uns::lua::auxiliary {
 		};
 	};
 
-	::uns::lua::error load(::uns::lua::alias::lua_state stack, const ::uns::lua::library& library) noexcept {
-		if(stack == nullptr) {
-			return ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid };
-		};
-
-		if(!library.text.empty()) {
-			auto narrow_text = ::uns::string::u8_cast<::std::string>(library.text);
-
-			if(int lua_retcode = luaL_loadstring((stack), narrow_text.c_str()); lua_retcode != LUA_OK) {
-				std::string err_str = "";
-
-				if(lua_isstring((stack), -1)) {
-					err_str = lua_tostring((stack), -1);
-					lua_pop((stack), -1);
-				};
-
-				return ::uns::lua::error{ ::uns::lua::auxiliary::lua_native_error_to_wrapper(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
-			};
-		};
-
-		if(!library.name_space.empty()) {
-			lua_newtable((stack));
-
-			for(const auto& entry : library.api) {
-				if(entry.name() == nullptr || entry.func() == nullptr) {
-					break;
-				};
-
-				lua_pushstring((stack), entry.name());
-				lua_pushcfunction((stack), reinterpret_cast<lua_CFunction>(entry.func()));
-				lua_settable((stack), -3);
-			};
-
-			lua_setglobal((stack), ::uns::string::u8_cast<::std::string>(library.name_space).c_str());
-		}
-		else {
-			for(const auto& entry : library.api) {
-				if(entry.name() == nullptr || entry.func() == nullptr) {
-					break;
-				};
-
-				lua_pushcfunction((stack), reinterpret_cast<lua_CFunction>(entry.func()));
-				lua_setglobal((stack), entry.name());
-
-			};
-		};
-
-		return ::uns::lua::error{ ::uns::lua::errcode::ok, ::uns::lua::errtype::ok };
-	};
 	::uns::lua::error load(::uns::lua::alias::lua_state stack, const ::std::u8string& text) noexcept {
 		if(stack == nullptr) {
 			return ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid };
@@ -1195,12 +1146,12 @@ namespace uns::lua::auxiliary {
 
 		auto narrow_text = ::uns::string::u8_cast<::std::string>(text);
 
-		if(int lua_retcode = luaL_loadstring((stack), narrow_text.c_str()); lua_retcode != LUA_OK) {
+		if(int lua_retcode = luaL_loadstring(stack, narrow_text.c_str()); lua_retcode != LUA_OK) {
 			std::string err_str = "";
 
-			if(lua_isstring((stack), -1)) {
-				err_str = lua_tostring((stack), -1);
-				lua_pop((stack), -1);
+			if(lua_isstring(stack, -1)) {
+				err_str = lua_tostring(stack, -1);
+				lua_pop(stack, -1);
 			};
 
 			return ::uns::lua::error{ ::uns::lua::auxiliary::lua_native_error_to_wrapper(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
@@ -1211,15 +1162,56 @@ namespace uns::lua::auxiliary {
 	::uns::lua::error load(::uns::lua::alias::lua_state stack, const ::std::filesystem::path& file) noexcept {
 		auto narrow_path = ::uns::string::u8_cast<::std::string>(::uns::string::u8_cast<::std::u8string>(file.lexically_normal().native()));
 
-		if(int lua_retcode = luaL_loadfile((stack), narrow_path.c_str()); lua_retcode != LUA_OK) {
-			std::string err_str = "";
+		if(int lua_retcode = luaL_loadfile(stack, narrow_path.c_str()); lua_retcode != LUA_OK) {
+			::std::string err_str = "";
 
-			if(lua_isstring((stack), -1)) {
-				err_str = lua_tostring((stack), -1);
-				lua_pop((stack), -1);
+			if(lua_isstring(stack, -1)) {
+				err_str = lua_tostring(stack, -1);
+				lua_pop(stack, -1);
 			};
 
 			return ::uns::lua::error{ ::uns::lua::auxiliary::lua_native_error_to_wrapper(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
+		};
+
+		return ::uns::lua::error{ ::uns::lua::errcode::ok, ::uns::lua::errtype::ok };
+	};
+	::uns::lua::error load(::uns::lua::alias::lua_state stack, const ::uns::lua::library& library) noexcept {
+		if(stack == nullptr) {
+			return ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid };
+		};
+
+		if(library.module_name.empty()) {
+			return ::uns::lua::error{ ::uns::lua::errcode::errsyntax, ::uns::lua::errtype::invalid, "Module name is empty"};
+		};
+
+		if(library.api.size() > 0) {
+			lua_getglobal(stack, "package");
+			lua_pushstring(stack, "loaded");
+			lua_gettable(stack, -2);
+
+			auto module_name = ::uns::string::u8_cast<::std::string>(library.module_name + u8"_api");
+			lua_pushstring(stack, module_name.c_str());
+			lua_newtable(stack);
+
+			for(const auto& entry : library.api) {
+				if(entry.name() == nullptr || entry.func() == nullptr) {
+					continue;
+				};
+
+				lua_pushstring(stack, entry.name());
+				lua_pushcfunction(stack, entry.func());
+				lua_settable(stack, -3);
+			};
+
+			lua_settable(stack, -3);
+			lua_pop(stack, -2);
+		};
+
+		if(!library.text.empty()) {
+			auto err = ::uns::lua::auxiliary::load(stack, library.text);
+			if(err.is()) {
+				return err;
+			};
 		};
 
 		return ::uns::lua::error{ ::uns::lua::errcode::ok, ::uns::lua::errtype::ok };
@@ -1704,6 +1696,9 @@ void ::uns::lua::thread::load(const ::uns::lua::library& library) noexcept {
 };
 void ::uns::lua::thread::load(const ::std::u8string& text) noexcept {
 	m_err = ::uns::lua::auxiliary::load(m_stack.get(), text);
+};
+void ::uns::lua::thread::load(const ::std::filesystem::path& file) noexcept {
+	m_err = ::uns::lua::auxiliary::load(m_stack.get(), file);
 };
 
 void ::uns::lua::thread::call(int results_expected_total) noexcept {

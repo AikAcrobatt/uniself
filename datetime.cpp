@@ -2,16 +2,16 @@
 #include "uniself/datetime.hpp"
 
 ::uns::datetime::datetime(const ::std::chrono::system_clock::time_point& time_point) noexcept {
-	const auto ymd = std::chrono::year_month_day{
-		std::chrono::floor<std::chrono::days>(time_point)
+	const auto ymd = ::std::chrono::year_month_day{
+		::std::chrono::floor<::std::chrono::days>(time_point)
 	};
 
 	year = static_cast<int>(ymd.year());
 	month = static_cast<int>(static_cast<unsigned int>(ymd.month()));
 	day_of_month = static_cast<int>(static_cast<unsigned int>(ymd.day()));
 
-	const auto hms = std::chrono::hh_mm_ss{
-		std::chrono::floor<std::chrono::seconds>(time_point.time_since_epoch() - std::chrono::floor<std::chrono::days>(time_point).time_since_epoch())
+	const auto hms = ::std::chrono::hh_mm_ss{
+		::std::chrono::floor<::std::chrono::seconds>(time_point.time_since_epoch() - ::std::chrono::floor<::std::chrono::days>(time_point).time_since_epoch())
 	};
 
 	hours = static_cast<int>(hms.hours().count());
@@ -19,44 +19,44 @@
 	seconds = static_cast<int>(hms.seconds().count());
 
 	subseconds = static_cast<long double>(
-		std::chrono::floor<std::chrono::nanoseconds>(
+		::std::chrono::floor<::std::chrono::nanoseconds>(
 			time_point.time_since_epoch()
-			- std::chrono::floor<std::chrono::seconds>(time_point).time_since_epoch()
+			- ::std::chrono::floor<::std::chrono::seconds>(time_point).time_since_epoch()
 		).count()
 	)
 	/ static_cast<long double>(
-		std::chrono::seconds(1)
-		/ std::chrono::nanoseconds(1)
+		::std::chrono::seconds(1)
+		/ ::std::chrono::nanoseconds(1)
 	);
 
 	this->normalize();
 };
 
-::uns::datetime::operator ::uns::datetime::time_point() const noexcept {
+::uns::datetime::operator uns::datetime::time_point() const noexcept {
 	auto datetime_struct = *this;
 
-	const auto ymd = std::chrono::year_month_day{
-		std::chrono::year(datetime_struct.year),
-		std::chrono::month(datetime_struct.month),
-		std::chrono::day(datetime_struct.day_of_month)
+	const auto ymd = ::std::chrono::year_month_day{
+		::std::chrono::year(datetime_struct.year),
+		::std::chrono::month(datetime_struct.month),
+		::std::chrono::day(datetime_struct.day_of_month)
 	};
 
-	if(!ymd.ok()) return std::chrono::system_clock::time_point();
+	if(!ymd.ok()) return ::std::chrono::system_clock::time_point();
 
-	auto time = std::chrono::system_clock::time_point{ std::chrono::sys_days(ymd) };
+	auto time = ::std::chrono::system_clock::time_point{ ::std::chrono::sys_days(ymd) };
 
-	time += std::chrono::hours(1) * datetime_struct.hours;
-	time += std::chrono::minutes(1) * datetime_struct.minutes;
-	time += std::chrono::seconds(1) * datetime_struct.seconds;
+	time += ::std::chrono::hours(1) * datetime_struct.hours;
+	time += ::std::chrono::minutes(1) * datetime_struct.minutes;
+	time += ::std::chrono::seconds(1) * datetime_struct.seconds;
 
-	auto subseconds = static_cast<long long int>(static_cast<long double>(std::chrono::seconds(1) / std::chrono::nanoseconds(1)) * datetime_struct.subseconds);
-	time += std::chrono::duration_cast<std::chrono::system_clock::duration>(std::chrono::nanoseconds(1) * subseconds);
+	auto subseconds = static_cast<long long int>(static_cast<long double>(::std::chrono::seconds(1) / ::std::chrono::nanoseconds(1)) * datetime_struct.subseconds);
+	time += ::std::chrono::duration_cast<::std::chrono::system_clock::duration>(::std::chrono::nanoseconds(1) * subseconds);
 
 	return time;
 };
 
 void ::uns::datetime::normalize() noexcept {
-	constexpr auto subseconds_in_second = std::chrono::seconds(1) / std::chrono::nanoseconds(1);
+	constexpr auto subseconds_in_second = ::std::chrono::seconds(1) / ::std::chrono::nanoseconds(1);
 	constexpr auto time_fraction_accuracy = 0.01L / static_cast<long double>(subseconds_in_second);
 
 	if(auto is_invalid = (this->subseconds < -time_fraction_accuracy); is_invalid || this->subseconds > 1.0 - time_fraction_accuracy) {
@@ -95,7 +95,7 @@ void ::uns::datetime::normalize() noexcept {
 			case 3:
 			{
 				num_days_in_month_cur = 31;
-				num_days_in_month_prev = (std::chrono::year(this->year).is_leap() ? 29 : 28);
+				num_days_in_month_prev = (::std::chrono::year(this->year).is_leap() ? 29 : 28);
 				break;
 			}
 			case 5:
@@ -118,7 +118,7 @@ void ::uns::datetime::normalize() noexcept {
 			}
 			case 2:
 			{
-				num_days_in_month_cur = (std::chrono::year(this->year).is_leap() ? 29 : 28);
+				num_days_in_month_cur = (::std::chrono::year(this->year).is_leap() ? 29 : 28);
 				num_days_in_month_prev = 31;
 				break;
 			};
@@ -148,28 +148,28 @@ void ::uns::datetime::normalize() noexcept {
 		)
 	);
 
-	const auto ymd = std::chrono::year_month_day{
-		std::chrono::year(this->year),
-		std::chrono::month(this->month),
-		std::chrono::day(this->day_of_month)
+	const auto ymd = ::std::chrono::year_month_day{
+		::std::chrono::year(this->year),
+		::std::chrono::month(this->month),
+		::std::chrono::day(this->day_of_month)
 	};
 
-	const auto weekday = std::chrono::weekday{
-		std::chrono::floor<std::chrono::days>(std::chrono::sys_days(ymd))
+	const auto weekday = ::std::chrono::weekday{
+		::std::chrono::floor<::std::chrono::days>(::std::chrono::sys_days(ymd))
 	};
 
 	this->year_is_leap = ymd.year().is_leap();
 	this->day_of_week = static_cast<int>(weekday.iso_encoding());
-	this->day_of_year = (std::chrono::sys_days(ymd) - std::chrono::sys_days(std::chrono::year(this->year) / 1 / 1)).count() + 1;
+	this->day_of_year = (::std::chrono::sys_days(ymd) - ::std::chrono::sys_days(::std::chrono::year(this->year) / 1 / 1)).count() + 1;
 	this->week_of_year = (this->day_of_year - this->day_of_week) / 7 + 1;
 };
 
 ::uns::datetime::time_point uns::timestamp() noexcept {
-	static const auto ymd = std::chrono::year_month_day{
-		std::chrono::year(1970),
-		std::chrono::month(1),
-		std::chrono::day(1)
+	static const auto ymd = ::std::chrono::year_month_day{
+		::std::chrono::year(1970),
+		::std::chrono::month(1),
+		::std::chrono::day(1)
 	};
 
-	return static_cast<std::chrono::system_clock::time_point>(std::chrono::sys_days(ymd));
+	return static_cast<::std::chrono::system_clock::time_point>(::std::chrono::sys_days(ymd));
 };

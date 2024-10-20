@@ -539,6 +539,7 @@ namespace uns::lua {
 
 		void load(const ::uns::lua::library& library) noexcept;
 		void load(const ::std::u8string& text) noexcept;
+		void load(const ::std::filesystem::path& file) noexcept;
 
 		void call(int results_expected_total) noexcept;
 
@@ -1403,7 +1404,7 @@ namespace uns::lua {
 
 	class library {
 	public:
-		::std::u8string name_space = u8"";
+		::std::u8string module_name = u8"";
 		::std::vector<::uns::lua::lib_entry> api;
 		::std::u8string text = u8"";
 	};
@@ -1445,6 +1446,7 @@ namespace uns::lua {
 
 	::uns::lua::value make_table() noexcept;
 
+
 	namespace dll {
 
 		template<::uns::lua::library(*lualib_returning_function)()>
@@ -1454,39 +1456,9 @@ namespace uns::lua {
 			auto lualib = lualib_returning_function();
 
 			thread.load(lualib);
-			if(thread.error().is()) {
-				auto error_msg = ::uns::lua::value{ thread.error().to_string() };
-				error_msg.push_to(thread);
-				return 1;
-			};
+			thread.call(0);
 
-			if(!lualib.name_space.empty()) {
-				thread.load(
-					u8R"^^(
-						local lualib_module = )^^" + lualib.name_space + u8R"^^(
-					)^^" + lualib.name_space + u8R"^^( = nil
-						return lualib_module
-					)^^"
-				);
-			}
-			else {
-				auto lualib_loading_procedure = ::std::u8string{};
-
-				for(const auto& api_entry : lualib.api) {
-					lualib_loading_procedure += u8"\n" + ::std::u8string{ u8"lualib_module." } + ::uns::string::u8_cast<::std::u8string>(api_entry.name()) + u8" = " + ::uns::string::u8_cast<::std::u8string>(api_entry.name()) + u8";";
-					lualib_loading_procedure += u8"\n" + ::uns::string::u8_cast<::std::u8string>(api_entry.name()) + u8" = nil;";
-				};
-
-				thread.load(
-					u8R"^^(
-						local lualib_module = {})^^" + lualib_loading_procedure + u8R"^^(
-						return lualib_module
-					)^^"
-				);
-			};
-			thread.call(1);
-
-			return 1;
+			return 0;
 		};
 
 	};
