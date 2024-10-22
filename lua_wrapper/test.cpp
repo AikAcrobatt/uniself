@@ -412,7 +412,7 @@ void script_loading_test() {
 int main() {
     ::std::cout << "START\n";
 
-    lib1_test();
+    script_loading_test();
 
     ::std::cout << "FINISH\n";
 };

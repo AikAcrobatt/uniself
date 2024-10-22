@@ -906,7 +906,7 @@ namespace uns::lua::auxiliary {
 		};
 
 		if(
-			auto garbage = lua_gettop((stack)) - function_idx;
+			auto garbage = lua_gettop((stack)) - function_idx + 1;
 			garbage > 0
 		) {
 			lua_pop((stack), -garbage);
@@ -924,7 +924,7 @@ namespace uns::lua::auxiliary {
 		};
 
 		if(
-			auto garbage = lua_gettop((stack)) - function_idx;
+			auto garbage = lua_gettop((stack)) - function_idx + 1;
 			garbage > 0
 		) {
 			lua_pop((stack), -garbage);
@@ -949,7 +949,7 @@ namespace uns::lua::auxiliary {
 		};
 
 		if(
-			auto garbage = lua_gettop((stack)) - function_idx;
+			auto garbage = lua_gettop((stack)) - function_idx + 1;
 			garbage > 0
 		) {
 			lua_pop((stack), -garbage);
@@ -981,7 +981,7 @@ namespace uns::lua::auxiliary {
 		};
 
 		if(
-			auto garbage = lua_gettop((stack)) - function_idx;
+			auto garbage = lua_gettop((stack)) - function_idx + 1;
 			garbage > 0
 		) {
 			lua_pop((stack), -garbage);
@@ -1020,7 +1020,7 @@ namespace uns::lua::auxiliary {
 		};
 
 		if(
-			auto garbage = lua_gettop((stack)) - function_idx;
+			auto garbage = lua_gettop((stack)) - function_idx + 1;
 			garbage > 0
 		) {
 			lua_pop((stack), -garbage);
@@ -1066,77 +1066,13 @@ namespace uns::lua::auxiliary {
 		};
 
 		if(
-			auto garbage = lua_gettop((stack)) - function_idx;
+			auto garbage = lua_gettop((stack)) - function_idx + 1;
 			garbage > 0
 		) {
 			lua_pop((stack), -garbage);
 		};
 
 		return result;
-	};
-
-	[[deprecated]] ::std::pair<::uns::lua::error, ::std::vector<::uns::lua::value>> execute(::uns::lua::alias::lua_state stack, const ::std::string& function_name, const ::std::size_t expected_results, const ::std::vector<::uns::lua::value>& args) noexcept {
-		using result_t = ::std::pair<::uns::lua::error, ::std::vector<::uns::lua::value>>;
-		
-		if(stack == nullptr) {
-			return result_t{
-				::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid },
-				::std::vector<::uns::lua::value>{}
-			};
-		};
-
-		lua_getglobal((stack), function_name.c_str());
-		const auto function_idx = lua_gettop((stack));
-
-		if(!lua_isfunction((stack), function_idx)) {
-			if(!lua_isnil((stack), function_idx)) {
-				return result_t{
-					::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::uncallable },
-					::std::vector<::uns::lua::value>{}
-				};
-			}
-			else {
-				return result_t{
-					::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::not_found },
-					::std::vector<::uns::lua::value>{}
-				};
-			};
-		};
-
-		for(const auto& arg : args) {
-			arg.push_to(stack);
-		};
-
-		if(int lua_retcode = lua_pcall((stack), static_cast<int>(args.size()), static_cast<int>(expected_results), 0); lua_retcode != LUA_OK) {//TODO args.size() must be < than int.max()
-			std::string err_str = "";
-			if(lua_isstring((stack), -1)) {
-				err_str = lua_tostring((stack), -1);
-			};
-
-			if(function_idx - lua_gettop((stack)) < 0) {
-				lua_pop((stack), function_idx - lua_gettop((stack)));
-			};
-
-			return result_t{
-				::uns::lua::error{ ::uns::lua::auxiliary::lua_native_error_to_wrapper(lua_retcode), ::uns::lua::errtype::lua_specific, err_str },
-				::std::vector<::uns::lua::value>{}
-			};
-		};
-
-		auto results = ::std::vector<::uns::lua::value>{};
-		results.reserve(expected_results);
-		for(auto idx = function_idx; idx <= lua_gettop((stack)) && idx <= function_idx + expected_results - 1; ++idx) {
-			results.push_back(::uns::lua::value::make_from(stack, idx));
-		};
-
-		if(function_idx - lua_gettop((stack)) < 0) {
-			lua_pop((stack), function_idx - lua_gettop((stack)));
-		};
-
-		return result_t{
-			::uns::lua::error{ ::uns::lua::errcode::ok, ::uns::lua::errtype::ok },
-			results
-		};
 	};
 
 	::uns::lua::error load(::uns::lua::alias::lua_state stack, const ::std::u8string& text) noexcept {
