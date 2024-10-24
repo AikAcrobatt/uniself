@@ -489,8 +489,8 @@ namespace uns::nn {
 
 			virtual ::std::size_t size() const noexcept = 0;
 			virtual typename input_traitset::input_neuron_type* get(const ::uns::nn::address&) noexcept = 0;
-			virtual iterator_type begin() noexcept = 0;
-			virtual iterator_type end() noexcept = 0;
+			virtual iterator_type begin() const noexcept = 0;
+			virtual iterator_type end() const noexcept = 0;
 		};
 
 
