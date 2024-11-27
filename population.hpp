@@ -349,18 +349,24 @@ namespace uns::population {
 	public:
 		machine(int random_seed, health_type life_decrease_per_iteration) noexcept : units(random_seed), life_decrement(life_decrease_per_iteration) {};
 	protected:
-		void sanitation() {
+		void sanitation() noexcept {
 			OnSanitationStart();
 
 			::std::vector<::std::shared_ptr<unit_type>> living_units;
 			living_units.reserve(units.size());
 
+			bool survive = false;
 			for(auto one_unit : units) {
 				OnSanitationUnitStart(one_unit);
+
+				survive = false;
+
 				if(one_unit.unit().is_alive()) {
 					living_units.push_back(one_unit.unit_ptr());
+					survive = true;
 				};
-				OnSanitationUnitFinish(one_unit);
+
+				OnSanitationUnitFinish(one_unit, survive);
 			};
 
 			units.clear();
@@ -373,16 +379,16 @@ namespace uns::population {
 			OnSanitationFinish();
 		};
 
-		virtual void OnConditionStart() {};
-		virtual void OnConditionUnitStart(order_element_type& elem) {};
-		virtual void OnConditionUnitFinish(order_element_type& elem) {};
-		virtual void OnConditionFinish() {};
-		virtual void OnSanitationStart() {};
-		virtual void OnSanitationUnitStart(order_element_type& elem) {};
-		virtual void OnSanitationUnitFinish(order_element_type& elem) {};
-		virtual void OnSanitationFinish() { units.indexate(); };
+		virtual void OnConditionStart() noexcept {};
+		virtual void OnConditionUnitStart(order_element_type& elem) noexcept {};
+		virtual void OnConditionUnitFinish(order_element_type& elem) noexcept {};
+		virtual void OnConditionFinish() noexcept {};
+		virtual void OnSanitationStart() noexcept {};
+		virtual void OnSanitationUnitStart(order_element_type& elem) noexcept {};
+		virtual void OnSanitationUnitFinish(order_element_type& elem, bool survive) noexcept {};
+		virtual void OnSanitationFinish() noexcept { units.indexate(); };
 	public:
-		void condition() {
+		void condition() noexcept {
 			OnConditionStart();
 
 			auto units_list = std::vector<order_element_type>{};
