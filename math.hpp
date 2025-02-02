@@ -74,23 +74,23 @@ namespace uns::math {
 
 	//max/min funcs
 	template<::uns::math::numeric value_t>
-	value_t maximal(const value_t& arg1, const value_t& arg2) noexcept {
+	constexpr value_t maximal(const value_t& arg1, const value_t& arg2) noexcept {
 		if(arg1 > arg2) return arg1;
 		else return arg2;
 	};
 	template<::uns::math::numeric value_t, typename ... args_t>
-	value_t maximal(const value_t& arg1, const args_t& ...args) noexcept {
+	constexpr value_t maximal(const value_t& arg1, const args_t& ...args) noexcept {
 		if(auto arg_ = static_cast<value_t>(::uns::math::maximal(args...)); arg1 > arg_) return arg1;
 		else return arg_;
 	};
 
 	template<::uns::math::numeric value_t>
-	value_t minimal(const value_t& arg1, const value_t& arg2) noexcept {
+	constexpr value_t minimal(const value_t& arg1, const value_t& arg2) noexcept {
 		if(arg1 < arg2) return arg1;
 		else return arg2;
 	};
 	template<::uns::math::numeric value_t, typename ... args_t>
-	value_t minimal(const value_t& arg1, const args_t& ...args) noexcept {
+	constexpr value_t minimal(const value_t& arg1, const args_t& ...args) noexcept {
 		if(auto arg_ = static_cast<value_t>(::uns::math::minimal(args...)); arg1 < arg_) return arg1;
 		else return arg_;
 	};
