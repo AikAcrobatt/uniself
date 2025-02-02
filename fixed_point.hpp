@@ -65,11 +65,14 @@ namespace uns {
 namespace uns::fixed_point {
 
 	template<int8_t unit_value, ::std::signed_integral base_type_t>
+		requires (!::std::is_same<int64_t, base_type_t>::value)//TODO instead of int64_t it is supposed to be a signed integer type with maximal size supported with current platform
 	class q1 {
 	public:
 		using base_type = base_type_t;
 		using represent_type = float;
 		using unit_value_type = int8_t;
+	protected:
+		using widest_type = int64_t;//TODO instead of int64_t it is supposed to be a signed integer type with maximal size supported with current platform
 	protected:
 		base_type m_frac = 0;
 	protected:
@@ -84,21 +87,28 @@ namespace uns::fixed_point {
 		};
 	public:
 		template<unit_value_type arg_unit_value>
-			requires (unit_value - arg_unit_value >= ::std::numeric_limits<unit_value_type>::min())//TODO this may never compile-throw on some platforms
-		::uns::fixed_point::q1<::uns::math::maximal<unit_value, arg_unit_value>, base_type> accurate_add(
+			requires (
+				static_cast<widest_type>(unit_value) - static_cast<widest_type>(arg_unit_value)
+					>= static_cast<widest_type>(::std::numeric_limits<unit_value_type>::min())
+			)
+			&& (
+				static_cast<widest_type>(arg_unit_value) - static_cast<widest_type>(unit_value)
+					>= static_cast<widest_type>(::std::numeric_limits<unit_value_type>::min())
+			)
+		::uns::fixed_point::q1<::uns::math::maximal<unit_value_type>(unit_value, arg_unit_value), base_type> accurate_add(
 			const ::uns::fixed_point::q1<arg_unit_value, base_type>& arg
 		) const noexcept {
-			if constexpr((unit_value - arg_unit_value) > value_bdigits()) {
+			if constexpr(static_cast<widest_type>(unit_value) - static_cast<widest_type>(arg_unit_value) > static_cast<widest_type>(value_bdigits())) {
 				return *this;
 			}
-			else if constexpr((arg_unit_value - unit_value) > value_bdigits()) {
+			else if constexpr((static_cast<widest_type>(arg_unit_value) - static_cast<widest_type>(unit_value)) > static_cast<widest_type>(value_bdigits())) {
 				return arg;
 			}
-			else if constexpr(unit_value >= arg_unit_value) {
-				return { m_frac + (arg.m_frac >> arg_unit_value + value_bdigits() - unit_value) };
+			else if constexpr(static_cast<widest_type>(unit_value) >= static_cast<widest_type>(arg_unit_value)) {
+				return { m_frac + (arg.m_frac >> (static_cast<widest_type>(arg_unit_value) + static_cast<widest_type>(value_bdigits()) - static_cast<widest_type>(unit_value))) };
 			}
-			else if constexpr(arg_unit_value > unit_value) {
-				return { arg.m_frac + (m_frac >> unit_value + value_bdigits() - arg_unit_value) };
+			else if constexpr(static_cast<widest_type>(arg_unit_value) > static_cast<widest_type>(unit_value)) {
+				return { arg.m_frac + (m_frac >> (static_cast<widest_type>(unit_value) + static_cast<widest_type>(value_bdigits()) - static_cast<widest_type>(arg_unit_value))) };
 			};
 		};
 	};
