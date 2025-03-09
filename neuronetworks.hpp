@@ -133,6 +133,23 @@ namespace uns::nn {
 
 	namespace description {
 
+
+		class collector {
+		public:
+			using hashsum_type = uint64_t;
+
+			hashsum_type hashsum = 0;
+		};
+
+
+		class activator {
+		public:
+			using hashsum_type = uint64_t;
+
+			hashsum_type hashsum = 0;
+		};
+
+
 		template<typename signal_traitset_t>
 			requires ::std::derived_from<
 				signal_traitset_t,
@@ -146,9 +163,9 @@ namespace uns::nn {
 		public:
 			using signal_traitset = signal_traitset_t;
 
-			::std::u8string activator = u8"";
+			::uns::nn::description::activator activator;
 			signal_traitset::signal_type r = typename signal_traitset::signal_type{ 0 };
-			::std::u8string collector = u8"";
+			::uns::nn::description::collector collector;
 			signal_traitset::signal_type c = typename signal_traitset::signal_type{ 0 };
 			::std::vector<::std::pair<::uns::nn::address, typename signal_traitset::weight_type>> links;
 			::std::vector<typename signal_traitset::params_type> params;
@@ -340,7 +357,7 @@ namespace uns::nn {
 			const typename signal_traitset::signal_type& value() const noexcept { return m_value; };
 			typename signal_traitset::signal_type& value() noexcept { return m_value; };
 
-			virtual ::std::u8string type() const noexcept { return u8"Zero"; };
+			virtual ::uns::nn::description::activator type() const noexcept { return ::uns::nn::description::activator{}; };
 
 			virtual typename signal_traitset::signal_type operator()(typename signal_traitset::signal_type, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) noexcept { return m_value = typename signal_traitset::signal_type{ 0 }; };
 
@@ -354,7 +371,7 @@ namespace uns::nn {
 			public:
 				using signal_traitset = signal_traitset_t;
 
-				virtual ::std::unique_ptr<::uns::nn::general::activator<signal_traitset_t>> operator()(const ::std::u8string_view&) const = 0;
+				virtual ::std::unique_ptr<::uns::nn::general::activator<signal_traitset_t>> operator()(const ::uns::nn::description::activator&) const = 0;
 			};
 		};
 
@@ -405,7 +422,7 @@ namespace uns::nn {
 			const typename signal_traitset::signal_type& value() const noexcept { return m_value; };
 			typename signal_traitset::signal_type& value() noexcept { return m_value; };
 
-			virtual ::std::u8string type() const noexcept { return u8"Zero"; };
+			virtual ::uns::nn::description::collector type() const noexcept { return ::uns::nn::description::collector{}; };
 
 			virtual typename signal_traitset::signal_type operator()(const ::std::vector<::std::pair<::uns::nn::general::neuron_view<signal_traitset>*, typename signal_traitset::weight_type>>&, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) noexcept { return m_value = typename signal_traitset::signal_type{ 0 }; };
 
@@ -421,7 +438,7 @@ namespace uns::nn {
 			public:
 				using signal_traitset = signal_traitset_t;
 
-				virtual ::std::unique_ptr<::uns::nn::general::collector<signal_traitset>> operator()(const ::std::u8string_view&) const = 0;
+				virtual ::std::unique_ptr<::uns::nn::general::collector<signal_traitset>> operator()(const ::uns::nn::description::collector&) const = 0;
 			};
 		};
 
