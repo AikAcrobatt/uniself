@@ -217,6 +217,8 @@ namespace uns::math {
 		auto size1 = m.size1();
 		auto size2 = m.size2();
 
+		if(size1 == new_size1 && size2 == new_size2) return;
+
 		m.resize(new_size1, new_size2, true);
 		for(i1 = size1; i1 < m.size1(); i1++) {
 			for(i2 = 0; i2 < size2 && i2 < m.size2(); i2++) {
@@ -447,7 +449,7 @@ namespace uns::math {
 	};
 
 
-	//copying of dim1 units within the same matrix
+	//returns a transposed copy of the original matrix
 	template<::uns::math::ublas_matrix matrix_t>
 	matrix_t trans(
 		matrix_t& m
