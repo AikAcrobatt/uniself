@@ -6,48 +6,73 @@
 #ifndef UNS_LIB_VARIADIC_TREE
 #define UNS_LIB_VARIADIC_TREE "variadic_tree.hpp"
 
-namespace uns {
 
-	template<typename contained_t>
-	class variadic_tree {
-	public:
-		using value_type = contained_t;
-	protected:
-		class adjacency_list_node {
+namespace uns::variadic_tree {
+
+	namespace pseudo {
+
+		class value_type {};
+
+
+		class iterator;
+		class subnodes;
+
+
+		class tree {
 		public:
-			using reference_type = ::std::size_t;
+			iterator begin();
+			iterator end();
+			::std::size_t size();
 		public:
-			::std::optional<reference_type> parent;
-			::std::vector<reference_type> subnodes;
+			subnodes roots();											//returns a proxy object representing a set of roots of the forest
+			iterator roots(::std::size_t idx);							//returns an iterator pointing to #idx root, or end() if there is no such root
+		public:
+			void swap(iterator SubTree1, iterator SubTree2);			//swaps two trees
+			void shrink_to_fit();
 		};
-	protected:
-		::std::vector<value_type> m_values;
-		::std::vector<adjacency_list_node> m_adjacency_list;
-		::std::vector<typename adjacency_list_node::reference_type> m_roots;
-	public:
-	protected:
-		typename adjacency_list_node::reference_type access(const adjacency_list_node& current_node, ::std::size_t subnode_idx, ::std::size_t ... subnodes_indexes) const noexcept {
-			return access(m_adjacency_list[current_node.subnodes[subnode_idx]], subnodes_indexes);
+
+
+		class iterator {
+		public:
+			subnodes subnodes();										//returns a proxy object representing a set of subnodes of the current node
+			iterator subnodes(::std::size_t idx);						//returns an iterator pointing to #idx subnode, or end() if there is no such subnode
+		public:
+			value_type operator*();
+			value_type operator->();
+			iterator operator++();
 		};
-		typename adjacency_list_node::reference_type access(const adjacency_list_node& current_node, ::std::size_t leaf_idx) const noexcept {
-			return current_node.subnodes[leaf_idx];
+
+
+		class subnodes {
+		public:
+			iterator begin();
+			iterator end();
+			::std::size_t size();
+		public:
+			void push_back(iterator SomeTree);							//copies the SomeTree and makes it the last subnode
+			void push_back(value_type SomeValue);						//creates a new subnode and puts there a SomeValue
+			bool insert(iterator InsertBeforeThis, iterator SomeTree);	//inserts SomeTree in the position before InsertBeforeThis in the same current subnodes set
+			bool remove(iterator SomeTree);								//removes SomeTree from subnodes if it is a subnode (and returns true), else do nothing and returns false
 		};
-		typename adjacency_list_node::reference_type access(::std::size_t root_idx, ::std::size_t ... subnodes_indexes) const noexcept {
-			return access(m_adjacency_list[m_roots[root_idx]], subnodes_indexes);
-		};
-		typename adjacency_list_node::reference_type access(::std::size_t root_idx) const noexcept {
-			return m_roots[root_idx];
-		};
-	public:
-		const value_type& operator() (::std::size_t ... indexes) const noexcept {
-			return m_values[access(indexes)];
-		};
-		value_type& operator() (::std::size_t ... indexes) noexcept {
-			return m_values[access(indexes)];
-		};
-	public:
 	};
 
+
+	/*
+	EXAMPLE:
+
+	auto tree = ::uns::variadic_tree::tree{};
+
+	tree.roots().push_back(value_type{ ... });
+	tree.roots(0).subnodes().push_back(value_type{ ... });
+
+	static_assert(tree.size() == 2);
+	static_assert(tree.roots().size() == 1);
+	static_assert(tree.roots(0).subnodes().size() == 1);
+
+	for(auto tree_iterator = tree.begin(); tree_iterator != tree.end(); ++tree_iterator) {
+		::std::cout << *tree_iterator << ::std::endl;
+	};
+	*/
 };
 
 #endif
