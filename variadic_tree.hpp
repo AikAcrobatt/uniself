@@ -25,25 +25,24 @@ namespace uns::variadic_tree {
 		::std::size_t size() const noexcept;
 		void resize(::std::size_t NewSize) noexcept;
 	public:
-
+		::std::size_t size(const ::uns::variadic_tree::index::reference& Ref) const noexcept;
+		::uns::variadic_tree::index::reference parent(const ::uns::variadic_tree::index::reference& Ref) const noexcept;
 	};
 
 
+	class const_iterator;
 	class iterator;
-	class subnodes;
 
 
-	class const_iterator {
+	class const_subnodes {
+		friend const_iterator;
 	protected:
 		const ::std::vector<value_type>& m_values;
 		const ::uns::variadic_tree::index& m_index;
 		const ::std::size_t& m_size;
 		::uns::variadic_tree::index::reference m_ref;
 	public:
-		const_iterator(
-			const ::uns::variadic_tree::iterator& Iterator
-		) noexcept;
-		const_iterator(
+		inline const_subnodes(
 			const ::uns::variadic_tree::index& Index,
 			const ::std::vector<value_type>& Values,
 			const ::std::size_t& TreeSize,
@@ -54,36 +53,38 @@ namespace uns::variadic_tree {
 			m_size(TreeSize),
 			m_ref(Reference)
 		{};
+	protected:
+		inline const_subnodes(const ::uns::variadic_tree::const_subnodes& Obj) noexcept :
+			m_index(Obj.m_index),
+			m_values(Obj.m_values),
+			m_size(Obj.m_size),
+			m_ref(Obj.m_ref) {};
+		inline::uns::variadic_tree::const_subnodes& operator=(const ::uns::variadic_tree::const_subnodes& Obj) = delete;
+		inline const_subnodes(::uns::variadic_tree::const_subnodes&& Obj) noexcept :
+			m_index(Obj.m_index),
+			m_values(Obj.m_values),
+			m_size(Obj.m_size),
+			m_ref(::std::move(Obj.m_ref)) {};
+		inline::uns::variadic_tree::const_subnodes& operator=(::uns::variadic_tree::const_subnodes&& Obj) = delete;
 	public:
-		::uns::variadic_tree::const_iterator cbegin() const noexcept;
-		::uns::variadic_tree::const_iterator cend() const noexcept;
+		~const_subnodes() noexcept = default;
 	public:
-		const ::uns::variadic_tree::subnodes& subnodes() const noexcept {						//returns a proxy object representing a set of subnodes of the current node
-			return ::uns::variadic_tree::subnodes{
-				m_index,
-				m_values,
-				m_size,
-				m_ref
-			};
-		};
-		::uns::variadic_tree::const_iterator subnodes(::std::size_t idx) const noexcept;		//returns an iterator pointing to #idx subnode, or end() if there is no such subnode
-		::uns::variadic_tree::const_iterator parent() const noexcept { return cend(); };		//returns an iterator to the parent node. If this is a root returns end()
-	public:
-		const value_type& operator*() const noexcept;
-		const value_type& operator->() const noexcept;
-		::uns::variadic_tree::const_iterator& operator++() noexcept;
+		inline ::std::size_t size() const noexcept { return m_index.size(m_ref); };
+	protected:
+		inline ::uns::variadic_tree::index::reference parent() const noexcept { return m_index.parent(m_ref); };
 	};
 
 
-	class iterator {
+	class subnodes {
 		friend const_iterator;
+		friend iterator;
 	protected:
 		::std::vector<value_type>& m_values;
 		::uns::variadic_tree::index& m_index;
 		::std::size_t& m_size;
 		::uns::variadic_tree::index::reference m_ref;
 	public:
-		iterator(
+		inline subnodes(
 			::uns::variadic_tree::index& Index,
 			::std::vector<value_type>& Values,
 			::std::size_t& TreeSize,
@@ -94,16 +95,147 @@ namespace uns::variadic_tree {
 			m_size(TreeSize),
 			m_ref(Reference)
 		{};
+	protected:
+		inline subnodes(const ::uns::variadic_tree::subnodes& Obj) noexcept :
+			m_index(Obj.m_index),
+			m_values(Obj.m_values),
+			m_size(Obj.m_size),
+			m_ref(Obj.m_ref)
+		{};
+		inline::uns::variadic_tree::subnodes& operator=(const ::uns::variadic_tree::subnodes& Obj) = delete;
+		inline subnodes(::uns::variadic_tree::subnodes&& Obj) noexcept :
+			m_index(Obj.m_index),
+			m_values(Obj.m_values),
+			m_size(Obj.m_size),
+			m_ref(::std::move(Obj.m_ref))
+		{};
+		inline::uns::variadic_tree::subnodes& operator=(::uns::variadic_tree::subnodes&& Obj) = delete;
+	public:
+		~subnodes() noexcept = default;
+	public:
+		inline ::std::size_t size() const noexcept { return m_index.size(m_ref); };
+	protected:
+		::uns::variadic_tree::index::reference parent() const noexcept { return m_index.parent(m_ref); };
+	public:
+		void push_back(::uns::variadic_tree::const_iterator SomeTree) noexcept;					//copies the SomeTree and makes it the last subnode
+		void push_back(const value_type& SomeValue) noexcept;									//creates a new subnode and puts there a SomeValue
+		bool insert(																			//inserts SomeTree in the position before InsertBeforeThis in the same current subnodes set
+			::uns::variadic_tree::const_iterator InsertBeforeThis,
+			::uns::variadic_tree::const_iterator SomeTree
+		) noexcept;
+		bool remove(::uns::variadic_tree::const_iterator SomeTree) noexcept;					//removes SomeTree from subnodes if it is a subnode (and returns true), else do nothing and returns false
+	};
+
+
+	class const_iterator {
+	public:
+		::uns::variadic_tree::const_subnodes subnodes;
+	public:
+		const_iterator(
+			const ::uns::variadic_tree::iterator& Iterator
+		) noexcept;
+		inline const_iterator(
+			const ::uns::variadic_tree::index& Index,
+			const ::std::vector<value_type>& Values,
+			const ::std::size_t& TreeSize,
+			::uns::variadic_tree::index::reference Reference
+		) noexcept :
+			subnodes(
+				Index,
+				Values,
+				TreeSize,
+				Reference
+			)
+		{};
+		inline const_iterator(const ::uns::variadic_tree::const_iterator& Obj) noexcept :
+			subnodes(Obj.subnodes)
+		{};
+		inline ::uns::variadic_tree::const_iterator& operator=(const ::uns::variadic_tree::const_iterator& Obj) noexcept {
+			if(this == &Obj) return *this;
+			if(&subnodes.m_index != &Obj.subnodes.m_index) return *this;
+			if(&subnodes.m_values != &Obj.subnodes.m_values) return *this;
+			if(&subnodes.m_size != &Obj.subnodes.m_size) return *this;
+
+			subnodes.m_ref = Obj.subnodes.m_ref;
+
+			return *this;
+		};
+		inline const_iterator(const ::uns::variadic_tree::const_iterator&& Obj) noexcept :
+			subnodes(::std::move(Obj.subnodes)) {};
+		inline ::uns::variadic_tree::const_iterator& operator=(::uns::variadic_tree::const_iterator&& Obj) noexcept {
+			if(this == &Obj) return *this;
+			if(&subnodes.m_index != &Obj.subnodes.m_index) return *this;
+			if(&subnodes.m_values != &Obj.subnodes.m_values) return *this;
+			if(&subnodes.m_size != &Obj.subnodes.m_size) return *this;
+
+			subnodes.m_ref = ::std::move(Obj.subnodes.m_ref);
+
+			return *this;
+		};
+		~const_iterator() noexcept = default;
+	public:
+		::uns::variadic_tree::const_iterator cbegin() const noexcept;
+		::uns::variadic_tree::const_iterator cend() const noexcept;
+	public:
+		::uns::variadic_tree::const_iterator parent() const noexcept { return cend(); };		//returns an iterator to the parent node. If this is a root returns end()
+	public:
+		const value_type& operator*() const noexcept;
+		const value_type& operator->() const noexcept;
+		::uns::variadic_tree::const_iterator& operator++() noexcept;
+	};
+
+
+	class iterator {
+		friend const_iterator;
+	public:
+		::uns::variadic_tree::subnodes subnodes;
+	public:
+		inline iterator(
+			::uns::variadic_tree::index& Index,
+			::std::vector<value_type>& Values,
+			::std::size_t& TreeSize,
+			::uns::variadic_tree::index::reference Reference
+		) noexcept :
+			subnodes(
+				Index,
+				Values,
+				TreeSize,
+				Reference
+			)
+		{};
+		inline iterator(const ::uns::variadic_tree::iterator& Obj) noexcept :
+			subnodes(Obj.subnodes)
+		{};
+		inline ::uns::variadic_tree::iterator& operator=(const ::uns::variadic_tree::iterator& Obj) noexcept {
+			if(this == &Obj) return *this;
+			if(&subnodes.m_index != &Obj.subnodes.m_index) return *this;
+			if(&subnodes.m_values != &Obj.subnodes.m_values) return *this;
+			if(&subnodes.m_size != &Obj.subnodes.m_size) return *this;
+
+			subnodes.m_ref = Obj.subnodes.m_ref;
+
+			return *this;
+		};
+		inline iterator(const ::uns::variadic_tree::iterator&& Obj) noexcept :
+			subnodes(::std::move(Obj.subnodes))
+		{};
+		inline ::uns::variadic_tree::iterator& operator=(::uns::variadic_tree::iterator&& Obj) noexcept {
+			if(this == &Obj) return *this;
+			if(&subnodes.m_index != &Obj.subnodes.m_index) return *this;
+			if(&subnodes.m_values != &Obj.subnodes.m_values) return *this;
+			if(&subnodes.m_size != &Obj.subnodes.m_size) return *this;
+
+			subnodes.m_ref = ::std::move(Obj.subnodes.m_ref);
+
+			return *this;
+		};
+		~iterator() noexcept = default;
 	public:
 		::uns::variadic_tree::const_iterator cbegin() const noexcept;
 		::uns::variadic_tree::const_iterator cend() const noexcept;
 		::uns::variadic_tree::iterator begin() noexcept;
 		::uns::variadic_tree::iterator end() noexcept;
 	public:
-		const ::uns::variadic_tree::subnodes& subnodes() const noexcept;						//returns a proxy object representing a set of subnodes of the current node
-		::uns::variadic_tree::subnodes& subnodes() noexcept;									//returns a proxy object representing a set of subnodes of the current node
-		::uns::variadic_tree::const_iterator subnodes(::std::size_t idx) const noexcept;		//returns an iterator pointing to #idx subnode, or end() if there is no such subnode
-		::uns::variadic_tree::iterator subnodes(::std::size_t idx) noexcept;					//returns an iterator pointing to #idx subnode, or end() if there is no such subnode
 		::uns::variadic_tree::const_iterator parent() const noexcept { return cend(); };		//returns an iterator to the parent node. If this is a root returns end()
 		::uns::variadic_tree::iterator parent() noexcept { return end(); };						//returns an iterator to the parent node. If this is a root returns end()
 	public:
@@ -115,36 +247,16 @@ namespace uns::variadic_tree {
 	};
 
 
-	class subnodes {
-	protected:
-		::std::vector<value_type>& m_values;
-		::uns::variadic_tree::index& m_index;
-		::std::size_t& m_size;
-		::uns::variadic_tree::index::reference m_ref;
-	public:
+	::uns::variadic_tree::const_iterator::const_iterator(
+		const ::uns::variadic_tree::iterator& Iterator
+	) noexcept :
 		subnodes(
-			::uns::variadic_tree::index& Index,
-			::std::vector<value_type>& Values,
-			::std::size_t& TreeSize,
-			::uns::variadic_tree::index::reference Reference
-		) noexcept :
-			m_index(Index),
-			m_values(Values),
-			m_size(TreeSize),
-			m_ref(Reference)
-		{};
-	public:
-		::std::size_t size() const noexcept;
-	public:
-		void push_back(::uns::variadic_tree::const_iterator SomeTree) noexcept;					//copies the SomeTree and makes it the last subnode
-		void push_back(const value_type& SomeValue) noexcept;									//creates a new subnode and puts there a SomeValue
-		bool insert(
-			::uns::variadic_tree::const_iterator InsertBeforeThis,
-			::uns::variadic_tree::const_iterator SomeTree
-		) noexcept;																				//inserts SomeTree in the position before InsertBeforeThis in the same current subnodes set
-		bool remove(::uns::variadic_tree::const_iterator SomeTree) noexcept;					//removes SomeTree from subnodes if it is a subnode (and returns true), else do nothing and returns false
-	};
-
+			Iterator.subnodes.m_index,
+			Iterator.subnodes.m_values,
+			Iterator.subnodes.m_size,
+			Iterator.subnodes.m_ref
+		)
+	{};
 
 	class tree {
 	protected:
@@ -213,12 +325,12 @@ namespace uns::variadic_tree {
 
 	auto tree = ::uns::variadic_tree::tree{};
 
-	tree.roots().push_back(value_type{ ... });
-	tree.roots(0).subnodes().push_back(value_type{ ... });
+	tree.set_root(value_type{ ... });
+	auto root = tree.root();
+	root.subnodes.push_back(value_type{ ... });
 
 	static_assert(tree.size() == 2);
-	static_assert(tree.roots().size() == 1);
-	static_assert(tree.roots(0).subnodes().size() == 1);
+	static_assert(root.subnodes.size() == 1);
 
 	for(auto tree_iterator = tree.begin(); tree_iterator != tree.end(); ++tree_iterator) {
 		::std::cout << *tree_iterator << ::std::endl;
