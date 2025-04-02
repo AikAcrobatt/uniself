@@ -24,6 +24,7 @@
     <ProjectGuid>{7b8072b4-e077-4982-b77c-5a91d6802638}</ProjectGuid>
     <RootNamespace>variadictree</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>flex_tree</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
