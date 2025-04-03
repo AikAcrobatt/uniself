@@ -16,7 +16,11 @@ namespace uns::trees::auxiliary::flex {
 	public:
 		class reference {
 		public:
+			reference() noexcept = default;
 			explicit reference(::std::size_t Idx) noexcept;
+		public:
+			bool operator==(const reference&) const noexcept;
+			bool operator!=(const reference&) const noexcept;
 		};
 	protected:
 	public:
@@ -58,7 +62,7 @@ namespace uns::trees::auxiliary::flex {
 			const index::reference& SubTree1,
 			const index::reference& SubTree2
 		) noexcept;
-		void shrink_to_fit() noexcept;
+		void gc() noexcept;
 	};
 
 
@@ -68,22 +72,34 @@ namespace uns::trees::auxiliary::flex {
 
 	class proxy {
 	public:
-		virtual ::uns::trees::auxiliary::flex::index& get_index() const noexcept = 0;
+		virtual bool init(
+			::uns::trees::auxiliary::flex::index*,
+			::uns::trees::auxiliary::flex::value_storage_type<value_type>*,
+			::uns::trees::auxiliary::flex::index::reference
+		) noexcept = 0;
+		virtual bool init(
+			proxy&,
+			::uns::trees::auxiliary::flex::index*,
+			::uns::trees::auxiliary::flex::value_storage_type<value_type>*,
+			::uns::trees::auxiliary::flex::index::reference
+		) const noexcept = 0;
+	public:
+		virtual ::uns::trees::auxiliary::flex::index* get_index() const noexcept = 0;
 	protected:
-		virtual ::uns::trees::auxiliary::flex::index& get_index(
+		virtual ::uns::trees::auxiliary::flex::index* get_index(
 			const proxy&
 		) const noexcept = 0;
 	public:
-		virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>& get_storage() const noexcept = 0;
+		virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>* get_storage() const noexcept = 0;
 	protected:
-		virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>& get_storage(
+		virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>* get_storage(
 			const proxy&
 		) const noexcept = 0;
 	public:
-		virtual const ::uns::trees::auxiliary::flex::index::reference& get_ref() const noexcept = 0;
+		virtual ::uns::trees::auxiliary::flex::index::reference get_ref() const noexcept = 0;
 		virtual void set_ref(const ::uns::trees::auxiliary::flex::index::reference&) noexcept = 0;
 	protected:
-		virtual const ::uns::trees::auxiliary::flex::index::reference& get_ref(
+		virtual ::uns::trees::auxiliary::flex::index::reference get_ref(
 			const proxy&
 		) const noexcept = 0;
 		virtual void set_ref(
@@ -122,16 +138,11 @@ namespace uns::trees {
 	public:
 		class const_subnodes: public ::uns::trees::auxiliary::flex::proxy {
 		protected:
-			::uns::trees::auxiliary::flex::index& m_index;
-			::std::vector<value_type>& m_storage;
+			::uns::trees::auxiliary::flex::index* m_index = nullptr;
+			::std::vector<value_type>* m_storage = nullptr;
 			::uns::trees::auxiliary::flex::index::reference m_ref;
 		public:
-			const_subnodes() = delete;
-			inline const_subnodes(const ::uns::trees::auxiliary::flex::proxy& Accessor) noexcept :
-				m_index(Accessor.get_index()),
-				m_storage(Accessor.get_storage()),
-				m_ref(Accessor.get_ref())
-			{};
+			const_subnodes() noexcept = default;
 		protected:
 			inline const_subnodes(const ::uns::trees::flex::const_subnodes& Obj) noexcept :
 				m_index(Obj.m_index),
@@ -164,60 +175,77 @@ namespace uns::trees {
 		public:
 			~const_subnodes() noexcept = default;
 		protected:
-			virtual ::uns::trees::auxiliary::flex::index& get_index() const noexcept override {
+			virtual bool init(
+				::uns::trees::auxiliary::flex::index* Index,
+				::uns::trees::auxiliary::flex::value_storage_type<value_type>* Storage,
+				::uns::trees::auxiliary::flex::index::reference Reference
+			) noexcept {
+				if(m_index != nullptr && m_storage != nullptr) return false;
+
+				m_index = Index;
+				m_storage = Storage;
+				m_ref = Reference;
+
+				return true;
+			};
+			virtual bool init(
+				proxy& Proxy,
+				::uns::trees::auxiliary::flex::index* Index,
+				::uns::trees::auxiliary::flex::value_storage_type<value_type>* Storage,
+				::uns::trees::auxiliary::flex::index::reference Reference
+			) const noexcept {
+				return Proxy.init(Index, Storage, Reference);
+			};
+		protected:
+			virtual ::uns::trees::auxiliary::flex::index* get_index() const noexcept override {
 				return m_index;
 			};
-			virtual ::uns::trees::auxiliary::flex::index& get_index(
-				const ::uns::trees::auxiliary::flex::proxy& Accessor
+			virtual ::uns::trees::auxiliary::flex::index* get_index(
+				const ::uns::trees::auxiliary::flex::proxy& Proxy
 			) const noexcept override {
-				return Accessor.get_index();
+				return Proxy.get_index();
 			};
 		protected:
-			virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>& get_storage() const noexcept override {
+			virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>* get_storage() const noexcept override {
 				return m_storage;
 			};
-			virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>& get_storage(
-				const ::uns::trees::auxiliary::flex::proxy& Accessor
+			virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>* get_storage(
+				const ::uns::trees::auxiliary::flex::proxy& Proxy
 			) const noexcept override {
-				return Accessor.get_storage();
+				return Proxy.get_storage();
 			};
 		protected:
-			virtual const ::uns::trees::auxiliary::flex::index::reference& get_ref() const noexcept override {
+			virtual ::uns::trees::auxiliary::flex::index::reference get_ref() const noexcept override {
 				return m_ref;
 			};
 			virtual void set_ref(const ::uns::trees::auxiliary::flex::index::reference& Reference) noexcept override {
 				m_ref = Reference;
 			};
-			virtual const ::uns::trees::auxiliary::flex::index::reference& get_ref(
-				const ::uns::trees::auxiliary::flex::proxy& Accessor
+			virtual ::uns::trees::auxiliary::flex::index::reference get_ref(
+				const ::uns::trees::auxiliary::flex::proxy& Proxy
 			) const noexcept override {
-				return Accessor.get_ref();
+				return Proxy.get_ref();
 			};
 			virtual void set_ref(
-				proxy& Accessor,
+				proxy& Proxy,
 				const ::uns::trees::auxiliary::flex::index::reference& Reference
 			) const noexcept override {
-				Accessor.set_ref(Reference);
+				Proxy.set_ref(Reference);
 			};
 		public:
-			inline ::std::size_t size() const noexcept { return m_index.get_subnodes_total(m_ref); };
+			inline ::std::size_t size() const noexcept { return m_index->get_subnodes_total(m_ref); };
 			inline ::uns::trees::flex::const_iterator operator[](::std::size_t SubnodeIdx) const noexcept;
 		protected:
-			inline ::uns::trees::auxiliary::flex::index::reference parent() const noexcept { return m_index.get_parent(m_ref); };
+			inline ::uns::trees::auxiliary::flex::index::reference parent() const noexcept { return m_index->get_parent(m_ref); };
 		};
 	public:
 		class subnodes: public ::uns::trees::auxiliary::flex::proxy {
 		protected:
-			::uns::trees::auxiliary::flex::index& m_index;
-			::std::vector<value_type>& m_storage;
+			::uns::trees::auxiliary::flex::index* m_index = nullptr;
+			::std::vector<value_type>* m_storage = nullptr;
 			::uns::trees::auxiliary::flex::index::reference m_ref;
 		public:
-			subnodes() = delete;
-			inline subnodes(const ::uns::trees::auxiliary::flex::proxy& Accessor) noexcept :
-				m_index(Accessor.get_index()),
-				m_storage(Accessor.get_storage()),
-				m_ref(Accessor.get_ref())
-			{};
+			subnodes() noexcept = default;
 		protected:
 			inline subnodes(const ::uns::trees::flex::subnodes& Obj) noexcept :
 				m_index(Obj.m_index),
@@ -249,47 +277,69 @@ namespace uns::trees {
 		public:
 			~subnodes() noexcept = default;
 		protected:
-			virtual ::uns::trees::auxiliary::flex::index& get_index() const noexcept override {
+			virtual bool init(
+				::uns::trees::auxiliary::flex::index* Index,
+				::uns::trees::auxiliary::flex::value_storage_type<value_type>* Storage,
+				::uns::trees::auxiliary::flex::index::reference Reference
+			) noexcept {
+				if(m_index != nullptr && m_storage != nullptr) return false;
+
+				m_index = Index;
+				m_storage = Storage;
+				m_ref = Reference;
+
+				return true;
+			};
+			virtual bool init(
+				proxy& Proxy,
+				::uns::trees::auxiliary::flex::index* Index,
+				::uns::trees::auxiliary::flex::value_storage_type<value_type>* Storage,
+				::uns::trees::auxiliary::flex::index::reference Reference
+			) const noexcept {
+				return Proxy.init(Index, Storage, Reference);
+			};
+		protected:
+			virtual ::uns::trees::auxiliary::flex::index* get_index() const noexcept override {
 				return m_index;
 			};
-			virtual ::uns::trees::auxiliary::flex::index& get_index(
-				const ::uns::trees::auxiliary::flex::proxy& Accessor
+			virtual ::uns::trees::auxiliary::flex::index* get_index(
+				const ::uns::trees::auxiliary::flex::proxy& Proxy
 			) const noexcept override {
-				return Accessor.get_index();
+				return Proxy.get_index();
 			};
 		protected:
-			virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>& get_storage() const noexcept override {
+			virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>* get_storage() const noexcept override {
 				return m_storage;
 			};
-			virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>& get_storage(
-				const ::uns::trees::auxiliary::flex::proxy& Accessor
+			virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>* get_storage(
+				const ::uns::trees::auxiliary::flex::proxy& Proxy
 			) const noexcept override {
-				return Accessor.get_storage();
+				return Proxy.get_storage();
 			};
 		protected:
-			virtual const ::uns::trees::auxiliary::flex::index::reference& get_ref() const noexcept override {
+			virtual ::uns::trees::auxiliary::flex::index::reference get_ref() const noexcept override {
 				return m_ref;
 			};
 			virtual void set_ref(const ::uns::trees::auxiliary::flex::index::reference& Reference) noexcept override {
 				m_ref = Reference;
 			};
-			virtual const ::uns::trees::auxiliary::flex::index::reference& get_ref(
-				const ::uns::trees::auxiliary::flex::proxy& Accessor
+			virtual ::uns::trees::auxiliary::flex::index::reference get_ref(
+				const ::uns::trees::auxiliary::flex::proxy& Proxy
 			) const noexcept override {
-				return Accessor.get_ref();
+				return Proxy.get_ref();
 			};
 			virtual void set_ref(
-				proxy& Accessor,
+				proxy& Proxy,
 				const ::uns::trees::auxiliary::flex::index::reference& Reference
 			) const noexcept override {
-				Accessor.set_ref(Reference);
+				Proxy.set_ref(Reference);
 			};
 		public:
-			inline ::std::size_t size() const noexcept { return m_index.get_subnodes_total(m_ref); };
+			inline ::std::size_t size() const noexcept { return m_index->get_subnodes_total(m_ref); };
 			inline ::uns::trees::flex::const_iterator operator[](::std::size_t SubnodeIdx) const noexcept;
 			inline ::uns::trees::flex::iterator operator[](::std::size_t SubnodeIdx) noexcept;
 		protected:
-			inline ::uns::trees::auxiliary::flex::index::reference parent() const noexcept { return m_index.get_parent(m_ref); };
+			inline ::uns::trees::auxiliary::flex::index::reference parent() const noexcept { return m_index->get_parent(m_ref); };
 		public:
 			inline void push_back(::uns::trees::flex::const_iterator SomeTree) noexcept;				//copies SomeTree and makes it the last subnode
 			inline void push_back(const value_type& SomeValue) noexcept;								//creates a new subnode, pushes it as the last subnode and puts there a SomeValue
@@ -302,29 +352,37 @@ namespace uns::trees {
 		public:
 			::uns::trees::flex::const_subnodes subnodes;
 		public:
-			const_iterator() = delete;
-			inline const_iterator(const ::uns::trees::auxiliary::flex::proxy& Obj) noexcept :
-				subnodes(Obj)
-			{};
-			inline const_iterator(const ::uns::trees::flex::const_iterator& Obj) noexcept :
-				subnodes(Obj)
-			{};
+			const_iterator() noexcept = default;
+			const_iterator(const ::uns::trees::flex::iterator& Obj) noexcept;
+			inline const_iterator(const ::uns::trees::flex::const_iterator& Obj) noexcept {
+				init(
+					subnodes,
+					get_index(Obj.subnodes),
+					get_storage(Obj.subnodes),
+					get_ref(Obj.subnodes)
+				);
+			};
 			inline ::uns::trees::flex::const_iterator& operator=(const ::uns::trees::flex::const_iterator& Obj) noexcept {
 				if(this == &Obj) return *this;
-				if(&get_index(subnodes) != &Obj.get_index()) return *this;
-				if(&get_storage(subnodes) != &Obj.get_storage()) return *this;
+				if(get_index(subnodes) != Obj.get_index()) return *this;
+				if(get_storage(subnodes) != Obj.get_storage()) return *this;
 
 				set_ref(subnodes, get_ref(Obj.subnodes));
 
 				return *this;
 			};
-			inline const_iterator(::uns::trees::flex::const_iterator&& Obj) noexcept :
-				subnodes(Obj)
-			{};
+			inline const_iterator(::uns::trees::flex::const_iterator&& Obj) noexcept {
+				init(
+					subnodes,
+					get_index(Obj.subnodes),
+					get_storage(Obj.subnodes),
+					get_ref(Obj.subnodes)
+				);
+			};
 			inline ::uns::trees::flex::const_iterator& operator=(::uns::trees::flex::const_iterator&& Obj) noexcept {
 				if(this == &Obj) return *this;
-				if(&get_index(subnodes) != &Obj.get_index()) return *this;
-				if(&get_storage(subnodes) != &Obj.get_storage()) return *this;
+				if(get_index(subnodes) != Obj.get_index()) return *this;
+				if(get_storage(subnodes) != Obj.get_storage()) return *this;
 
 				set_ref(subnodes, get_ref(Obj.subnodes));
 
@@ -332,50 +390,67 @@ namespace uns::trees {
 			};
 			~const_iterator() noexcept = default;
 		protected:
-			virtual ::uns::trees::auxiliary::flex::index& get_index() const noexcept override {
+			virtual bool init(
+				::uns::trees::auxiliary::flex::index* Index,
+				::uns::trees::auxiliary::flex::value_storage_type<value_type>* Storage,
+				::uns::trees::auxiliary::flex::index::reference Reference
+			) noexcept {
+				return init(subnodes,Index, Storage, Reference);
+			};
+			virtual bool init(
+				proxy& Proxy,
+				::uns::trees::auxiliary::flex::index* Index,
+				::uns::trees::auxiliary::flex::value_storage_type<value_type>* Storage,
+				::uns::trees::auxiliary::flex::index::reference Reference
+			) const noexcept {
+				return Proxy.init(Index, Storage, Reference);
+			};
+		protected:
+			virtual ::uns::trees::auxiliary::flex::index* get_index() const noexcept override {
 				return get_index(subnodes);
 			};
-			virtual ::uns::trees::auxiliary::flex::index& get_index(
-				const ::uns::trees::auxiliary::flex::proxy& Accessor
+			virtual ::uns::trees::auxiliary::flex::index* get_index(
+				const ::uns::trees::auxiliary::flex::proxy& Proxy
 			) const noexcept override {
-				return Accessor.get_index();
+				return Proxy.get_index();
 			};
 		protected:
-			virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>& get_storage() const noexcept override {
+			virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>* get_storage() const noexcept override {
 				return get_storage(subnodes);
 			};
-			virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>& get_storage(
-				const ::uns::trees::auxiliary::flex::proxy& Accessor
+			virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>* get_storage(
+				const ::uns::trees::auxiliary::flex::proxy& Proxy
 			) const noexcept override {
-				return Accessor.get_storage();
+				return Proxy.get_storage();
 			};
 		protected:
-			virtual const ::uns::trees::auxiliary::flex::index::reference& get_ref() const noexcept override {
+			virtual ::uns::trees::auxiliary::flex::index::reference get_ref() const noexcept override {
 				return get_ref(subnodes);
 			};
 			virtual void set_ref(const ::uns::trees::auxiliary::flex::index::reference& Reference) noexcept override {
 				set_ref(subnodes, Reference);
 			};
-			virtual const ::uns::trees::auxiliary::flex::index::reference& get_ref(
-				const ::uns::trees::auxiliary::flex::proxy& Accessor
+			virtual ::uns::trees::auxiliary::flex::index::reference get_ref(
+				const ::uns::trees::auxiliary::flex::proxy& Proxy
 			) const noexcept override {
-				return Accessor.get_ref();
+				return Proxy.get_ref();
 			};
 			virtual void set_ref(
-				proxy& Accessor,
+				proxy& Proxy,
 				const ::uns::trees::auxiliary::flex::index::reference& Reference
 			) const noexcept override {
-				Accessor.set_ref(Reference);
+				Proxy.set_ref(Reference);
 			};
 		public:
 			::uns::trees::flex::const_iterator cbegin() const noexcept {
-				auto result = ::uns::trees::flex::const_iterator{
-					subnodes
-				};
+				auto result = ::uns::trees::flex::const_iterator{};
 
-				result.set_ref(
+				init(
+					result,
+					get_index(subnodes),
+					get_storage(subnodes),
 					traversal::begin(
-						get_index(subnodes),
+						*get_index(subnodes),
 						get_ref(subnodes)
 					)
 				);
@@ -383,13 +458,14 @@ namespace uns::trees {
 				return result;
 			};
 			::uns::trees::flex::const_iterator cend() const noexcept {
-				auto result = ::uns::trees::flex::const_iterator{
-					subnodes
-				};
+				auto result = ::uns::trees::flex::const_iterator{};
 
-				result.set_ref(
+				init(
+					result,
+					get_index(subnodes),
+					get_storage(subnodes),
 					traversal::end(
-						get_index(subnodes),
+						*get_index(subnodes),
 						get_ref(subnodes)
 					)
 				);
@@ -398,12 +474,13 @@ namespace uns::trees {
 			};
 		public:
 			::uns::trees::flex::const_iterator parent() const noexcept {
-				auto result = ::uns::trees::flex::const_iterator{
-					subnodes
-				};
+				auto result = ::uns::trees::flex::const_iterator{};
 
-				result.set_ref(
-					get_index(subnodes).get_parent(
+				init(
+					result,
+					get_index(subnodes),
+					get_storage(subnodes),
+					get_index(subnodes)->get_parent(
 						get_ref(subnodes)
 					)
 				);
@@ -412,15 +489,15 @@ namespace uns::trees {
 			};
 		public:
 			inline const value_type& operator*() const noexcept {
-				return get_storage(subnodes)[
-					get_index(subnodes).get(
+				return (*get_storage(subnodes))[
+					get_index(subnodes)->get(
 						get_ref(subnodes)
 					)
 				];
 			};
 			inline const value_type* operator->() const noexcept {
-				return &get_storage(subnodes)[
-					get_index(subnodes).get(
+				return &(*get_storage(subnodes))[
+					get_index(subnodes)->get(
 						get_ref(subnodes)
 					)
 				];
@@ -429,7 +506,7 @@ namespace uns::trees {
 				set_ref(
 					subnodes,
 					traversal::next(
-						get_index(subnodes),
+						*get_index(subnodes),
 						get_ref(subnodes)
 					)
 				);
@@ -441,31 +518,36 @@ namespace uns::trees {
 		public:
 			::uns::trees::flex::subnodes subnodes;
 		public:
-			iterator() = delete;
-		protected:
-			inline iterator(const ::uns::trees::auxiliary::flex::proxy& Obj) noexcept :
-				subnodes(Obj)
-			{};
-		public:
-			inline iterator(const ::uns::trees::flex::iterator& Obj) noexcept :
-				subnodes(Obj)
-			{};
+			iterator() noexcept = default;
+			inline iterator(const ::uns::trees::flex::const_iterator& Obj) noexcept {
+				init(
+					subnodes,
+					get_index(Obj.subnodes),
+					get_storage(Obj.subnodes),
+					get_ref(Obj.subnodes)
+				);
+			};
 			inline ::uns::trees::flex::iterator& operator=(const ::uns::trees::flex::iterator& Obj) noexcept {
 				if(this == &Obj) return *this;
-				if(&get_index(subnodes) != &Obj.get_index()) return *this;
-				if(&get_storage(subnodes) != &Obj.get_storage()) return *this;
+				if(get_index(subnodes) != Obj.get_index()) return *this;
+				if(get_storage(subnodes) != Obj.get_storage()) return *this;
 
 				set_ref(subnodes, get_ref(Obj.subnodes));
 
 				return *this;
 			};
-			inline iterator(::uns::trees::flex::iterator&& Obj) noexcept :
-				subnodes(Obj)
-			{};
+			inline iterator(::uns::trees::flex::iterator&& Obj) noexcept {
+				init(
+					subnodes,
+					get_index(Obj.subnodes),
+					get_storage(Obj.subnodes),
+					get_ref(Obj.subnodes)
+				);
+			};
 			inline ::uns::trees::flex::iterator& operator=(::uns::trees::flex::iterator&& Obj) noexcept {
 				if(this == &Obj) return *this;
-				if(&get_index(subnodes) != &Obj.get_index()) return *this;
-				if(&get_storage(subnodes) != &Obj.get_storage()) return *this;
+				if(get_index(subnodes) != Obj.get_index()) return *this;
+				if(get_storage(subnodes) != Obj.get_storage()) return *this;
 
 				set_ref(subnodes, get_ref(Obj.subnodes));
 
@@ -473,96 +555,112 @@ namespace uns::trees {
 			};
 			~iterator() noexcept = default;
 		protected:
-			virtual ::uns::trees::auxiliary::flex::index& get_index() const noexcept override {
+			virtual bool init(
+				::uns::trees::auxiliary::flex::index* Index,
+				::uns::trees::auxiliary::flex::value_storage_type<value_type>* Storage,
+				::uns::trees::auxiliary::flex::index::reference Reference
+			) noexcept {
+				return init(subnodes, Index, Storage, Reference);
+			};
+			virtual bool init(
+				proxy& Proxy,
+				::uns::trees::auxiliary::flex::index* Index,
+				::uns::trees::auxiliary::flex::value_storage_type<value_type>* Storage,
+				::uns::trees::auxiliary::flex::index::reference Reference
+			) const noexcept {
+				return Proxy.init(Index, Storage, Reference);
+			};
+		protected:
+			virtual ::uns::trees::auxiliary::flex::index* get_index() const noexcept override {
 				return get_index(subnodes);
 			};
-			virtual ::uns::trees::auxiliary::flex::index& get_index(
-				const ::uns::trees::auxiliary::flex::proxy& Accessor
+			virtual ::uns::trees::auxiliary::flex::index* get_index(
+				const ::uns::trees::auxiliary::flex::proxy& Proxy
 			) const noexcept override {
-				return Accessor.get_index();
+				return Proxy.get_index();
 			};
 		protected:
-			virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>& get_storage() const noexcept override {
+			virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>* get_storage() const noexcept override {
 				return get_storage(subnodes);
 			};
-			virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>& get_storage(
-				const ::uns::trees::auxiliary::flex::proxy& Accessor
+			virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>* get_storage(
+				const ::uns::trees::auxiliary::flex::proxy& Proxy
 			) const noexcept override {
-				return Accessor.get_storage();
+				return Proxy.get_storage();
 			};
 		protected:
-			virtual const ::uns::trees::auxiliary::flex::index::reference& get_ref() const noexcept override {
+			virtual ::uns::trees::auxiliary::flex::index::reference get_ref() const noexcept override {
 				return get_ref(subnodes);
 			};
 			virtual void set_ref(const ::uns::trees::auxiliary::flex::index::reference& Reference) noexcept override {
 				set_ref(subnodes, Reference);
 			};
-			virtual const ::uns::trees::auxiliary::flex::index::reference& get_ref(
-				const ::uns::trees::auxiliary::flex::proxy& Accessor
+			virtual ::uns::trees::auxiliary::flex::index::reference get_ref(
+				const ::uns::trees::auxiliary::flex::proxy& Proxy
 			) const noexcept override {
-				return Accessor.get_ref();
+				return Proxy.get_ref();
 			};
 			virtual void set_ref(
-				proxy& Accessor,
+				proxy& Proxy,
 				const ::uns::trees::auxiliary::flex::index::reference& Reference
 			) const noexcept override {
-				Accessor.set_ref(Reference);
+				Proxy.set_ref(Reference);
 			};
 		public:
-			inline ::uns::trees::flex::const_iterator cbegin() const noexcept {
-				auto result = ::uns::trees::flex::const_iterator{
-					subnodes
-				};
+			::uns::trees::flex::const_iterator cbegin() const noexcept {
+				auto result = ::uns::trees::flex::const_iterator{};
 
-				set_ref(
+				init(
 					result,
+					get_index(subnodes),
+					get_storage(subnodes),
 					traversal::begin(
-						get_index(subnodes),
+						*get_index(subnodes),
 						get_ref(subnodes)
 					)
 				);
 
 				return result;
 			};
-			inline ::uns::trees::flex::const_iterator cend() const noexcept {
-				auto result = ::uns::trees::flex::const_iterator{
-					subnodes
-				};
+			::uns::trees::flex::iterator begin() noexcept {
+				auto result = ::uns::trees::flex::iterator{};
 
-				set_ref(
+				init(
 					result,
-					traversal::end(
-						get_index(subnodes),
-						get_ref(subnodes)
-					)
-				);
-
-				return result;
-			};
-			inline ::uns::trees::flex::iterator begin() noexcept {
-				auto result = ::uns::trees::flex::iterator{
-					subnodes
-				};
-
-				set_ref(
-					result,
+					get_index(subnodes),
+					get_storage(subnodes),
 					traversal::begin(
-						get_index(subnodes),
+						*get_index(subnodes),
 						get_ref(subnodes)
 					)
 				);
 
 				return result;
 			};
-			inline ::uns::trees::flex::iterator end() noexcept {
-				auto result = ::uns::trees::flex::iterator{
-					subnodes
-				};
+			::uns::trees::flex::const_iterator cend() const noexcept {
+				auto result = ::uns::trees::flex::const_iterator{};
 
-				set_ref(
+				init(
 					result,
+					get_index(subnodes),
+					get_storage(subnodes),
 					traversal::end(
-						get_index(subnodes),
+						*get_index(subnodes),
+						get_ref(subnodes)
+					)
+				);
+
+				return result;
+			};
+			::uns::trees::flex::iterator end() const noexcept {
+				auto result = ::uns::trees::flex::iterator{};
+
+				init(
+					result,
+					get_index(subnodes),
+					get_storage(subnodes),
+					traversal::end(
+						*get_index(subnodes),
 						get_ref(subnodes)
 					)
 				);
@@ -570,28 +668,28 @@ namespace uns::trees {
 				return result;
 			};
 		public:
-			inline ::uns::trees::flex::const_iterator parent() const noexcept {
-				auto result = ::uns::trees::flex::const_iterator{
-					subnodes
-				};
+			::uns::trees::flex::const_iterator parent() const noexcept {
+				auto result = ::uns::trees::flex::const_iterator{};
 
-				set_ref(
+				init(
 					result,
-					get_index(subnodes).get_parent(
+					get_index(subnodes),
+					get_storage(subnodes),
+					get_index(subnodes)->get_parent(
 						get_ref(subnodes)
 					)
 				);
 
 				return result;
 			};
-			inline ::uns::trees::flex::iterator parent() noexcept {
-				auto result = ::uns::trees::flex::iterator{
-					subnodes
-				};
+			::uns::trees::flex::iterator parent() noexcept {
+				auto result = ::uns::trees::flex::iterator{};
 
-				set_ref(
+				init(
 					result,
-					get_index(subnodes).get_parent(
+					get_index(subnodes),
+					get_storage(subnodes),
+					get_index(subnodes)->get_parent(
 						get_ref(subnodes)
 					)
 				);
@@ -600,29 +698,29 @@ namespace uns::trees {
 			};
 		public:
 			inline const value_type& operator*() const noexcept {
-				return get_storage(subnodes)[
-					get_index(subnodes).get(
+				return (*get_storage(subnodes))[
+					get_index(subnodes)->get(
 						get_ref(subnodes)
 					)
 				];
 			};
 			inline value_type& operator*() noexcept {
-				return get_storage(subnodes)[
-					get_index(subnodes).get(
+				return (*get_storage(subnodes))[
+					get_index(subnodes)->get(
 						get_ref(subnodes)
 					)
 				];
 			};
 			inline const value_type* operator->() const noexcept {
-				return &get_storage(subnodes)[
-					get_index(subnodes).get(
+				return &(*get_storage(subnodes))[
+					get_index(subnodes)->get(
 						get_ref(subnodes)
 					)
 				];
 			};
 			inline value_type* operator->() noexcept {
-				return &get_storage(subnodes)[
-					get_index(subnodes).get(
+				return &(*get_storage(subnodes))[
+					get_index(subnodes)->get(
 						get_ref(subnodes)
 					)
 				];
@@ -631,7 +729,7 @@ namespace uns::trees {
 				set_ref(
 					subnodes,
 					traversal::next(
-						get_index(subnodes),
+						*get_index(subnodes),
 						get_ref(subnodes)
 					)
 				);
@@ -639,176 +737,199 @@ namespace uns::trees {
 		};
 	protected:
 		mutable ::uns::trees::auxiliary::flex::index m_index;
-		mutable ::std::vector<value_type> m_values;
+		mutable ::std::vector<value_type> m_storage;
 	protected:
-		virtual ::uns::trees::auxiliary::flex::index& get_index() const noexcept override {
-			return m_index;
+		virtual bool init(
+			::uns::trees::auxiliary::flex::index* Index,
+			::uns::trees::auxiliary::flex::value_storage_type<value_type>* Storage,
+			::uns::trees::auxiliary::flex::index::reference Reference
+		) noexcept {
+			return false;
 		};
-		virtual ::uns::trees::auxiliary::flex::index& get_index(
-			const ::uns::trees::auxiliary::flex::proxy& Accessor
+		virtual bool init(
+			proxy& Proxy,
+			::uns::trees::auxiliary::flex::index* Index,
+			::uns::trees::auxiliary::flex::value_storage_type<value_type>* Storage,
+			::uns::trees::auxiliary::flex::index::reference Reference
+		) const noexcept {
+			return Proxy.init(Index, Storage, Reference);
+		};
+	protected:
+		virtual ::uns::trees::auxiliary::flex::index* get_index() const noexcept override {
+			return &m_index;
+		};
+		virtual ::uns::trees::auxiliary::flex::index* get_index(
+			const ::uns::trees::auxiliary::flex::proxy& Proxy
 		) const noexcept override {
-			return Accessor.get_index();
+			return Proxy.get_index();
 		};
 	protected:
-		virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>& get_storage() const noexcept override {
-			return m_values;
+		virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>* get_storage() const noexcept override {
+			return &m_storage;
 		};
-		virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>& get_storage(
-			const ::uns::trees::auxiliary::flex::proxy& Accessor
+		virtual ::uns::trees::auxiliary::flex::value_storage_type<value_type>* get_storage(
+			const ::uns::trees::auxiliary::flex::proxy& Proxy
 		) const noexcept override {
-			return Accessor.get_storage();
+			return Proxy.get_storage();
 		};
 	protected:
-		virtual const ::uns::trees::auxiliary::flex::index::reference& get_ref() const noexcept override {
+		virtual ::uns::trees::auxiliary::flex::index::reference get_ref() const noexcept override {
 			return m_index.get_root();
 		};
 		virtual void set_ref(const ::uns::trees::auxiliary::flex::index::reference& Reference) noexcept override {};
-		virtual const ::uns::trees::auxiliary::flex::index::reference& get_ref(
-			const ::uns::trees::auxiliary::flex::proxy& Accessor
+		virtual ::uns::trees::auxiliary::flex::index::reference get_ref(
+			const ::uns::trees::auxiliary::flex::proxy& Proxy
 		) const noexcept override {
-			return Accessor.get_ref();
+			return Proxy.get_ref();
 		};
 		virtual void set_ref(
-			proxy& Accessor,
+			proxy& Proxy,
 			const ::uns::trees::auxiliary::flex::index::reference& Reference
 		) const noexcept override {
-			Accessor.set_ref(Reference);
+			Proxy.set_ref(Reference);
 		};
 	public:
 		::uns::trees::flex::const_iterator cbegin() const noexcept {
 			return root();
 		};
-		::uns::trees::flex::const_iterator cend() const noexcept {
-			auto result = ::uns::trees::flex::const_iterator{
-				*this
-			};
-
-			set_ref(
-				result.subnodes,
-				m_index.get_root()
-			);
-
-			return result;
-		};
 		::uns::trees::flex::iterator begin() noexcept {
-			auto result = ::uns::trees::flex::iterator{
-				*this
-			};
+			return root();
+		};
+		::uns::trees::flex::const_iterator cend() const noexcept {
+			auto result = ::uns::trees::flex::const_iterator{};
 
-			set_ref(
-				result.subnodes,
-				m_index.get_root()
+			init(
+				result,
+				&m_index,
+				&m_storage,
+				m_index.get_null()
 			);
 
 			return result;
 		};
-		::uns::variadic_tree::iterator end() noexcept {
-			return ::uns::variadic_tree::iterator{
-				m_index,
-				m_values,
-				m_index.none()
-			};
+		::uns::trees::flex::iterator end() noexcept {
+			auto result = ::uns::trees::flex::iterator{};
+
+			init(
+				result,
+				&m_index,
+				&m_storage,
+				m_index.get_null()
+			);
+
+			return result;
 		};
 		::std::size_t size() const noexcept { return m_index.size(); };
 	public:
-		::uns::variadic_tree::const_iterator root() const noexcept {							//returns an iterator pointing to the root, or end() if the tree is empty
-			return ::uns::variadic_tree::const_iterator{
-				m_index,
-				m_values,
-				m_index.root()
-			};
+		::uns::trees::flex::const_iterator root() const noexcept {
+			auto result = ::uns::trees::flex::const_iterator{};
+
+			init(
+				result,
+				&m_index,
+				&m_storage,
+				m_index.get_root()
+			);
+
+			return result;
 		};
-		::uns::variadic_tree::iterator root() noexcept {										//returns an iterator pointing to the root, or end() if the tree is empty
-			return ::uns::variadic_tree::iterator{
-				m_index,
-				m_values,
-				m_index.root()
-			};
+		::uns::trees::flex::iterator root() noexcept {
+			auto result = ::uns::trees::flex::iterator{};
+
+			init(
+				result,
+				&m_index,
+				&m_storage,
+				m_index.get_root()
+			);
+
+			return result;
 		};
 	public:
 		inline void set_root(const value_type& Value) noexcept {
-			auto root_ref = m_index.root();
-			auto root_idx = m_index.value_idx(root_ref);
+			auto root_ref = m_index.get_root();
 
-			if(m_values.size() <= root_idx) {
-				m_values.resize(root_idx + 1);
+			if(root_ref == m_index.get_null()) {
+				if(m_storage.size() == 0) {
+					m_storage.push_back(Value);
+				}
+				else {
+					m_storage[0] = Value;
+				};
+
+				m_index.set_root(0);
+			}
+			else {
+				auto root_idx = m_index.get(root_ref);
+
+				if(m_storage.size() <= root_idx) {
+					m_storage.resize(root_idx + 1);
+				};
+
+				m_storage[root_idx] = Value;
 			};
-
-			m_values[root_idx] = Value;
 		};
-		inline void swap(																		//swaps two trees
-			const ::uns::variadic_tree::iterator& SubTree1,
-			const ::uns::variadic_tree::iterator& SubTree2
+		inline void swap(
+			const ::uns::trees::flex::const_iterator& SubTree1,
+			const ::uns::trees::flex::const_iterator& SubTree2
 		) noexcept {
-			m_index.swap(SubTree1.subnodes.m_ref, SubTree2.subnodes.m_ref);
+			m_index.swap(
+				get_ref(SubTree1.subnodes),
+				get_ref(SubTree2.subnodes)
+			);
 		};
 	protected:
 		inline void check_references(
 			::std::vector<bool>& Referenced,
-			::uns::variadic_tree::index::reference Ref
+			::uns::trees::auxiliary::flex::index::reference Ref
 		) noexcept {
 			Referenced[
-				m_index.value_idx(Ref)
+				m_index.get(Ref)
 			] = true;
 
-			const auto subnodes_total = m_index.subnodes_total(Ref);
+			const auto subnodes_total = m_index.get_subnodes_total(Ref);
 			for(::std::size_t subnode_idx = 0; subnode_idx < subnodes_total; ++subnode_idx) {
 				check_references(
 					Referenced,
-					m_index.subnode(Ref, subnode_idx)
+					m_index.get_subnode(Ref, subnode_idx)
 				);
 			};
 		};
 	public:
-		inline void shrink_to_fit() noexcept {
-			m_index.shrink_to_fit();
+		inline void gc() noexcept {
+			m_index.gc();
 
 			auto referenced = ::std::vector<bool>{};
-			referenced.resize(m_values.size(), false);
+			referenced.resize(m_storage.size(), false);
 
-			check_references(
-				referenced,
-				m_index.root()
-			);
+			if(m_index.get_root() != m_index.get_null()) {
+				check_references(
+					referenced,
+					m_index.get_root()
+				);
+			};
 
-			auto values_iter = m_values.cbegin();
+			auto values_iter = m_storage.cbegin();
 			auto referenced_iter = referenced.cbegin();
-			auto values_end = m_values.cend();
+			auto values_end = m_storage.cend();
 			auto referenced_end = referenced.cend();
 
 			while(
 				values_iter != values_end
 				&& referenced_iter != referenced_end
-				) {
+			) {
 				if(*referenced_iter) {
 					++values_iter;
 					++referenced_iter;
 				}
 				else {
-					values_iter = m_values.erase(values_iter);
+					values_iter = m_storage.erase(values_iter);
 					++referenced_iter;
 				};
 			};
 
-			m_values.shrink_to_fit();
+			m_storage.shrink_to_fit();
 		};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	
 	};
 
 };
