@@ -20,9 +20,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\flex_tree_concept.hpp">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="..\flex_tree.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>

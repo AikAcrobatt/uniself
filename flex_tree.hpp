@@ -307,11 +307,12 @@ namespace uns::trees {
 		protected:
 			inline ::uns::trees::auxiliary::flex::index::reference parent() const noexcept { return m_carcase->index.get_parent(m_ref); };
 		public:
-			inline void push_back(::uns::trees::flex::const_iterator SomeTree) noexcept;				//copies SomeTree and makes it the last subnode
+			inline void push_back(const ::uns::trees::flex::const_iterator& SomeTree) noexcept;				//copies SomeTree and makes it the last subnode
 			inline void push_back(const value_type& SomeValue) noexcept;								//creates a new subnode, pushes it as the last subnode and puts there a SomeValue
 			inline bool insert(																			//removes the last subnode and inserts it in the position PosIdx in the same current subnodes set
 				::std::size_t PosIdx
 			) noexcept;
+			void replace(const ::uns::trees::flex::const_iterator& SomeTree) noexcept;
 		};
 	public:
 		class const_iterator: public ::uns::trees::auxiliary::flex::proxy {
@@ -884,7 +885,7 @@ namespace uns::trees {
 	return result;
 };
 
-void ::uns::trees::flex::subnodes::push_back(::uns::trees::flex::const_iterator SomeTree) noexcept {
+void ::uns::trees::flex::subnodes::push_back(const ::uns::trees::flex::const_iterator& SomeTree) noexcept {
 	auto original_value_idx = get_carcase(SomeTree.subnodes)->index.get(
 		get_ref(SomeTree.subnodes)
 	);
@@ -924,6 +925,12 @@ bool ::uns::trees::flex::subnodes::insert(
 			m_carcase->index.get_subnode(m_ref, subnode_idx - 1)
 		);
 	};
+};
+void ::uns::trees::flex::subnodes::replace(const ::uns::trees::flex::const_iterator& SomeTree) noexcept {
+	m_carcase->index.set_parent(
+		get_ref(SomeTree.subnodes),
+		m_ref
+	);
 };
 
 #endif
