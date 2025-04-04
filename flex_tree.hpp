@@ -803,6 +803,8 @@ namespace uns::trees {
 			::std::vector<::std::pair<::uns::trees::auxiliary::flex::index::reference, ::std::size_t>>& References,
 			::uns::trees::auxiliary::flex::index::reference CurrentNode
 		) noexcept {
+			if(CurrentNode == m_carcase.index.get_null()) return;
+
 			References.push_back({
 				CurrentNode,
 				m_carcase.index.get(CurrentNode)
@@ -902,9 +904,14 @@ void ::uns::trees::flex::subnodes::push_back(const ::uns::trees::flex::const_ite
 
 	auto just_added_node = this->operator[](size() - 1);
 	for(::std::size_t subnode_idx = 0; subnode_idx < SomeTree.subnodes.size(); ++subnode_idx) {
-		just_added_node.subnodes.push_back(
-			SomeTree.subnodes[subnode_idx]
-		);
+		if(
+			auto original_subnode_iterator = SomeTree.subnodes[subnode_idx];
+			get_ref(original_subnode_iterator) != m_carcase->index.get_null()
+		) {
+			just_added_node.subnodes.push_back(
+				original_subnode_iterator
+			);
+		};
 	};
 };
 void ::uns::trees::flex::subnodes::push_back(const value_type& SomeValue) noexcept {
@@ -919,12 +926,30 @@ void ::uns::trees::flex::subnodes::push_back(const value_type& SomeValue) noexce
 bool ::uns::trees::flex::subnodes::insert(
 	::std::size_t PosIdx
 ) noexcept {
-	for(::std::size_t subnode_idx = m_carcase->index.get_subnodes_total(m_ref) - 1; subnode_idx > PosIdx; --subnode_idx) {
+	if(m_carcase->index.get_subnodes_total(m_ref) == 0) return false;
+
+	auto what_to_insert = m_carcase->index.get_subnodes_total(m_ref) - 1;
+
+	if(
+		what_to_insert >= PosIdx
+		&& m_carcase->index.get_subnode(m_ref, PosIdx) == m_carcase->index.get_null()
+	) {
+		m_carcase->index.swap(
+			m_carcase->index.get_subnode(m_ref, what_to_insert),
+			m_carcase->index.get_subnode(m_ref, PosIdx)
+		);
+
+		return true;
+	};
+
+	for(::std::size_t subnode_idx = what_to_insert; subnode_idx > PosIdx; --subnode_idx) {
 		m_carcase->index.swap(
 			m_carcase->index.get_subnode(m_ref, subnode_idx),
 			m_carcase->index.get_subnode(m_ref, subnode_idx - 1)
 		);
 	};
+
+	return what_to_insert >= PosIdx;
 };
 void ::uns::trees::flex::subnodes::replace(const ::uns::trees::flex::const_iterator& SomeTree) noexcept {
 	m_carcase->index.set_parent(
