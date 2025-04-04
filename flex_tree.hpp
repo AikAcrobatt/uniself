@@ -113,29 +113,12 @@ namespace uns::trees::auxiliary::flex {
 namespace uns::trees {
 
 
-	class traversal {
-	public:
-		static ::uns::trees::auxiliary::flex::index::reference next(
-			const ::uns::trees::auxiliary::flex::index& Index,
-			::uns::trees::auxiliary::flex::index::reference Current
-		) noexcept;
-		static ::uns::trees::auxiliary::flex::index::reference begin(
-			const ::uns::trees::auxiliary::flex::index& Index,
-			::uns::trees::auxiliary::flex::index::reference Current
-		) noexcept;
-		static ::uns::trees::auxiliary::flex::index::reference end(
-			const ::uns::trees::auxiliary::flex::index& Index,
-			::uns::trees::auxiliary::flex::index::reference Current
-		) noexcept;
-	};
-
-
 	class flex: public ::uns::trees::auxiliary::flex::proxy {
 	public:
 		class const_subnodes;
 		class subnodes;
-		class const_iterator;
-		class iterator;
+		class const_node;
+		class node;
 	public:
 		class const_subnodes: public ::uns::trees::auxiliary::flex::proxy {
 		protected:
@@ -218,7 +201,7 @@ namespace uns::trees {
 			};
 		public:
 			inline ::std::size_t size() const noexcept { return m_carcase->index.get_subnodes_total(m_ref); };
-			inline ::uns::trees::flex::const_iterator operator[](::std::size_t SubnodeIdx) const noexcept;
+			inline ::uns::trees::flex::const_node operator[](::std::size_t SubnodeIdx) const noexcept;
 		protected:
 			inline ::uns::trees::auxiliary::flex::index::reference parent() const noexcept { return m_carcase->index.get_parent(m_ref); };
 		};
@@ -302,33 +285,33 @@ namespace uns::trees {
 			};
 		public:
 			inline ::std::size_t size() const noexcept { return m_carcase->index.get_subnodes_total(m_ref); };
-			inline ::uns::trees::flex::const_iterator operator[](::std::size_t SubnodeIdx) const noexcept;
-			inline ::uns::trees::flex::iterator operator[](::std::size_t SubnodeIdx) noexcept;
+			inline ::uns::trees::flex::const_node operator[](::std::size_t SubnodeIdx) const noexcept;
+			inline ::uns::trees::flex::node operator[](::std::size_t SubnodeIdx) noexcept;
 		protected:
 			inline ::uns::trees::auxiliary::flex::index::reference parent() const noexcept { return m_carcase->index.get_parent(m_ref); };
 		public:
-			inline void push_back(const ::uns::trees::flex::const_iterator& SomeTree) noexcept;				//copies SomeTree and makes it the last subnode
+			inline void push_back(const ::uns::trees::flex::const_node& SomeTree) noexcept;				//copies SomeTree and makes it the last subnode
 			inline void push_back(const value_type& SomeValue) noexcept;								//creates a new subnode, pushes it as the last subnode and puts there a SomeValue
 			inline bool insert(																			//removes the last subnode and inserts it in the position PosIdx in the same current subnodes set
 				::std::size_t PosIdx
 			) noexcept;
-			void replace(const ::uns::trees::flex::const_iterator& SomeTree) noexcept;
+			void replace(const ::uns::trees::flex::const_node& SomeTree) noexcept;
 		};
 	public:
-		class const_iterator: public ::uns::trees::auxiliary::flex::proxy {
+		class const_node: public ::uns::trees::auxiliary::flex::proxy {
 		public:
 			::uns::trees::flex::const_subnodes subnodes;
 		public:
-			const_iterator() noexcept = default;
-			const_iterator(const ::uns::trees::flex::iterator& Obj) noexcept;
-			inline const_iterator(const ::uns::trees::flex::const_iterator& Obj) noexcept {
+			const_node() noexcept = default;
+			const_node(const ::uns::trees::flex::node& Obj) noexcept;
+			inline const_node(const ::uns::trees::flex::const_node& Obj) noexcept {
 				init(
 					subnodes,
 					get_carcase(Obj.subnodes),
 					get_ref(Obj.subnodes)
 				);
 			};
-			inline ::uns::trees::flex::const_iterator& operator=(const ::uns::trees::flex::const_iterator& Obj) noexcept {
+			inline ::uns::trees::flex::const_node& operator=(const ::uns::trees::flex::const_node& Obj) noexcept {
 				if(this == &Obj) return *this;
 				if(get_carcase(subnodes) != Obj.get_carcase()) return *this;
 
@@ -336,14 +319,14 @@ namespace uns::trees {
 
 				return *this;
 			};
-			inline const_iterator(::uns::trees::flex::const_iterator&& Obj) noexcept {
+			inline const_node(::uns::trees::flex::const_node&& Obj) noexcept {
 				init(
 					subnodes,
 					get_carcase(Obj.subnodes),
 					get_ref(Obj.subnodes)
 				);
 			};
-			inline ::uns::trees::flex::const_iterator& operator=(::uns::trees::flex::const_iterator&& Obj) noexcept {
+			inline ::uns::trees::flex::const_node& operator=(::uns::trees::flex::const_node&& Obj) noexcept {
 				if(this == &Obj) return *this;
 				if(get_carcase(subnodes) != Obj.get_carcase()) return *this;
 
@@ -351,7 +334,7 @@ namespace uns::trees {
 
 				return *this;
 			};
-			~const_iterator() noexcept = default;
+			~const_node() noexcept = default;
 		protected:
 			virtual bool init(
 				::uns::trees::auxiliary::flex::tree_carcase<value_type>* Carcase,
@@ -394,37 +377,8 @@ namespace uns::trees {
 				Proxy.set_ref(Reference);
 			};
 		public:
-			::uns::trees::flex::const_iterator cbegin() const noexcept {
-				auto result = ::uns::trees::flex::const_iterator{};
-
-				init(
-					result,
-					get_carcase(subnodes),
-					traversal::begin(
-						get_carcase(subnodes)->index,
-						get_ref(subnodes)
-					)
-				);
-
-				return result;
-			};
-			::uns::trees::flex::const_iterator cend() const noexcept {
-				auto result = ::uns::trees::flex::const_iterator{};
-
-				init(
-					result,
-					get_carcase(subnodes),
-					traversal::end(
-						get_carcase(subnodes)->index,
-						get_ref(subnodes)
-					)
-				);
-
-				return result;
-			};
-		public:
-			::uns::trees::flex::const_iterator parent() const noexcept {
-				auto result = ::uns::trees::flex::const_iterator{};
+			::uns::trees::flex::const_node parent() const noexcept {
+				auto result = ::uns::trees::flex::const_node{};
 
 				init(
 					result,
@@ -451,30 +405,21 @@ namespace uns::trees {
 					)
 				];
 			};
-			inline ::uns::trees::flex::iterator& operator++() noexcept {
-				set_ref(
-					subnodes,
-					traversal::next(
-						get_carcase(subnodes)->index,
-						get_ref(subnodes)
-					)
-				);
-			};
 		};
 	public:
-		class iterator: public ::uns::trees::auxiliary::flex::proxy {
+		class node: public ::uns::trees::auxiliary::flex::proxy {
 		public:
 			::uns::trees::flex::subnodes subnodes;
 		public:
-			iterator() noexcept = default;
-			inline iterator(const ::uns::trees::flex::iterator& Obj) noexcept {
+			node() noexcept = default;
+			inline node(const ::uns::trees::flex::node& Obj) noexcept {
 				init(
 					subnodes,
 					get_carcase(Obj.subnodes),
 					get_ref(Obj.subnodes)
 				);
 			};
-			inline ::uns::trees::flex::iterator& operator=(const ::uns::trees::flex::iterator& Obj) noexcept {
+			inline ::uns::trees::flex::node& operator=(const ::uns::trees::flex::node& Obj) noexcept {
 				if(this == &Obj) return *this;
 				if(get_carcase(subnodes) != Obj.get_carcase()) return *this;
 
@@ -482,14 +427,14 @@ namespace uns::trees {
 
 				return *this;
 			};
-			inline iterator(::uns::trees::flex::iterator&& Obj) noexcept {
+			inline node(::uns::trees::flex::node&& Obj) noexcept {
 				init(
 					subnodes,
 					get_carcase(Obj.subnodes),
 					get_ref(Obj.subnodes)
 				);
 			};
-			inline ::uns::trees::flex::iterator& operator=(::uns::trees::flex::iterator&& Obj) noexcept {
+			inline ::uns::trees::flex::node& operator=(::uns::trees::flex::node&& Obj) noexcept {
 				if(this == &Obj) return *this;
 				if(get_carcase(subnodes) != Obj.get_carcase()) return *this;
 
@@ -497,7 +442,7 @@ namespace uns::trees {
 
 				return *this;
 			};
-			~iterator() noexcept = default;
+			~node() noexcept = default;
 		protected:
 			virtual bool init(
 				::uns::trees::auxiliary::flex::tree_carcase<value_type>* Carcase,
@@ -540,65 +485,8 @@ namespace uns::trees {
 				Proxy.set_ref(Reference);
 			};
 		public:
-			::uns::trees::flex::const_iterator cbegin() const noexcept {
-				auto result = ::uns::trees::flex::const_iterator{};
-
-				init(
-					result,
-					get_carcase(subnodes),
-					traversal::begin(
-						get_carcase(subnodes)->index,
-						get_ref(subnodes)
-					)
-				);
-
-				return result;
-			};
-			::uns::trees::flex::iterator begin() noexcept {
-				auto result = ::uns::trees::flex::iterator{};
-
-				init(
-					result,
-					get_carcase(subnodes),
-					traversal::begin(
-						get_carcase(subnodes)->index,
-						get_ref(subnodes)
-					)
-				);
-
-				return result;
-			};
-			::uns::trees::flex::const_iterator cend() const noexcept {
-				auto result = ::uns::trees::flex::const_iterator{};
-
-				init(
-					result,
-					get_carcase(subnodes),
-					traversal::end(
-						get_carcase(subnodes)->index,
-						get_ref(subnodes)
-					)
-				);
-
-				return result;
-			};
-			::uns::trees::flex::iterator end() noexcept {
-				auto result = ::uns::trees::flex::iterator{};
-
-				init(
-					result,
-					get_carcase(subnodes),
-					traversal::end(
-						get_carcase(subnodes)->index,
-						get_ref(subnodes)
-					)
-				);
-
-				return result;
-			};
-		public:
-			::uns::trees::flex::const_iterator parent() const noexcept {
-				auto result = ::uns::trees::flex::const_iterator{};
+			::uns::trees::flex::const_node parent() const noexcept {
+				auto result = ::uns::trees::flex::const_node{};
 
 				init(
 					result,
@@ -610,8 +498,8 @@ namespace uns::trees {
 
 				return result;
 			};
-			::uns::trees::flex::iterator parent() noexcept {
-				auto result = ::uns::trees::flex::iterator{};
+			::uns::trees::flex::node parent() noexcept {
+				auto result = ::uns::trees::flex::node{};
 
 				init(
 					result,
@@ -651,15 +539,6 @@ namespace uns::trees {
 						get_ref(subnodes)
 					)
 				];
-			};
-			inline ::uns::trees::flex::iterator& operator++() noexcept {
-				set_ref(
-					subnodes,
-					traversal::next(
-						get_carcase(subnodes)->index,
-						get_ref(subnodes)
-					)
-				);
 			};
 		};
 	protected:
@@ -705,38 +584,9 @@ namespace uns::trees {
 			Proxy.set_ref(Reference);
 		};
 	public:
-		::uns::trees::flex::const_iterator cbegin() const noexcept {
-			return root();
-		};
-		::uns::trees::flex::iterator begin() noexcept {
-			return root();
-		};
-		::uns::trees::flex::const_iterator cend() const noexcept {
-			auto result = ::uns::trees::flex::const_iterator{};
-
-			init(
-				result,
-				&m_carcase,
-				m_carcase.index.get_null()
-			);
-
-			return result;
-		};
-		::uns::trees::flex::iterator end() noexcept {
-			auto result = ::uns::trees::flex::iterator{};
-
-			init(
-				result,
-				&m_carcase,
-				m_carcase.index.get_null()
-			);
-
-			return result;
-		};
 		::std::size_t size() const noexcept { return m_carcase.index.size(); };
-	public:
-		::uns::trees::flex::const_iterator root() const noexcept {
-			auto result = ::uns::trees::flex::const_iterator{};
+		::uns::trees::flex::const_node croot() const noexcept {
+			auto result = ::uns::trees::flex::const_node{};
 
 			init(
 				result,
@@ -746,13 +596,35 @@ namespace uns::trees {
 
 			return result;
 		};
-		::uns::trees::flex::iterator root() noexcept {
-			auto result = ::uns::trees::flex::iterator{};
+		::uns::trees::flex::node root() noexcept {
+			auto result = ::uns::trees::flex::node{};
 
 			init(
 				result,
 				&m_carcase,
 				m_carcase.index.get_root()
+			);
+
+			return result;
+		};
+		::uns::trees::flex::const_node cnull() const noexcept {
+			auto result = ::uns::trees::flex::const_node{};
+
+			init(
+				result,
+				&m_carcase,
+				m_carcase.index.get_null()
+			);
+
+			return result;
+		};
+		::uns::trees::flex::node null() noexcept {
+			auto result = ::uns::trees::flex::node{};
+
+			init(
+				result,
+				&m_carcase,
+				m_carcase.index.get_null()
 			);
 
 			return result;
@@ -782,8 +654,8 @@ namespace uns::trees {
 			};
 		};
 		inline void swap(
-			const ::uns::trees::flex::const_iterator& SubTree1,
-			const ::uns::trees::flex::const_iterator& SubTree2
+			const ::uns::trees::flex::const_node& SubTree1,
+			const ::uns::trees::flex::const_node& SubTree2
 		) noexcept {
 			m_carcase.index.swap(
 				get_ref(SubTree1.subnodes),
@@ -791,7 +663,7 @@ namespace uns::trees {
 			);
 		};
 		inline void remove(
-			const ::uns::trees::flex::const_iterator& SubTree
+			const ::uns::trees::flex::const_node& SubTree
 		) noexcept {
 			m_carcase.index.set_parent(
 				get_ref(SubTree.subnodes),
@@ -852,8 +724,8 @@ namespace uns::trees {
 };
 
 
-::uns::trees::flex::const_iterator uns::trees::flex::const_subnodes::operator[](::std::size_t SubnodeIdx) const noexcept {
-	auto result = ::uns::trees::flex::const_iterator{};
+::uns::trees::flex::const_node uns::trees::flex::const_subnodes::operator[](::std::size_t SubnodeIdx) const noexcept {
+	auto result = ::uns::trees::flex::const_node{};
 
 	init(
 		result,
@@ -864,8 +736,8 @@ namespace uns::trees {
 	return result;
 };
 
-::uns::trees::flex::const_iterator uns::trees::flex::subnodes::operator[](::std::size_t SubnodeIdx) const noexcept {
-	auto result = ::uns::trees::flex::const_iterator{};
+::uns::trees::flex::const_node uns::trees::flex::subnodes::operator[](::std::size_t SubnodeIdx) const noexcept {
+	auto result = ::uns::trees::flex::const_node{};
 
 	init(
 		result,
@@ -875,8 +747,8 @@ namespace uns::trees {
 
 	return result;
 };
-::uns::trees::flex::iterator uns::trees::flex::subnodes::operator[](::std::size_t SubnodeIdx) noexcept {
-	auto result = ::uns::trees::flex::iterator{};
+::uns::trees::flex::node uns::trees::flex::subnodes::operator[](::std::size_t SubnodeIdx) noexcept {
+	auto result = ::uns::trees::flex::node{};
 
 	init(
 		result,
@@ -887,7 +759,7 @@ namespace uns::trees {
 	return result;
 };
 
-void ::uns::trees::flex::subnodes::push_back(const ::uns::trees::flex::const_iterator& SomeTree) noexcept {
+void ::uns::trees::flex::subnodes::push_back(const ::uns::trees::flex::const_node& SomeTree) noexcept {
 	auto original_value_idx = get_carcase(SomeTree.subnodes)->index.get(
 		get_ref(SomeTree.subnodes)
 	);
@@ -951,7 +823,7 @@ bool ::uns::trees::flex::subnodes::insert(
 
 	return what_to_insert >= PosIdx;
 };
-void ::uns::trees::flex::subnodes::replace(const ::uns::trees::flex::const_iterator& SomeTree) noexcept {
+void ::uns::trees::flex::subnodes::replace(const ::uns::trees::flex::const_node& SomeTree) noexcept {
 	m_carcase->index.set_parent(
 		get_ref(SomeTree.subnodes),
 		m_ref
