@@ -15,55 +15,170 @@ namespace uns::trees::auxiliary::flex {
 	class index {
 	public:
 		class reference {
+		protected:
+			bool m_isnull = true;
+			::std::size_t m_value = 0;
 		public:
 			reference() noexcept = default;
-			explicit reference(::std::size_t Idx) noexcept;
+			explicit reference(::std::size_t Idx) noexcept :
+				m_isnull(false),
+				m_value(Idx)
+			{};
 		public:
-			bool operator==(const reference&) const noexcept;
-			bool operator!=(const reference&) const noexcept;
+			bool operator==(const reference& Obj) const noexcept {
+				return (m_isnull && Obj.m_isnull)
+					|| (m_value == Obj.m_value);
+			};
+			bool operator!=(const reference& Obj) const noexcept {
+				return !(*this == Obj);
+			};
+		public:
+			operator ::std::size_t() const noexcept { return m_value; };
+		public:
+			bool is_null() const noexcept { return m_isnull; };
 		};
 	protected:
+		class node {
+		public:
+			void set_idx(::std::size_t ValueIdx) noexcept;
+			::std::size_t get_idx() const noexcept;
+		public:
+			index::reference get_parent() const noexcept;
+			void set_parent(const index::reference& Ref) noexcept;
+		public:
+			::std::size_t get_subnodes_total() const noexcept;
+			index::reference get_subnode(::std::size_t SubnodeIdx) const noexcept;
+		};
+	protected:
+		::std::vector<index::node> m_nodes;
+		::std::size_t m_size = 0;
 	public:
-		index::reference get_root() const noexcept;						//returns a root node; if the tree is empty returns null
+		index::reference get_root() const noexcept {
+			if(m_nodes.size() > 0) {
+				return index::reference{ 0 };
+			}
+			else {
+				return get_null();
+			};
+		};						//returns a root node; if the tree is empty returns null
 		index::reference set_root(										//adds a root node (if there isn't) and sets it's idx to the passed one
 			::std::size_t ValueIdx
-		) noexcept;
+		) noexcept {
+			if(m_nodes.size() == 0) {
+				m_nodes.push_back(
+					index::node{}
+				);
+				m_size = 1;
+			};
+
+			m_nodes[0].set_idx(ValueIdx);
+
+			return index::reference{ 0 };
+		};
 	public:
-		index::reference get_null() const noexcept;						//returns 'parent' of the root node
+		index::reference get_null() const noexcept {
+			return index::reference{};
+		};
 	public:
 		index::reference get_parent(									//returns parent of this node; if this node == root, returns null
 			const index::reference& CurrentSubTree
-		) const noexcept;
+		) const noexcept {
+			auto idx = static_cast<::std::size_t>(CurrentSubTree);
+			return m_nodes[idx].get_parent();
+		};
 		void set_parent(												//changes parent of this node to the passed one (have no effect if the NewParent == null)
 			const index::reference& CurrentSubTree,
 			const index::reference& NewParent
-		) noexcept;
+		) noexcept {
+			auto idx = static_cast<::std::size_t>(CurrentSubTree);
+			m_nodes[idx].set_parent(NewParent);
+
+			if(
+				!reference_isvalid(NewParent)
+				&& m_size > 0
+			) {
+				m_size -= 1;
+			};
+		};
 		index::reference push(											//returns a new node without any parent
 			::std::size_t ValueIdx
-		) noexcept;
+		) noexcept {
+			m_nodes.push_back(
+				index::node{}
+			);
+			m_size += 1;
+
+			m_nodes[m_nodes.size() - 1].set_idx(ValueIdx);
+
+			return index::reference{ m_nodes.size() - 1 };
+		};
 	public:
 		::std::size_t get_subnodes_total(
 			const index::reference& CurrentSubTree
-		) const noexcept;
+		) const noexcept {
+			auto idx = static_cast<::std::size_t>(CurrentSubTree);
+			return m_nodes[idx].get_subnodes_total();
+		};
 		index::reference get_subnode(
 			const index::reference& CurrentSubTree,
 			::std::size_t SubnodeIdx
-		) const noexcept;
+		) const noexcept {
+			auto idx = static_cast<::std::size_t>(CurrentSubTree);
+			return m_nodes[idx].get_subnode(SubnodeIdx);
+		};
 	public:
-		::std::size_t size() const noexcept;
+		::std::size_t size() const noexcept {
+			return m_size;
+		};
 		::std::size_t get(
 			const index::reference& Ref
-		) const noexcept;
-		::std::size_t set(
+		) const noexcept {
+			auto idx = static_cast<::std::size_t>(Ref);
+			return m_nodes[idx].get_idx();
+		};
+		void set(
 			const index::reference& Ref,
 			::std::size_t ValueNewIdx
-		) const noexcept;
+		) noexcept {
+			auto idx = static_cast<::std::size_t>(Ref);
+			m_nodes[idx].set_idx(ValueNewIdx);
+		};
 	public:
 		void swap(
 			const index::reference& SubTree1,
 			const index::reference& SubTree2
-		) noexcept;
+		) noexcept {
+			if(
+				!reference_isvalid(SubTree1)
+				|| !reference_isvalid(SubTree2)
+			) {
+				return;
+			};
+
+			auto idx1 = static_cast<::std::size_t>(SubTree1);
+			auto idx2 = static_cast<::std::size_t>(SubTree2);
+
+			if(
+				!reference_isvalid(m_nodes[idx1].get_parent())
+				|| !reference_isvalid(m_nodes[idx2].get_parent())
+			) {
+				return;
+			};
+
+			auto tmp_parent = m_nodes[idx1].get_parent();
+			m_nodes[idx1].set_parent(m_nodes[idx2].get_parent());
+			m_nodes[idx2].set_parent(tmp_parent);
+		};
 		void gc() noexcept;
+	public:
+		bool reference_isvalid(const index::reference& Ref) const noexcept {
+			if(Ref == get_null()) {
+				return false;
+			};
+
+			auto idx = static_cast<::std::size_t>(Ref);
+			return idx >= 0 && idx < m_nodes.size();
+		};
 	};
 
 
@@ -827,6 +942,14 @@ void ::uns::trees::flex::subnodes::replace(const ::uns::trees::flex::const_node&
 	m_carcase->index.set_parent(
 		get_ref(SomeTree.subnodes),
 		m_ref
+	);
+};
+
+::uns::trees::flex::const_node::const_node(const ::uns::trees::flex::node& Obj) noexcept {
+	init(
+		subnodes,
+		get_carcase(Obj.subnodes),
+		get_ref(Obj.subnodes)
 	);
 };
 
