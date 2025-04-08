@@ -450,6 +450,8 @@ namespace uns::trees {
 				return *this;
 			};
 			~const_node() noexcept = default;
+		public:
+			//TODO to perform an operator==(const node&) method
 		protected:
 			virtual bool init(
 				::uns::trees::auxiliary::flex::tree_carcase<value_type>* Carcase,
@@ -558,6 +560,8 @@ namespace uns::trees {
 				return *this;
 			};
 			~node() noexcept = default;
+		public:
+			//TODO to perform an operator==(const node&) method
 		protected:
 			virtual bool init(
 				::uns::trees::auxiliary::flex::tree_carcase<value_type>* Carcase,
