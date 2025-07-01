@@ -711,7 +711,7 @@ namespace uns::nn {
 			return result;
 		};
 
-		virtual int subneurons_total() const noexcept override { return static_cast<int>(m_links.size()); };
+		virtual ::std::size_t subneurons_total() const noexcept override { return m_links.size(); };
 		virtual const ::uns::nn::general::neuron<typename base::neuron_traitset>* subneuron(int connection_idx) const noexcept override {
 			if(connection_idx >= 0 && connection_idx < m_links.size()) {
 				return static_cast<::uns::nn::general::neuron<typename base::neuron_traitset>*>(::std::get<part::_neuron_>(m_links[connection_idx]));
@@ -728,6 +728,8 @@ namespace uns::nn {
 				return nullptr;
 			};
 		};
+
+		virtual ::std::size_t params_total() const noexcept override { return m_params.size(); };
 
 		virtual const typename base::neuron_traitset::signal_traitset::signal_type& R() const noexcept override { return m_F->value(); };
 		virtual typename base::neuron_traitset::signal_traitset::signal_type& R() noexcept { return m_F->value(); };
@@ -1107,6 +1109,36 @@ namespace uns::nn {
 		virtual typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::signal_type _R(::std::size_t layer_index, ::std::size_t index) const { return base::m_layers[layer_index][index]->_R(); };
 
 		virtual typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::signal_type _C(::std::size_t layer_index, ::std::size_t index) const { return base::m_layers[layer_index][index]->_C(); };
+
+		virtual typename base::neuron_traitset::signal_traitset::signal_type dS_dw(
+			::std::size_t layer_index,
+			::std::size_t neuron_idx,
+			int link_index,
+			const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params
+		) const noexcept {
+			return m_layers[layer_index][neuron_idx].dS_dw(link_index, common_params);
+		};
+
+		virtual typename base::neuron_traitset::signal_traitset::signal_type dS_dp(
+			::std::size_t layer_index,
+			::std::size_t neuron_idx,
+			int param_index,
+			const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params
+		) const noexcept { 
+			return m_layers[layer_index][neuron_idx].dS_dp(param_index, common_params);
+		};
+
+		virtual typename base::neuron_traitset::signal_traitset::signal_type dF_dp(
+			::std::size_t layer_index,
+			::std::size_t neuron_idx,
+			int param_index,
+			const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params
+		) const noexcept {
+			return m_layers[layer_index][neuron_idx].dF_dp(param_index, common_params);
+		};
+
+		virtual ::std::size_t links_total(::std::size_t layer_index, ::std::size_t neuron_idx) const noexcept { return m_layers[layer_index][neuron_idx].subneurons_total(); };
+		virtual ::std::size_t params_total(::std::size_t layer_index, ::std::size_t neuron_idx) const noexcept { return m_layers[layer_index][neuron_idx].params_total(); };
 	};
 };
 
