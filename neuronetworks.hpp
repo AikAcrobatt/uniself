@@ -297,6 +297,8 @@ namespace uns::nn {
 			virtual const ::uns::nn::general::neuron_view<signal_traitset>* subneuron(int connection_idx) const noexcept { return nullptr; };
 			virtual ::uns::nn::general::neuron_view<signal_traitset>* subneuron(int connection_idx) noexcept { return nullptr; };
 
+			virtual ::std::size_t params_total() const noexcept override { return 0; };
+
 			virtual const typename signal_traitset::signal_type& R() const noexcept { return typename signal_traitset::signal_type{ 0 }; };
 			virtual const typename signal_traitset::signal_type& C() const noexcept { return typename signal_traitset::signal_type{ 0 }; };
 
@@ -477,6 +479,8 @@ namespace uns::nn {
 			virtual int subneurons_total() const noexcept override { return 0; };
 			virtual const ::uns::nn::general::neuron<neuron_traitset>* subneuron(int connection_idx) const noexcept override { return nullptr; };
 			virtual ::uns::nn::general::neuron<neuron_traitset>* subneuron(int connection_idx) noexcept override { return nullptr; };
+
+			virtual ::std::size_t params_total() const noexcept override { return 0; };
 
 			virtual const typename neuron_traitset::signal_traitset::signal_type& R() const noexcept override { return typename neuron_traitset::signal_traitset::signal_type{ 0 }; };
 			virtual const typename neuron_traitset::signal_traitset::signal_type& C() const noexcept override { return typename neuron_traitset::signal_traitset::signal_type{ 0 }; };
