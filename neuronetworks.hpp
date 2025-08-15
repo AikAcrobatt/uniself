@@ -209,7 +209,7 @@ namespace uns::nn {
 
 				return *this;
 			};
-			~neuron() {};
+			virtual ~neuron() {};
 		};
 
 
@@ -253,7 +253,7 @@ namespace uns::nn {
 
 				return *this;
 			};
-			~network() {};
+			virtual ~network() {};
 		};
 
 	};
@@ -283,6 +283,7 @@ namespace uns::nn {
 			neuron_view(const ::uns::nn::address& address) noexcept :
 				m_address(address) 
 			{};
+			virtual ~neuron_view() {};
 
 			virtual ::std::size_t capacity() const noexcept {
 				::std::size_t result = 0;
@@ -293,11 +294,11 @@ namespace uns::nn {
 				return result;
 			};
 
-			virtual int subneurons_total() const noexcept { return 0; };
-			virtual const ::uns::nn::general::neuron_view<signal_traitset>* subneuron(int connection_idx) const noexcept { return nullptr; };
-			virtual ::uns::nn::general::neuron_view<signal_traitset>* subneuron(int connection_idx) noexcept { return nullptr; };
+			virtual ::std::size_t subneurons_total() const noexcept { return 0; };
+			virtual const ::uns::nn::general::neuron_view<signal_traitset>* subneuron(::std::size_t connection_idx) const noexcept { return nullptr; };
+			virtual ::uns::nn::general::neuron_view<signal_traitset>* subneuron(::std::size_t connection_idx) noexcept { return nullptr; };
 
-			virtual ::std::size_t params_total() const noexcept override { return 0; };
+			virtual ::std::size_t params_total() const noexcept { return 0; };
 
 			virtual const typename signal_traitset::signal_type& R() const noexcept { return typename signal_traitset::signal_type{ 0 }; };
 			virtual const typename signal_traitset::signal_type& C() const noexcept { return typename signal_traitset::signal_type{ 0 }; };
@@ -352,7 +353,7 @@ namespace uns::nn {
 				m_value = value;
 				return *this;
 			};
-			~activator() noexcept {};
+			virtual ~activator() noexcept {};
 
 			virtual ::std::size_t capacity() const noexcept { return sizeof(*this); };
 
@@ -417,7 +418,7 @@ namespace uns::nn {
 				m_value = value;
 				return *this;
 			};
-			~collector() noexcept {};
+			virtual ~collector() noexcept {};
 
 			virtual ::std::size_t capacity() const noexcept { return sizeof(*this); };
 
@@ -476,9 +477,9 @@ namespace uns::nn {
 				return base::capacity();
 			};
 
-			virtual int subneurons_total() const noexcept override { return 0; };
-			virtual const ::uns::nn::general::neuron<neuron_traitset>* subneuron(int connection_idx) const noexcept override { return nullptr; };
-			virtual ::uns::nn::general::neuron<neuron_traitset>* subneuron(int connection_idx) noexcept override { return nullptr; };
+			virtual ::std::size_t subneurons_total() const noexcept override { return 0; };
+			virtual const ::uns::nn::general::neuron<neuron_traitset>* subneuron(::std::size_t connection_idx) const noexcept override { return nullptr; };
+			virtual ::uns::nn::general::neuron<neuron_traitset>* subneuron(::std::size_t connection_idx) noexcept override { return nullptr; };
 
 			virtual ::std::size_t params_total() const noexcept override { return 0; };
 
@@ -515,11 +516,11 @@ namespace uns::nn {
 		};
 
 
-		//all neural networks must be inherited fromthat class
+		//all neural networks must be inherited from that class
 		template<typename network_traitset_t>
 			requires ::std::derived_from<
 				network_traitset_t,
-					::uns::nn::traitset::network<
+				::uns::nn::traitset::network<
 					typename network_traitset_t::neuron_type,
 					typename network_traitset_t::description_type,
 					typename network_traitset_t::input_data_object_type
@@ -574,6 +575,7 @@ namespace uns::nn {
 	class sequential_neuron : public ::uns::nn::general::neuron<neuron_traitset_t> {
 	public:
 		using base = ::uns::nn::general::neuron<neuron_traitset_t>;
+		using neuron_traitset = typename base::neuron_traitset;
 		using signal_type = typename base::neuron_traitset::signal_traitset::signal_type;
 		using weight_type = typename base::neuron_traitset::signal_traitset::weight_type;
 	public:
@@ -594,7 +596,7 @@ namespace uns::nn {
 		::uns::nn::sequential_neuron<typename base::neuron_traitset>& operator=(const ::uns::nn::sequential_neuron<typename base::neuron_traitset>&) = delete;
 		sequential_neuron(::uns::nn::sequential_neuron<typename base::neuron_traitset>&&) = delete;
 		::uns::nn::sequential_neuron<typename base::neuron_traitset>& operator=(::uns::nn::sequential_neuron<typename base::neuron_traitset>&&) = delete;
-		~sequential_neuron() noexcept { clear(); };
+		virtual ~sequential_neuron() {};
 	protected:
 		virtual void clear() noexcept {
 			m_F = nullptr;
@@ -716,7 +718,7 @@ namespace uns::nn {
 		};
 
 		virtual ::std::size_t subneurons_total() const noexcept override { return m_links.size(); };
-		virtual const ::uns::nn::general::neuron<typename base::neuron_traitset>* subneuron(int connection_idx) const noexcept override {
+		virtual const ::uns::nn::general::neuron<typename base::neuron_traitset>* subneuron(::std::size_t connection_idx) const noexcept override {
 			if(connection_idx >= 0 && connection_idx < m_links.size()) {
 				return static_cast<::uns::nn::general::neuron<typename base::neuron_traitset>*>(::std::get<part::_neuron_>(m_links[connection_idx]));
 			}
@@ -724,7 +726,7 @@ namespace uns::nn {
 				return nullptr;
 			};
 		};
-		virtual ::uns::nn::general::neuron<typename base::neuron_traitset>* subneuron(int connection_idx) noexcept override {
+		virtual ::uns::nn::general::neuron<typename base::neuron_traitset>* subneuron(::std::size_t connection_idx) noexcept override {
 			if(connection_idx >= 0 && connection_idx < m_links.size()) {
 				return static_cast<::uns::nn::general::neuron<typename base::neuron_traitset>*>(::std::get<part::_neuron_>(m_links[connection_idx]));
 			}
@@ -751,8 +753,11 @@ namespace uns::nn {
 	class nonrecursive_reversive_neuron : public ::uns::nn::sequential_neuron<neuron_traitset_t> {
 	protected:
 		using base = ::uns::nn::sequential_neuron<neuron_traitset_t>;
-		using place_type = int;
 	public:
+		using neuron_traitset = typename base::neuron_traitset;
+		using signal_type = typename base::signal_type;
+		using weight_type = typename base::weight_type;
+		using place_type = int;
 	protected:
 		static const int _place_ = 1;
 		typename base::neuron_traitset::signal_traitset::signal_type m_r = 0;
@@ -766,7 +771,7 @@ namespace uns::nn {
 		::uns::nn::nonrecursive_reversive_neuron<typename base::neuron_traitset>& operator=(const ::uns::nn::nonrecursive_reversive_neuron<typename base::neuron_traitset>&) = delete;
 		nonrecursive_reversive_neuron(::uns::nn::nonrecursive_reversive_neuron<typename base::neuron_traitset>&&) = delete;
 		::uns::nn::nonrecursive_reversive_neuron<typename base::neuron_traitset>& operator=(::uns::nn::nonrecursive_reversive_neuron<typename base::neuron_traitset>&&) = delete;
-		~nonrecursive_reversive_neuron() { clear(); };
+		virtual ~nonrecursive_reversive_neuron() {};
 	protected:
 		virtual void clear() noexcept {
 			base::clear();
@@ -788,7 +793,7 @@ namespace uns::nn {
 						throw ::std::runtime_error(UNS_DEV_EXCEPTION_MSG);
 					};
 
-					for(int subneuron_idx = 0; subneuron_idx < neuron_ptr->subneurons_total(); ++subneuron_idx) {
+					for(::std::size_t subneuron_idx = 0; subneuron_idx < neuron_ptr->subneurons_total(); ++subneuron_idx) {
 						if(neuron_ptr->subneuron(subneuron_idx)->address() == this->address()) {
 							m__links.emplace_back(::std::pair<::uns::nn::nonrecursive_reversive_neuron<typename base::neuron_traitset>*, place_type>{ neuron_ptr, subneuron_idx });
 						};
@@ -854,6 +859,7 @@ namespace uns::nn {
 	class sequential_network : public ::uns::nn::general::network<network_traitset_t> {
 	protected:
 		using base = ::uns::nn::general::network<network_traitset_t>;
+		using network_traitset = typename base::network_traitset;
 
 		::std::vector<::std::vector<typename base::network_traitset::neuron_type*>> m_layers;
 	public:
@@ -862,9 +868,7 @@ namespace uns::nn {
 		::uns::nn::sequential_network<typename base::network_traitset>& operator=(const ::uns::nn::sequential_network<typename base::network_traitset>& net) = delete;
 		sequential_network(::uns::nn::sequential_network<typename base::network_traitset>&& net) = delete;
 		::uns::nn::sequential_network<typename base::network_traitset>& operator=(::uns::nn::sequential_network<typename base::network_traitset>&& net) = delete;
-		~sequential_network() {
-			clear();
-		};
+		virtual ~sequential_network() {};
 	protected:
 		void clear() noexcept {
 			for(auto& layer : m_layers) {
@@ -1042,7 +1046,9 @@ namespace uns::nn {
 	class nonrecursive_reversive_network : public ::uns::nn::sequential_network<network_traitset_t> {
 	protected:
 		using base = ::uns::nn::sequential_network<network_traitset_t>;
-
+	public:
+		using network_traitset = typename base::network_traitset;
+	protected:
 		::std::vector<typename base::network_traitset::output_data_object_type::input_traitset::input_neuron_type*> m_reversive_inputs;
 	public:
 		nonrecursive_reversive_network() {};
@@ -1050,9 +1056,7 @@ namespace uns::nn {
 		::uns::nn::nonrecursive_reversive_network<typename base::network_traitset>& operator=(const ::uns::nn::nonrecursive_reversive_network<typename base::network_traitset>& net) = delete;
 		nonrecursive_reversive_network(::uns::nn::nonrecursive_reversive_network<typename base::network_traitset>&& net) = delete;
 		::uns::nn::nonrecursive_reversive_network<typename base::network_traitset>& operator=(::uns::nn::nonrecursive_reversive_network<typename base::network_traitset>&& net) = delete;
-		~nonrecursive_reversive_network() {
-			clear();
-		};
+		virtual ~nonrecursive_reversive_network() {};
 	protected:
 		void clear() noexcept {
 			::uns::nn::sequential_network<typename base::network_traitset>::clear();
@@ -1114,29 +1118,29 @@ namespace uns::nn {
 
 		virtual typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::signal_type _C(::std::size_t layer_index, ::std::size_t index) const { return base::m_layers[layer_index][index]->_C(); };
 
-		virtual typename base::neuron_traitset::signal_traitset::signal_type dS_dw(
+		virtual typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::signal_type dS_dw(
 			::std::size_t layer_index,
 			::std::size_t neuron_idx,
 			int link_index,
-			const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params
+			const ::std::vector<typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::params_type>& common_params
 		) const noexcept {
 			return m_layers[layer_index][neuron_idx].dS_dw(link_index, common_params);
 		};
 
-		virtual typename base::neuron_traitset::signal_traitset::signal_type dS_dp(
+		virtual typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::signal_type dS_dp(
 			::std::size_t layer_index,
 			::std::size_t neuron_idx,
 			int param_index,
-			const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params
+			const ::std::vector<typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::params_type>& common_params
 		) const noexcept { 
 			return m_layers[layer_index][neuron_idx].dS_dp(param_index, common_params);
 		};
 
-		virtual typename base::neuron_traitset::signal_traitset::signal_type dF_dp(
+		virtual typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::signal_type dF_dp(
 			::std::size_t layer_index,
 			::std::size_t neuron_idx,
 			int param_index,
-			const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params
+			const ::std::vector<typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::params_type>& common_params
 		) const noexcept {
 			return m_layers[layer_index][neuron_idx].dF_dp(param_index, common_params);
 		};
