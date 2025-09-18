@@ -27,7 +27,6 @@ namespace uns {
 			collection.cend();
 			{ *(collection.cbegin()) } -> ::std::convertible_to<value_t>;
 			collection.cbegin()++;
-			{ collection.size() } -> ::std::integral;
 		};
 
 
