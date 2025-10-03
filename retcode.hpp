@@ -168,7 +168,7 @@ namespace uns {
 		protected:
 			static bool operand(bool arg1, bool arg2) { return false; };
 		public:
-			static bool match(const ::uns::response& SingleResponse) {
+			static bool match(const ::uns::response& SingleResponse) {//TODO a conflict between static and non-static method
 				return first_subfilter_t::match<operand>(SingleResponse);
 			};
 			virtual bool match(const ::uns::response& SingleResponse) const noexcept override {
