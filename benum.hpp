@@ -14,66 +14,66 @@
 #define UNS_LIB_BENUM "benum.hpp"
 
 //BENUM DECLARATOR
-#define UNS_BENUM_DECLARATOR(BENUM_NAME, SPECIFICATION_TYPE, ...)																	        \
-	BETTER_ENUM(BENUM_NAME, SPECIFICATION_TYPE, __VA_ARGS__);															                    \
-	inline bool operator==(const BENUM_NAME& arg1, const BENUM_NAME::_enumerated& arg2) { return arg1 == static_cast<BENUM_NAME>(arg2); };			\
-	inline bool operator==(const BENUM_NAME::_enumerated& arg1, const BENUM_NAME& arg2) { return static_cast<BENUM_NAME>(arg1) == arg2; };			\
-	inline bool operator!=(const BENUM_NAME& arg1, const BENUM_NAME::_enumerated& arg2) { return !(arg1 == static_cast<BENUM_NAME>(arg2)); };		\
-	inline bool operator!=(const BENUM_NAME::_enumerated& arg1, const BENUM_NAME& arg2) { return !(static_cast<BENUM_NAME>(arg1) == arg2); };		
+#define UNS_BENUM_DECLARATOR(BENUM_NAME, SPECIFICATION_TYPE, ...)                                                                            \
+    BETTER_ENUM(BENUM_NAME, SPECIFICATION_TYPE, __VA_ARGS__);                                                                                \
+    inline bool operator==(const BENUM_NAME& arg1, const BENUM_NAME::_enumerated& arg2) { return arg1 == static_cast<BENUM_NAME>(arg2); };            \
+    inline bool operator==(const BENUM_NAME::_enumerated& arg1, const BENUM_NAME& arg2) { return static_cast<BENUM_NAME>(arg1) == arg2; };            \
+    inline bool operator!=(const BENUM_NAME& arg1, const BENUM_NAME::_enumerated& arg2) { return !(arg1 == static_cast<BENUM_NAME>(arg2)); };        \
+    inline bool operator!=(const BENUM_NAME::_enumerated& arg1, const BENUM_NAME& arg2) { return !(static_cast<BENUM_NAME>(arg1) == arg2); };        
 
 //TODO benums are strongly dependent on the code page of initial file especially when they do have default values
 //TODO so there is a strong demand in independent realization of benums
 
 namespace uns {
 
-	//BENUM CONCEPT
-	template<typename benum_t>
-	concept is_benum = requires(benum_t enum_obj) {
-		benum_t::_values();
-	}
-	&& requires(benum_t enum_obj) {
-		benum_t::_values().begin();
-	}
-	&& requires(benum_t enum_obj) {
-		benum_t::_values().end();
-	}
-	&& requires(benum_t enum_obj) {
-		benum_t::_values().size();
-	}
-	&& requires(benum_t enum_obj) {
-		typename benum_t::_enumerated;
-	}
-	&& requires(benum_t enum_obj) {
-		{ enum_obj } -> ::std::convertible_to<typename benum_t::_enumerated>;
-	}
-	&& requires(benum_t enum_obj) {
-		typename benum_t::_value_iterator;
-	}
-	&& requires(benum_t enum_obj) {
-		enum_obj._to_string();
-	}
-	&& requires(benum_t enum_obj) {
-		benum_t::_from_string("...");
-	};
+    //BENUM CONCEPT
+    template<typename benum_t>
+    concept is_benum = requires(benum_t enum_obj) {
+        benum_t::_values();
+    }
+    && requires(benum_t enum_obj) {
+        benum_t::_values().begin();
+    }
+    && requires(benum_t enum_obj) {
+        benum_t::_values().end();
+    }
+    && requires(benum_t enum_obj) {
+        benum_t::_values().size();
+    }
+    && requires(benum_t enum_obj) {
+        typename benum_t::_enumerated;
+    }
+    && requires(benum_t enum_obj) {
+        { enum_obj } -> ::std::convertible_to<typename benum_t::_enumerated>;
+    }
+    && requires(benum_t enum_obj) {
+        typename benum_t::_value_iterator;
+    }
+    && requires(benum_t enum_obj) {
+        enum_obj._to_string();
+    }
+    && requires(benum_t enum_obj) {
+        benum_t::_from_string("...");
+    };
 
 
-	//BENUM TYPE_TRAITS
-	template<typename benum_t>
-	class benum_traits : public ::std::integral_constant<bool, ::uns::is_benum<benum_t>> {};
+    //BENUM TYPE_TRAITS
+    template<typename benum_t>
+    class benum_traits : public ::std::integral_constant<bool, ::uns::is_benum<benum_t>> {};
 };
 
 
 namespace uns::string {
 
-	//convertions of benum types with std::u8string
-	template<::std::constructible_from<::std::u8string> out_t, ::uns::is_benum in_t>
-	out_t u8_cast(const in_t& obj) {
-		return ::uns::string::u8_cast<::std::u8string>(obj._to_string());
-	};
-	template<::uns::is_benum out_t>
-	out_t u8_cast(const ::std::u8string_view& obj) {
-		return out_t::_from_string(::uns::string::u8_cast<::std::string>(obj).c_str());
-	};
+    //convertions of benum types with std::u8string
+    template<::std::constructible_from<::std::u8string> out_t, ::uns::is_benum in_t>
+    out_t u8_cast(const in_t& obj) {
+        return ::uns::string::u8_cast<::std::u8string>(obj._to_string());
+    };
+    template<::uns::is_benum out_t>
+    out_t u8_cast(const ::std::u8string_view& obj) {
+        return out_t::_from_string(::uns::string::u8_cast<::std::string>(obj).c_str());
+    };
 };
 //TODO it does not work with explicit enumerators
 
