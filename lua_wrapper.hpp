@@ -829,7 +829,7 @@ namespace uns::lua {
                     result.push_to(stack);
                 };
 
-                return results.size();
+                return static_cast<int>(results.size());
             };
             template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {

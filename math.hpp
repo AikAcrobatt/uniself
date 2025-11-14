@@ -3,9 +3,17 @@
 #include <concepts>
 #include <limits>
 
-
 #ifndef UNS_LIB_MATH
 #define UNS_LIB_MATH "math.hpp"
+
+#ifdef max
+#define UNS_STD_MAX max
+#undef max
+#endif
+#ifdef min
+#define UNS_STD_MIN min
+#undef min
+#endif
 
 namespace uns::math {
 
@@ -118,5 +126,14 @@ namespace uns::math {
     };
 
 };
+
+#ifdef UNS_STD_MAX
+#define max UNS_STD_MAX
+#undef UNS_STD_MAX
+#endif
+#ifdef UNS_STD_MIN
+#define min UNS_STD_MIN
+#undef UNS_STD_MIN
+#endif
 
 #endif
