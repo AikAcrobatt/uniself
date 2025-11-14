@@ -30,9 +30,9 @@ namespace uns {
         };
 
 
-    template<typename iterator_t, typename referencable_t>
+    template<typename iterator_t, typename referensable_t>
     concept legacy_iterator = requires (iterator_t iter) {
-        ::std::convertible_to<decltype(*iter), referencable_t>;
+        ::std::convertible_to<decltype(*iter), referensable_t>;
         ::std::same_as<decltype(++iter), iterator_t&>;
     };
 
@@ -44,7 +44,16 @@ namespace uns {
         args_t ... args
     ) {
         result = functor(args ...);
-    };
+    }
+    || (
+        ::std::same_as<result_t, void>
+        && requires(
+            functor_t functor,
+            args_t ... args
+        ) {
+            functor(args ...);
+        }
+    );
 
 
 };
