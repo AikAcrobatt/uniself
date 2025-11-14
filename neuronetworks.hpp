@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -509,7 +509,6 @@ namespace uns::nn {
             using iterator_type = typename input_data_object_traitset_t::iterator_type;
             using input_allocator_type = typename input_data_object_traitset_t::input_allocator_type;
 
-            virtual ::std::size_t size() const noexcept = 0;
             virtual typename input_traitset::input_neuron_type* get(const ::uns::nn::address&) noexcept = 0;
             virtual iterator_type begin() const noexcept = 0;
             virtual iterator_type end() const noexcept = 0;
@@ -598,7 +597,7 @@ namespace uns::nn {
         ::uns::nn::sequential_neuron<typename base::neuron_traitset>& operator=(::uns::nn::sequential_neuron<typename base::neuron_traitset>&&) = delete;
         virtual ~sequential_neuron() {};
     protected:
-        virtual void clear() noexcept {
+        void clear() noexcept {
             m_F = nullptr;
             m_S = nullptr;
 
@@ -614,16 +613,10 @@ namespace uns::nn {
 
             if(m_F != nullptr) {
                 res.activator = m_F->type();
-            }
-            else {
-                res.activator = u8"";
             };
 
             if(m_S != nullptr) {
-                res.collector = m_F->type();
-            }
-            else {
-                res.collector = u8"";
+                res.collector = m_S->type();
             };
 
             res.params = m_params;
@@ -773,7 +766,7 @@ namespace uns::nn {
         ::uns::nn::nonrecursive_reversive_neuron<typename base::neuron_traitset>& operator=(::uns::nn::nonrecursive_reversive_neuron<typename base::neuron_traitset>&&) = delete;
         virtual ~nonrecursive_reversive_neuron() {};
     protected:
-        virtual void clear() noexcept {
+        void clear() noexcept {
             base::clear();
 
             m__links.clear();
@@ -868,7 +861,7 @@ namespace uns::nn {
         ::uns::nn::sequential_network<typename base::network_traitset>& operator=(const ::uns::nn::sequential_network<typename base::network_traitset>& net) = delete;
         sequential_network(::uns::nn::sequential_network<typename base::network_traitset>&& net) = delete;
         ::uns::nn::sequential_network<typename base::network_traitset>& operator=(::uns::nn::sequential_network<typename base::network_traitset>&& net) = delete;
-        virtual ~sequential_network() {};
+        virtual ~sequential_network() { clear(); };
     protected:
         void clear() noexcept {
             for(auto& layer : m_layers) {
@@ -1056,7 +1049,7 @@ namespace uns::nn {
         ::uns::nn::nonrecursive_reversive_network<typename base::network_traitset>& operator=(const ::uns::nn::nonrecursive_reversive_network<typename base::network_traitset>& net) = delete;
         nonrecursive_reversive_network(::uns::nn::nonrecursive_reversive_network<typename base::network_traitset>&& net) = delete;
         ::uns::nn::nonrecursive_reversive_network<typename base::network_traitset>& operator=(::uns::nn::nonrecursive_reversive_network<typename base::network_traitset>&& net) = delete;
-        virtual ~nonrecursive_reversive_network() {};
+        virtual ~nonrecursive_reversive_network() { clear(); };
     protected:
         void clear() noexcept {
             ::uns::nn::sequential_network<typename base::network_traitset>::clear();
@@ -1124,7 +1117,7 @@ namespace uns::nn {
             int link_index,
             const ::std::vector<typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::params_type>& common_params
         ) const noexcept {
-            return m_layers[layer_index][neuron_idx].dS_dw(link_index, common_params);
+            return base::m_layers[layer_index][neuron_idx].dS_dw(link_index, common_params);
         };
 
         virtual typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::signal_type dS_dp(
@@ -1133,7 +1126,7 @@ namespace uns::nn {
             int param_index,
             const ::std::vector<typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::params_type>& common_params
         ) const noexcept { 
-            return m_layers[layer_index][neuron_idx].dS_dp(param_index, common_params);
+            return base::m_layers[layer_index][neuron_idx].dS_dp(param_index, common_params);
         };
 
         virtual typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::signal_type dF_dp(
@@ -1142,11 +1135,11 @@ namespace uns::nn {
             int param_index,
             const ::std::vector<typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::params_type>& common_params
         ) const noexcept {
-            return m_layers[layer_index][neuron_idx].dF_dp(param_index, common_params);
+            return base::m_layers[layer_index][neuron_idx].dF_dp(param_index, common_params);
         };
 
-        virtual ::std::size_t links_total(::std::size_t layer_index, ::std::size_t neuron_idx) const noexcept { return m_layers[layer_index][neuron_idx].subneurons_total(); };
-        virtual ::std::size_t params_total(::std::size_t layer_index, ::std::size_t neuron_idx) const noexcept { return m_layers[layer_index][neuron_idx].params_total(); };
+        virtual ::std::size_t links_total(::std::size_t layer_index, ::std::size_t neuron_idx) const noexcept { return base::m_layers[layer_index][neuron_idx].subneurons_total(); };
+        virtual ::std::size_t params_total(::std::size_t layer_index, ::std::size_t neuron_idx) const noexcept { return base::m_layers[layer_index][neuron_idx].params_total(); };
     };
 };
 
