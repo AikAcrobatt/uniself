@@ -382,7 +382,7 @@ namespace uns::population {
         virtual void OnConditionStart() noexcept {};
         virtual void OnConditionUnitStart(order_element_type& elem) noexcept {};
         virtual void OnConditionUnitFinish(order_element_type& elem) noexcept {};
-        virtual void OnConditionBeforeBreed() noexcept {};
+        virtual void OnBeforeBreed() noexcept {};
         virtual void OnConditionFinish() noexcept {};
         virtual void OnSanitationStart() noexcept {};
         virtual void OnSanitationUnitStart(order_element_type& elem) noexcept {};
@@ -404,7 +404,7 @@ namespace uns::population {
                 OnConditionUnitFinish(one_unit);
             };
 
-            OnConditionBeforeBreed();
+            OnBeforeBreed();
 
             for(auto& one_unit : units_list) {
                 breeder.breed(one_unit);
