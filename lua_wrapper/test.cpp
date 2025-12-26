@@ -1,4 +1,4 @@
-﻿
+
 #include <iostream>
 
 #include "uniself/lua_wrapper.hpp"
@@ -113,10 +113,14 @@ void test_print(::uns::lua::thread& th) noexcept {
 };
 
 
-::std::array<::uns::lua::value, 5> lib_func_5_5(::uns::lua::thread&, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2, const ::uns::lua::value& arg3, const ::uns::lua::value& arg4, const ::uns::lua::value& arg5) noexcept {
+::std::array<::uns::lua::value, 5> lib_func_5_5(::uns::lua::thread&, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2, const ::uns::lua::value& arg3, const ::uns::lua::value& arg4, const ::uns::lua::value& arg5) {
     return { arg5, arg4, arg1, arg3, arg2 };
 };
 
+void lib_func_0_0(::uns::lua::thread&) {
+    throw ::std::exception{ "Expected exception" };
+    print_vals("!!lib_func_0_0!!");
+};
 
 void function_n_value_test() {
     auto script = ::uns::lua::script{
@@ -409,10 +413,42 @@ void script_loading_test() {
     ::std::cout << print_args.error().to_string() << "\n";
 };
 
+void error_rising() {
+    auto script = ::uns::lua::script{
+        ::uns::lua::library{ u8"module", { ::uns::lua::lib_entry::make<lib_func_0_0>(::std::u8string{ u8"lib_func" }) }, u8"" }
+    };
+    if(script.error().is()) {
+        ::std::cout << script.error().to_string() << "\n";
+        return;
+    };
+
+    script.load(
+        ::std::u8string{
+            u8R"^^(
+                print("LUA:START")
+                module = require "module_api"
+                print(pcall(module.lib_func, 1, nil, 3))
+                print("LUA:FINISH")
+            )^^"
+        }
+    );
+    if(script.error().is()) {
+        ::std::cout << script.error().to_string() << "\n";
+        return;
+    };
+
+    script.run();
+    if(script.error().is()) {
+        ::std::cout << script.error().to_string() << "\n";
+        return;
+    };
+
+};
+
 int main() {
     ::std::cout << "START\n";
 
-    script_loading_test();
+    error_rising();
 
     ::std::cout << "FINISH\n";
 };

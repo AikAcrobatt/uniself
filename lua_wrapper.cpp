@@ -874,7 +874,7 @@ namespace uns::lua::auxiliary {
             int lua_retcode = lua_pcall((stack), args_total, expected_results, 0);
             lua_retcode != LUA_OK
         ) {
-            std::string err_str = "";
+            ::std::string err_str = "";
             if(lua_isstring((stack), -1)) {
                 err_str = lua_tostring((stack), -1);
             };
@@ -1679,6 +1679,15 @@ void ::uns::lua::thread::call(int results_expected_total) noexcept {
     else {
         return 0;
     };
+};
+
+int ::uns::lua::thread::raise_error(const ::std::string& errtext) noexcept {
+    luaL_error((m_stack.get()), errtext.c_str());
+    return 0;
+};
+int ::uns::lua::thread::raise_error(const ::std::u8string& errtext) noexcept {
+    auto l_errtext = ::uns::string::u8_cast<::std::string>(errtext);
+    return raise_error(l_errtext);
 };
 
 void ::uns::lua::thread::gc() noexcept {

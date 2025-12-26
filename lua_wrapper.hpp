@@ -549,6 +549,9 @@ namespace uns::lua {
         ::std::size_t size() const noexcept;
         ::uns::lua::value get_value(int input_index) noexcept;
 
+        int raise_error(const ::std::string& errtext) noexcept;
+        int raise_error(const ::std::u8string& errtext) noexcept;
+
         void gc() noexcept;
     };
 
@@ -557,567 +560,790 @@ namespace uns::lua {
 
         namespace wrappers::returning_all {
 
-            template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&) noexcept>
+            template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                auto args = ::std::vector<::uns::lua::value>{};
-                for(::std::size_t arg_idx = 1; arg_idx < l_thread.size(); ++arg_idx) {
-                    args.push_back(l_thread.get_value(arg_idx));
+                try{
+                    auto args = ::std::vector<::uns::lua::value>{};
+                    for(::std::size_t arg_idx = 1; arg_idx < l_thread.size(); ++arg_idx) {
+                        args.push_back(l_thread.get_value(arg_idx));
+                    };
+
+                    auto results = wrapped(l_thread, args);
+
+                    for(const auto& result : results) {
+                        result.push_to(stack);
+                    };
+
+                    return static_cast<int>(results.size());
+                }
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
                 };
-
-                auto results = wrapped(l_thread, args);
-
-                for(const auto& result : results) {
-                    result.push_to(stack);
-                };
-
-                return results.size();
             };
-            template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&) noexcept>
+            template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                auto results = wrapped(l_thread);
+                try {
+                    auto results = wrapped(l_thread);
 
-                for(const auto& result : results) {
-                    result.push_to(stack);
+                    for(const auto& result : results) {
+                        result.push_to(stack);
+                    };
+
+                    return static_cast<int>(results.size());
+                }
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
                 };
-
-                return results.size();
             };
-            template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
+            template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                auto results = ::std::vector<::uns::lua::value>{};
-                if(l_thread.size() >= 1) {
-                    results = wrapped(l_thread, l_thread.get_value(1));
+                try {
+                    auto results = ::std::vector<::uns::lua::value>{};
+                    if(l_thread.size() >= 1) {
+                        results = wrapped(l_thread, l_thread.get_value(1));
+                    }
+                    else {
+                        results = wrapped(l_thread, ::uns::lua::nil);
+                    };
+
+                    for(const auto& result : results) {
+                        result.push_to(stack);
+                    };
+
+                    return static_cast<int>(results.size());
                 }
-                else {
-                    results = wrapped(l_thread, ::uns::lua::nil);
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
                 };
-
-                for(const auto& result : results) {
-                    result.push_to(stack);
-                };
-
-                return results.size();
             };
-            template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+            template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                auto results = ::std::vector<::uns::lua::value>{};
-                if(l_thread.size() >= 2) {
-                    results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2));
-                }
-                else if(l_thread.size() >= 1) {
-                    results = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil);
-                }
-                else {
-                    results = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil);
-                };
+                try {
+                    auto results = ::std::vector<::uns::lua::value>{};
+                    if(l_thread.size() >= 2) {
+                        results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2));
+                    }
+                    else if(l_thread.size() >= 1) {
+                        results = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil);
+                    }
+                    else {
+                        results = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil);
+                    };
 
-                for(const auto& result : results) {
-                    result.push_to(stack);
-                };
+                    for(const auto& result : results) {
+                        result.push_to(stack);
+                    };
 
-                return results.size();
+                    return static_cast<int>(results.size());
+                }
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
+                };
             };
-            template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+            template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                auto results = ::std::vector<::uns::lua::value>{};
-                if(l_thread.size() >= 3) {
-                    results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3));
-                }
-                else if(l_thread.size() >= 2) {
-                    results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 1) {
-                    results = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else {
-                    results = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                };
+                try {
+                    auto results = ::std::vector<::uns::lua::value>{};
+                    if(l_thread.size() >= 3) {
+                        results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3));
+                    }
+                    else if(l_thread.size() >= 2) {
+                        results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 1) {
+                        results = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else {
+                        results = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    };
 
-                for(const auto& result : results) {
-                    result.push_to(stack);
-                };
+                    for(const auto& result : results) {
+                        result.push_to(stack);
+                    };
 
-                return results.size();
+                    return static_cast<int>(results.size());
+                }
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
+                };
             };
-            template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+            template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                auto results = ::std::vector<::uns::lua::value>{};
-                if(l_thread.size() >= 4) {
-                    results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4));
-                }
-                else if(l_thread.size() >= 3) {
-                    results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 2) {
-                    results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 1) {
-                    results = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else {
-                    results = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                };
+                try {
+                    auto results = ::std::vector<::uns::lua::value>{};
+                    if(l_thread.size() >= 4) {
+                        results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4));
+                    }
+                    else if(l_thread.size() >= 3) {
+                        results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 2) {
+                        results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 1) {
+                        results = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else {
+                        results = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    };
 
-                for(const auto& result : results) {
-                    result.push_to(stack);
-                };
+                    for(const auto& result : results) {
+                        result.push_to(stack);
+                    };
 
-                return results.size();
+                    return static_cast<int>(results.size());
+                }
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
+                };
             };
-            template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+            template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                auto results = ::std::vector<::uns::lua::value>{};
-                if(l_thread.size() >= 5) {
-                    results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4), l_thread.get_value(5));
-                }
-                else if(l_thread.size() >= 4) {
-                    results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4), ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 3) {
-                    results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 2) {
-                    results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 1) {
-                    results = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else {
-                    results = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                };
+                try {
+                    auto results = ::std::vector<::uns::lua::value>{};
+                    if(l_thread.size() >= 5) {
+                        results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4), l_thread.get_value(5));
+                    }
+                    else if(l_thread.size() >= 4) {
+                        results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4), ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 3) {
+                        results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 2) {
+                        results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 1) {
+                        results = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else {
+                        results = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    };
 
-                for(const auto& result : results) {
-                    result.push_to(stack);
-                };
+                    for(const auto& result : results) {
+                        result.push_to(stack);
+                    };
 
-                return results.size();
+                    return static_cast<int>(results.size());
+                }
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
+                };
             };
 
         };
 
         namespace wrappers::returning_some {
 
-            template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&) noexcept>
+            template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                auto args = ::std::vector<::uns::lua::value>{};
-                for(::std::size_t arg_idx = 1; arg_idx < l_thread.size(); ++arg_idx) {
-                    args.push_back(l_thread.get_value(arg_idx));
+                try {
+                    auto args = ::std::vector<::uns::lua::value>{};
+                    for(::std::size_t arg_idx = 1; arg_idx < l_thread.size(); ++arg_idx) {
+                        args.push_back(l_thread.get_value(arg_idx));
+                    };
+
+                    auto results = wrapped(l_thread, args);
+
+                    for(const auto& result : results) {
+                        result.push_to(stack);
+                    };
+
+                    return static_cast<int>(results.size());
+                }
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
                 };
-
-                auto results = wrapped(l_thread, args);
-
-                for(const auto& result : results) {
-                    result.push_to(stack);
-                };
-
-                return results.size();
             };
-            template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&) noexcept>
+            template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
-                auto results = wrapped(l_thread);
 
-                auto results = wrapped(l_thread);
+                try {
+                    auto results = wrapped(l_thread);
+                    for(const auto& result : results) {
+                        result.push_to(stack);
+                    };
 
-                for(const auto& result : results) {
-                    result.push_to(stack);
+                    return static_cast<int>(results.size());
+                }
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
                 };
-
-                return results.size();
             };
-            template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
+            template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                auto results = ::std::array<::uns::lua::value, result_values_number>{};
-                if(l_thread.size() >= 1) {
-                    results = wrapped(l_thread, l_thread.get_value(1));
+                try {
+                    auto results = ::std::array<::uns::lua::value, result_values_number>{};
+                    if(l_thread.size() >= 1) {
+                        results = wrapped(l_thread, l_thread.get_value(1));
+                    }
+                    else {
+                        results = wrapped(l_thread, ::uns::lua::nil);
+                    };
+
+                    for(const auto& result : results) {
+                        result.push_to(stack);
+                    };
+
+                    return static_cast<int>(results.size());
                 }
-                else {
-                    results = wrapped(l_thread, ::uns::lua::nil);
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
                 };
-
-                for(const auto& result : results) {
-                    result.push_to(stack);
-                };
-
-                return results.size();
             };
-            template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+            template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                auto results = ::std::array<::uns::lua::value, result_values_number>{};
-                if(l_thread.size() >= 2) {
-                    results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2));
-                }
-                else if(l_thread.size() >= 1) {
-                    results = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil);
-                }
-                else {
-                    results = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil);
-                };
+                try {
+                    auto results = ::std::array<::uns::lua::value, result_values_number>{};
+                    if(l_thread.size() >= 2) {
+                        results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2));
+                    }
+                    else if(l_thread.size() >= 1) {
+                        results = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil);
+                    }
+                    else {
+                        results = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil);
+                    };
 
-                for(const auto& result : results) {
-                    result.push_to(stack);
-                };
+                    for(const auto& result : results) {
+                        result.push_to(stack);
+                    };
 
-                return results.size();
+                    return static_cast<int>(results.size());
+                }
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
+                };
             };
-            template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+            template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                auto results = ::std::array<::uns::lua::value, result_values_number>{};
-                if(l_thread.size() >= 3) {
-                    results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3));
-                }
-                else if(l_thread.size() >= 2) {
-                    results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 1) {
-                    results = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else {
-                    results = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                };
+                try {
+                    auto results = ::std::array<::uns::lua::value, result_values_number>{};
+                    if(l_thread.size() >= 3) {
+                        results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3));
+                    }
+                    else if(l_thread.size() >= 2) {
+                        results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 1) {
+                        results = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else {
+                        results = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    };
 
-                for(const auto& result : results) {
-                    result.push_to(stack);
-                };
+                    for(const auto& result : results) {
+                        result.push_to(stack);
+                    };
 
-                return results.size();
+                    return static_cast<int>(results.size());
+                }
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
+                };
             };
-            template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+            template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                auto results = ::std::array<::uns::lua::value, result_values_number>{};
-                if(l_thread.size() >= 4) {
-                    results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4));
-                }
-                else if(l_thread.size() >= 3) {
-                    results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 2) {
-                    results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 1) {
-                    results = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else {
-                    results = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                };
+                try {
+                    auto results = ::std::array<::uns::lua::value, result_values_number>{};
+                    if(l_thread.size() >= 4) {
+                        results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4));
+                    }
+                    else if(l_thread.size() >= 3) {
+                        results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 2) {
+                        results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 1) {
+                        results = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else {
+                        results = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    };
 
-                for(const auto& result : results) {
-                    result.push_to(stack);
-                };
+                    for(const auto& result : results) {
+                        result.push_to(stack);
+                    };
 
-                return static_cast<int>(results.size());
+                    return static_cast<int>(results.size());
+                }
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
+                };
             };
-            template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+            template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                auto results = ::std::array<::uns::lua::value, result_values_number>{};
-                if(l_thread.size() >= 5) {
-                    results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4), l_thread.get_value(5));
-                }
-                else if(l_thread.size() >= 4) {
-                    results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4), ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 3) {
-                    results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 2) {
-                    results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 1) {
-                    results = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else {
-                    results = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                };
+                try {
+                    auto results = ::std::array<::uns::lua::value, result_values_number>{};
+                    if(l_thread.size() >= 5) {
+                        results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4), l_thread.get_value(5));
+                    }
+                    else if(l_thread.size() >= 4) {
+                        results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4), ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 3) {
+                        results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 2) {
+                        results = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 1) {
+                        results = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else {
+                        results = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    };
 
-                for(const auto& result : results) {
-                    result.push_to(stack);
-                };
+                    for(const auto& result : results) {
+                        result.push_to(stack);
+                    };
 
-                return results.size();
+                    return static_cast<int>(results.size());
+                }
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
+                };
             };
 
         };
 
         namespace wrappers::returning_one {
 
-            template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&) noexcept>
+            template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                auto args = ::std::vector<::uns::lua::value>{};
-                for(::std::size_t arg_idx = 1; arg_idx < l_thread.size(); ++arg_idx) {
-                    args.push_back(l_thread.get_value(arg_idx));
+                try {
+                    auto args = ::std::vector<::uns::lua::value>{};
+                    for(::std::size_t arg_idx = 1; arg_idx < l_thread.size(); ++arg_idx) {
+                        args.push_back(l_thread.get_value(arg_idx));
+                    };
+
+                    auto result = wrapped(l_thread, args);
+                    result.push_to(stack);
+
+                    return 1;
+                }
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
                 };
-
-                auto result = wrapped(l_thread, args);
-                result.push_to(stack);
-
-                return 1;
             };
-            template<::uns::lua::value(*wrapped)(::uns::lua::thread&) noexcept>
-            int wrap(::uns::lua::alias::lua_state stack) noexcept {
-                auto l_thread = ::uns::lua::thread{ stack };
-                auto result = wrapped(l_thread);
-
-                result.push_to(stack);
-
-                return 1;
-            };
-            template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
+            template<::uns::lua::value(*wrapped)(::uns::lua::thread&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                auto result = ::uns::lua::value{};
-                if(l_thread.size() >= 1) {
-                    result = wrapped(l_thread, l_thread.get_value(1));
+                try {
+                    auto result = wrapped(l_thread);
+                    result.push_to(stack);
+
+                    return 1;
                 }
-                else {
-                    result = wrapped(l_thread, ::uns::lua::nil);
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
                 };
-
-                result.push_to(stack);
-
-                return 1;
             };
-            template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+            template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                auto result = ::uns::lua::value{};
-                if(l_thread.size() >= 2) {
-                    result = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2));
+                try {
+                    auto result = ::uns::lua::value{};
+                    if(l_thread.size() >= 1) {
+                        result = wrapped(l_thread, l_thread.get_value(1));
+                    }
+                    else {
+                        result = wrapped(l_thread, ::uns::lua::nil);
+                    };
+
+                    result.push_to(stack);
+
+                    return 1;
                 }
-                else if(l_thread.size() >= 1) {
-                    result = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil);
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
                 }
-                else {
-                    result = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil);
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
                 };
-
-                result.push_to(stack);
-
-                return 1;
             };
-            template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+            template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                auto result = ::uns::lua::value{};
-                if(l_thread.size() >= 3) {
-                    result = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3));
+                try {
+                    auto result = ::uns::lua::value{};
+                    if(l_thread.size() >= 2) {
+                        result = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2));
+                    }
+                    else if(l_thread.size() >= 1) {
+                        result = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil);
+                    }
+                    else {
+                        result = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil);
+                    };
+
+                    result.push_to(stack);
+
+                    return 1;
                 }
-                else if(l_thread.size() >= 2) {
-                    result = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil);
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
                 }
-                else if(l_thread.size() >= 1) {
-                    result = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else {
-                    result = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
                 };
-
-                result.push_to(stack);
-
-                return 1;
             };
-            template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+            template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                auto result = ::uns::lua::value{};
-                if(l_thread.size() >= 4) {
-                    result = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4));
+                try {
+                    auto result = ::uns::lua::value{};
+                    if(l_thread.size() >= 3) {
+                        result = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3));
+                    }
+                    else if(l_thread.size() >= 2) {
+                        result = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 1) {
+                        result = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else {
+                        result = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    };
+
+                    result.push_to(stack);
+
+                    return 1;
                 }
-                else if(l_thread.size() >= 3) {
-                    result = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), ::uns::lua::nil);
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
                 }
-                else if(l_thread.size() >= 2) {
-                    result = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 1) {
-                    result = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else {
-                    result = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
                 };
-
-                result.push_to(stack);
-
-                return 1;
             };
-            template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+            template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                auto result = ::uns::lua::value{};
-                if(l_thread.size() >= 5) {
-                    result = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4), l_thread.get_value(5));
+                try {
+                    auto result = ::uns::lua::value{};
+                    if(l_thread.size() >= 4) {
+                        result = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4));
+                    }
+                    else if(l_thread.size() >= 3) {
+                        result = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 2) {
+                        result = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 1) {
+                        result = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else {
+                        result = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    };
+
+                    result.push_to(stack);
+
+                    return 1;
                 }
-                else if(l_thread.size() >= 4) {
-                    result = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4), ::uns::lua::nil);
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
                 }
-                else if(l_thread.size() >= 3) {
-                    result = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 2) {
-                    result = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 1) {
-                    result = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else {
-                    result = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
                 };
+            };
+            template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
+            int wrap(::uns::lua::alias::lua_state stack) noexcept {
+                auto l_thread = ::uns::lua::thread{ stack };
 
-                result.push_to(stack);
+                try {
+                    auto result = ::uns::lua::value{};
+                    if(l_thread.size() >= 5) {
+                        result = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4), l_thread.get_value(5));
+                    }
+                    else if(l_thread.size() >= 4) {
+                        result = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4), ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 3) {
+                        result = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 2) {
+                        result = wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 1) {
+                        result = wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else {
+                        result = wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    };
 
-                return 1;
+                    result.push_to(stack);
+
+                    return 1;
+                }
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
+                };
             };
 
         };
 
         namespace wrappers::returning_none {
 
-            template<void(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&) noexcept>
+            template<void(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                auto args = ::std::vector<::uns::lua::value>{};
-                for(::std::size_t arg_idx = 1; arg_idx < l_thread.size(); ++arg_idx) {
-                    args.push_back(l_thread.get_value(arg_idx));
+                try {
+                    auto args = ::std::vector<::uns::lua::value>{};
+                    for(::std::size_t arg_idx = 1; arg_idx < l_thread.size(); ++arg_idx) {
+                        args.push_back(l_thread.get_value(arg_idx));
+                    };
+
+                    wrapped(l_thread, args);
+
+                    return 0;
+                }
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
                 };
-
-                wrapped(l_thread, args);
-
-                return 0;
             };
-            template<void(*wrapped)(::uns::lua::thread&) noexcept>
-            int wrap(::uns::lua::alias::lua_state stack) noexcept {
-                auto l_thread = ::uns::lua::thread{ stack };
-                wrapped(l_thread);
-
-                return 0;
-            };
-            template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
+            template<void(*wrapped)(::uns::lua::thread&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                if(l_thread.size() >= 1) {
-                    wrapped(l_thread, l_thread.get_value(1));
+                try {
+                    wrapped(l_thread);
+
+                    return 0;
                 }
-                else {
-                    wrapped(l_thread, ::uns::lua::nil);
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
                 };
-
-                return 0;
             };
-            template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+            template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                if(l_thread.size() >= 2) {
-                    wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2));
-                }
-                else if(l_thread.size() >= 1) {
-                    wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil);
-                }
-                else {
-                    wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil);
-                };
+                try {
+                    if(l_thread.size() >= 1) {
+                        wrapped(l_thread, l_thread.get_value(1));
+                    }
+                    else {
+                        wrapped(l_thread, ::uns::lua::nil);
+                    };
 
-                return 0;
+                    return 0;
+                }
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
+                };
             };
-            template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+            template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                if(l_thread.size() >= 3) {
-                    wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3));
-                }
-                else if(l_thread.size() >= 2) {
-                    wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 1) {
-                    wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else {
-                    wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                };
+                try {
+                    if(l_thread.size() >= 2) {
+                        wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2));
+                    }
+                    else if(l_thread.size() >= 1) {
+                        wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil);
+                    }
+                    else {
+                        wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil);
+                    };
 
-                return 0;
+                    return 0;
+                }
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
+                };
             };
-            template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+            template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                if(l_thread.size() >= 4) {
-                    wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4));
-                }
-                else if(l_thread.size() >= 3) {
-                    wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 2) {
-                    wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 1) {
-                    wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else {
-                    wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                };
+                try {
+                    if(l_thread.size() >= 3) {
+                        wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3));
+                    }
+                    else if(l_thread.size() >= 2) {
+                        wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 1) {
+                        wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else {
+                        wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    };
 
-                return 0;
+                    return 0;
+                }
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
+                };
             };
-            template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+            template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
             int wrap(::uns::lua::alias::lua_state stack) noexcept {
                 auto l_thread = ::uns::lua::thread{ stack };
 
-                if(l_thread.size() >= 5) {
-                    wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4), l_thread.get_value(5));
-                }
-                else if(l_thread.size() >= 4) {
-                    wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4), ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 3) {
-                    wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 2) {
-                    wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else if(l_thread.size() >= 1) {
-                    wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                }
-                else {
-                    wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
-                };
+                try {
+                    if(l_thread.size() >= 4) {
+                        wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4));
+                    }
+                    else if(l_thread.size() >= 3) {
+                        wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 2) {
+                        wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 1) {
+                        wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else {
+                        wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    };
 
-                return 0;
+                    return 0;
+                }
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
+                };
+            };
+            template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
+            int wrap(::uns::lua::alias::lua_state stack) noexcept {
+                auto l_thread = ::uns::lua::thread{ stack };
+
+                try {
+                    if(l_thread.size() >= 5) {
+                        wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4), l_thread.get_value(5));
+                    }
+                    else if(l_thread.size() >= 4) {
+                        wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), l_thread.get_value(4), ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 3) {
+                        wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), l_thread.get_value(3), ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 2) {
+                        wrapped(l_thread, l_thread.get_value(1), l_thread.get_value(2), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else if(l_thread.size() >= 1) {
+                        wrapped(l_thread, l_thread.get_value(1), ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    }
+                    else {
+                        wrapped(l_thread, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil, ::uns::lua::nil);
+                    };
+
+                    return 0;
+                }
+                catch(const ::std::exception& e) {
+                    return l_thread.raise_error(e.what());
+                }
+                catch(...) {
+                    return l_thread.raise_error("Unknown exception");
+                };
             };
 
         };
@@ -1141,7 +1367,7 @@ namespace uns::lua {
         inline const char* name() const noexcept { return m_name.c_str(); };
         inline ::uns::lua::alias::lua_cfunction func() const noexcept { return m_function; };
 
-        template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&) noexcept>
+        template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1150,7 +1376,7 @@ namespace uns::lua {
 
             return res;
         };
-        template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&) noexcept>
+        template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1159,7 +1385,7 @@ namespace uns::lua {
 
             return res;
         };
-        template<::uns::lua::value(*wrapped)(::uns::lua::thread&) noexcept>
+        template<::uns::lua::value(*wrapped)(::uns::lua::thread&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1168,7 +1394,7 @@ namespace uns::lua {
 
             return res;
         };
-        template<void(*wrapped)(::uns::lua::thread&) noexcept>
+        template<void(*wrapped)(::uns::lua::thread&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1178,7 +1404,7 @@ namespace uns::lua {
             return res;
         };
 
-        template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&) noexcept>
+        template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1196,7 +1422,7 @@ namespace uns::lua {
 
             return res;
         };
-        template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&) noexcept>
+        template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1205,7 +1431,7 @@ namespace uns::lua {
 
             return res;
         };
-        template<void(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&) noexcept>
+        template<void(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1215,7 +1441,7 @@ namespace uns::lua {
             return res;
         };
 
-        template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
+        template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1224,7 +1450,7 @@ namespace uns::lua {
 
             return res;
         };
-        template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
+        template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1233,7 +1459,7 @@ namespace uns::lua {
 
             return res;
         };
-        template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
+        template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1242,7 +1468,7 @@ namespace uns::lua {
 
             return res;
         };
-        template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&) noexcept>
+        template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1252,7 +1478,7 @@ namespace uns::lua {
             return res;
         };
 
-        template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+        template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1261,7 +1487,7 @@ namespace uns::lua {
 
             return res;
         };
-        template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+        template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1270,7 +1496,7 @@ namespace uns::lua {
 
             return res;
         };
-        template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+        template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1279,7 +1505,7 @@ namespace uns::lua {
 
             return res;
         };
-        template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+        template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1289,7 +1515,7 @@ namespace uns::lua {
             return res;
         };
 
-        template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+        template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1298,7 +1524,7 @@ namespace uns::lua {
 
             return res;
         };
-        template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+        template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1307,7 +1533,7 @@ namespace uns::lua {
 
             return res;
         };
-        template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+        template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1316,7 +1542,7 @@ namespace uns::lua {
 
             return res;
         };
-        template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+        template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1326,7 +1552,7 @@ namespace uns::lua {
             return res;
         };
 
-        template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+        template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1335,7 +1561,7 @@ namespace uns::lua {
 
             return res;
         };
-        template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+        template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1344,7 +1570,7 @@ namespace uns::lua {
 
             return res;
         };
-        template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+        template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1353,7 +1579,7 @@ namespace uns::lua {
 
             return res;
         };
-        template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+        template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1363,7 +1589,7 @@ namespace uns::lua {
             return res;
         };
 
-        template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+        template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1372,7 +1598,7 @@ namespace uns::lua {
 
             return res;
         };
-        template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+        template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1381,7 +1607,7 @@ namespace uns::lua {
 
             return res;
         };
-        template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+        template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
@@ -1390,7 +1616,7 @@ namespace uns::lua {
 
             return res;
         };
-        template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&) noexcept>
+        template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
         static ::uns::lua::lib_entry make(const ::std::u8string& name) noexcept {
             auto res = ::uns::lua::lib_entry{};
 
