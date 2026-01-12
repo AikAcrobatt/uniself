@@ -131,22 +131,32 @@ namespace uns::nn::traitset {
 
 namespace uns::nn {
 
-    namespace description {
 
+    template<typename description_t>
+    concept is_description = requires (description_t Description) {
+        Description.is_description();
+    };
+
+
+    namespace description {
 
         class collector {
         public:
             using hashsum_type = uint64_t;
-
+        public:
             hashsum_type hashsum = 0;
+        private:
+            static constexpr void is_description() noexcept {};
         };
 
 
         class activator {
         public:
             using hashsum_type = uint64_t;
-
+        public:
             hashsum_type hashsum = 0;
+        private:
+            static constexpr void is_description() noexcept {};
         };
 
 
@@ -162,14 +172,14 @@ namespace uns::nn {
         class neuron {
         public:
             using signal_traitset = signal_traitset_t;
-
+        public:
             ::uns::nn::description::activator activator;
             signal_traitset::signal_type r = typename signal_traitset::signal_type{ 0 };
             ::uns::nn::description::collector collector;
             signal_traitset::signal_type c = typename signal_traitset::signal_type{ 0 };
             ::std::vector<::std::pair<::uns::nn::address, typename signal_traitset::weight_type>> links;
             ::std::vector<typename signal_traitset::params_type> params;
-
+        public:
             neuron() noexcept {};
             neuron(const ::uns::nn::description::neuron<signal_traitset>& obj) noexcept :
                 activator(obj.activator),
@@ -210,31 +220,25 @@ namespace uns::nn {
                 return *this;
             };
             virtual ~neuron() {};
+        private:
+            static constexpr void is_description() noexcept {};
         };
 
 
-        template<typename neuron_traitset_t>
-            requires ::std::derived_from<
-                neuron_traitset_t,
-                ::uns::nn::traitset::neuron<
-                    typename neuron_traitset_t::signal_traitset,
-                    typename neuron_traitset_t::description_type,
-                    typename neuron_traitset_t::activator_caster_type,
-                    typename neuron_traitset_t::collector_caster_type
-                >
-            >
+        template<::uns::nn::is_description neuron_description_t>
         class network {
         public:
-            using neuron_traitset = neuron_traitset_t;
-
-            ::std::vector<::std::vector<typename neuron_traitset::description_type>> layers;
+            using neuron_description_type = neuron_description_t;
+        public:
+            ::std::vector<::std::vector<neuron_description_type>> layers;
             ::std::vector<::uns::nn::address> outputs;
-
+        public:
             network() noexcept {};
-            network(const ::uns::nn::description::network<neuron_traitset>& obj) noexcept :
+            network(const ::uns::nn::description::network<neuron_description_type>& obj) noexcept :
                 layers(obj.layers),
-                outputs(obj.outputs) {};
-            ::uns::nn::description::network<neuron_traitset>& operator=(const ::uns::nn::description::network<neuron_traitset>& obj) {
+                outputs(obj.outputs)
+            {};
+            ::uns::nn::description::network<neuron_description_type>& operator=(const ::uns::nn::description::network<neuron_description_type>& obj) {
                 if(this == &obj) return *this;
 
                 layers = obj.layers;
@@ -242,10 +246,11 @@ namespace uns::nn {
 
                 return *this;
             };
-            network(::uns::nn::description::network<neuron_traitset>&& obj) noexcept :
+            network(::uns::nn::description::network<neuron_description_type>&& obj) noexcept :
                 layers(::std::move(obj.layers)),
-                outputs(::std::move(obj.outputs)) {};
-            ::uns::nn::description::network<neuron_traitset>& operator=(::uns::nn::description::network<neuron_traitset>&& obj) {
+                outputs(::std::move(obj.outputs))
+            {};
+            ::uns::nn::description::network<neuron_description_type>& operator=(::uns::nn::description::network<neuron_description_type>&& obj) {
                 if(this == &obj) return *this;
 
                 layers = ::std::move(obj.layers);
@@ -254,6 +259,8 @@ namespace uns::nn {
                 return *this;
             };
             virtual ~network() {};
+        private:
+            static constexpr void is_description() noexcept {};
         };
 
     };
