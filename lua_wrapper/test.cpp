@@ -445,10 +445,63 @@ void error_rising() {
 
 };
 
+void invalid_handler() {
+    auto script = ::uns::lua::script{
+        ::std::u8string{
+            u8R"^^(
+                function print_args(...)
+                    return ...
+                end
+            )^^"
+        }
+    };
+
+    script.run();
+    auto print_args = script.get_function(u8"print_args2");
+
+    ::std::cout << "print_args.error()='" << print_args.error().to_string() << "'\n";
+
+    ::std::cout << ::std::boolalpha << "print_args.valid()=" << print_args.valid() << "\n";
+};
+
+void invalid_function_call() {
+    auto script = ::uns::lua::script{
+        ::std::u8string{
+            u8R"^^(
+                function print_args(...)
+                    return ...
+                end
+            )^^"
+    }
+    };
+
+    script.run();
+    auto print_args = script.get_function(u8"print_args2");
+
+    ::std::cout << print_args.error().to_string() << "\n";
+
+    if(!print_args.error().is()) {
+        auto arg1 = ::uns::lua::make_table();
+        auto arg2 = ::uns::lua::value{ 0.0045006 };
+        auto arg3 = ::uns::lua::value{ true };
+        auto arg4 = ::uns::lua::value{ u8"It's working!" };
+
+        static_cast<::uns::lua::type::table&>(arg1)[arg2] = arg3;
+        static_cast<::uns::lua::type::table&>(arg1)[::uns::lua::value{ "What?" }] = arg4;
+        static_cast<::uns::lua::type::table&>(arg1)[u8"Some subtable"] = ::uns::lua::make_table();
+        static_cast<::uns::lua::type::table&>(static_cast<::uns::lua::type::table&>(arg1)["Some subtable"])[123] = "Yeah baby!";
+
+        auto results = print_args(4, arg1, arg2, arg3, arg4);
+
+        print_vals(results.get_all());
+    };
+    ::std::cout << print_args.error().to_string() << "\n";
+};
+
 int main() {
     ::std::cout << "START\n";
 
-    error_rising();
+    invalid_function_call();
 
     ::std::cout << "FINISH\n";
 };
