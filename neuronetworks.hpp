@@ -146,7 +146,7 @@ namespace uns::nn {
         public:
             hashsum_type hashsum = 0;
         protected:
-            static constexpr void is_description() {};
+            virtual void is_description() const noexcept {};
         };
 
 
@@ -156,7 +156,7 @@ namespace uns::nn {
         public:
             hashsum_type hashsum = 0;
         protected:
-            static constexpr void is_description() {};
+            virtual void is_description() const noexcept {};
         };
 
 
@@ -221,7 +221,7 @@ namespace uns::nn {
             };
             virtual ~neuron() {};
         protected:
-            static constexpr void is_description() {};
+            virtual void is_description() const noexcept {};
         };
 
 
@@ -260,7 +260,7 @@ namespace uns::nn {
             };
             virtual ~network() {};
         protected:
-            static constexpr void is_description() {};
+            virtual void is_description() const noexcept {};
         };
 
     };
