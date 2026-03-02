@@ -859,7 +859,6 @@ namespace uns::nn {
         };
 
         virtual void _collect(const ::std::vector<typename base::neuron_traitset::signal_traitset::params_type>& common_params) {
-            m_s = 0;
             for(auto _link : m__links) {
                 m_s += ::std::get<base::part::_neuron_>(_link)->m_r * ::std::get<base::part::_neuron_>(_link)->dS_dr(::std::get<_place_>(_link), common_params);
             };
