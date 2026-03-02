@@ -57,7 +57,7 @@ namespace uns::nn::traitset {
 
 
     template<typename signal_traitset_t, typename iterator_t, typename input_allocator_t>
-        requires ::std::derived_from<
+        /*requires ::std::derived_from<
             signal_traitset_t,
             ::uns::nn::traitset::signal<
                 typename signal_traitset_t::signal_type,
@@ -68,6 +68,7 @@ namespace uns::nn::traitset {
         && ::std::derived_from<input_allocator_t, ::std::allocator<typename input_allocator_t::value_type>>
         && ::std::same_as<typename input_allocator_t::value_type::neuron_traitset::signal_traitset, signal_traitset_t>
         && ::uns::legacy_iterator<iterator_t, ::uns::nn::address>
+        */
     class input {
     public:
         using signal_traitset = signal_traitset_t;
@@ -78,7 +79,7 @@ namespace uns::nn::traitset {
 
 
     template<typename signal_traitset_t, typename description_neuron_t, typename activator_caster_t, typename collector_caster_t>
-        requires ::std::derived_from<
+        /*requires ::std::derived_from<
             signal_traitset_t,
             ::uns::nn::traitset::signal<
                 typename signal_traitset_t::signal_type,
@@ -89,6 +90,7 @@ namespace uns::nn::traitset {
         && ::std::same_as<typename description_neuron_t::signal_traitset, signal_traitset_t>
         && ::std::same_as<typename activator_caster_t::signal_traitset, signal_traitset_t>
         && ::std::same_as<typename collector_caster_t::signal_traitset, signal_traitset_t>
+        */
     class neuron {
     public:
         using signal_traitset = signal_traitset_t;
@@ -99,7 +101,7 @@ namespace uns::nn::traitset {
 
 
     template<typename neuron_t, typename description_network_t, typename input_data_object_t>
-        requires ::std::derived_from<
+        /*requires ::std::derived_from<
             typename neuron_t::neuron_traitset,
             ::uns::nn::traitset::neuron<
                 typename neuron_t::neuron_traitset::signal_traitset,
@@ -119,7 +121,7 @@ namespace uns::nn::traitset {
         && ::std::same_as<
             typename neuron_t::neuron_traitset,
             typename description_network_t::neuron_traitset
-        >
+        >*/
     class network {
     public:
         using neuron_type = neuron_t;
@@ -131,24 +133,24 @@ namespace uns::nn::traitset {
 
 namespace uns::nn {
 
-
+    /*
     template<typename description_t>
     concept is_description = requires (description_t Description) {
         Description.is_description();
     };
-
+    */
 
     namespace description {
 
         template<typename signal_traitset_t>
-            requires ::std::derived_from<
+            /*requires ::std::derived_from<
                 signal_traitset_t,
                     ::uns::nn::traitset::signal<
                     typename signal_traitset_t::signal_type,
                     typename signal_traitset_t::weight_type,
                     typename signal_traitset_t::params_type
                     >
-            >
+            >*/
         class collector {
         public:
             using hashsum_type = uint64_t;
@@ -162,14 +164,14 @@ namespace uns::nn {
 
 
         template<typename signal_traitset_t>
-            requires ::std::derived_from<
+            /*requires ::std::derived_from<
                 signal_traitset_t,
                     ::uns::nn::traitset::signal<
                     typename signal_traitset_t::signal_type,
                     typename signal_traitset_t::weight_type,
                     typename signal_traitset_t::params_type
                     >
-            >
+            >*/
         class activator {
         public:
             using hashsum_type = uint64_t;
@@ -183,14 +185,14 @@ namespace uns::nn {
 
 
         template<typename signal_traitset_t>
-            requires ::std::derived_from<
+            /*requires ::std::derived_from<
                 signal_traitset_t,
                 ::uns::nn::traitset::signal<
                     typename signal_traitset_t::signal_type,
                     typename signal_traitset_t::weight_type,
                     typename signal_traitset_t::params_type
                 >
-            >
+            >*/
         class neuron {
         public:
             using signal_traitset = signal_traitset_t;
@@ -247,7 +249,7 @@ namespace uns::nn {
         };
 
 
-        template<::uns::nn::is_description neuron_description_t>
+        template<typename /*::uns::nn::is_description*/ neuron_description_t>
         class network {
         public:
             using neuron_description_type = neuron_description_t;
@@ -294,14 +296,14 @@ namespace uns::nn {
 
         //the most common neuron-like class, beeing used for linking neurons purposes mostly
         template<typename signal_traitset_t>
-            requires ::std::derived_from<
+            /*requires ::std::derived_from<
                 signal_traitset_t,
                 ::uns::nn::traitset::signal<
                     typename signal_traitset_t::signal_type,
                     typename signal_traitset_t::weight_type,
                     typename signal_traitset_t::params_type
                 >
-            >
+            >*/
         class neuron_view {
         public:
             using signal_traitset = signal_traitset_t;
@@ -345,14 +347,14 @@ namespace uns::nn {
 
         //basic activator class is intended to be used as polymorphic wrapper for all other activators
         template<typename signal_traitset_t>
-            requires ::std::derived_from<
+            /*requires ::std::derived_from<
                 signal_traitset_t,
                 ::uns::nn::traitset::signal<
                     typename signal_traitset_t::signal_type,
                     typename signal_traitset_t::weight_type,
                     typename signal_traitset_t::params_type
                 >
-            >
+            >*/
         class activator {
         public:
             using signal_traitset = signal_traitset_t;
@@ -410,14 +412,14 @@ namespace uns::nn {
 
         //basic collector class is intended to be used as polymorphic wrapper for all other collectorss
         template<typename signal_traitset_t>
-            requires ::std::derived_from<
+            /*requires ::std::derived_from<
                 signal_traitset_t,
                 ::uns::nn::traitset::signal<
                     typename signal_traitset_t::signal_type,
                     typename signal_traitset_t::weight_type,
                     typename signal_traitset_t::params_type
                 >
-            >
+            >*/
         class collector {
         public:
             using signal_traitset = signal_traitset_t;
@@ -477,7 +479,7 @@ namespace uns::nn {
 
         //this neuron class is supposed to be the general ancestor for all kinds of neurons
         template<typename neuron_traitset_t>
-            requires ::std::derived_from<
+            /*requires ::std::derived_from<
                 neuron_traitset_t,
                 ::uns::nn::traitset::neuron<
                     typename neuron_traitset_t::signal_traitset,
@@ -485,7 +487,7 @@ namespace uns::nn {
                     typename neuron_traitset_t::activator_caster_type,
                     typename neuron_traitset_t::collector_caster_type
                 >
-            >
+            >*/
         class neuron : public ::uns::nn::general::neuron_view<typename neuron_traitset_t::signal_traitset> {
         protected:
             using base = ::uns::nn::general::neuron_view<typename neuron_traitset_t::signal_traitset>;
@@ -524,14 +526,14 @@ namespace uns::nn {
 
         //all input data (either: straight or reversive) must be provided for all neural networks using some classes derived from this
         template<typename input_data_object_traitset_t>
-            requires ::std::derived_from<
+            /*requires ::std::derived_from<
                 input_data_object_traitset_t,
                 ::uns::nn::traitset::input<
                     typename input_data_object_traitset_t::signal_traitset,
                     typename input_data_object_traitset_t::iterator_type,
                     typename input_data_object_traitset_t::input_allocator_type
                 >
-            >
+            >*/
         class input_data_object {
         public:
             using input_traitset = input_data_object_traitset_t;
@@ -546,14 +548,14 @@ namespace uns::nn {
 
         //all neural networks must be inherited from that class
         template<typename network_traitset_t>
-            requires ::std::derived_from<
+            /*requires ::std::derived_from<
                 network_traitset_t,
                 ::uns::nn::traitset::network<
                     typename network_traitset_t::neuron_type,
                     typename network_traitset_t::description_type,
                     typename network_traitset_t::input_data_object_type
                 >
-            >
+            >*/
         class network {
         public:
             using network_traitset = typename network_traitset_t;
@@ -591,7 +593,7 @@ namespace uns::nn {
 
     //a class of neuron introduces the neurons supposed to consist sequential single-directional neural network's body
     template<typename neuron_traitset_t>
-        requires ::std::derived_from<
+        /*requires ::std::derived_from<
             neuron_traitset_t,
             ::uns::nn::traitset::neuron<
                 typename neuron_traitset_t::signal_traitset,
@@ -599,7 +601,7 @@ namespace uns::nn {
                 typename neuron_traitset_t::activator_caster_type,
                 typename neuron_traitset_t::collector_caster_type
             >
-        >
+        >*/
     class sequential_neuron : public ::uns::nn::general::neuron<neuron_traitset_t> {
     public:
         using base = ::uns::nn::general::neuron<neuron_traitset_t>;
@@ -803,25 +805,30 @@ namespace uns::nn {
         };
     public:
         virtual void _link(
-            ::std::vector<::std::vector<::uns::nn::nonrecursive_reversive_neuron<typename base::neuron_traitset>*>>& main_body,
-            ::std::unordered_map<::uns::nn::address, ::uns::nn::general::neuron<typename base::neuron_traitset>*, ::uns::nn::address::hash>& reverse_inputs
+            ::std::vector<::std::vector<::uns::nn::nonrecursive_reversive_neuron<typename base::neuron_traitset>*>>& main_body
         ) {
             m__links.clear();
 
-            for(const auto& layer : main_body) {
-                for(const auto& neuron_ptr : layer) {
-                    if(neuron_ptr == nullptr) {
+            for (const auto& layer : main_body) {
+                for (const auto& neuron_ptr : layer) {
+                    if (neuron_ptr == nullptr) {
                         clear();
                         throw ::std::runtime_error(UNS_DEV_EXCEPTION_MSG);
                     };
 
-                    for(::std::size_t subneuron_idx = 0; subneuron_idx < neuron_ptr->subneurons_total(); ++subneuron_idx) {
-                        if(neuron_ptr->subneuron(subneuron_idx)->address() == this->address()) {
+                    for (::std::size_t subneuron_idx = 0; subneuron_idx < neuron_ptr->subneurons_total(); ++subneuron_idx) {
+                        if (neuron_ptr->subneuron(subneuron_idx)->address() == this->address()) {
                             m__links.emplace_back(::std::pair<::uns::nn::nonrecursive_reversive_neuron<typename base::neuron_traitset>*, place_type>{ neuron_ptr, subneuron_idx });
                         };
                     };
                 };
             };
+        };
+        virtual void _link(
+            ::std::vector<::std::vector<::uns::nn::nonrecursive_reversive_neuron<typename base::neuron_traitset>*>>& main_body,
+            ::std::unordered_map<::uns::nn::address, ::uns::nn::general::neuron<typename base::neuron_traitset>*, ::uns::nn::address::hash>& reverse_inputs
+        ) {
+            _link(main_body);
 
             if(auto iter = reverse_inputs.find(this->address()); iter != reverse_inputs.end()) {
                 m_input = iter->second;
@@ -1028,10 +1035,6 @@ namespace uns::nn {
             };
         };
 
-        virtual typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::signal_type R(::std::size_t layer_index, ::std::size_t index) const { return m_layers[layer_index][index]->R(); };
-
-        virtual typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::signal_type C(::std::size_t layer_index, ::std::size_t index) const { return m_layers[layer_index][index]->C(); };
-
         virtual typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::signal_type O(::std::size_t index) const { return base::m_outputs[index]->R(); };
 
         virtual typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::signal_type I(::std::size_t index) const { return base::m_inputs[index]->R(); };
@@ -1040,12 +1043,21 @@ namespace uns::nn {
         virtual ::std::size_t neurons_total(size_t index) const { return m_layers[index].size(); };
         virtual ::std::size_t outputs_total() const { return base::m_outputs.size(); };
         virtual ::std::size_t inputs_total() const { return base::m_inputs.size(); };
+
+        virtual const ::uns::nn::address& output(::std::size_t output_idx) const { return base::m_outputs.at(output_idx)->address(); };
+
+        virtual const typename base::network_traitset::neuron_type& access(const ::uns::nn::address& address) const {
+            return *m_layers.at(static_cast<::std::size_t>(address.layer)).at(static_cast<::std::size_t>(address.index));
+        };
+        virtual typename base::network_traitset::neuron_type& access(const ::uns::nn::address& address) {
+            return *m_layers.at(static_cast<::std::size_t>(address.layer)).at(static_cast<::std::size_t>(address.index));
+        };
     };
 
 
     //a class of network introduces the reversable neural network
     template<class network_traitset_t>
-        requires ::std::derived_from<
+        /*requires ::std::derived_from<
             network_traitset_t,
             ::uns::nn::traitset::network<
                 typename network_traitset_t::neuron_type,
@@ -1064,7 +1076,7 @@ namespace uns::nn {
             typename ::uns::nn::general::input_data_object<
                 typename network_traitset_t::output_data_object_type::input_traitset
             >
-        >
+        >*/
     class nonrecursive_reversive_network : public ::uns::nn::sequential_network<network_traitset_t> {
     protected:
         using base = ::uns::nn::sequential_network<network_traitset_t>;
@@ -1091,6 +1103,13 @@ namespace uns::nn {
             m_reversive_inputs.clear();
         };
     public:
+        virtual void _link() {
+            for (const auto& layer : base::m_layers) {
+                for (auto neuron_ptr : layer) {
+                    neuron_ptr->_link(base::m_layers);
+                };
+            };
+        };
         virtual void _link(typename base::network_traitset::output_data_object_type& odo) {
             auto reverse_inputs = ::std::unordered_map<::uns::nn::address, ::uns::nn::general::neuron<typename base::network_traitset::neuron_type::neuron_traitset>*, ::uns::nn::address::hash>{};
 
@@ -1105,8 +1124,8 @@ namespace uns::nn {
                 };
             };
 
-            for(const auto& layer : base::m_layers) {
-                for(auto neuron_ptr : layer) {
+            for (const auto& layer : base::m_layers) {
+                for (auto neuron_ptr : layer) {
                     neuron_ptr->_link(base::m_layers, reverse_inputs);
                 };
             };
@@ -1136,6 +1155,7 @@ namespace uns::nn {
             };
         };
 
+        /*
         virtual typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::signal_type _R(::std::size_t layer_index, ::std::size_t index) const { return base::m_layers[layer_index][index]->_R(); };
 
         virtual typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::signal_type _C(::std::size_t layer_index, ::std::size_t index) const { return base::m_layers[layer_index][index]->_C(); };
@@ -1169,6 +1189,7 @@ namespace uns::nn {
 
         virtual ::std::size_t links_total(::std::size_t layer_index, ::std::size_t neuron_idx) const { return base::m_layers[layer_index][neuron_idx].subneurons_total(); };
         virtual ::std::size_t params_total(::std::size_t layer_index, ::std::size_t neuron_idx) const { return base::m_layers[layer_index][neuron_idx].params_total(); };
+        */
     };
 };
 
