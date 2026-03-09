@@ -330,10 +330,11 @@ namespace uns::nn {
             virtual ::uns::nn::general::neuron_view<signal_traitset>* subneuron(::std::size_t connection_idx) { return nullptr; };
 
             virtual ::std::size_t params_total() const { return 0; };
-
+#pragma warning(push)
+#pragma warning(disable: 4172)
             virtual const typename signal_traitset::signal_type& R() const { return typename signal_traitset::signal_type{ 0 }; };
             virtual const typename signal_traitset::signal_type& C() const { return typename signal_traitset::signal_type{ 0 }; };
-
+#pragma warning(pop)
             virtual const ::uns::nn::address& address() const { return m_address; };
             virtual ::uns::nn::address& address() { return m_address; };
             virtual bool is_reversible() const { return false; };
