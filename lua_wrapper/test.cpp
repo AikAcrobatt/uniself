@@ -501,7 +501,7 @@ void invalid_function_call() {
 int main() {
     ::std::cout << "START\n";
 
-    invalid_function_call();
+    error_rising();
 
     ::std::cout << "FINISH\n";
 };
