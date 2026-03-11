@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.1.32228.430
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11527.330 d18.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "benum", "benum\benum.vcxproj", "{9797AF16-8170-48EC-AF64-132B87841117}"
 EndProject
@@ -20,6 +20,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lua_wrapper", "lua_wrapper\lua_wrapper.vcxproj", "{6789E5D5-DBCA-4FA2-B216-6A3F02E7B1F9}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "datetime", "datetime\datetime.vcxproj", "{3792FA9C-0AFF-4884-B877-C427BCCB9F65}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "renum", "renum\renum.vcxproj", "{6BDFCF32-6FBA-4B9D-824F-30B6D836F5A5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -101,6 +103,14 @@ Global
 		{3792FA9C-0AFF-4884-B877-C427BCCB9F65}.Release|x64.Build.0 = Release|x64
 		{3792FA9C-0AFF-4884-B877-C427BCCB9F65}.Release|x86.ActiveCfg = Release|Win32
 		{3792FA9C-0AFF-4884-B877-C427BCCB9F65}.Release|x86.Build.0 = Release|Win32
+		{6BDFCF32-6FBA-4B9D-824F-30B6D836F5A5}.Debug|x64.ActiveCfg = Debug|x64
+		{6BDFCF32-6FBA-4B9D-824F-30B6D836F5A5}.Debug|x64.Build.0 = Debug|x64
+		{6BDFCF32-6FBA-4B9D-824F-30B6D836F5A5}.Debug|x86.ActiveCfg = Debug|Win32
+		{6BDFCF32-6FBA-4B9D-824F-30B6D836F5A5}.Debug|x86.Build.0 = Debug|Win32
+		{6BDFCF32-6FBA-4B9D-824F-30B6D836F5A5}.Release|x64.ActiveCfg = Release|x64
+		{6BDFCF32-6FBA-4B9D-824F-30B6D836F5A5}.Release|x64.Build.0 = Release|x64
+		{6BDFCF32-6FBA-4B9D-824F-30B6D836F5A5}.Release|x86.ActiveCfg = Release|Win32
+		{6BDFCF32-6FBA-4B9D-824F-30B6D836F5A5}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
