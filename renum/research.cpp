@@ -52,11 +52,12 @@ if (Str == U8LIT(apl##renum_val)) { return apl##renum_val; } else
     RENUM_FOR_EACH(apl, repetitive_macro, __VA_ARGS__)
 
 #define RENUM_PICK_FIRST(arg1, ...) arg1
+//#define RENUM_ADD_EQUALITY(arg1, ...) = arg1
 
-#define RENUM_GET_MACRO_OFPAIR(_1, _2,  NAME, ...) NAME
+#define RENUM_GET_MACRO_OFPAIR(_1, _2, NAME, ...) NAME
 
-#define RENUM_MAKE_EQUALITY(arg1, ...)\
-    arg1 RENUM_GET_MACRO_OFPAIR(,__VA_ARGS__, = __VA_ARGS__)
+#define RENUM_MAKE_EQUALITY(arg1, arg2)\
+    arg1 arg2
 
 #include <vector>
 
@@ -69,27 +70,27 @@ public:
             RENUM_MAKE_EQUALITY,
             RENUM_SEGMENT_FIRST,
             RENUM_SEGMENT,
-            (renum_identifier_0001),
-            (renum_identifier_2),
+            (renum_identifier_0001, =6),
+            (renum_identifier_2, )/*,
             (renum_identifier__03, -127),
-            (renum_identifier_10)
+            (renum_identifier_10)*/
         )
     };
     inline static constexpr ::std::size_t s_size = RENUM_COUNTER(
-        (renum_identifier_0001),
-        (renum_identifier_2),
-        (renum_identifier__03, -127),
-        (renum_identifier_10)
+        (renum_identifier_0001, 6),
+        (renum_identifier_2, )/*,
+            (renum_identifier__03, -127),
+            (renum_identifier_10)*/
     );
 protected:
     enum_type m_value = RENUM_FOR_EACH_WITH_FIRST(
         RENUM_PICK_FIRST,
         RENUM_SEGMENT_FIRST,
         RENUM_EMPTY,
-        (renum_identifier_0001),
-        (renum_identifier_2),
-        (renum_identifier__03, -127),
-        (renum_identifier_10)
+        (renum_identifier_0001, 6),
+        (renum_identifier_2, )/*,
+            (renum_identifier__03, -127),
+            (renum_identifier_10)*/
     );
 public:
     constexpr renum_name() noexcept : m_value{
@@ -97,10 +98,10 @@ public:
             RENUM_PICK_FIRST,
             RENUM_SEGMENT_FIRST,
             RENUM_EMPTY,
-            (renum_identifier_0001),
-            (renum_identifier_2),
+            (renum_identifier_0001, 6),
+            (renum_identifier_2, )/*,
             (renum_identifier__03, -127),
-            (renum_identifier_10)
+            (renum_identifier_10)*/
         )
     } {};
     constexpr renum_name(enum_type EnumVal) noexcept : m_value{ EnumVal } {};
@@ -131,10 +132,10 @@ public:
                 RENUM_PICK_FIRST,
                 RENUM_SEGMENT_FIRST,
                 RENUM_SEGMENT,
-                (renum_identifier_0001),
-                (renum_identifier_2),
-                (renum_identifier__03, -127),
-                (renum_identifier_10)
+            (renum_identifier_0001, 6),
+            (renum_identifier_2, )/*,
+            (renum_identifier__03, -127),
+            (renum_identifier_10)*/
             )
         };
     };
@@ -144,10 +145,10 @@ public:
             RENUM_FOR_EACH(
                 RENUM_PICK_FIRST,
                 RENUM_TOSTRING_SEGMENT,
-                (renum_identifier_0001),
-                (renum_identifier_2),
-                (renum_identifier__03, -127),
-                (renum_identifier_10)
+                (renum_identifier_0001, 6),
+                (renum_identifier_2, )/*,
+            (renum_identifier__03, -127),
+            (renum_identifier_10)*/
             )
             default: {
                 throw ::std::runtime_error{ "TODO" };
@@ -158,10 +159,10 @@ public:
         RENUM_FOR_EACH(
             RENUM_PICK_FIRST,
             RENUM_FROMSTRING_SEGMENT,
-            (renum_identifier_0001),
-            (renum_identifier_2),
+            (renum_identifier_0001, 6),
+            (renum_identifier_2, )/*,
             (renum_identifier__03, -127),
-            (renum_identifier_10)
+            (renum_identifier_10)*/
         )
         {
             throw ::std::runtime_error{ "TODO" };
@@ -173,7 +174,7 @@ public:
 int main() {
     ::std::cout << "START\n";
 
-    renum_name val = renum_name::renum_identifier_10;
+    renum_name val = renum_name::renum_identifier_0001;
 
     ::std::u8string str_val = val.to_string();
 
