@@ -1,6 +1,28 @@
+#pragma once
 
-#include <iostream>
+#ifndef UNS_LIB_RENUM
+#define UNS_LIB_RENUM "renum.hpp"
+
 #include <vector>
+#include <stdexcept>
+#include <concepts>
+
+/*DESCRIPTION
+* renum = reflective enumeration
+
+* declaration:
+UNS_RENUM(<renum name>, <underlying integer type>,
+    (<renum member name>, [= <renum member integer value>]) , //both: paranthesis and separative comma - are required! (Even if there is no need to define integer value
+    ... //up to 125 members total
+);
+
+constexpr static ::std::size_t size();
+constexpr static ::std::vector<renum> values();
+
+constexpr ::std::u8string to_string() const;
+constexpr static renum_name from_string(const ::std::u8string_view& Str); //throws if Str does not match any renum member
+
+*/
 
 //enum contents support
 
@@ -164,6 +186,7 @@
 #define UNS_RENUM_FROMSTRING_SEGMENT(renum_pair)\
     UNS_RENUM_FROMSTRING_SEGMENT_INNER(UNS_RENUM_EXPAND(UNS_RENUM_OBTAIN_FIRST)renum_pair)
 
+
 #define UNS_RENUM(renum_name, underlying_type, ...)\
 class renum_name {\
 public:\
@@ -176,10 +199,10 @@ public:\
             __VA_ARGS__\
         )\
     };\
+private:\
     inline static constexpr ::std::size_t s_size = UNS_RENUM_COUNTER(\
         __VA_ARGS__\
     );\
-protected:\
     enum_type m_value = UNS_RENUM_FOR_FIRST(\
         UNS_RENUM_OBTAIN_FIRST,\
         __VA_ARGS__\
@@ -202,13 +225,13 @@ public:\
     inline constexpr ~renum_name() noexcept {};\
 public:\
     inline constexpr bool operator==(const renum_name& arg) const noexcept { return m_value == arg.m_value; };\
-    inline constexpr bool operator!=(const renum_name& arg) const noexcept { return !(m_value == arg.m_value); };\
+    /*inline constexpr bool operator!=(const renum_name& arg) const noexcept { return !(m_value == arg.m_value); };*/\
 public:\
     inline explicit constexpr operator enum_type() const noexcept { return m_value; };\
     inline explicit constexpr operator integral_type() const noexcept { return m_value; };\
 public:\
     inline constexpr static ::std::size_t size() noexcept { return s_size; };\
-    inline constexpr static ::std::vector<renum_name> values() {/*TODO*/\
+    inline constexpr static ::std::vector<renum_name> values() {\
         return {\
             UNS_RENUM_FOR_EACH(\
                 UNS_RENUM_VALUE,\
@@ -226,7 +249,7 @@ public:\
                 __VA_ARGS__\
             )\
             default: {\
-                throw ::std::runtime_error{ "TODO" };\
+                throw ::std::runtime_error{ "The inner state of renum is incorrect" };\
             }\
         };\
     };\
@@ -237,34 +260,51 @@ public:\
             __VA_ARGS__\
         )\
         {\
-            throw ::std::runtime_error{ "TODO" };\
+            throw ::std::runtime_error{ "The string '" + ::std::string{ reinterpret_cast<const char*>(Str.data()) } + "' does not match any renum's member" };\
         };\
     };\
 };\
+::std::ostream& operator<<(::std::ostream& ostr, const renum_name& RenumObj) {\
+    return ostr << ::std::string{ reinterpret_cast<const char*>(RenumObj.to_string().data()) };\
+};\
 
 
-namespace nmspc {
+namespace uns {
 
-    UNS_RENUM(some, long int,
-        (bcu, = -1229),
-        (__, ),
-        (abc, ),
-        (engcef, )
-    );
-
-};
-
-int main() {
-    ::std::cout << "START\n";
-
-    ::nmspc::some eval;
-
-    auto strs = ::std::vector<::std::u8string>{};
-    for (auto renum_val : ::nmspc::some::values()) {
-        strs.emplace_back(renum_val.to_string());
+    //RENUM CONCEPT
+    template<typename renum_t>
+    concept is_renum = requires(renum_t enum_obj) {
+        renum_t::values();
+    }
+    && requires(renum_t enum_obj) {
+        renum_t::values().begin();
+    }
+    && requires(renum_t enum_obj) {
+        renum_t::values().end();
+    }
+    && requires(renum_t enum_obj) {
+        renum_t::values().size();
+    }
+    && requires(renum_t enum_obj) {
+        renum_t::size();
+    }
+    && requires(renum_t enum_obj) {
+        typename renum_t::enum_type;
+    }
+    && requires(typename renum_t::enum_type enum_val) {
+        { enum_val } -> ::std::convertible_to<renum_t>;
+    }
+    && requires(renum_t enum_obj) {
+        enum_obj.to_string();
+    }
+    && requires(renum_t enum_obj) {
+        renum_t::from_string(u8"...");
     };
 
-    ::std::cout << ::nmspc::some::size() << ::std::endl;
 
-    ::std::cout << "FINISH\n";
+    //BENUM TYPE_TRAITS
+    template<typename renum_t>
+    class renum_traits : public ::std::integral_constant<bool, ::uns::is_renum<renum_t>> {};
 };
+
+#endif
