@@ -403,31 +403,10 @@ namespace uns::string {
 
 
 //IOSTREAMS FOR UTF-8 STRINGS
-template<typename ostream_t>
-ostream_t& operator<<(ostream_t& os, const ::std::u8string_view& str) {
-    if constexpr(::std::is_base_of<::std::basic_ostream<char>, ostream_t>::value) {
-        return operator<<(os, ::uns::string::u8_cast<::std::string>(str));
-    }
-    else if constexpr(::std::is_base_of<::std::basic_ostream<wchar_t>, ostream_t>::value) {
-        return operator<<(os, ::uns::string::u8_cast<::std::wstring>(str));
-    };
+::std::ostream& operator<<(::std::ostream& os, const ::std::u8string& str) {
+    return os << ::uns::string::u8_cast<::std::string>(str);
 };
 
-template<typename istream_t>
-istream_t& operator>>(istream_t& is, ::std::u8string& str) {
-    if constexpr(::std::is_base_of<::std::basic_ostream<char>, istream_t>::value) {
-        auto val = ::std::string();
-        auto& res = operator>>(is, val);
-        str = ::uns::string::u8_cast<::std::u8string>(val);
-        return res;
-    }
-    else if constexpr(::std::is_base_of<::std::basic_ostream<wchar_t>, istream_t>::value) {
-        auto val = ::std::wstring();
-        auto& res = operator>>(is, val);
-        str = ::uns::string::u8_cast<::std::u8string>(val);
-        return res;
-    };
-};
 //TODO it does not work with fstreams
     
 

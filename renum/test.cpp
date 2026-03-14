@@ -1,8 +1,11 @@
-#include "pch.h"
 
+#include <iostream>
 #include <tuple>
 
+#include "gtest/gtest.h"
+
 #include "uniself/renum.hpp"
+#include "uniself/strings.hpp"
 
 namespace abyss {
 
@@ -21,49 +24,126 @@ namespace abyss {
 
 };
 
-UNS_RENUM(times, int,
-    (t1, = 0),
-    (t2, = 10),
-    (t3, )
+template<typename renum_candidate_t>
+class RenumTyped : public ::testing::Test {};
+
+using types_list = ::testing::Types<::abyss::layers, void, int, char, ::std::string>;
+TYPED_TEST_CASE(RenumTyped, types_list);
+
+TYPED_TEST(RenumTyped, TraitsTest) {
+    if (typeid(TypeParam) == typeid(::abyss::layers)) {
+        ASSERT_TRUE(::uns::renum_traits<TypeParam>::value);
+    }
+    else {
+        ASSERT_FALSE(::uns::renum_traits<TypeParam>::value);
+    };
+};
+
+
+class ComparationChecks : public ::testing::TestWithParam<
+        ::std::tuple<::abyss::layers::integral_type, ::abyss::layers::integral_type>
+    > {};
+
+TEST_P(ComparationChecks, EqualityCheckRenumEnum) {
+    const ::abyss::layers renum_obj = ::abyss::layers::enum_type{ ::std::get<0>(GetParam()) };
+    const auto renum_enum = ::abyss::layers::enum_type{ ::std::get<1>(GetParam()) };
+    if (::std::get<0>(GetParam()) == ::std::get<1>(GetParam())) {
+        EXPECT_TRUE(renum_obj == renum_enum);
+        EXPECT_TRUE(renum_enum == renum_obj);
+    }
+    else {
+        EXPECT_FALSE(renum_obj == renum_enum);
+        EXPECT_FALSE(renum_enum == renum_obj);
+    };
+};
+
+TEST_P(ComparationChecks, UnEqualityCheckRenumEnum) {
+    const ::abyss::layers renum_obj = ::abyss::layers::enum_type{ ::std::get<0>(GetParam()) };
+    const auto renum_enum = ::abyss::layers::enum_type{ ::std::get<1>(GetParam()) };
+    if (::std::get<0>(GetParam()) == ::std::get<1>(GetParam())) {
+        EXPECT_FALSE(renum_obj != renum_enum);
+        EXPECT_FALSE(renum_enum != renum_obj);
+    }
+    else {
+        EXPECT_TRUE(renum_obj != renum_enum);
+        EXPECT_TRUE(renum_enum != renum_obj);
+    };
+};
+
+TEST_P(ComparationChecks, EqualityCheckRenumRenum) {
+    const ::abyss::layers renum_obj_1 = ::abyss::layers::enum_type{ ::std::get<0>(GetParam()) };
+    const ::abyss::layers renum_obj_2 = ::abyss::layers::enum_type{ ::std::get<1>(GetParam()) };
+    if (::std::get<0>(GetParam()) == ::std::get<1>(GetParam())) {
+        EXPECT_TRUE(renum_obj_1 == renum_obj_2);
+    }
+    else {
+        EXPECT_FALSE(renum_obj_1 == renum_obj_2);
+    };
+};
+
+TEST_P(ComparationChecks, UnEqualityCheckRenumRenum) {
+    const ::abyss::layers renum_obj_1 = ::abyss::layers::enum_type{ ::std::get<0>(GetParam()) };
+    const ::abyss::layers renum_obj_2 = ::abyss::layers::enum_type{ ::std::get<1>(GetParam()) };
+    if (::std::get<0>(GetParam()) == ::std::get<1>(GetParam())) {
+        EXPECT_FALSE(renum_obj_1 != renum_obj_2);
+    }
+    else {
+        EXPECT_TRUE(renum_obj_1 != renum_obj_2);
+    };
+};
+
+INSTANTIATE_TEST_CASE_P(RenumGeneral, ComparationChecks,
+    ::testing::Combine(
+        ::testing::Range<::abyss::layers::integral_type>(0, ::abyss::layers::size()),
+        ::testing::Range<::abyss::layers::integral_type>(0, ::abyss::layers::size())
+    )
 );
 
 
-class EnumToRenumCmp : public ::testing::TestWithParam<
-        ::std::tuple<::abyss::layers, ::abyss::layers::enum_type>
-    > {};
+UNS_RENUM(renum_test, int,
+    (t1, = 0),
+    (t2, = 10),
+    (t3,)
+);
 
-
-TEST_P(EnumToRenumCmp, EqualityCheck) {
-    EXPECT_TRUE(::std::get<0>(GetParam()) == ::std::get<1>(GetParam()));
-    EXPECT_TRUE(::std::get<1>(GetParam()) == ::std::get<0>(GetParam()));
+class RenumStrings : public ::testing::TestWithParam<
+    ::std::tuple<::renum_test, ::std::u8string>
+> {
+public:
+    using elem_type = ::std::tuple<::renum_test, ::std::u8string>;
+public:
+    enum {
+        renum = 0,
+        string = 1
+    };
 };
 
-INSTANTIATE_TEST_CASE_P(
-    RenumGeneral, EnumToRenumCmp, 
-    ::testing::Combine(
-        ::testing::Values(
-            static_cast<::abyss::layers>(::abyss::layers::l0),
-            static_cast<::abyss::layers>(::abyss::layers::l1)/*,
-            static_cast<::abyss::layers>(::abyss::layers::l2),
-            static_cast<::abyss::layers>(::abyss::layers::l3),
-            static_cast<::abyss::layers>(::abyss::layers::l4),
-            static_cast<::abyss::layers>(::abyss::layers::l5),
-            static_cast<::abyss::layers>(::abyss::layers::l6),
-            static_cast<::abyss::layers>(::abyss::layers::l7),
-            static_cast<::abyss::layers>(::abyss::layers::l8),
-            static_cast<::abyss::layers>(::abyss::layers::l9)*/
-        ),
-        ::testing::Values(
-            ::abyss::layers::l0,
-            ::abyss::layers::l1/*,
-            ::abyss::layers::l2,
-            ::abyss::layers::l3,
-            ::abyss::layers::l4,
-            ::abyss::layers::l5,
-            ::abyss::layers::l6,
-            ::abyss::layers::l7,
-            ::abyss::layers::l8,
-            ::abyss::layers::l9*/
-        )
+class RenumConvertStringsCorrect : public RenumStrings {};
+
+TEST_P(RenumConvertStringsCorrect, RenumFromStrings) {
+    ASSERT_TRUE(
+        ::std::get<::RenumStrings::renum>(GetParam())
+        == ::renum_test::from_string(::std::get<::RenumStrings::string>(GetParam()))
+    );
+};
+
+TEST_P(RenumConvertStringsCorrect, RenumToStrings) {
+    ASSERT_TRUE(
+        ::std::get<::RenumStrings::renum>(GetParam()).to_string()
+        == ::std::get<::RenumStrings::string>(GetParam())
+    );
+};
+
+::testing::Message& operator<<(::testing::Message& Os, const ::RenumStrings::elem_type& Elem) {
+    return Os
+        << "::RenumStrings::elem_type{ " << static_cast<int>(::std::get<::RenumStrings::renum>(Elem))
+        << ", " << ::uns::string::u8_cast<::std::string>(::std::get<::RenumStrings::string>(Elem)) << " }";
+};
+
+INSTANTIATE_TEST_CASE_P(RenumGeneral, RenumConvertStringsCorrect,
+    ::testing::Values(
+        ::RenumStrings::elem_type{ ::renum_test::t1, u8"t1" }
+        , ::RenumStrings::elem_type{ ::renum_test::t2, u8"t2" }
+        , ::RenumStrings::elem_type{ ::renum_test::t3, u8"t3" }
     )
 );
