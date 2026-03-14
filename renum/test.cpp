@@ -118,6 +118,21 @@ public:
     };
 };
 
+template<>
+::std::string testing::PrintToString(const ::RenumStrings::elem_type& Elem) {
+    return "RenumStrings::Elem{ "
+        + ::uns::string::u8_cast<::std::string>(
+            ::uns::string::u8_cast<::std::u8string>(
+                static_cast<::renum_test::integral_type>(::std::get<::RenumStrings::renum>(Elem))
+            )
+        )
+        + ", "
+        + ::uns::string::u8_cast<::std::string>(
+            ::std::get<::RenumStrings::string>(Elem)
+        )
+        + " }";
+};
+
 class RenumConvertStringsCorrect : public RenumStrings {};
 
 TEST_P(RenumConvertStringsCorrect, RenumFromStrings) {
@@ -134,16 +149,35 @@ TEST_P(RenumConvertStringsCorrect, RenumToStrings) {
     );
 };
 
-::testing::Message& operator<<(::testing::Message& Os, const ::RenumStrings::elem_type& Elem) {
-    return Os
-        << "::RenumStrings::elem_type{ " << static_cast<int>(::std::get<::RenumStrings::renum>(Elem))
-        << ", " << ::uns::string::u8_cast<::std::string>(::std::get<::RenumStrings::string>(Elem)) << " }";
-};
-
 INSTANTIATE_TEST_CASE_P(RenumGeneral, RenumConvertStringsCorrect,
     ::testing::Values(
         ::RenumStrings::elem_type{ ::renum_test::t1, u8"t1" }
         , ::RenumStrings::elem_type{ ::renum_test::t2, u8"t2" }
         , ::RenumStrings::elem_type{ ::renum_test::t3, u8"t3" }
+    )
+);
+
+class RenumConvertStringsInCorrect : public RenumStrings {};
+
+TEST_P(RenumConvertStringsInCorrect, RenumFromStrings) {
+    ASSERT_FALSE(//TODO to assert an exception
+        ::std::get<::RenumStrings::renum>(GetParam())
+        == ::renum_test::from_string(::std::get<::RenumStrings::string>(GetParam()))
+    );
+};
+
+TEST_P(RenumConvertStringsInCorrect, RenumToStrings) {
+    ASSERT_FALSE(
+        ::std::get<::RenumStrings::renum>(GetParam()).to_string()
+        == ::std::get<::RenumStrings::string>(GetParam())
+    );
+};
+
+INSTANTIATE_TEST_CASE_P(RenumGeneral, RenumConvertStringsInCorrect,
+    ::testing::Values(
+        ::RenumStrings::elem_type{ ::renum_test::t1, u8" t1" }
+        , ::RenumStrings::elem_type{ ::renum_test::t2, u8"t 2" }
+        , ::RenumStrings::elem_type{ ::renum_test::t3, u8"t4" }
+        , ::RenumStrings::elem_type{ ::renum_test::t3, u8"t3 " }
     )
 );
