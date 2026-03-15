@@ -264,9 +264,6 @@ public:\
         };\
     };\
 };\
-::std::ostream& operator<<(::std::ostream& ostr, const renum_name& RenumObj) {\
-    return ostr << ::std::string{ reinterpret_cast<const char*>(RenumObj.to_string().data()) };\
-};\
 
 
 namespace uns {
