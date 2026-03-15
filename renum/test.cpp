@@ -118,6 +118,7 @@ public:
     };
 };
 
+
 template<>
 ::std::string testing::PrintToString(const ::RenumStrings::elem_type& Elem) {
     return "RenumStrings::Elem{ "
@@ -157,12 +158,14 @@ INSTANTIATE_TEST_CASE_P(RenumGeneral, RenumConvertStringsCorrect,
     )
 );
 
+
 class RenumConvertStringsInCorrect : public RenumStrings {};
 
 TEST_P(RenumConvertStringsInCorrect, RenumFromStrings) {
-    ASSERT_FALSE(//TODO to assert an exception
+    ASSERT_THROW(
         ::std::get<::RenumStrings::renum>(GetParam())
         == ::renum_test::from_string(::std::get<::RenumStrings::string>(GetParam()))
+        , ::std::runtime_error
     );
 };
 
@@ -179,5 +182,79 @@ INSTANTIATE_TEST_CASE_P(RenumGeneral, RenumConvertStringsInCorrect,
         , ::RenumStrings::elem_type{ ::renum_test::t2, u8"t 2" }
         , ::RenumStrings::elem_type{ ::renum_test::t3, u8"t4" }
         , ::RenumStrings::elem_type{ ::renum_test::t3, u8"t3 " }
+    )
+);
+
+
+UNS_RENUM(unconditioned, int,
+    (T1, = 0)
+    , (_,)
+    , ( ABRACKAM_LINCOLN_WAS_THE_MOST_FAMOUS_PRESIDENT_OF_THE_USA, = 111)
+    , (hg1jkh081974, )
+    , (Ky______________________________________lksugbh, = 7890)
+    , (                HJJH,= 11111)
+    , (UwAuWa,=141315)
+    , (slhdbc                    , )
+    , (a, )
+    , (b, )
+);
+
+template<>
+::std::string testing::PrintToString(const ::unconditioned& Elem) {
+    return "unconditioned::" + ::uns::string::u8_cast<::std::string>(Elem.to_string());
+};
+
+template<typename initial_t>
+class RenumIdenticalCast : public ::testing::TestWithParam<initial_t> {};
+
+class RenumIdenticalCastRenum : public ::RenumIdenticalCast<::unconditioned> {};
+
+TEST_P(RenumIdenticalCastRenum, FromRenumToRenum) {
+    ASSERT_TRUE(
+        GetParam() == ::unconditioned::from_string(GetParam().to_string())
+    );
+};
+
+INSTANTIATE_TEST_CASE_P(RenumGeneral, RenumIdenticalCastRenum,
+    ::testing::Values(
+        ::unconditioned::_
+        , ::unconditioned::a
+        , ::unconditioned::ABRACKAM_LINCOLN_WAS_THE_MOST_FAMOUS_PRESIDENT_OF_THE_USA
+        , ::unconditioned::b
+        , ::unconditioned::hg1jkh081974
+        , ::unconditioned::HJJH
+        , ::unconditioned::Ky______________________________________lksugbh
+        , ::unconditioned::slhdbc
+        , ::unconditioned::T1
+        , ::unconditioned::UwAuWa
+    )
+);
+
+
+class RenumIdenticalCastString : public ::RenumIdenticalCast<::std::u8string> {};
+
+template<>
+::std::string testing::PrintToString(const ::std::u8string& Elem) {
+    return "u8\"" + ::uns::string::u8_cast<::std::string>(Elem) + "\"";
+};
+
+TEST_P(RenumIdenticalCastString, FromStringToString) {
+    ASSERT_TRUE(
+        GetParam() == ::unconditioned::from_string(GetParam()).to_string()
+    );
+};
+
+INSTANTIATE_TEST_CASE_P(RenumGeneral, RenumIdenticalCastString,
+    ::testing::Values(
+        u8"_"
+        , u8"a"
+        , u8"ABRACKAM_LINCOLN_WAS_THE_MOST_FAMOUS_PRESIDENT_OF_THE_USA"
+        , u8"b"
+        , u8"hg1jkh081974"
+        , u8"HJJH"
+        , u8"Ky______________________________________lksugbh"
+        , u8"slhdbc"
+        , u8"T1"
+        , u8"UwAuWa"
     )
 );
