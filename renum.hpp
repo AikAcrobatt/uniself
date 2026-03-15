@@ -19,8 +19,8 @@ UNS_RENUM(<renum name>, <underlying integer type>,
 constexpr static ::std::size_t size();
 constexpr static ::std::vector<renum> values();
 
-constexpr ::std::u8string to_string() const;
-constexpr static renum_name from_string(const ::std::u8string_view& Str); //throws if Str does not match any renum member
+constexpr ::std::u32string to_string() const;
+constexpr static renum_name from_string(const ::std::u32string_view& Str); //throws if Str does not match any renum member
 
 */
 
@@ -167,8 +167,8 @@ constexpr static renum_name from_string(const ::std::u8string_view& Str); //thro
 
 //renum-specific macros
 
-#define UNS_U8INSTRUCTION(arg) u8#arg
-#define UNS_U8LITERAL(arg) UNS_U8INSTRUCTION(##arg)
+#define UNS_U32INSTRUCTION(arg) U#arg
+#define UNS_U32LITERAL(arg) UNS_U32INSTRUCTION(##arg)
 
 #define UNS_RENUM_DELIMITER_NONE()
 #define UNS_RENUM_DELIMITER_COMMA() ,
@@ -177,12 +177,12 @@ constexpr static renum_name from_string(const ::std::u8string_view& Str); //thro
 #define UNS_RENUM_VALUE(renum_pair) UNS_RENUM_EXPAND(UNS_RENUM_OBTAIN_FIRST)renum_pair
 
 #define UNS_RENUM_TOSTRING_SEGMENT_INNER(arg)\
-    case arg: { return UNS_U8LITERAL(arg); }
+    case arg: { return UNS_U32LITERAL(arg); }
 #define UNS_RENUM_TOSTRING_SEGMENT(renum_pair)\
     UNS_RENUM_TOSTRING_SEGMENT_INNER(UNS_RENUM_EXPAND(UNS_RENUM_OBTAIN_FIRST)renum_pair)
 
 #define UNS_RENUM_FROMSTRING_SEGMENT_INNER(arg)\
-    if (Str == UNS_U8LITERAL(arg)) { return arg; } else
+    if (Str == UNS_U32LITERAL(arg)) { return arg; } else
 #define UNS_RENUM_FROMSTRING_SEGMENT(renum_pair)\
     UNS_RENUM_FROMSTRING_SEGMENT_INNER(UNS_RENUM_EXPAND(UNS_RENUM_OBTAIN_FIRST)renum_pair)
 
@@ -241,7 +241,7 @@ public:\
         };\
     };\
 public:\
-    inline constexpr ::std::u8string to_string() const {\
+    inline constexpr ::std::u32string to_string() const {\
         switch (m_value) {\
             UNS_RENUM_FOR_EACH(\
                 UNS_RENUM_TOSTRING_SEGMENT,\
@@ -253,7 +253,7 @@ public:\
             }\
         };\
     };\
-    inline constexpr static renum_name from_string(const ::std::u8string_view& Str) {\
+    inline constexpr static renum_name from_string(const ::std::u32string_view& Str) {\
         UNS_RENUM_FOR_EACH(\
             UNS_RENUM_FROMSTRING_SEGMENT,\
             UNS_RENUM_DELIMITER_NONE,\
@@ -298,7 +298,7 @@ namespace uns {
         enum_obj.to_string();
     }
     && requires(renum_t enum_obj) {
-        renum_t::from_string(u8"...");
+        renum_t::from_string(U"...");
     };
 
 

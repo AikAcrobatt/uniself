@@ -107,10 +107,10 @@ UNS_RENUM(renum_test, int,
 );
 
 class RenumStrings : public ::testing::TestWithParam<
-    ::std::tuple<::renum_test, ::std::u8string>
+    ::std::tuple<::renum_test, ::std::u32string>
 > {
 public:
-    using elem_type = ::std::tuple<::renum_test, ::std::u8string>;
+    using elem_type = ::std::tuple<::renum_test, ::std::u32string>;
 public:
     enum {
         renum = 0,
@@ -129,7 +129,9 @@ template<>
         )
         + ", "
         + ::uns::string::u8_cast<::std::string>(
-            ::std::get<::RenumStrings::string>(Elem)
+            ::uns::string::u8_cast<::std::u8string>(
+                ::std::get<::RenumStrings::string>(Elem)
+            )
         )
         + " }";
 };
@@ -152,9 +154,9 @@ TEST_P(RenumConvertStringsCorrect, RenumToStrings) {
 
 INSTANTIATE_TEST_CASE_P(RenumGeneral, RenumConvertStringsCorrect,
     ::testing::Values(
-        ::RenumStrings::elem_type{ ::renum_test::t1, u8"t1" }
-        , ::RenumStrings::elem_type{ ::renum_test::t2, u8"t2" }
-        , ::RenumStrings::elem_type{ ::renum_test::t3, u8"t3" }
+        ::RenumStrings::elem_type{ ::renum_test::t1, U"t1" }
+        , ::RenumStrings::elem_type{ ::renum_test::t2, U"t2" }
+        , ::RenumStrings::elem_type{ ::renum_test::t3, U"t3" }
     )
 );
 
@@ -178,10 +180,10 @@ TEST_P(RenumConvertStringsInCorrect, RenumToStrings) {
 
 INSTANTIATE_TEST_CASE_P(RenumGeneral, RenumConvertStringsInCorrect,
     ::testing::Values(
-        ::RenumStrings::elem_type{ ::renum_test::t1, u8" t1" }
-        , ::RenumStrings::elem_type{ ::renum_test::t2, u8"t 2" }
-        , ::RenumStrings::elem_type{ ::renum_test::t3, u8"t4" }
-        , ::RenumStrings::elem_type{ ::renum_test::t3, u8"t3 " }
+        ::RenumStrings::elem_type{ ::renum_test::t1, U" t1" }
+        , ::RenumStrings::elem_type{ ::renum_test::t2, U"t 2" }
+        , ::RenumStrings::elem_type{ ::renum_test::t3, U"t4" }
+        , ::RenumStrings::elem_type{ ::renum_test::t3, U"t3 " }
     )
 );
 
@@ -201,7 +203,9 @@ UNS_RENUM(unconditioned, int,
 
 template<>
 ::std::string testing::PrintToString(const ::unconditioned& Elem) {
-    return "unconditioned::" + ::uns::string::u8_cast<::std::string>(Elem.to_string());
+    return "unconditioned::" + ::uns::string::u8_cast<::std::string>(
+        ::uns::string::u8_cast<::std::u8string>(Elem.to_string())
+    );
 };
 
 template<typename initial_t>
@@ -231,11 +235,13 @@ INSTANTIATE_TEST_CASE_P(RenumGeneral, RenumIdenticalCastRenum,
 );
 
 
-class RenumIdenticalCastString : public ::RenumIdenticalCast<::std::u8string> {};
+class RenumIdenticalCastString : public ::RenumIdenticalCast<::std::u32string> {};
 
 template<>
-::std::string testing::PrintToString(const ::std::u8string& Elem) {
-    return "u8\"" + ::uns::string::u8_cast<::std::string>(Elem) + "\"";
+::std::string testing::PrintToString(const ::std::u32string& Elem) {
+    return "u8\"" + ::uns::string::u8_cast<::std::string>(
+        ::uns::string::u8_cast<::std::u8string>(Elem)
+    ) + "\"";
 };
 
 TEST_P(RenumIdenticalCastString, FromStringToString) {
@@ -246,15 +252,15 @@ TEST_P(RenumIdenticalCastString, FromStringToString) {
 
 INSTANTIATE_TEST_CASE_P(RenumGeneral, RenumIdenticalCastString,
     ::testing::Values(
-        u8"_"
-        , u8"a"
-        , u8"ABRACKAM_LINCOLN_WAS_THE_MOST_FAMOUS_PRESIDENT_OF_THE_USA"
-        , u8"b"
-        , u8"hg1jkh081974"
-        , u8"HJJH"
-        , u8"Ky______________________________________lksugbh"
-        , u8"slhdbc"
-        , u8"T1"
-        , u8"UwAuWa"
+        U"_"
+        , U"a"
+        , U"ABRACKAM_LINCOLN_WAS_THE_MOST_FAMOUS_PRESIDENT_OF_THE_USA"
+        , U"b"
+        , U"hg1jkh081974"
+        , U"HJJH"
+        , U"Ky______________________________________lksugbh"
+        , U"slhdbc"
+        , U"T1"
+        , U"UwAuWa"
     )
 );
