@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef UNS_LIB_RENUM
-#define UNS_LIB_RENUM "renum.hpp"
+#define UNS_LIB_RENUM
 
 #include <vector>
 #include <stdexcept>
