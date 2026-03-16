@@ -299,7 +299,7 @@ namespace uns {
     };
 
 
-    //BENUM TYPE_TRAITS
+    //RENUM TYPE_TRAITS
     template<typename renum_t>
     class renum_traits : public ::std::integral_constant<bool, ::uns::is_renum<renum_t>> {};
 };

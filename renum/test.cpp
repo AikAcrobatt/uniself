@@ -10,16 +10,16 @@
 namespace abyss {
 
     UNS_RENUM(layers, int,
-        (l0, = 0),
-        (l1, = 1),
-        (l2, = 2),
-        (l3, = 3),
-        (l4, = 4),
-        (l5, = 5),
-        (l6, = 6),
-        (l7, = 7),
-        (l8, = 8),
-        (l9, = 9)
+        (l0, = 0)
+        , (l1, = 1)
+        , (l2, = 2)
+        , (l3, = 3)
+        , (l4, = 4)
+        , (l5, = 5)
+        , (l6, = 6)
+        , (l7, = 7)
+        , (l8, = 8)
+        , (l9, = 9)
     );
 
 };
@@ -101,9 +101,9 @@ INSTANTIATE_TEST_CASE_P(RenumGeneral, ComparationChecks,
 
 
 UNS_RENUM(renum_test, int,
-    (t1, = 0),
-    (t2, = 10),
-    (t3,)
+    (t1, = 0)
+    , (t2, = 10)
+    , (t3,)
 );
 
 class RenumStrings : public ::testing::TestWithParam<
@@ -113,8 +113,8 @@ public:
     using elem_type = ::std::tuple<::renum_test, ::std::u32string>;
 public:
     enum {
-        renum = 0,
-        string = 1
+        renum = 0
+        , string = 1
     };
 };
 
@@ -141,14 +141,14 @@ class RenumConvertStringsCorrect : public RenumStrings {};
 TEST_P(RenumConvertStringsCorrect, RenumFromStrings) {
     ASSERT_TRUE(
         ::std::get<::RenumStrings::renum>(GetParam())
-        == ::renum_test::from_string(::std::get<::RenumStrings::string>(GetParam()))
+            == ::renum_test::from_string(::std::get<::RenumStrings::string>(GetParam()))
     );
 };
 
 TEST_P(RenumConvertStringsCorrect, RenumToStrings) {
     ASSERT_TRUE(
         ::std::get<::RenumStrings::renum>(GetParam()).to_string()
-        == ::std::get<::RenumStrings::string>(GetParam())
+            == ::std::get<::RenumStrings::string>(GetParam())
     );
 };
 
@@ -166,7 +166,7 @@ class RenumConvertStringsInCorrect : public RenumStrings {};
 TEST_P(RenumConvertStringsInCorrect, RenumFromStrings) {
     ASSERT_THROW(
         ::std::get<::RenumStrings::renum>(GetParam())
-        == ::renum_test::from_string(::std::get<::RenumStrings::string>(GetParam()))
+            == ::renum_test::from_string(::std::get<::RenumStrings::string>(GetParam()))
         , ::std::runtime_error
     );
 };
@@ -174,7 +174,7 @@ TEST_P(RenumConvertStringsInCorrect, RenumFromStrings) {
 TEST_P(RenumConvertStringsInCorrect, RenumToStrings) {
     ASSERT_FALSE(
         ::std::get<::RenumStrings::renum>(GetParam()).to_string()
-        == ::std::get<::RenumStrings::string>(GetParam())
+            == ::std::get<::RenumStrings::string>(GetParam())
     );
 };
 
