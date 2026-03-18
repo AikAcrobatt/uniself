@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.3.11527.330
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "strings", "strings\strings.vcxproj", "{87FA26EC-94D5-4F1F-96EA-F92C2EE42CC0}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "math", "math\math.vcxproj", "{E44BCB6C-3FB1-4583-933D-2FACB69BA585}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "matrix", "matrix\matrix.vcxproj", "{6E37A88F-A3DF-4AAF-9E34-06D18D7E5D37}"
@@ -21,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "renum", "renum\renum.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "concepts", "concepts\concepts.vcxproj", "{EE51514D-3700-42D2-A821-9E412D8C4959}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "strings", "strings\strings.vcxproj", "{81D4434B-5799-4161-A0A3-E26A14CB2E85}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -29,14 +29,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{87FA26EC-94D5-4F1F-96EA-F92C2EE42CC0}.Debug|x64.ActiveCfg = Debug|x64
-		{87FA26EC-94D5-4F1F-96EA-F92C2EE42CC0}.Debug|x64.Build.0 = Debug|x64
-		{87FA26EC-94D5-4F1F-96EA-F92C2EE42CC0}.Debug|x86.ActiveCfg = Debug|Win32
-		{87FA26EC-94D5-4F1F-96EA-F92C2EE42CC0}.Debug|x86.Build.0 = Debug|Win32
-		{87FA26EC-94D5-4F1F-96EA-F92C2EE42CC0}.Release|x64.ActiveCfg = Release|x64
-		{87FA26EC-94D5-4F1F-96EA-F92C2EE42CC0}.Release|x64.Build.0 = Release|x64
-		{87FA26EC-94D5-4F1F-96EA-F92C2EE42CC0}.Release|x86.ActiveCfg = Release|Win32
-		{87FA26EC-94D5-4F1F-96EA-F92C2EE42CC0}.Release|x86.Build.0 = Release|Win32
 		{E44BCB6C-3FB1-4583-933D-2FACB69BA585}.Debug|x64.ActiveCfg = Debug|x64
 		{E44BCB6C-3FB1-4583-933D-2FACB69BA585}.Debug|x64.Build.0 = Debug|x64
 		{E44BCB6C-3FB1-4583-933D-2FACB69BA585}.Debug|x86.ActiveCfg = Debug|Win32
@@ -101,6 +93,14 @@ Global
 		{EE51514D-3700-42D2-A821-9E412D8C4959}.Release|x64.Build.0 = Release|x64
 		{EE51514D-3700-42D2-A821-9E412D8C4959}.Release|x86.ActiveCfg = Release|Win32
 		{EE51514D-3700-42D2-A821-9E412D8C4959}.Release|x86.Build.0 = Release|Win32
+		{81D4434B-5799-4161-A0A3-E26A14CB2E85}.Debug|x64.ActiveCfg = Debug|x64
+		{81D4434B-5799-4161-A0A3-E26A14CB2E85}.Debug|x64.Build.0 = Debug|x64
+		{81D4434B-5799-4161-A0A3-E26A14CB2E85}.Debug|x86.ActiveCfg = Debug|Win32
+		{81D4434B-5799-4161-A0A3-E26A14CB2E85}.Debug|x86.Build.0 = Debug|Win32
+		{81D4434B-5799-4161-A0A3-E26A14CB2E85}.Release|x64.ActiveCfg = Release|x64
+		{81D4434B-5799-4161-A0A3-E26A14CB2E85}.Release|x64.Build.0 = Release|x64
+		{81D4434B-5799-4161-A0A3-E26A14CB2E85}.Release|x86.ActiveCfg = Release|Win32
+		{81D4434B-5799-4161-A0A3-E26A14CB2E85}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
