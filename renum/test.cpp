@@ -7,6 +7,7 @@
 #include "uniself/renum.hpp"
 #include "uniself/strings.hpp"
 
+
 namespace abyss {
 
     UNS_RENUM(layers, int,
@@ -118,20 +119,15 @@ public:
     };
 };
 
-
 template<>
 ::std::string testing::PrintToString(const ::RenumStrings::elem_type& Elem) {
     return "RenumStrings::Elem{ "
-        + ::uns::string::u8_cast<::std::string>(
-            ::uns::string::u8_cast<::std::u8string>(
-                static_cast<::renum_test::integral_type>(::std::get<::RenumStrings::renum>(Elem))
-            )
+        + ::uns::string::cast<::std::string>(
+            static_cast<::renum_test::integral_type>(::std::get<::RenumStrings::renum>(Elem))
         )
         + ", "
-        + ::uns::string::u8_cast<::std::string>(
-            ::uns::string::u8_cast<::std::u8string>(
-                ::std::get<::RenumStrings::string>(Elem)
-            )
+        + ::uns::string::cast<::std::string>(
+            ::std::get<::RenumStrings::string>(Elem)
         )
         + " }";
 };
@@ -203,9 +199,7 @@ UNS_RENUM(unconditioned, int,
 
 template<>
 ::std::string testing::PrintToString(const ::unconditioned& Elem) {
-    return "unconditioned::" + ::uns::string::u8_cast<::std::string>(
-        ::uns::string::u8_cast<::std::u8string>(Elem.to_string())
-    );
+    return "unconditioned::" + ::uns::string::cast<::std::string>(Elem.to_string());
 };
 
 template<typename initial_t>
@@ -239,9 +233,7 @@ class RenumIdenticalCastString : public ::RenumIdenticalCast<::std::u32string> {
 
 template<>
 ::std::string testing::PrintToString(const ::std::u32string& Elem) {
-    return "u8\"" + ::uns::string::u8_cast<::std::string>(
-        ::uns::string::u8_cast<::std::u8string>(Elem)
-    ) + "\"";
+    return "u8\"" + ::uns::string::cast<::std::string>(Elem) + "\"";
 };
 
 TEST_P(RenumIdenticalCastString, FromStringToString) {
