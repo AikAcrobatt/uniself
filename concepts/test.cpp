@@ -117,7 +117,7 @@ namespace uns::tests::concepts::collections {
 
 namespace uns::tests::concepts::collections {
 
-    using collections_const_types_list = ::testing::Types<
+    using const_types_list = ::testing::Types<
         ::std::vector<::uns::tests::concepts::collections::collection_element_type>
         , ::std::list<::uns::tests::concepts::collections::collection_element_type>
         , ::std::set<::uns::tests::concepts::collections::collection_element_type>
@@ -130,7 +130,7 @@ namespace uns::tests::concepts::collections {
 template<typename collection_candidate_t>
 class ConceptCollectionConstCorrect : public ::testing::Test {};
 
-TYPED_TEST_CASE(ConceptCollectionConstCorrect, ::uns::tests::concepts::collections::collections_const_types_list);
+TYPED_TEST_CASE(ConceptCollectionConstCorrect, ::uns::tests::concepts::collections::const_types_list);
 
 TYPED_TEST(ConceptCollectionConstCorrect, Test) {
     ASSERT_TRUE(::uns::tests::concepts::collections::test_const_iter<TypeParam>());
@@ -139,7 +139,7 @@ TYPED_TEST(ConceptCollectionConstCorrect, Test) {
 
 namespace uns::tests::concepts::collections {
 
-    using non_collections_const_types_list = ::testing::Types<
+    using fake_const_types_list = ::testing::Types<
         int
         , double
         , bool
@@ -161,7 +161,7 @@ namespace uns::tests::concepts::collections {
 template<typename collection_candidate_t>
 class ConceptCollectionConstInCorrect : public ::testing::Test {};
 
-TYPED_TEST_CASE(ConceptCollectionConstInCorrect, ::uns::tests::concepts::collections::non_collections_const_types_list);
+TYPED_TEST_CASE(ConceptCollectionConstInCorrect, ::uns::tests::concepts::collections::fake_const_types_list);
 
 TYPED_TEST(ConceptCollectionConstInCorrect, Test) {
     ASSERT_FALSE(::uns::tests::concepts::collections::test_const_iter<TypeParam>());
@@ -170,7 +170,7 @@ TYPED_TEST(ConceptCollectionConstInCorrect, Test) {
 
 namespace uns::tests::concepts::collections {
 
-    using collections_types_list = ::testing::Types<
+    using nonconst_types_list = ::testing::Types<
         ::std::vector<::uns::tests::concepts::collections::collection_element_type>
         , ::std::list<::uns::tests::concepts::collections::collection_element_type>
         , ::std::set<::uns::tests::concepts::collections::collection_element_type>
@@ -184,7 +184,7 @@ namespace uns::tests::concepts::collections {
 template<typename collection_candidate_t>
 class ConceptCollectionCorrect : public ::testing::Test {};
 
-TYPED_TEST_CASE(ConceptCollectionCorrect, ::uns::tests::concepts::collections::collections_types_list);
+TYPED_TEST_CASE(ConceptCollectionCorrect, ::uns::tests::concepts::collections::nonconst_types_list);
 
 TYPED_TEST(ConceptCollectionCorrect, Test) {
     ASSERT_TRUE(::uns::tests::concepts::collections::test_iter<TypeParam>());
@@ -193,7 +193,7 @@ TYPED_TEST(ConceptCollectionCorrect, Test) {
 
 namespace uns::tests::concepts::collections {
 
-    using non_collections_types_list = ::testing::Types<
+    using fake_nonconst_types_list = ::testing::Types<
         int
         , double
         , bool
@@ -214,37 +214,8 @@ namespace uns::tests::concepts::collections {
 template<typename collection_candidate_t>
 class ConceptCollectionInCorrect : public ::testing::Test {};
 
-TYPED_TEST_CASE(ConceptCollectionInCorrect, ::uns::tests::concepts::collections::non_collections_types_list);
+TYPED_TEST_CASE(ConceptCollectionInCorrect, ::uns::tests::concepts::collections::fake_nonconst_types_list);
 
 TYPED_TEST(ConceptCollectionInCorrect, Test) {
     ASSERT_FALSE(::uns::tests::concepts::collections::test_iter<TypeParam>());
 };
-
-
-namespace uns::tests::concepts::callables {
-
-    template<::uns::callable functor_t>
-    constexpr bool test() {
-        return true;
-    };
-
-
-    template<typename return_t, typename ... arg_tt>
-    return_t returning(arg_tt... arg) { return {}; };
-
-
-    template<typename return_t, typename ... arg_tt>
-    class invokable {
-    public:
-        return_t operator()(arg_tt... arg) { return {}; };
-    };
-
-
-    class non_invokable {};
-
-    using list = ::testing::Combine(
-        ::testing::Types<void, int, bool>
-        ,::testing::Types<void, int, bool>
-    );
-};
-

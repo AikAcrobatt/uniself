@@ -41,26 +41,6 @@ namespace uns {
         }
         && ::uns::legacy_iterator<typename collection_t::const_iterator, value_t>;
 
-
-    template<typename functor_t, typename result_t, typename ... args_t>
-    concept callable = requires(
-        functor_t functor,
-        result_t result,
-        args_t ... args
-    ) {
-        result = functor(args ...);
-    }
-    || (
-        ::std::same_as<result_t, void>
-        && requires(
-            functor_t functor,
-            args_t ... args
-        ) {
-            functor(args ...);
-        }
-    );
-
-
 };
 
 #endif
