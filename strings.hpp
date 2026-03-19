@@ -329,6 +329,22 @@ namespace uns::string {
 
         return out_t(0);
     };
+    template<::std::constructible_from<::std::u32string> out_t, typename in_t>
+        requires (::std::is_integral<in_t>::value && !::std::is_same<in_t, bool>::value)
+    out_t cast(const in_t& obj) {
+        auto res = ::std::string(64, '\0');
+
+        auto* begin = &(*res.begin());
+        auto* end = &res.back();
+
+        auto conv = ::std::to_chars(begin, end, obj, 10);
+        if (conv.ec == ::std::errc()) {
+            return ::uns::string::cast<::std::u32string>(res);
+        }
+        else {
+            throw ::std::runtime_error("An input value can't be converted to string");
+        };
+    };
     template<::std::floating_point out_t>
     out_t cast(const ::std::u8string_view& str) {
         auto start_pos = 0;
@@ -362,24 +378,8 @@ namespace uns::string {
 
         throw ::std::runtime_error("An input string can't be converted to floating point");
     };
-    template<::std::constructible_from<::std::u32string> out_t, typename in_t>
-        requires (::std::is_integral<in_t>::value && !::std::is_same<in_t, bool>::value)
-    out_t cast(const in_t& obj) {
-        auto res = ::std::string(64, '\0');
-
-        auto* begin = &(*res.begin());
-        auto* end = &res.back();
-
-        auto conv = ::std::to_chars(begin, end, obj, 10);
-        if (conv.ec == ::std::errc()) {
-            return ::uns::string::cast<::std::u32string>(res);
-        }
-        else {
-            throw ::std::runtime_error("An input value can't be converted to string");
-        };
-    };
     template<::std::constructible_from<::std::u32string> out_t, ::std::floating_point in_t>
-    out_t u8_cast(const in_t& obj) {
+    out_t cast(const in_t& obj) {
         auto res = ::std::string(64, '\0');
         auto* begin = &(*res.begin());
         auto* end = &res.back();

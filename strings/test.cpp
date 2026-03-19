@@ -1,4 +1,5 @@
 
+#include <sstream>
 
 #include "uniself/strings.hpp"
 #include "uniself/renum.hpp"
@@ -153,7 +154,7 @@ TEST(StringCasts, WU32Test) {
         , to
     );
 };
-TEST(StringCasts, W2U8Test) {
+TEST(StringCasts, WU8Test) {
     const auto from = ::std::wstring{ L"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
     const auto to = ::std::u8string{ u8"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
 
@@ -361,5 +362,1116 @@ INSTANTIATE_TEST_CASE_P(TypedCasts, BackwardBooleanCasts,
         , ::BooleanCasts::elem_type{ U"FAlse",  false,  ::correct::no }
         , ::BooleanCasts::elem_type{ U" FALSE ",false,  ::correct::no }
         , ::BooleanCasts::elem_type{ U"00",     false,  ::correct::no }
+    )
+);
+
+
+template<typename numeric_t, ::uns::is_basic_string string_t>
+class IntegerCasts : public ::testing::TestWithParam<
+    ::std::tuple<string_t, numeric_t, ::correct>
+> {
+public:
+    using elem_type = ::std::tuple<string_t, numeric_t, ::correct>;
+    using string_type = string_t;
+    using numeric_type = numeric_t;
+public:
+    enum elem_part {
+        string = 0
+        , expectation = 1
+        , correctness = 2
+    };
+public:
+    static ::std::string to_string(const elem_type& Elem) {
+        auto ss = ::std::stringstream{};
+        ss << ::std::get<elem_part::expectation>(Elem);
+
+        auto expected = ::std::string{};
+        ss >> expected;
+
+        return "IntegerCasts::Elem{ "
+            + testing::PrintToString(
+                ::std::get<elem_part::string>(Elem)
+            )
+            + " ?= "
+            + expected
+            + ", correct::"
+            + ::uns::string::cast<::std::string>(
+                ::std::get<elem_part::correctness>(Elem).to_string()
+            )
+            + " }";
+    };
+};
+
+class UnsignedIntegerCastsU32 : public ::IntegerCasts<unsigned long long int, ::std::u32string> {};
+class UnsignedIntegerCastsS : public ::IntegerCasts<unsigned long long int, ::std::string> {};
+class UnsignedIntegerCastsU8 : public ::IntegerCasts<unsigned long long int, ::std::u8string> {};
+class UnsignedIntegerCastsU16 : public ::IntegerCasts<unsigned long long int, ::std::u16string> {};
+class UnsignedIntegerCastsW : public ::IntegerCasts<unsigned long long int, ::std::wstring> {};
+
+template<>
+::std::string testing::PrintToString(const ::UnsignedIntegerCastsU32::elem_type& Elem) {
+    return ::UnsignedIntegerCastsU32::to_string(Elem);
+};
+template<>
+::std::string testing::PrintToString(const ::UnsignedIntegerCastsS ::elem_type& Elem) {
+    return ::UnsignedIntegerCastsS::to_string(Elem);
+};
+template<>
+::std::string testing::PrintToString(const ::UnsignedIntegerCastsU8::elem_type& Elem) {
+    return ::UnsignedIntegerCastsU8::to_string(Elem);
+};
+template<>
+::std::string testing::PrintToString(const ::UnsignedIntegerCastsU16::elem_type& Elem) {
+    return ::UnsignedIntegerCastsU16::to_string(Elem);
+};
+template<>
+::std::string testing::PrintToString(const ::UnsignedIntegerCastsW::elem_type& Elem) {
+    return ::UnsignedIntegerCastsW::to_string(Elem);
+};
+
+TEST_P(UnsignedIntegerCastsU32, ForwardCastTest) {
+    using TestCaseFixture = UnsignedIntegerCastsU32;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            ASSERT_NE(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+TEST_P(UnsignedIntegerCastsU32, BackwardCastTest) {
+    using TestCaseFixture = UnsignedIntegerCastsU32;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::expectation>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::numeric_type>(
+                    ::std::get<TestCaseFixture::string>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            bool comparison_result = false;
+
+            #pragma warning(push)
+            #pragma warning(disable: 4553)
+            ASSERT_THROW(
+                comparison_result = (
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                    == ::uns::string::cast<TestCaseFixture::numeric_type>(
+                        ::std::get<TestCaseFixture::string>(GetParam())
+                    )
+                    )
+                , ::std::runtime_error
+            );
+            #pragma warning(pop)
+
+            ASSERT_FALSE(comparison_result);
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+INSTANTIATE_TEST_CASE_P(NumericCasts, UnsignedIntegerCastsU32,
+    ::testing::Values(
+         UnsignedIntegerCastsU32::elem_type{ U"0",          0,      ::correct::yes }
+        //, UnsignedIntegerCastsU32::elem_type{ U"0000",      0,      ::correct::yes }
+        , UnsignedIntegerCastsU32::elem_type{ U"1",         1,      ::correct::yes }
+        //, UnsignedIntegerCastsU32::elem_type{ U"0000001",   1,      ::correct::yes }
+        , UnsignedIntegerCastsU32::elem_type{ U"10423",     10423,  ::correct::yes }
+        , UnsignedIntegerCastsU32::elem_type{ U"789",       789,    ::correct::yes }
+        , UnsignedIntegerCastsU32::elem_type{ U"22304568",  22304568, ::correct::yes }
+        , UnsignedIntegerCastsU32::elem_type{ U"22304568 ", 22304568, ::correct::no }
+        , UnsignedIntegerCastsU32::elem_type{ U" 0",        0,      ::correct::no }
+        , UnsignedIntegerCastsU32::elem_type{ U"1 ",        1,      ::correct::no }
+        , UnsignedIntegerCastsU32::elem_type{ U"10_423",    10423,  ::correct::no }
+        , UnsignedIntegerCastsU32::elem_type{ U"8-8",       88,     ::correct::no }
+        , UnsignedIntegerCastsU32::elem_type{ U"7J9",       7,      ::correct::no }
+        , UnsignedIntegerCastsU32::elem_type{ U"2230 4568 ",2230,   ::correct::no }
+    )
+);
+
+TEST_P(UnsignedIntegerCastsS, ForwardCastTest) {
+    using TestCaseFixture = UnsignedIntegerCastsS;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            ASSERT_NE(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+TEST_P(UnsignedIntegerCastsS, BackwardCastTest) {
+    using TestCaseFixture = UnsignedIntegerCastsS;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::expectation>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::numeric_type>(
+                    ::std::get<TestCaseFixture::string>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            bool comparison_result = false;
+
+            #pragma warning(push)
+            #pragma warning(disable: 4553)
+            ASSERT_THROW(
+                comparison_result = (
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                    == ::uns::string::cast<TestCaseFixture::numeric_type>(
+                        ::std::get<TestCaseFixture::string>(GetParam())
+                    )
+                    )
+                , ::std::runtime_error
+            );
+            #pragma warning(pop)
+
+            ASSERT_FALSE(comparison_result);
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+INSTANTIATE_TEST_CASE_P(NumericCasts, UnsignedIntegerCastsS,
+    ::testing::Values(
+        UnsignedIntegerCastsS::elem_type{ "0",           0,      ::correct::yes }
+        //, UnsignedIntegerCastsS::elem_type{ "0000",      0,      ::correct::yes }
+        , UnsignedIntegerCastsS::elem_type{ "1",         1,      ::correct::yes }
+        //, UnsignedIntegerCastsS::elem_type{ "0000001",   1,      ::correct::yes }
+        , UnsignedIntegerCastsS::elem_type{ "10423",     10423,  ::correct::yes }
+        , UnsignedIntegerCastsS::elem_type{ "789",       789,    ::correct::yes }
+        , UnsignedIntegerCastsS::elem_type{ "22304568",  22304568, ::correct::yes }
+        , UnsignedIntegerCastsS::elem_type{ "22304568 ", 22304568, ::correct::no }
+        , UnsignedIntegerCastsS::elem_type{ " 0",        0,      ::correct::no }
+        , UnsignedIntegerCastsS::elem_type{ "1 ",        1,      ::correct::no }
+        , UnsignedIntegerCastsS::elem_type{ "10_423",    10423,  ::correct::no }
+        , UnsignedIntegerCastsS::elem_type{ "8-8",       88,     ::correct::no }
+        , UnsignedIntegerCastsS::elem_type{ "7J9",       7,      ::correct::no }
+        , UnsignedIntegerCastsS::elem_type{ "2230 4568 ",2230,   ::correct::no }
+    )
+);
+
+TEST_P(UnsignedIntegerCastsU8, ForwardCastTest) {
+    using TestCaseFixture = UnsignedIntegerCastsU8;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            ASSERT_NE(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+TEST_P(UnsignedIntegerCastsU8, BackwardCastTest) {
+    using TestCaseFixture = UnsignedIntegerCastsU8;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::expectation>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::numeric_type>(
+                    ::std::get<TestCaseFixture::string>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            bool comparison_result = false;
+
+            #pragma warning(push)
+            #pragma warning(disable: 4553)
+            ASSERT_THROW(
+                comparison_result = (
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                    == ::uns::string::cast<TestCaseFixture::numeric_type>(
+                        ::std::get<TestCaseFixture::string>(GetParam())
+                    )
+                    )
+                , ::std::runtime_error
+            );
+            #pragma warning(pop)
+
+            ASSERT_FALSE(comparison_result);
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+INSTANTIATE_TEST_CASE_P(NumericCasts, UnsignedIntegerCastsU8,
+    ::testing::Values(
+        UnsignedIntegerCastsU8::elem_type{ u8"0",           0,      ::correct::yes }
+        //, UnsignedIntegerCastsU8::elem_type{ u8"0000",      0,      ::correct::yes }
+        , UnsignedIntegerCastsU8::elem_type{ u8"1",         1,      ::correct::yes }
+        //, UnsignedIntegerCastsU8::elem_type{ u8"0000001",   1,      ::correct::yes }
+        , UnsignedIntegerCastsU8::elem_type{ u8"10423",     10423,  ::correct::yes }
+        , UnsignedIntegerCastsU8::elem_type{ u8"789",       789,    ::correct::yes }
+        , UnsignedIntegerCastsU8::elem_type{ u8"22304568",  22304568, ::correct::yes }
+        , UnsignedIntegerCastsU8::elem_type{ u8"22304568 ", 22304568, ::correct::no }
+        , UnsignedIntegerCastsU8::elem_type{ u8" 0",        0,      ::correct::no }
+        , UnsignedIntegerCastsU8::elem_type{ u8"1 ",        1,      ::correct::no }
+        , UnsignedIntegerCastsU8::elem_type{ u8"10_423",    10423,  ::correct::no }
+        , UnsignedIntegerCastsU8::elem_type{ u8"8-8",       88,     ::correct::no }
+        , UnsignedIntegerCastsU8::elem_type{ u8"7J9",       7,      ::correct::no }
+        , UnsignedIntegerCastsU8::elem_type{ u8"2230 4568 ",2230,   ::correct::no }
+    )
+);
+
+TEST_P(UnsignedIntegerCastsU16, ForwardCastTest) {
+    using TestCaseFixture = UnsignedIntegerCastsU16;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            ASSERT_NE(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+TEST_P(UnsignedIntegerCastsU16, BackwardCastTest) {
+    using TestCaseFixture = UnsignedIntegerCastsU16;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::expectation>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::numeric_type>(
+                    ::std::get<TestCaseFixture::string>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            bool comparison_result = false;
+
+            #pragma warning(push)
+            #pragma warning(disable: 4553)
+            ASSERT_THROW(
+                comparison_result = (
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                    == ::uns::string::cast<TestCaseFixture::numeric_type>(
+                        ::std::get<TestCaseFixture::string>(GetParam())
+                    )
+                    )
+                , ::std::runtime_error
+            );
+            #pragma warning(pop)
+
+            ASSERT_FALSE(comparison_result);
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+INSTANTIATE_TEST_CASE_P(NumericCasts, UnsignedIntegerCastsU16,
+    ::testing::Values(
+        UnsignedIntegerCastsU16::elem_type{ u"0",           0,      ::correct::yes }
+        //, UnsignedIntegerCastsU16::elem_type{ u"0000",      0,      ::correct::yes }
+        , UnsignedIntegerCastsU16::elem_type{ u"1",         1,      ::correct::yes }
+        //, UnsignedIntegerCastsU16::elem_type{ u"0000001",   1,      ::correct::yes }
+        , UnsignedIntegerCastsU16::elem_type{ u"10423",     10423,  ::correct::yes }
+        , UnsignedIntegerCastsU16::elem_type{ u"789",       789,    ::correct::yes }
+        , UnsignedIntegerCastsU16::elem_type{ u"22304568",  22304568, ::correct::yes }
+        , UnsignedIntegerCastsU16::elem_type{ u"22304568 ", 22304568, ::correct::no }
+        , UnsignedIntegerCastsU16::elem_type{ u" 0",        0,      ::correct::no }
+        , UnsignedIntegerCastsU16::elem_type{ u"1 ",        1,      ::correct::no }
+        , UnsignedIntegerCastsU16::elem_type{ u"10_423",    10423,  ::correct::no }
+        , UnsignedIntegerCastsU16::elem_type{ u"8-8",       88,     ::correct::no }
+        , UnsignedIntegerCastsU16::elem_type{ u"7J9",       7,      ::correct::no }
+        , UnsignedIntegerCastsU16::elem_type{ u"2230 4568 ",2230,   ::correct::no }
+    )
+);
+
+TEST_P(UnsignedIntegerCastsW, ForwardCastTest) {
+    using TestCaseFixture = UnsignedIntegerCastsW;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            ASSERT_NE(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+TEST_P(UnsignedIntegerCastsW, BackwardCastTest) {
+    using TestCaseFixture = UnsignedIntegerCastsW;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::expectation>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::numeric_type>(
+                    ::std::get<TestCaseFixture::string>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            bool comparison_result = false;
+
+            #pragma warning(push)
+            #pragma warning(disable: 4553)
+            ASSERT_THROW(
+                comparison_result = (
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                    == ::uns::string::cast<TestCaseFixture::numeric_type>(
+                        ::std::get<TestCaseFixture::string>(GetParam())
+                    )
+                    )
+                , ::std::runtime_error
+            );
+            #pragma warning(pop)
+
+            ASSERT_FALSE(comparison_result);
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+INSTANTIATE_TEST_CASE_P(NumericCasts, UnsignedIntegerCastsW,
+    ::testing::Values(
+        UnsignedIntegerCastsW::elem_type{ L"0",           0,      ::correct::yes }
+        //, UnsignedIntegerCastsW::elem_type{ L"0000",      0,      ::correct::yes }
+        , UnsignedIntegerCastsW::elem_type{ L"1",         1,      ::correct::yes }
+        //, UnsignedIntegerCastsW::elem_type{ L"0000001",   1,      ::correct::yes }
+        , UnsignedIntegerCastsW::elem_type{ L"10423",     10423,  ::correct::yes }
+        , UnsignedIntegerCastsW::elem_type{ L"789",       789,    ::correct::yes }
+        , UnsignedIntegerCastsW::elem_type{ L"22304568",  22304568, ::correct::yes }
+        , UnsignedIntegerCastsW::elem_type{ L"22304568 ", 22304568, ::correct::no }
+        , UnsignedIntegerCastsW::elem_type{ L" 0",        0,      ::correct::no }
+        , UnsignedIntegerCastsW::elem_type{ L"1 ",        1,      ::correct::no }
+        , UnsignedIntegerCastsW::elem_type{ L"10_423",    10423,  ::correct::no }
+        , UnsignedIntegerCastsW::elem_type{ L"8-8",       88,     ::correct::no }
+        , UnsignedIntegerCastsW::elem_type{ L"7J9",       7,      ::correct::no }
+        , UnsignedIntegerCastsW::elem_type{ L"2230 4568 ",2230,   ::correct::no }
+    )
+);
+
+class SignedIntegerCastsU32 : public ::IntegerCasts<long long int, ::std::u32string> {};
+class SignedIntegerCastsS : public ::IntegerCasts<long long int, ::std::string> {};
+class SignedIntegerCastsU8 : public ::IntegerCasts<long long int, ::std::u8string> {};
+class SignedIntegerCastsU16 : public ::IntegerCasts<long long int, ::std::u16string> {};
+class SignedIntegerCastsW : public ::IntegerCasts<long long int, ::std::wstring> {};
+
+template<>
+::std::string testing::PrintToString(const ::SignedIntegerCastsU32::elem_type& Elem) {
+    return ::SignedIntegerCastsU32::to_string(Elem);
+};
+template<>
+::std::string testing::PrintToString(const ::SignedIntegerCastsS::elem_type& Elem) {
+    return ::SignedIntegerCastsS::to_string(Elem);
+};
+template<>
+::std::string testing::PrintToString(const ::SignedIntegerCastsU8::elem_type& Elem) {
+    return ::SignedIntegerCastsU8::to_string(Elem);
+};
+template<>
+::std::string testing::PrintToString(const ::SignedIntegerCastsU16::elem_type& Elem) {
+    return ::SignedIntegerCastsU16::to_string(Elem);
+};
+template<>
+::std::string testing::PrintToString(const ::SignedIntegerCastsW::elem_type& Elem) {
+    return ::SignedIntegerCastsW::to_string(Elem);
+};
+
+TEST_P(SignedIntegerCastsU32, ForwardCastTest) {
+    using TestCaseFixture = SignedIntegerCastsU32;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            ASSERT_NE(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+TEST_P(SignedIntegerCastsU32, BackwardCastTest) {
+    using TestCaseFixture = SignedIntegerCastsU32;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::expectation>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::numeric_type>(
+                    ::std::get<TestCaseFixture::string>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            bool comparison_result = false;
+
+            #pragma warning(push)
+            #pragma warning(disable: 4553)
+            ASSERT_THROW(
+                comparison_result = (
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                    == ::uns::string::cast<TestCaseFixture::numeric_type>(
+                        ::std::get<TestCaseFixture::string>(GetParam())
+                    )
+                    )
+                , ::std::runtime_error
+            );
+            #pragma warning(pop)
+
+            ASSERT_FALSE(comparison_result);
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+INSTANTIATE_TEST_CASE_P(NumericCasts, SignedIntegerCastsU32,
+    ::testing::Values(
+        SignedIntegerCastsU32::elem_type{ U"0",          0,      ::correct::yes }
+        //, SignedIntegerCastsU32::elem_type{ U"0000",      0,      ::correct::yes }
+        , SignedIntegerCastsU32::elem_type{ U"1",         1,      ::correct::yes }
+        //, SignedIntegerCastsU32::elem_type{ U"0000001",   1,      ::correct::yes }
+        , SignedIntegerCastsU32::elem_type{ U"10423",     10423,  ::correct::yes }
+        , SignedIntegerCastsU32::elem_type{ U"-88",       -88,    ::correct::yes }
+        , SignedIntegerCastsU32::elem_type{ U"- 88",      -88,    ::correct::yes }
+        //, SignedIntegerCastsU32::elem_type{ U"-00088",    -88,    ::correct::yes }
+        , SignedIntegerCastsU32::elem_type{ U"789",       789,    ::correct::yes }
+        , SignedIntegerCastsU32::elem_type{ U"22304568",  22304568, ::correct::yes }
+        , SignedIntegerCastsU32::elem_type{ U"22304568 ", 22304568, ::correct::no }
+        , SignedIntegerCastsU32::elem_type{ U"-4444",     -4444,  ::correct::yes }
+        , SignedIntegerCastsU32::elem_type{ U"-4444 ",    -4444,  ::correct::no }
+        , SignedIntegerCastsU32::elem_type{ U" 0",        0,      ::correct::no }
+        , SignedIntegerCastsU32::elem_type{ U"1 ",        1,      ::correct::no }
+        , SignedIntegerCastsU32::elem_type{ U"10_423",    10423,  ::correct::no }
+        , SignedIntegerCastsU32::elem_type{ U"8-8",       88,     ::correct::no }
+        , SignedIntegerCastsU32::elem_type{ U"7J9",       7,      ::correct::no }
+        , SignedIntegerCastsU32::elem_type{ U"2230 4568 ",2230,   ::correct::no }
+        , SignedIntegerCastsU32::elem_type{ U"-44 44 ",   -44,    ::correct::no }
+    )
+);
+
+TEST_P(SignedIntegerCastsS, ForwardCastTest) {
+    using TestCaseFixture = SignedIntegerCastsS;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            ASSERT_NE(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+TEST_P(SignedIntegerCastsS, BackwardCastTest) {
+    using TestCaseFixture = SignedIntegerCastsS;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::expectation>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::numeric_type>(
+                    ::std::get<TestCaseFixture::string>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            bool comparison_result = false;
+
+            #pragma warning(push)
+            #pragma warning(disable: 4553)
+            ASSERT_THROW(
+                comparison_result = (
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                    == ::uns::string::cast<TestCaseFixture::numeric_type>(
+                        ::std::get<TestCaseFixture::string>(GetParam())
+                    )
+                    )
+                , ::std::runtime_error
+            );
+            #pragma warning(pop)
+
+            ASSERT_FALSE(comparison_result);
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+INSTANTIATE_TEST_CASE_P(NumericCasts, SignedIntegerCastsS,
+    ::testing::Values(
+        SignedIntegerCastsS::elem_type{ "0",          0,      ::correct::yes }
+        //, SignedIntegerCastsS::elem_type{ "0000",      0,      ::correct::yes }
+        , SignedIntegerCastsS::elem_type{ "1",         1,      ::correct::yes }
+        //, SignedIntegerCastsS::elem_type{ "0000001",   1,      ::correct::yes }
+        , SignedIntegerCastsS::elem_type{ "10423",     10423,  ::correct::yes }
+        , SignedIntegerCastsS::elem_type{ "-88",       -88,    ::correct::yes }
+        , SignedIntegerCastsS::elem_type{ "- 88",      -88,    ::correct::yes }
+        //, SignedIntegerCastsS::elem_type{ "-00088",    -88,    ::correct::yes }
+        , SignedIntegerCastsS::elem_type{ "789",       789,    ::correct::yes }
+        , SignedIntegerCastsS::elem_type{ "22304568",  22304568, ::correct::yes }
+        , SignedIntegerCastsS::elem_type{ "22304568 ", 22304568, ::correct::no }
+        , SignedIntegerCastsS::elem_type{ "-4444",     -4444,  ::correct::yes }
+        , SignedIntegerCastsS::elem_type{ "-4444 ",    -4444,  ::correct::no }
+        , SignedIntegerCastsS::elem_type{ " 0",        0,      ::correct::no }
+        , SignedIntegerCastsS::elem_type{ "1 ",        1,      ::correct::no }
+        , SignedIntegerCastsS::elem_type{ "10_423",    10423,  ::correct::no }
+        , SignedIntegerCastsS::elem_type{ "8-8",       88,     ::correct::no }
+        , SignedIntegerCastsS::elem_type{ "7J9",       7,      ::correct::no }
+        , SignedIntegerCastsS::elem_type{ "2230 4568 ",2230,   ::correct::no }
+        , SignedIntegerCastsS::elem_type{ "-44 44 ",   -44,    ::correct::no }
+    )
+);
+
+TEST_P(SignedIntegerCastsU8, ForwardCastTest) {
+    using TestCaseFixture = SignedIntegerCastsU8;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            ASSERT_NE(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+TEST_P(SignedIntegerCastsU8, BackwardCastTest) {
+    using TestCaseFixture = SignedIntegerCastsU8;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::expectation>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::numeric_type>(
+                    ::std::get<TestCaseFixture::string>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            bool comparison_result = false;
+
+            #pragma warning(push)
+            #pragma warning(disable: 4553)
+            ASSERT_THROW(
+                comparison_result = (
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                    == ::uns::string::cast<TestCaseFixture::numeric_type>(
+                        ::std::get<TestCaseFixture::string>(GetParam())
+                    )
+                    )
+                , ::std::runtime_error
+            );
+            #pragma warning(pop)
+
+            ASSERT_FALSE(comparison_result);
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+INSTANTIATE_TEST_CASE_P(NumericCasts, SignedIntegerCastsU8,
+    ::testing::Values(
+        SignedIntegerCastsU8::elem_type{ u8"0",           0,      ::correct::yes }
+        //, SignedIntegerCastsU8::elem_type{ u8"0000",      0,      ::correct::yes }
+        , SignedIntegerCastsU8::elem_type{ u8"1",         1,      ::correct::yes }
+        //, SignedIntegerCastsU8::elem_type{ u8"0000001",   1,      ::correct::yes }
+        , SignedIntegerCastsU8::elem_type{ u8"10423",     10423,  ::correct::yes }
+        , SignedIntegerCastsU8::elem_type{ u8"-88",       -88,    ::correct::yes }
+        , SignedIntegerCastsU8::elem_type{ u8"- 88",      -88,    ::correct::yes }
+        //, SignedIntegerCastsU8::elem_type{ u8"-00088",    -88,    ::correct::yes }
+        , SignedIntegerCastsU8::elem_type{ u8"789",       789,    ::correct::yes }
+        , SignedIntegerCastsU8::elem_type{ u8"22304568",  22304568, ::correct::yes }
+        , SignedIntegerCastsU8::elem_type{ u8"22304568 ", 22304568, ::correct::no }
+        , SignedIntegerCastsU8::elem_type{ u8"-4444",     -4444,  ::correct::yes }
+        , SignedIntegerCastsU8::elem_type{ u8"-4444 ",    -4444,  ::correct::no }
+        , SignedIntegerCastsU8::elem_type{ u8" 0",        0,      ::correct::no }
+        , SignedIntegerCastsU8::elem_type{ u8"1 ",        1,      ::correct::no }
+        , SignedIntegerCastsU8::elem_type{ u8"10_423",    10423,  ::correct::no }
+        , SignedIntegerCastsU8::elem_type{ u8"8-8",       88,     ::correct::no }
+        , SignedIntegerCastsU8::elem_type{ u8"7J9",       7,      ::correct::no }
+        , SignedIntegerCastsU8::elem_type{ u8"2230 4568 ",2230,   ::correct::no }
+        , SignedIntegerCastsU8::elem_type{ u8"-44 44 ",   -44,    ::correct::no }
+    )
+);
+
+TEST_P(SignedIntegerCastsU16, ForwardCastTest) {
+    using TestCaseFixture = SignedIntegerCastsU16;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            ASSERT_NE(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+TEST_P(SignedIntegerCastsU16, BackwardCastTest) {
+    using TestCaseFixture = SignedIntegerCastsU16;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::expectation>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::numeric_type>(
+                    ::std::get<TestCaseFixture::string>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            bool comparison_result = false;
+
+            #pragma warning(push)
+            #pragma warning(disable: 4553)
+            ASSERT_THROW(
+                comparison_result = (
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                    == ::uns::string::cast<TestCaseFixture::numeric_type>(
+                        ::std::get<TestCaseFixture::string>(GetParam())
+                    )
+                    )
+                , ::std::runtime_error
+            );
+            #pragma warning(pop)
+
+            ASSERT_FALSE(comparison_result);
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+INSTANTIATE_TEST_CASE_P(NumericCasts, SignedIntegerCastsU16,
+    ::testing::Values(
+        SignedIntegerCastsU16::elem_type{ u"0",           0,      ::correct::yes }
+        //, SignedIntegerCastsU16::elem_type{ u"0000",      0,      ::correct::yes }
+        , SignedIntegerCastsU16::elem_type{ u"1",         1,      ::correct::yes }
+        //, SignedIntegerCastsU16::elem_type{ u"0000001",   1,      ::correct::yes }
+        , SignedIntegerCastsU16::elem_type{ u"10423",     10423,  ::correct::yes }
+        , SignedIntegerCastsU16::elem_type{ u"-88",       -88,    ::correct::yes }
+        , SignedIntegerCastsU16::elem_type{ u"- 88",      -88,    ::correct::yes }
+        //, SignedIntegerCastsU16::elem_type{ u"-00088",    -88,    ::correct::yes }
+        , SignedIntegerCastsU16::elem_type{ u"789",       789,    ::correct::yes }
+        , SignedIntegerCastsU16::elem_type{ u"22304568",  22304568, ::correct::yes }
+        , SignedIntegerCastsU16::elem_type{ u"22304568 ", 22304568, ::correct::no }
+        , SignedIntegerCastsU16::elem_type{ u"-4444",     -4444,  ::correct::yes }
+        , SignedIntegerCastsU16::elem_type{ u"-4444 ",    -4444,  ::correct::no }
+        , SignedIntegerCastsU16::elem_type{ u" 0",        0,      ::correct::no }
+        , SignedIntegerCastsU16::elem_type{ u"1 ",        1,      ::correct::no }
+        , SignedIntegerCastsU16::elem_type{ u"10_423",    10423,  ::correct::no }
+        , SignedIntegerCastsU16::elem_type{ u"8-8",       88,     ::correct::no }
+        , SignedIntegerCastsU16::elem_type{ u"7J9",       7,      ::correct::no }
+        , SignedIntegerCastsU16::elem_type{ u"2230 4568 ",2230,   ::correct::no }
+        , SignedIntegerCastsU16::elem_type{ u"-44 44 ",   -44,    ::correct::no }
+    )
+);
+
+TEST_P(SignedIntegerCastsW, ForwardCastTest) {
+    using TestCaseFixture = SignedIntegerCastsW;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            ASSERT_NE(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+TEST_P(SignedIntegerCastsW, BackwardCastTest) {
+    using TestCaseFixture = SignedIntegerCastsW;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::expectation>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::numeric_type>(
+                    ::std::get<TestCaseFixture::string>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            bool comparison_result = false;
+
+            #pragma warning(push)
+            #pragma warning(disable: 4553)
+            ASSERT_THROW(
+                comparison_result = (
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                    == ::uns::string::cast<TestCaseFixture::numeric_type>(
+                        ::std::get<TestCaseFixture::string>(GetParam())
+                    )
+                )
+                , ::std::runtime_error
+            );
+            #pragma warning(pop)
+
+            ASSERT_FALSE(comparison_result);
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+INSTANTIATE_TEST_CASE_P(NumericCasts, SignedIntegerCastsW,
+    ::testing::Values(
+        SignedIntegerCastsW::elem_type{ L"0",           0,      ::correct::yes }
+        //, SignedIntegerCastsW::elem_type{ L"0000",      0,      ::correct::yes }
+        , SignedIntegerCastsW::elem_type{ L"1",         1,      ::correct::yes }
+        //, SignedIntegerCastsW::elem_type{ L"0000001",   1,      ::correct::yes }
+        , SignedIntegerCastsW::elem_type{ L"10423",     10423,  ::correct::yes }
+        , SignedIntegerCastsW::elem_type{ L"-88",       -88,    ::correct::yes }
+        , SignedIntegerCastsW::elem_type{ L"- 88",      -88,    ::correct::yes }
+        //, SignedIntegerCastsW::elem_type{ L"-00088",    -88,    ::correct::yes }
+        , SignedIntegerCastsW::elem_type{ L"789",       789,    ::correct::yes }
+        , SignedIntegerCastsW::elem_type{ L"22304568",  22304568, ::correct::yes }
+        , SignedIntegerCastsW::elem_type{ L"22304568 ", 22304568, ::correct::no }
+        , SignedIntegerCastsW::elem_type{ L"-4444",     -4444,  ::correct::yes }
+        , SignedIntegerCastsW::elem_type{ L"-4444 ",    -4444,  ::correct::no }
+        , SignedIntegerCastsW::elem_type{ L" 0",        0,      ::correct::no }
+        , SignedIntegerCastsW::elem_type{ L"1 ",        1,      ::correct::no }
+        , SignedIntegerCastsW::elem_type{ L"10_423",    10423,  ::correct::no }
+        , SignedIntegerCastsW::elem_type{ L"8-8",       88,     ::correct::no }
+        , SignedIntegerCastsW::elem_type{ L"7J9",       7,      ::correct::no }
+        , SignedIntegerCastsW::elem_type{ L"2230 4568 ",2230,   ::correct::no }
+        , SignedIntegerCastsW::elem_type{ L"-44 44 ",   -44,    ::correct::no }
     )
 );
