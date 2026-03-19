@@ -511,10 +511,10 @@ TEST_P(UnsignedIntegerCastsU32, BackwardCastTest) {
 
 INSTANTIATE_TEST_CASE_P(NumericCasts, UnsignedIntegerCastsU32,
     ::testing::Values(
-         UnsignedIntegerCastsU32::elem_type{ U"0",          0,      ::correct::yes }
-        //, UnsignedIntegerCastsU32::elem_type{ U"0000",      0,      ::correct::yes }
+        UnsignedIntegerCastsU32::elem_type{ U"0",          0,      ::correct::yes }
+        , UnsignedIntegerCastsU32::elem_type{ U"0000",      0,      ::correct::yes }
         , UnsignedIntegerCastsU32::elem_type{ U"1",         1,      ::correct::yes }
-        //, UnsignedIntegerCastsU32::elem_type{ U"0000001",   1,      ::correct::yes }
+        , UnsignedIntegerCastsU32::elem_type{ U"0000001",   1,      ::correct::yes }
         , UnsignedIntegerCastsU32::elem_type{ U"10423",     10423,  ::correct::yes }
         , UnsignedIntegerCastsU32::elem_type{ U"789",       789,    ::correct::yes }
         , UnsignedIntegerCastsU32::elem_type{ U"22304568",  22304568, ::correct::yes }
@@ -611,9 +611,9 @@ TEST_P(UnsignedIntegerCastsS, BackwardCastTest) {
 INSTANTIATE_TEST_CASE_P(NumericCasts, UnsignedIntegerCastsS,
     ::testing::Values(
         UnsignedIntegerCastsS::elem_type{ "0",           0,      ::correct::yes }
-        //, UnsignedIntegerCastsS::elem_type{ "0000",      0,      ::correct::yes }
+        , UnsignedIntegerCastsS::elem_type{ "0000",      0,      ::correct::yes }
         , UnsignedIntegerCastsS::elem_type{ "1",         1,      ::correct::yes }
-        //, UnsignedIntegerCastsS::elem_type{ "0000001",   1,      ::correct::yes }
+        , UnsignedIntegerCastsS::elem_type{ "0000001",   1,      ::correct::yes }
         , UnsignedIntegerCastsS::elem_type{ "10423",     10423,  ::correct::yes }
         , UnsignedIntegerCastsS::elem_type{ "789",       789,    ::correct::yes }
         , UnsignedIntegerCastsS::elem_type{ "22304568",  22304568, ::correct::yes }
@@ -710,9 +710,9 @@ TEST_P(UnsignedIntegerCastsU8, BackwardCastTest) {
 INSTANTIATE_TEST_CASE_P(NumericCasts, UnsignedIntegerCastsU8,
     ::testing::Values(
         UnsignedIntegerCastsU8::elem_type{ u8"0",           0,      ::correct::yes }
-        //, UnsignedIntegerCastsU8::elem_type{ u8"0000",      0,      ::correct::yes }
+        , UnsignedIntegerCastsU8::elem_type{ u8"0000",      0,      ::correct::yes }
         , UnsignedIntegerCastsU8::elem_type{ u8"1",         1,      ::correct::yes }
-        //, UnsignedIntegerCastsU8::elem_type{ u8"0000001",   1,      ::correct::yes }
+        , UnsignedIntegerCastsU8::elem_type{ u8"0000001",   1,      ::correct::yes }
         , UnsignedIntegerCastsU8::elem_type{ u8"10423",     10423,  ::correct::yes }
         , UnsignedIntegerCastsU8::elem_type{ u8"789",       789,    ::correct::yes }
         , UnsignedIntegerCastsU8::elem_type{ u8"22304568",  22304568, ::correct::yes }
@@ -809,9 +809,9 @@ TEST_P(UnsignedIntegerCastsU16, BackwardCastTest) {
 INSTANTIATE_TEST_CASE_P(NumericCasts, UnsignedIntegerCastsU16,
     ::testing::Values(
         UnsignedIntegerCastsU16::elem_type{ u"0",           0,      ::correct::yes }
-        //, UnsignedIntegerCastsU16::elem_type{ u"0000",      0,      ::correct::yes }
+        , UnsignedIntegerCastsU16::elem_type{ u"0000",      0,      ::correct::yes }
         , UnsignedIntegerCastsU16::elem_type{ u"1",         1,      ::correct::yes }
-        //, UnsignedIntegerCastsU16::elem_type{ u"0000001",   1,      ::correct::yes }
+        , UnsignedIntegerCastsU16::elem_type{ u"0000001",   1,      ::correct::yes }
         , UnsignedIntegerCastsU16::elem_type{ u"10423",     10423,  ::correct::yes }
         , UnsignedIntegerCastsU16::elem_type{ u"789",       789,    ::correct::yes }
         , UnsignedIntegerCastsU16::elem_type{ u"22304568",  22304568, ::correct::yes }
@@ -908,9 +908,9 @@ TEST_P(UnsignedIntegerCastsW, BackwardCastTest) {
 INSTANTIATE_TEST_CASE_P(NumericCasts, UnsignedIntegerCastsW,
     ::testing::Values(
         UnsignedIntegerCastsW::elem_type{ L"0",           0,      ::correct::yes }
-        //, UnsignedIntegerCastsW::elem_type{ L"0000",      0,      ::correct::yes }
+        , UnsignedIntegerCastsW::elem_type{ L"0000",      0,      ::correct::yes }
         , UnsignedIntegerCastsW::elem_type{ L"1",         1,      ::correct::yes }
-        //, UnsignedIntegerCastsW::elem_type{ L"0000001",   1,      ::correct::yes }
+        , UnsignedIntegerCastsW::elem_type{ L"0000001",   1,      ::correct::yes }
         , UnsignedIntegerCastsW::elem_type{ L"10423",     10423,  ::correct::yes }
         , UnsignedIntegerCastsW::elem_type{ L"789",       789,    ::correct::yes }
         , UnsignedIntegerCastsW::elem_type{ L"22304568",  22304568, ::correct::yes }
@@ -1034,13 +1034,13 @@ TEST_P(SignedIntegerCastsU32, BackwardCastTest) {
 INSTANTIATE_TEST_CASE_P(NumericCasts, SignedIntegerCastsU32,
     ::testing::Values(
         SignedIntegerCastsU32::elem_type{ U"0",          0,      ::correct::yes }
-        //, SignedIntegerCastsU32::elem_type{ U"0000",      0,      ::correct::yes }
+        , SignedIntegerCastsU32::elem_type{ U"0000",      0,      ::correct::yes }
         , SignedIntegerCastsU32::elem_type{ U"1",         1,      ::correct::yes }
-        //, SignedIntegerCastsU32::elem_type{ U"0000001",   1,      ::correct::yes }
+        , SignedIntegerCastsU32::elem_type{ U"0000001",   1,      ::correct::yes }
         , SignedIntegerCastsU32::elem_type{ U"10423",     10423,  ::correct::yes }
         , SignedIntegerCastsU32::elem_type{ U"-88",       -88,    ::correct::yes }
-        , SignedIntegerCastsU32::elem_type{ U"- 88",      -88,    ::correct::yes }
-        //, SignedIntegerCastsU32::elem_type{ U"-00088",    -88,    ::correct::yes }
+        , SignedIntegerCastsU32::elem_type{ U"- 88",      -88,    ::correct::no }
+        , SignedIntegerCastsU32::elem_type{ U"-00088",    -88,    ::correct::yes }
         , SignedIntegerCastsU32::elem_type{ U"789",       789,    ::correct::yes }
         , SignedIntegerCastsU32::elem_type{ U"22304568",  22304568, ::correct::yes }
         , SignedIntegerCastsU32::elem_type{ U"22304568 ", 22304568, ::correct::no }
@@ -1139,13 +1139,13 @@ TEST_P(SignedIntegerCastsS, BackwardCastTest) {
 INSTANTIATE_TEST_CASE_P(NumericCasts, SignedIntegerCastsS,
     ::testing::Values(
         SignedIntegerCastsS::elem_type{ "0",          0,      ::correct::yes }
-        //, SignedIntegerCastsS::elem_type{ "0000",      0,      ::correct::yes }
+        , SignedIntegerCastsS::elem_type{ "0000",      0,      ::correct::yes }
         , SignedIntegerCastsS::elem_type{ "1",         1,      ::correct::yes }
-        //, SignedIntegerCastsS::elem_type{ "0000001",   1,      ::correct::yes }
+        , SignedIntegerCastsS::elem_type{ "0000001",   1,      ::correct::yes }
         , SignedIntegerCastsS::elem_type{ "10423",     10423,  ::correct::yes }
         , SignedIntegerCastsS::elem_type{ "-88",       -88,    ::correct::yes }
-        , SignedIntegerCastsS::elem_type{ "- 88",      -88,    ::correct::yes }
-        //, SignedIntegerCastsS::elem_type{ "-00088",    -88,    ::correct::yes }
+        , SignedIntegerCastsS::elem_type{ "- 88",      -88,    ::correct::no }
+        , SignedIntegerCastsS::elem_type{ "-00088",    -88,    ::correct::yes }
         , SignedIntegerCastsS::elem_type{ "789",       789,    ::correct::yes }
         , SignedIntegerCastsS::elem_type{ "22304568",  22304568, ::correct::yes }
         , SignedIntegerCastsS::elem_type{ "22304568 ", 22304568, ::correct::no }
@@ -1244,13 +1244,13 @@ TEST_P(SignedIntegerCastsU8, BackwardCastTest) {
 INSTANTIATE_TEST_CASE_P(NumericCasts, SignedIntegerCastsU8,
     ::testing::Values(
         SignedIntegerCastsU8::elem_type{ u8"0",           0,      ::correct::yes }
-        //, SignedIntegerCastsU8::elem_type{ u8"0000",      0,      ::correct::yes }
+        , SignedIntegerCastsU8::elem_type{ u8"0000",      0,      ::correct::yes }
         , SignedIntegerCastsU8::elem_type{ u8"1",         1,      ::correct::yes }
-        //, SignedIntegerCastsU8::elem_type{ u8"0000001",   1,      ::correct::yes }
+        , SignedIntegerCastsU8::elem_type{ u8"0000001",   1,      ::correct::yes }
         , SignedIntegerCastsU8::elem_type{ u8"10423",     10423,  ::correct::yes }
         , SignedIntegerCastsU8::elem_type{ u8"-88",       -88,    ::correct::yes }
-        , SignedIntegerCastsU8::elem_type{ u8"- 88",      -88,    ::correct::yes }
-        //, SignedIntegerCastsU8::elem_type{ u8"-00088",    -88,    ::correct::yes }
+        , SignedIntegerCastsU8::elem_type{ u8"- 88",      -88,    ::correct::no }
+        , SignedIntegerCastsU8::elem_type{ u8"-00088",    -88,    ::correct::yes }
         , SignedIntegerCastsU8::elem_type{ u8"789",       789,    ::correct::yes }
         , SignedIntegerCastsU8::elem_type{ u8"22304568",  22304568, ::correct::yes }
         , SignedIntegerCastsU8::elem_type{ u8"22304568 ", 22304568, ::correct::no }
@@ -1349,13 +1349,13 @@ TEST_P(SignedIntegerCastsU16, BackwardCastTest) {
 INSTANTIATE_TEST_CASE_P(NumericCasts, SignedIntegerCastsU16,
     ::testing::Values(
         SignedIntegerCastsU16::elem_type{ u"0",           0,      ::correct::yes }
-        //, SignedIntegerCastsU16::elem_type{ u"0000",      0,      ::correct::yes }
+        , SignedIntegerCastsU16::elem_type{ u"0000",      0,      ::correct::yes }
         , SignedIntegerCastsU16::elem_type{ u"1",         1,      ::correct::yes }
-        //, SignedIntegerCastsU16::elem_type{ u"0000001",   1,      ::correct::yes }
+        , SignedIntegerCastsU16::elem_type{ u"0000001",   1,      ::correct::yes }
         , SignedIntegerCastsU16::elem_type{ u"10423",     10423,  ::correct::yes }
         , SignedIntegerCastsU16::elem_type{ u"-88",       -88,    ::correct::yes }
-        , SignedIntegerCastsU16::elem_type{ u"- 88",      -88,    ::correct::yes }
-        //, SignedIntegerCastsU16::elem_type{ u"-00088",    -88,    ::correct::yes }
+        , SignedIntegerCastsU16::elem_type{ u"- 88",      -88,    ::correct::no }
+        , SignedIntegerCastsU16::elem_type{ u"-00088",    -88,    ::correct::yes }
         , SignedIntegerCastsU16::elem_type{ u"789",       789,    ::correct::yes }
         , SignedIntegerCastsU16::elem_type{ u"22304568",  22304568, ::correct::yes }
         , SignedIntegerCastsU16::elem_type{ u"22304568 ", 22304568, ::correct::no }
@@ -1454,13 +1454,13 @@ TEST_P(SignedIntegerCastsW, BackwardCastTest) {
 INSTANTIATE_TEST_CASE_P(NumericCasts, SignedIntegerCastsW,
     ::testing::Values(
         SignedIntegerCastsW::elem_type{ L"0",           0,      ::correct::yes }
-        //, SignedIntegerCastsW::elem_type{ L"0000",      0,      ::correct::yes }
+        , SignedIntegerCastsW::elem_type{ L"0000",      0,      ::correct::yes }
         , SignedIntegerCastsW::elem_type{ L"1",         1,      ::correct::yes }
-        //, SignedIntegerCastsW::elem_type{ L"0000001",   1,      ::correct::yes }
+        , SignedIntegerCastsW::elem_type{ L"0000001",   1,      ::correct::yes }
         , SignedIntegerCastsW::elem_type{ L"10423",     10423,  ::correct::yes }
         , SignedIntegerCastsW::elem_type{ L"-88",       -88,    ::correct::yes }
-        , SignedIntegerCastsW::elem_type{ L"- 88",      -88,    ::correct::yes }
-        //, SignedIntegerCastsW::elem_type{ L"-00088",    -88,    ::correct::yes }
+        , SignedIntegerCastsW::elem_type{ L"- 88",      -88,    ::correct::no }
+        , SignedIntegerCastsW::elem_type{ L"-00088",    -88,    ::correct::yes }
         , SignedIntegerCastsW::elem_type{ L"789",       789,    ::correct::yes }
         , SignedIntegerCastsW::elem_type{ L"22304568",  22304568, ::correct::yes }
         , SignedIntegerCastsW::elem_type{ L"22304568 ", 22304568, ::correct::no }

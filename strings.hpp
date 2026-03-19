@@ -257,6 +257,62 @@ namespace uns::string {
     template<typename out_t>
         requires (::std::is_integral<out_t>::value && !::std::is_same<out_t, bool>::value)
     out_t cast(const ::std::u32string_view& str) {
+        auto iter = str.cbegin();
+
+        out_t sign = 1;
+        if (*iter == U'-') {
+            if constexpr (!::std::is_signed<out_t>::value) {
+                throw ::std::runtime_error{ "An input string cannot be converted to unsigned integer type" };
+            };
+
+            sign *= -1;
+            ++iter;
+        };
+        if (str.cend() - iter < 1) {
+            throw ::std::runtime_error{ "An input string cannot be converted to numeric type" };
+        };
+
+        out_t base = 10;
+        const char32_t low = U'0';
+        char32_t high = U'9';
+        if (str.cend() - iter >= 2) {
+            if (
+                auto prefix = ::std::u32string_view{ iter, iter + 2 };
+                prefix == U"0x"
+                || prefix == U"0X"
+            ) {
+                base = 0x10;
+                high = U'F';
+            }
+            else if (
+                prefix == U"0b"
+                || prefix == U"0B"
+            ) {
+                base = 0b10;
+                high = U'1';
+            };
+        };
+
+        out_t result = 0;
+        while (iter < str.cend()) {
+            if (
+                char32_t u32char = *iter;
+                u32char >= low && u32char <= high
+            ) {
+                result *= base;
+                result += (u32char - low);
+            }
+            else {
+                throw ::std::runtime_error{ "An input string cannot be converted to integer type" };
+            };
+
+            ++iter;
+        };
+        result *= sign;
+
+        return result;
+
+        /*
         auto start_pos = 0;
         for (start_pos = 0; start_pos < str.size(); start_pos++) {
             if (
@@ -328,6 +384,7 @@ namespace uns::string {
         };
 
         return out_t(0);
+        */
     };
     template<::std::constructible_from<::std::u32string> out_t, typename in_t>
         requires (::std::is_integral<in_t>::value && !::std::is_same<in_t, bool>::value)
