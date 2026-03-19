@@ -224,10 +224,10 @@ public:\
     };\
     inline constexpr ~renum_name() noexcept {};\
 public:\
-    inline constexpr bool operator==(const renum_name& arg) const noexcept { return m_value == arg.m_value; };\
+    /*inline constexpr bool operator==(const renum_name& arg) const noexcept { return m_value == arg.m_value; };*/\
     /*inline constexpr bool operator!=(const renum_name& arg) const noexcept { return !(m_value == arg.m_value); };*/\
 public:\
-    inline explicit constexpr operator enum_type() const noexcept { return m_value; };\
+    inline constexpr operator enum_type() const noexcept { return m_value; };\
     inline explicit constexpr operator integral_type() const noexcept { return m_value; };\
 public:\
     inline constexpr static ::std::size_t size() noexcept { return s_size; };\
