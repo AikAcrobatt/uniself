@@ -220,7 +220,6 @@ namespace uns::string {
         };
     };
 
-
     //conversions renum <-> ::std::u32string
     template<::std::constructible_from<::std::u32string> out_t, ::uns::is_renum in_t>
     out_t cast(const in_t& from) {

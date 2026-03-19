@@ -5,9 +5,186 @@
 
 #include "gtest/gtest.h"
 
+template<>
+::std::string testing::PrintToString(const ::std::u32string& Elem) {
+    return "u32\""
+        + ::uns::string::cast<::std::string>(Elem)
+        + "\"";
+};
+template<>
+::std::string testing::PrintToString(const ::std::u8string& Elem) {
+    return "u8\""
+        + ::uns::string::cast<::std::string>(Elem)
+        + "\"";
+};
+template<>
+::std::string testing::PrintToString(const ::std::u16string& Elem) {
+    return "u16\""
+        + ::uns::string::cast<::std::string>(Elem)
+        + "\"";
+};
+template<>
+::std::string testing::PrintToString(const ::std::wstring& Elem) {
+    return "L\""
+        + ::uns::string::cast<::std::string>(Elem)
+        + "\"";
+};
+
+
+class StringCasts : public ::testing::Test {};
+
+TEST(StringCasts, U32U32Test) {
+    const auto from = ::std::u32string{ U"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u32string{ U"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+
+    ASSERT_EQ(
+        ::uns::string::cast<decltype(to)>(from)
+        , to
+    );
+};
+TEST(StringCasts, U32U8Test) {
+    const auto from = ::std::u32string{ U"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u8string{ u8"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+
+    ASSERT_EQ(
+        ::uns::string::cast<decltype(to)>(from)
+        , to
+    );
+};
+TEST(StringCasts, U32U16Test) {
+    const auto from = ::std::u32string{ U"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u16string{ u"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+
+    ASSERT_EQ(
+        ::uns::string::cast<decltype(to)>(from)
+        , to
+    );
+};
+TEST(StringCasts, U32WTest) {
+    const auto from = ::std::u32string{ U"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::wstring{ L"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+
+    ASSERT_EQ(
+        ::uns::string::cast<decltype(to)>(from)
+        , to
+    );
+};
+
+TEST(StringCasts, U8U32Test) {
+    const auto from = ::std::u8string{ u8"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u32string{ U"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+
+    ASSERT_EQ(
+        ::uns::string::cast<decltype(to)>(from)
+        , to
+    );
+};
+TEST(StringCasts, U82U8Test) {
+    const auto from = ::std::u8string{ u8"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u8string{ u8"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+
+    ASSERT_EQ(
+        ::uns::string::cast<decltype(to)>(from)
+        , to
+    );
+};
+TEST(StringCasts, U8U16Test) {
+    const auto from = ::std::u8string{ u8"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u16string{ u"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+
+    ASSERT_EQ(
+        ::uns::string::cast<decltype(to)>(from)
+        , to
+    );
+};
+TEST(StringCasts, U8WTest) {
+    const auto from = ::std::u8string{ u8"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::wstring{ L"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+
+    ASSERT_EQ(
+        ::uns::string::cast<decltype(to)>(from)
+        , to
+    );
+};
+
+TEST(StringCasts, U16U32Test) {
+    const auto from = ::std::u16string{ u"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u32string{ U"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+
+    ASSERT_EQ(
+        ::uns::string::cast<decltype(to)>(from)
+        , to
+    );
+};
+TEST(StringCasts, U162U8Test) {
+    const auto from = ::std::u16string{ u"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u8string{ u8"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+
+    ASSERT_EQ(
+        ::uns::string::cast<decltype(to)>(from)
+        , to
+    );
+};
+TEST(StringCasts, U16U16Test) {
+    const auto from = ::std::u16string{ u"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u16string{ u"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+
+    ASSERT_EQ(
+        ::uns::string::cast<decltype(to)>(from)
+        , to
+    );
+};
+TEST(StringCasts, U16WTest) {
+    const auto from = ::std::u16string{ u"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::wstring{ L"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+
+    ASSERT_EQ(
+        ::uns::string::cast<decltype(to)>(from)
+        , to
+    );
+};
+
+TEST(StringCasts, WU32Test) {
+    const auto from = ::std::wstring{ L"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u32string{ U"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+
+    ASSERT_EQ(
+        ::uns::string::cast<decltype(to)>(from)
+        , to
+    );
+};
+TEST(StringCasts, W2U8Test) {
+    const auto from = ::std::wstring{ L"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u8string{ u8"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+
+    ASSERT_EQ(
+        ::uns::string::cast<decltype(to)>(from)
+        , to
+    );
+};
+TEST(StringCasts, WU16Test) {
+    const auto from = ::std::wstring{ L"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u16string{ u"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+
+    ASSERT_EQ(
+        ::uns::string::cast<decltype(to)>(from)
+        , to
+    );
+};
+TEST(StringCasts, WWTest) {
+    const auto from = ::std::wstring{ L"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::wstring{ L"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+
+    ASSERT_EQ(
+        ::uns::string::cast<decltype(to)>(from)
+        , to
+    );
+};
+
+
 namespace uns::tests::string::casts {
 
-    const auto testphrase = ::std::u32string{ U"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto testphrase = ::std::u32string{ U"AB\u304FCD e\u3051fgh !@\u30F1#% \u304CАБ\u3058ВГ\u3081д\u3062еёжзик_" };
 
     using types_list = ::testing::Types<
         ::std::u32string
@@ -19,13 +196,12 @@ namespace uns::tests::string::casts {
 
 };
 
-
 template<::uns::is_basic_string string_t>
-class CrossStringCasts : public ::testing::Test {};
+class ForwardCrossStringCasts : public ::testing::Test {};
 
-TYPED_TEST_CASE(CrossStringCasts, ::uns::tests::string::casts::types_list);
+TYPED_TEST_CASE(ForwardCrossStringCasts, ::uns::tests::string::casts::types_list);
 
-TYPED_TEST(CrossStringCasts, BackwardIdenticalTest) {
+TYPED_TEST(ForwardCrossStringCasts, IdenticalTest) {
     ASSERT_TRUE(
         ::uns::tests::string::casts::testphrase == ::uns::string::cast<::std::u32string>(
             ::uns::string::cast<TypeParam>(::uns::tests::string::casts::testphrase)
@@ -69,12 +245,6 @@ template<>
             ::std::get<::BooleanCasts::correctness>(Elem).to_string()
         )
         + " }";
-};
-template<>
-::std::string testing::PrintToString(const ::std::u32string& Elem) {
-    return "u32\""
-        + ::uns::string::cast<::std::string>(Elem)
-        + "\"";
 };
 
 class ForwardBooleanCasts : public ::BooleanCasts {};
@@ -144,16 +314,22 @@ TEST_P(BackwardBooleanCasts, CastTest) {
             break;
         }
         case ::correct::no: {
+            bool comparison_result = false;
+
             #pragma warning(push)
             #pragma warning(disable: 4553)
             ASSERT_THROW(
-                ::std::get<::BooleanCasts::expectation>(GetParam())
-                == ::uns::string::cast<bool>(
-                    ::std::get<::BooleanCasts::string>(GetParam())
+                comparison_result = (
+                    ::std::get<::BooleanCasts::expectation>(GetParam())
+                    == ::uns::string::cast<bool>(
+                        ::std::get<::BooleanCasts::string>(GetParam())
+                    )
                 )
                 , ::std::runtime_error
             );
             #pragma warning(pop)
+
+            ASSERT_FALSE(comparison_result);
 
             break;
         }
