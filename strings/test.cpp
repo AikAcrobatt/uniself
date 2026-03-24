@@ -1126,8 +1126,10 @@ TEST_P(SignedIntegerCastsU32, BackwardCastTest) {
 
 INSTANTIATE_TEST_CASE_P(NumericCasts, SignedIntegerCastsU32,
     ::testing::Values(
-        SignedIntegerCastsU32::make( U"0",          0,      ::correct::yes )
+        SignedIntegerCastsU32::make( U"0",           0,      ::correct::yes )
+        , SignedIntegerCastsU32::elem_type(U"-0",    0,      ::correct::yes, U"0")
         , SignedIntegerCastsU32::make( U"1",         1,      ::correct::yes )
+        , SignedIntegerCastsU32::make( U"-1",        -1,     ::correct::yes )
         , SignedIntegerCastsU32::make( U"10423",     10423,  ::correct::yes )
         , SignedIntegerCastsU32::make( U"-88",       -88,    ::correct::yes )
         , SignedIntegerCastsU32::make( U"- 88",      -88,    ::correct::no )
@@ -1244,8 +1246,10 @@ TEST_P(SignedIntegerCastsS, BackwardCastTest) {
 
 INSTANTIATE_TEST_CASE_P(NumericCasts, SignedIntegerCastsS,
     ::testing::Values(
-        SignedIntegerCastsS::make( "0",          0,      ::correct::yes )
+        SignedIntegerCastsS::make( "0",           0,      ::correct::yes )
+        , SignedIntegerCastsS::elem_type( "-0",   0,      ::correct::yes, "0")
         , SignedIntegerCastsS::make( "1",         1,      ::correct::yes )
+        , SignedIntegerCastsS::make( "-1",        -1,     ::correct::yes)
         , SignedIntegerCastsS::make( "10423",     10423,  ::correct::yes )
         , SignedIntegerCastsS::make( "-88",       -88,    ::correct::yes )
         , SignedIntegerCastsS::make( "- 88",      -88,    ::correct::no )
@@ -1363,7 +1367,9 @@ TEST_P(SignedIntegerCastsU8, BackwardCastTest) {
 INSTANTIATE_TEST_CASE_P(NumericCasts, SignedIntegerCastsU8,
     ::testing::Values(
         SignedIntegerCastsU8::make( u8"0",           0,      ::correct::yes )
+        , SignedIntegerCastsU8::elem_type(u8"-0",     0,      ::correct::yes, u8"0")
         , SignedIntegerCastsU8::make( u8"1",         1,      ::correct::yes )
+        , SignedIntegerCastsU8::make( u8"-1",        -1,     ::correct::yes)
         , SignedIntegerCastsU8::make( u8"10423",     10423,  ::correct::yes )
         , SignedIntegerCastsU8::make( u8"-88",       -88,    ::correct::yes )
         , SignedIntegerCastsU8::make( u8"- 88",      -88,    ::correct::no )
@@ -1481,7 +1487,9 @@ TEST_P(SignedIntegerCastsU16, BackwardCastTest) {
 INSTANTIATE_TEST_CASE_P(NumericCasts, SignedIntegerCastsU16,
     ::testing::Values(
         SignedIntegerCastsU16::make( u"0",           0,      ::correct::yes )
+        , SignedIntegerCastsU16::elem_type(u"-0",    0,      ::correct::yes, u"0")
         , SignedIntegerCastsU16::make( u"1",         1,      ::correct::yes )
+        , SignedIntegerCastsU16::make( u"-1",        -1,     ::correct::yes)
         , SignedIntegerCastsU16::make( u"10423",     10423,  ::correct::yes )
         , SignedIntegerCastsU16::make( u"-88",       -88,    ::correct::yes )
         , SignedIntegerCastsU16::make( u"- 88",      -88,    ::correct::no )
@@ -1599,7 +1607,9 @@ TEST_P(SignedIntegerCastsW, BackwardCastTest) {
 INSTANTIATE_TEST_CASE_P(NumericCasts, SignedIntegerCastsW,
     ::testing::Values(
         SignedIntegerCastsW::make( L"0",           0,      ::correct::yes )
+        , SignedIntegerCastsW::elem_type(L"-0",    0,      ::correct::yes, L"0")
         , SignedIntegerCastsW::make( L"1",         1,      ::correct::yes )
+        , SignedIntegerCastsW::make( L"-1",        -1,     ::correct::yes)
         , SignedIntegerCastsW::make( L"10423",     10423,  ::correct::yes )
         , SignedIntegerCastsW::make( L"-88",       -88,    ::correct::yes )
         , SignedIntegerCastsW::make( L"- 88",      -88,    ::correct::no )
@@ -1620,3 +1630,251 @@ INSTANTIATE_TEST_CASE_P(NumericCasts, SignedIntegerCastsW,
         , SignedIntegerCastsW::elem_type{ L"-00088", -88,   ::correct::yes, L"-88" }
     )
 );
+
+
+class HexUnsignedIntegerCastsU32 : public ::IntegerCasts<unsigned long long int, ::std::u32string> {};
+
+TEST_P(HexUnsignedIntegerCastsU32, ForwardCastTest) {
+    using TestCaseFixture = HexUnsignedIntegerCastsU32;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            const TestCaseFixture::string_type string_variants[] = {
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::std::get<TestCaseFixture::string_equ>(GetParam())
+            };
+
+            ASSERT_TRUE(
+                (
+                    ::uns::string::to_hex<TestCaseFixture::string_type>(
+                        ::std::get<TestCaseFixture::expectation>(GetParam())
+                    )
+                    == string_variants[0]
+                )
+                || (
+                    ::uns::string::to_hex<TestCaseFixture::string_type>(
+                        ::std::get<TestCaseFixture::expectation>(GetParam())
+                    )
+                    == string_variants[1]
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            ASSERT_NE(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::to_hex<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+TEST_P(HexUnsignedIntegerCastsU32, BackwardCastTest) {
+    using TestCaseFixture = HexUnsignedIntegerCastsU32;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::expectation>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::numeric_type>(
+                    ::std::get<TestCaseFixture::string>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            bool comparison_result = false;
+
+            #pragma warning(push)
+            #pragma warning(disable: 4553)
+            ASSERT_THROW(
+                comparison_result = (
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                    == ::uns::string::cast<TestCaseFixture::numeric_type>(
+                        ::std::get<TestCaseFixture::string>(GetParam())
+                    )
+                )
+                , ::std::runtime_error
+            );
+            #pragma warning(pop)
+
+            ASSERT_FALSE(comparison_result);
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+INSTANTIATE_TEST_CASE_P(NumericCasts, HexUnsignedIntegerCastsU32,
+    ::testing::Values(
+        HexUnsignedIntegerCastsU32::make(U"0x0", 0, ::correct::yes)
+        , HexUnsignedIntegerCastsU32::make(U"0x1", 1, ::correct::yes)
+        , HexUnsignedIntegerCastsU32::elem_type(U"0X10423", 0x10423, ::correct::yes, U"0x10423")
+        , HexUnsignedIntegerCastsU32::make(U"0x7A8B8", 0x7A8B8, ::correct::yes)
+        , HexUnsignedIntegerCastsU32::make(U"0x22304568", 0x22304568, ::correct::yes)
+        , HexUnsignedIntegerCastsU32::elem_type(U"0X22304568", 0x22304568, ::correct::yes, U"0x22304568")
+        , HexUnsignedIntegerCastsU32::elem_type(U"0x01234789ABCDEF", 0x1234789ABCDEF, ::correct::yes, U"0x1234789ABCDEF")
+        , HexUnsignedIntegerCastsU32::elem_type(U"0X01234789ABCDEF", 0x1234789ABCDEF, ::correct::yes, U"0x1234789ABCDEF")
+        , HexUnsignedIntegerCastsU32::make(U"0x22304568 ", 22304568, ::correct::no)
+        , HexUnsignedIntegerCastsU32::make(U" 0x0", 0, ::correct::no)
+        , HexUnsignedIntegerCastsU32::make(U"0x1 ", 1, ::correct::no)
+        , HexUnsignedIntegerCastsU32::make(U"0x10_423", 0x10423, ::correct::no)
+        , HexUnsignedIntegerCastsU32::make(U"0x8-8", 0x88, ::correct::no)
+        , HexUnsignedIntegerCastsU32::make(U"0x7J9", 0x7D9, ::correct::no)
+        , HexUnsignedIntegerCastsU32::make(U"0x2230 4568 ", 0x22304568, ::correct::no)
+        , HexUnsignedIntegerCastsU32::make(U"0x-56", -0x56, ::correct::no)
+        , HexUnsignedIntegerCastsU32::elem_type{ U"0x0000", 0x0,      ::correct::yes, U"0x0" }
+        , HexUnsignedIntegerCastsU32::elem_type{ U"0x0000001", 0x1,   ::correct::yes, U"0x1" }
+        , HexUnsignedIntegerCastsU32::make(U"x10423", 0x10423, ::correct::no)
+        , HexUnsignedIntegerCastsU32::make(U"00x7A8B9", 0x7A8B9, ::correct::no)
+        , HexUnsignedIntegerCastsU32::make(U"0x 114", 0x114, ::correct::no)
+    )
+);
+
+
+class HexSignedIntegerCastsU32 : public ::IntegerCasts<long long int, ::std::u32string> {};
+
+TEST_P(HexSignedIntegerCastsU32, ForwardCastTest) {
+    using TestCaseFixture = HexSignedIntegerCastsU32;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            const TestCaseFixture::string_type string_variants[] = {
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::std::get<TestCaseFixture::string_equ>(GetParam())
+            };
+
+            ASSERT_TRUE(
+                (
+                    ::uns::string::to_hex<TestCaseFixture::string_type>(
+                        ::std::get<TestCaseFixture::expectation>(GetParam())
+                    )
+                    == string_variants[0]
+                )
+                || (
+                    ::uns::string::to_hex<TestCaseFixture::string_type>(
+                        ::std::get<TestCaseFixture::expectation>(GetParam())
+                    )
+                    == string_variants[1]
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            ASSERT_NE(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::to_hex<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+TEST_P(HexSignedIntegerCastsU32, BackwardCastTest) {
+    using TestCaseFixture = HexSignedIntegerCastsU32;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::expectation>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::numeric_type>(
+                    ::std::get<TestCaseFixture::string>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            bool comparison_result = false;
+
+            #pragma warning(push)
+            #pragma warning(disable: 4553)
+            ASSERT_THROW(
+                comparison_result = (
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                    == ::uns::string::cast<TestCaseFixture::numeric_type>(
+                        ::std::get<TestCaseFixture::string>(GetParam())
+                    )
+                )
+                , ::std::runtime_error
+            );
+            #pragma warning(pop)
+
+            ASSERT_FALSE(comparison_result);
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+INSTANTIATE_TEST_CASE_P(NumericCasts, HexSignedIntegerCastsU32,
+    ::testing::Values(
+        HexSignedIntegerCastsU32::make(U"0x0", 0, ::correct::yes)
+        , HexSignedIntegerCastsU32::elem_type(U"-0x0", -0, ::correct::yes, U"0x0")
+        , HexSignedIntegerCastsU32::make(U"-0x1", -1, ::correct::yes)
+        , HexSignedIntegerCastsU32::elem_type(U"0X10423", 0x10423, ::correct::yes, U"0x10423")
+        , HexSignedIntegerCastsU32::make(U"-0x7A8B9", -0x7A8B9, ::correct::yes)
+        , HexSignedIntegerCastsU32::make(U"0x22304568", 0x22304568, ::correct::yes)
+        , HexSignedIntegerCastsU32::elem_type(U"-0X22304568", -0x22304568, ::correct::yes, U"-0x22304568")
+        , HexSignedIntegerCastsU32::elem_type(U"-0x01234567ABCDEF", -0x1234567ABCDEF, ::correct::yes, U"-0x1234567ABCDEF")
+        , HexSignedIntegerCastsU32::elem_type(U"0X01234567ABCDEF", 0x1234567ABCDEF, ::correct::yes, U"0x1234567ABCDEF")
+        , HexSignedIntegerCastsU32::make(U"-0x22304568 ", -22304568, ::correct::no)
+        , HexSignedIntegerCastsU32::make(U"- 0x0", -0, ::correct::no)
+        , HexSignedIntegerCastsU32::make(U"-0x1 ", -1, ::correct::no)
+        , HexSignedIntegerCastsU32::make(U"0x10_423", 0x10423, ::correct::no)
+        , HexSignedIntegerCastsU32::make(U"0x8-8", 0x88, ::correct::no)
+        , HexSignedIntegerCastsU32::make(U"0x7J9", 0x7D9, ::correct::no)
+        , HexSignedIntegerCastsU32::make(U" -0x7D9", -0x7D9, ::correct::no)
+        , HexSignedIntegerCastsU32::make(U"0x2230 4568 ", 0x22304568, ::correct::no)
+        , HexSignedIntegerCastsU32::make(U"0x-56", -0x56, ::correct::no)
+        , HexSignedIntegerCastsU32::elem_type{ U"-0x0000", -0x0,      ::correct::yes, U"0x0" }
+        , HexSignedIntegerCastsU32::elem_type{ U"0x0000001", 0x1,   ::correct::yes, U"0x1" }
+        , HexSignedIntegerCastsU32::make(U"x10423", 0x10423, ::correct::no)
+        , HexSignedIntegerCastsU32::make(U"X10423", 0x10423, ::correct::no)
+        , HexSignedIntegerCastsU32::make(U"00x7A8B9", 0x7A8B9, ::correct::no)
+        , HexSignedIntegerCastsU32::make(U"0x 114", 0x114, ::correct::no)
+    )
+);
+

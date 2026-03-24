@@ -16,6 +16,140 @@
 
 namespace uns::string {
 
+    //conversions from non-::std::u32string to non-::std::u32string
+    namespace auxiliary {
+
+        template<typename testing_t>
+        concept non_constructible_from_u32string = !::std::constructible_from<testing_t, ::std::u32string>;
+
+        inline char32_t hex_extendable_digit(uint8_t SmallNumber) {
+            if (SmallNumber >= 0 && SmallNumber < 10) {
+                return U'0' + SmallNumber;
+            }
+            else if (SmallNumber >= 0xA && SmallNumber < 0x10) {
+                return U'A' + SmallNumber - 0xA;
+            }
+            else {
+                throw ::std::runtime_error{
+                    ::std::string{ "A small number \'" }
+                    + static_cast<char>(SmallNumber + '0')
+                    + "\' cannot be represented as hex-extendable digit"
+                };
+            };
+        };
+        inline uint8_t dec_number(const char32_t Digit) {
+            if (Digit >= U'0' && Digit <= U'9') {
+                return Digit - U'0';
+            }
+            else {
+                throw ::std::runtime_error{ "A char32 cannot be interpreted as decimal digit of any base" };
+            };
+        };
+        inline uint8_t hex_number(const char32_t Digit) {
+            if (Digit >= U'0' && Digit <= U'9') {
+                return Digit - U'0';
+            }
+            else if (Digit >= U'A' && Digit <= U'F') {
+                return Digit - U'A' + 10;
+            }
+            else {
+                throw ::std::runtime_error{ "A char32 cannot be interpreted as hexadecimal digit of any base" };
+            };
+        };
+        inline uint8_t bin_number(const char32_t Digit) {
+            if (Digit >= U'0' && Digit <= U'1') {
+                return Digit - U'0';
+            }
+            else {
+                throw ::std::runtime_error{ "A char32 cannot be interpreted as binary digit of any base" };
+            };
+        };
+
+        template<typename in_t>
+            requires (::std::is_integral<in_t>::value && !::std::is_same<in_t, bool>::value)
+        ::std::u32string integer_to_string(const in_t Base, const in_t& Obj) {
+            auto converting_val = Obj;
+
+            constexpr ::std::size_t reversed_result_size = sizeof(in_t) * 8;
+            char32_t reversed_result[reversed_result_size];
+            int digits_counter = 0;
+            for (auto& single_char : reversed_result) {
+                single_char = ::uns::string::auxiliary::hex_extendable_digit(converting_val % Base);
+                converting_val /= Base;
+                digits_counter++;
+
+                if (converting_val == 0) {
+                    break;
+                };
+            };
+
+            auto result = ::std::u32string{};
+            result.reserve(digits_counter);
+            digits_counter -= 1;
+            for (; digits_counter >= 0; --digits_counter) {
+                result += reversed_result[digits_counter];
+            };
+
+            return result;
+        }
+    };
+
+    //TRIM
+    bool trim(::std::u32string& Str) {
+        bool was_trimmed = false;
+
+        auto new_begin = Str.cbegin();
+        for (; new_begin < Str.cend(); ++new_begin) {
+            if (
+                *new_begin != U' '
+                && *new_begin != U'\n'
+                && *new_begin != U'\t'
+                && *new_begin != U'\v'
+                && *new_begin != U'\b'
+                && *new_begin != U'\r'
+                && *new_begin != U'\f'
+                && *new_begin != U'\a'
+            ) {
+                break;
+            };
+
+            was_trimmed = true;
+        };
+
+        auto new_end = Str.cend();
+        for (auto new_rend = Str.crbegin(); new_rend < Str.crend(); ++new_rend) {
+            if (
+                *new_rend != U' '
+                && *new_rend != U'\n'
+                && *new_rend != U'\t'
+                && *new_rend != U'\v'
+                && *new_rend != U'\b'
+                && *new_rend != U'\r'
+                && *new_rend != U'\f'
+                && *new_rend != U'\a'
+            ) {
+                new_end = Str.cend() - (new_rend - Str.crbegin());
+                break;
+            };
+
+            was_trimmed = true;
+        };
+
+        Str = ::std::u32string{
+            new_begin
+            , new_end
+        };
+
+        return was_trimmed;
+    };
+    ::std::u32string trim(const ::std::u32string_view& StrView) {
+        auto result = ::std::u32string{ StrView };
+
+        ::uns::string::trim(result);
+
+        return result;
+    };
+
     //STRING CAST FUNCTIONS
     // trivial ::std::u8string conversion
     template<::std::constructible_from<::std::string> out_t>
@@ -245,8 +379,8 @@ namespace uns::string {
         };
     };
     template<::std::constructible_from<::std::u32string> out_t, ::std::same_as<bool> in_t>
-    out_t cast(const in_t& obj) {
-        if (static_cast<bool>(obj)) {
+    out_t cast(const in_t& Obj) {
+        if (static_cast<bool>(Obj)) {
             return ::std::u32string(U"true");
         }
         else {
@@ -273,93 +407,67 @@ namespace uns::string {
             throw ::std::runtime_error{ "An input string cannot be converted to numeric type" };
         };
 
-        out_t base = 10;
-        const char32_t low = U'0';
-        char32_t high = U'9';
+        out_t result = 0;
+        bool is_dec = true;
         if (str.cend() - iter >= 2) {
             if (
-                auto prefix = ::std::u32string_view{ iter, iter + 2 };
+                const auto prefix = ::std::u32string_view{ iter, iter + 2 };
                 prefix == U"0x"
                 || prefix == U"0X"
             ) {
-                base = 0x10;
-                high = U'F';
+                const out_t base = 0x10;
+
+                iter += 2;
+                while (iter < str.cend()) {
+                    result *= base;
+                    result += ::uns::string::auxiliary::hex_number(*iter);
+
+                    ++iter;
+                };
+
+                is_dec = false;
             }
             else if (
                 prefix == U"0b"
                 || prefix == U"0B"
             ) {
-                base = 0b10;
-                high = U'1';
+                const out_t base = 0b10;
+
+                iter += 2;
+                while (iter < str.cend()) {
+                    result *= base;
+                    result += ::uns::string::auxiliary::bin_number(*iter);
+
+                    ++iter;
+                };
+
+                is_dec = false;
             };
         };
-
-        out_t result = 0;
-        while (iter < str.cend()) {
-            if (
-                char32_t u32char = *iter;
-                u32char >= low && u32char <= high
-            ) {
+        if(is_dec) {
+            const out_t base = 10;
+            while (iter < str.cend()) {
                 result *= base;
-                result += (u32char - low);
-            }
-            else {
-                throw ::std::runtime_error{ "An input string cannot be converted to integer type" };
-            };
+                result += ::uns::string::auxiliary::dec_number(*iter);
 
-            ++iter;
+                ++iter;
+            };
         };
+
         result *= sign;
 
         return result;
     };
     template<::std::constructible_from<::std::u32string> out_t, typename in_t>
         requires (::std::is_integral<in_t>::value && !::std::is_same<in_t, bool>::value)
-    out_t cast(const in_t& obj) {
-        auto converting_val = obj;
-        constexpr bool is_signed = ::std::is_signed<in_t>::value;
-        if constexpr (is_signed) {
-            if (converting_val < 0) converting_val *= -1;
-        };
-
-        constexpr ::std::size_t reversed_result_size = sizeof(in_t) * 8;
-        char32_t reversed_result[reversed_result_size];
-        constexpr in_t divider = 10;
-        int digits_counter = 0;
-        for (auto& single_char : reversed_result) {
-            single_char = U'0' + (converting_val % divider);
-            converting_val /= divider;
-            digits_counter++;
-
-            if (converting_val == 0) {
-                break;
+    out_t cast(const in_t& Obj) {
+        if constexpr (::std::is_signed<in_t>::value) {
+            if (Obj < 0) {
+                return { U"-" + ::uns::string::auxiliary::integer_to_string<in_t>(10, -Obj) };
             };
         };
 
-        auto result = ::std::u32string{};
-        result.reserve(digits_counter + (is_signed && obj < 0? 1 : 0));
-        if (is_signed && obj < 0) {
-            result += U"-";
-        };
-        digits_counter -= 1;
-        for (; digits_counter >= 0; --digits_counter) {
-            result += reversed_result[digits_counter];
-        };
-
-        return result;
-        /*
-        auto res = ::std::string(64, '\0');
-
-        auto* begin = &(*res.begin());
-        auto* end = &res.back();
-
-        auto conv = ::std::to_chars(begin, end, obj, 10);
-        if (conv.ec == ::std::errc()) {
-            return ::uns::string::cast<::std::u32string>(res);
-        }
-        else {
-            throw ::std::runtime_error("An input value can't be converted to string");
-        };*/
+        return { ::uns::string::auxiliary::integer_to_string<in_t>(10, Obj)};
     };
     template<::std::floating_point out_t>
     out_t cast(const ::std::u8string_view& str) {
@@ -395,26 +503,18 @@ namespace uns::string {
         throw ::std::runtime_error("An input string can't be converted to floating point");
     };
     template<::std::constructible_from<::std::u32string> out_t, ::std::floating_point in_t>
-    out_t cast(const in_t& obj) {
+    out_t cast(const in_t& Obj) {
         auto res = ::std::string(64, '\0');
         auto* begin = &(*res.begin());
         auto* end = &res.back();
 
-        auto conv = ::std::to_chars(begin, end, obj, ::std::chars_format::general);
+        auto conv = ::std::to_chars(begin, end, Obj, ::std::chars_format::general);
         if (conv.ec == ::std::errc()) {
             return ::uns::string::cast<::std::u32string>(res);
         }
         else {
             throw ::std::runtime_error("An input value can't be converted to string");
         };
-    };
-
-    //conversions from non-::std::u32string to non-::std::u32string
-    namespace auxiliary {
-
-        template<typename testing_t>
-        concept non_constructible_from_u32string = !::std::constructible_from<testing_t, ::std::u32string>;
-
     };
 
     template<
@@ -427,6 +527,29 @@ namespace uns::string {
         );
     };
 
+    //CAST FUNCTIONS FOR NUMERICS TO FORMATTED STRING
+    template<::std::constructible_from<::std::u32string> out_t, typename in_t>
+        requires (::std::is_integral<in_t>::value && !::std::is_same<in_t, bool>::value)
+    out_t to_hex(const in_t& Obj) {
+        if constexpr (::std::is_signed<in_t>::value) {
+            if (Obj < 0) {
+                return { U"-0x" + ::uns::string::auxiliary::integer_to_string<in_t>(16, -Obj) };
+            };
+        };
+
+        return { U"0x" + ::uns::string::auxiliary::integer_to_string<in_t>(16, Obj) };
+    };
+    template<::std::constructible_from<::std::u32string> out_t, typename in_t>
+        requires (::std::is_integral<in_t>::value && !::std::is_same<in_t, bool>::value)
+    out_t to_bin(const in_t& Obj) {
+        if constexpr (::std::is_signed<in_t>::value) {
+            if (Obj < 0) {
+                return { U"-0b" + ::uns::string::auxiliary::integer_to_string<in_t>(2, -Obj) };
+            };
+        };
+
+        return { U"0b" + ::uns::string::auxiliary::integer_to_string<in_t>(2, Obj) };
+    };
 };
 
 #endif
