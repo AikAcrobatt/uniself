@@ -5,6 +5,7 @@
 
 #include <string>
 #include <charconv>
+#include <limits>
 #include <type_traits>
 #include <concepts>
 #include <exception>
@@ -311,84 +312,42 @@ namespace uns::string {
         result *= sign;
 
         return result;
-
-        /*
-        auto start_pos = 0;
-        for (start_pos = 0; start_pos < str.size(); start_pos++) {
-            if (
-                char8_t lit = str[start_pos];
-                lit != U' '
-                && lit != U'\n'
-                && lit != U'\t'
-                && lit != U'\r'
-            ) {
-                break;
-            };
-        };
-
-        auto pos_hex = str.find(U"0x", start_pos); if (!(pos_hex >= 0 && pos_hex < str.size())) pos_hex = str.find(U"0X", start_pos);
-        auto pos_bin = str.find(U"0b", start_pos); if (!(pos_bin >= 0 && pos_bin < str.size())) pos_bin = str.find(U"0B", start_pos);
-        auto pos_minus = str.find(U"-");
-        auto is_hex = (pos_hex >= 0 && pos_hex < str.size());
-        auto is_bin = (pos_bin >= 0 && pos_bin < str.size());
-        auto is_negative = (pos_minus >= 0 && pos_minus == (is_bin ? pos_bin : pos_hex) - 1 && pos_minus != ::std::string_view::npos);
-
-        if (is_hex) {
-            pos_hex += 2;
-            is_hex = (pos_hex < str.size());
-        }
-        else
-            pos_hex = 0;
-
-        if (is_bin) {
-            pos_bin += 2;
-            is_bin = (pos_bin < str.size());
-        }
-        else
-            pos_bin = 0;
-
-        if (!is_hex && !is_bin) {
-            auto res = out_t(0);
-            const char* begin = reinterpret_cast<const char*>(str.data() + start_pos);
-            const char* end = &begin[str.size()];
-
-            auto conv = ::std::from_chars(begin, end, res, 10);
-            if (conv.ec == ::std::errc())
-                return res;
-            else
-                is_hex = true;
-        };
-
-        if (is_hex) {
-            auto res = out_t(0);
-            const char* begin = reinterpret_cast<const char*>(&str.data()[pos_hex]);
-            const char* end = &begin[str.size()];
-
-            auto conv = ::std::from_chars(begin, end, res, 16);
-            if (conv.ec == ::std::errc())
-                return res * (is_negative ? -1 : 1);
-            else
-                is_bin = true;
-        };
-
-        if (is_bin) {
-            auto res = out_t(0);
-            const char* begin = reinterpret_cast<const char*>(&str.data()[pos_bin]);
-            const char* end = &begin[str.size()];
-
-            auto conv = ::std::from_chars(begin, end, res, 2);
-            if (conv.ec == ::std::errc())
-                return res * (is_negative ? -1 : 1);
-            else
-                throw ::std::runtime_error("An input string can't be converted to integer with base neither decimal, nor hexadecimal and even binary");
-        };
-
-        return out_t(0);
-        */
     };
     template<::std::constructible_from<::std::u32string> out_t, typename in_t>
         requires (::std::is_integral<in_t>::value && !::std::is_same<in_t, bool>::value)
     out_t cast(const in_t& obj) {
+        auto converting_val = obj;
+        constexpr bool is_signed = ::std::is_signed<in_t>::value;
+        if constexpr (is_signed) {
+            if (converting_val < 0) converting_val *= -1;
+        };
+
+        constexpr ::std::size_t reversed_result_size = sizeof(in_t) * 8;
+        char32_t reversed_result[reversed_result_size];
+        constexpr in_t divider = 10;
+        int digits_counter = 0;
+        for (auto& single_char : reversed_result) {
+            single_char = U'0' + (converting_val % divider);
+            converting_val /= divider;
+            digits_counter++;
+
+            if (converting_val == 0) {
+                break;
+            };
+        };
+
+        auto result = ::std::u32string{};
+        result.reserve(digits_counter + (is_signed && obj < 0? 1 : 0));
+        if (is_signed && obj < 0) {
+            result += U"-";
+        };
+        digits_counter -= 1;
+        for (; digits_counter >= 0; --digits_counter) {
+            result += reversed_result[digits_counter];
+        };
+
+        return result;
+        /*
         auto res = ::std::string(64, '\0');
 
         auto* begin = &(*res.begin());
@@ -400,7 +359,7 @@ namespace uns::string {
         }
         else {
             throw ::std::runtime_error("An input value can't be converted to string");
-        };
+        };*/
     };
     template<::std::floating_point out_t>
     out_t cast(const ::std::u8string_view& str) {
