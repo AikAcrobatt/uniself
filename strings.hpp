@@ -22,46 +22,49 @@ namespace uns::string {
         template<typename testing_t>
         concept non_constructible_from_u32string = !::std::constructible_from<testing_t, ::std::u32string>;
 
-        inline char32_t hex_extendable_digit(uint8_t SmallNumber) {
-            if (SmallNumber >= 0 && SmallNumber < 10) {
-                return U'0' + SmallNumber;
+        inline char32_t digit_to_char(uint8_t SingleDigit) {
+            if (SingleDigit >= 0 && SingleDigit < 10) {
+                return U'0' + SingleDigit;
             }
-            else if (SmallNumber >= 0xA && SmallNumber < 0x10) {
-                return U'A' + SmallNumber - 0xA;
+            else if (SingleDigit >= 0x0a && SingleDigit < 0x10) {
+                return U'a' + SingleDigit - 0x0a;
             }
             else {
                 throw ::std::runtime_error{
-                    ::std::string{ "A small number \'" }
-                    + static_cast<char>(SmallNumber + '0')
-                    + "\' cannot be represented as hex-extendable digit"
+                    ::std::string{ "Numeric value \'" }
+                    + static_cast<char>(SingleDigit)
+                    + "\' cannot be interpreted as a single digit of any base"
                 };
             };
         };
-        inline uint8_t dec_number(const char32_t Digit) {
-            if (Digit >= U'0' && Digit <= U'9') {
-                return Digit - U'0';
+        inline uint8_t dec_char_to_digit(const char32_t DecimalChar) {
+            if (DecimalChar >= U'0' && DecimalChar <= U'9') {
+                return DecimalChar - U'0';
             }
             else {
-                throw ::std::runtime_error{ "A char32 cannot be interpreted as decimal digit of any base" };
+                throw ::std::runtime_error{ "A char32 cannot be interpreted as decimal digit" };
             };
         };
-        inline uint8_t hex_number(const char32_t Digit) {
-            if (Digit >= U'0' && Digit <= U'9') {
-                return Digit - U'0';
+        inline uint8_t hex_char_to_digit(const char32_t HexadecimalChar) {
+            if (HexadecimalChar >= U'0' && HexadecimalChar <= U'9') {
+                return HexadecimalChar - U'0';
             }
-            else if (Digit >= U'A' && Digit <= U'F') {
-                return Digit - U'A' + 10;
+            else if (HexadecimalChar >= U'a' && HexadecimalChar <= U'f') {
+                return HexadecimalChar - U'a' + 10;
+            }
+            else if (HexadecimalChar >= U'A' && HexadecimalChar <= U'F') {
+                return HexadecimalChar - U'A' + 10;
             }
             else {
-                throw ::std::runtime_error{ "A char32 cannot be interpreted as hexadecimal digit of any base" };
+                throw ::std::runtime_error{ "A char32 cannot be interpreted as hexadecimal digit" };
             };
         };
-        inline uint8_t bin_number(const char32_t Digit) {
-            if (Digit >= U'0' && Digit <= U'1') {
-                return Digit - U'0';
+        inline uint8_t bin_char_to_digit(const char32_t BinaryChar) {
+            if (BinaryChar >= U'0' && BinaryChar <= U'1') {
+                return BinaryChar - U'0';
             }
             else {
-                throw ::std::runtime_error{ "A char32 cannot be interpreted as binary digit of any base" };
+                throw ::std::runtime_error{ "A char32 cannot be interpreted as binary digit" };
             };
         };
 
@@ -74,7 +77,7 @@ namespace uns::string {
             char32_t reversed_result[reversed_result_size];
             int digits_counter = 0;
             for (auto& single_char : reversed_result) {
-                single_char = ::uns::string::auxiliary::hex_extendable_digit(converting_val % Base);
+                single_char = ::uns::string::auxiliary::digit_to_char(converting_val % Base);
                 converting_val /= Base;
                 digits_counter++;
 
@@ -420,7 +423,7 @@ namespace uns::string {
                 iter += 2;
                 while (iter < str.cend()) {
                     result *= base;
-                    result += ::uns::string::auxiliary::hex_number(*iter);
+                    result += ::uns::string::auxiliary::hex_char_to_digit(*iter);
 
                     ++iter;
                 };
@@ -436,7 +439,7 @@ namespace uns::string {
                 iter += 2;
                 while (iter < str.cend()) {
                     result *= base;
-                    result += ::uns::string::auxiliary::bin_number(*iter);
+                    result += ::uns::string::auxiliary::bin_char_to_digit(*iter);
 
                     ++iter;
                 };
@@ -448,7 +451,7 @@ namespace uns::string {
             const out_t base = 10;
             while (iter < str.cend()) {
                 result *= base;
-                result += ::uns::string::auxiliary::dec_number(*iter);
+                result += ::uns::string::auxiliary::dec_char_to_digit(*iter);
 
                 ++iter;
             };

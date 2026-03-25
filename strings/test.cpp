@@ -1732,24 +1732,30 @@ INSTANTIATE_TEST_CASE_P(NumericCasts, HexUnsignedIntegerCastsU32,
         HexUnsignedIntegerCastsU32::make(U"0x0", 0, ::correct::yes)
         , HexUnsignedIntegerCastsU32::make(U"0x1", 1, ::correct::yes)
         , HexUnsignedIntegerCastsU32::elem_type(U"0X10423", 0x10423, ::correct::yes, U"0x10423")
-        , HexUnsignedIntegerCastsU32::make(U"0x7A8B8", 0x7A8B8, ::correct::yes)
+        , HexUnsignedIntegerCastsU32::make(U"0x7a8b8", 0x7a8b8, ::correct::yes)
         , HexUnsignedIntegerCastsU32::make(U"0x22304568", 0x22304568, ::correct::yes)
         , HexUnsignedIntegerCastsU32::elem_type(U"0X22304568", 0x22304568, ::correct::yes, U"0x22304568")
-        , HexUnsignedIntegerCastsU32::elem_type(U"0x01234789ABCDEF", 0x1234789ABCDEF, ::correct::yes, U"0x1234789ABCDEF")
-        , HexUnsignedIntegerCastsU32::elem_type(U"0X01234789ABCDEF", 0x1234789ABCDEF, ::correct::yes, U"0x1234789ABCDEF")
+        , HexUnsignedIntegerCastsU32::elem_type(U"0x01234789abcdef", 0x01234789abcdef, ::correct::yes, U"0x1234789abcdef")
+        , HexUnsignedIntegerCastsU32::elem_type(U"0X01234789abcdef", 0x01234789abcdef, ::correct::yes, U"0x1234789abcdef")
         , HexUnsignedIntegerCastsU32::make(U"0x22304568 ", 22304568, ::correct::no)
         , HexUnsignedIntegerCastsU32::make(U" 0x0", 0, ::correct::no)
         , HexUnsignedIntegerCastsU32::make(U"0x1 ", 1, ::correct::no)
         , HexUnsignedIntegerCastsU32::make(U"0x10_423", 0x10423, ::correct::no)
         , HexUnsignedIntegerCastsU32::make(U"0x8-8", 0x88, ::correct::no)
-        , HexUnsignedIntegerCastsU32::make(U"0x7J9", 0x7D9, ::correct::no)
+        , HexUnsignedIntegerCastsU32::make(U"0x7j9", 0x7d9, ::correct::no)
         , HexUnsignedIntegerCastsU32::make(U"0x2230 4568 ", 0x22304568, ::correct::no)
         , HexUnsignedIntegerCastsU32::make(U"0x-56", -0x56, ::correct::no)
         , HexUnsignedIntegerCastsU32::elem_type{ U"0x0000", 0x0,      ::correct::yes, U"0x0" }
         , HexUnsignedIntegerCastsU32::elem_type{ U"0x0000001", 0x1,   ::correct::yes, U"0x1" }
         , HexUnsignedIntegerCastsU32::make(U"x10423", 0x10423, ::correct::no)
-        , HexUnsignedIntegerCastsU32::make(U"00x7A8B9", 0x7A8B9, ::correct::no)
+        , HexUnsignedIntegerCastsU32::make(U"00x7a8b9", 0x7a8b9, ::correct::no)
         , HexUnsignedIntegerCastsU32::make(U"0x 114", 0x114, ::correct::no)
+        , HexUnsignedIntegerCastsU32::elem_type(U"0X10A23", 0x10a23, ::correct::yes, U"0x10a23")
+        , HexUnsignedIntegerCastsU32::elem_type(U"0x7a8B8", 0x7a8b8, ::correct::yes, U"0x7a8b8")
+        , HexUnsignedIntegerCastsU32::elem_type(U"0x2aC304Ef68", 0x2ac304ef68, ::correct::yes, U"0x2ac304ef68")
+        , HexUnsignedIntegerCastsU32::elem_type(U"0X2Ac304eF68", 0x2ac304ef68, ::correct::yes, U"0x2ac304ef68")
+        , HexUnsignedIntegerCastsU32::elem_type(U"0x0123456789ABCDEF", 0x0123456789abcdef, ::correct::yes, U"0x123456789abcdef")
+        , HexUnsignedIntegerCastsU32::elem_type(U"0X0123456789ABCDEF", 0x0123456789abcdef, ::correct::yes, U"0x123456789abcdef")
     )
 );
 
@@ -1855,26 +1861,276 @@ INSTANTIATE_TEST_CASE_P(NumericCasts, HexSignedIntegerCastsU32,
         , HexSignedIntegerCastsU32::elem_type(U"-0x0", -0, ::correct::yes, U"0x0")
         , HexSignedIntegerCastsU32::make(U"-0x1", -1, ::correct::yes)
         , HexSignedIntegerCastsU32::elem_type(U"0X10423", 0x10423, ::correct::yes, U"0x10423")
-        , HexSignedIntegerCastsU32::make(U"-0x7A8B9", -0x7A8B9, ::correct::yes)
+        , HexSignedIntegerCastsU32::make(U"-0x7a8b9", -0x7a8b9, ::correct::yes)
         , HexSignedIntegerCastsU32::make(U"0x22304568", 0x22304568, ::correct::yes)
         , HexSignedIntegerCastsU32::elem_type(U"-0X22304568", -0x22304568, ::correct::yes, U"-0x22304568")
-        , HexSignedIntegerCastsU32::elem_type(U"-0x01234567ABCDEF", -0x1234567ABCDEF, ::correct::yes, U"-0x1234567ABCDEF")
-        , HexSignedIntegerCastsU32::elem_type(U"0X01234567ABCDEF", 0x1234567ABCDEF, ::correct::yes, U"0x1234567ABCDEF")
+        , HexSignedIntegerCastsU32::elem_type(U"-0x01234567abcdef", -0x1234567abcdef, ::correct::yes, U"-0x1234567abcdef")
+        , HexSignedIntegerCastsU32::elem_type(U"0X01234567abcdef", 0x1234567abcdef, ::correct::yes, U"0x1234567abcdef")
         , HexSignedIntegerCastsU32::make(U"-0x22304568 ", -22304568, ::correct::no)
         , HexSignedIntegerCastsU32::make(U"- 0x0", -0, ::correct::no)
         , HexSignedIntegerCastsU32::make(U"-0x1 ", -1, ::correct::no)
         , HexSignedIntegerCastsU32::make(U"0x10_423", 0x10423, ::correct::no)
         , HexSignedIntegerCastsU32::make(U"0x8-8", 0x88, ::correct::no)
-        , HexSignedIntegerCastsU32::make(U"0x7J9", 0x7D9, ::correct::no)
-        , HexSignedIntegerCastsU32::make(U" -0x7D9", -0x7D9, ::correct::no)
+        , HexSignedIntegerCastsU32::make(U"0x7j9", 0x7d9, ::correct::no)
+        , HexSignedIntegerCastsU32::make(U" -0x7d9", -0x7d9, ::correct::no)
         , HexSignedIntegerCastsU32::make(U"0x2230 4568 ", 0x22304568, ::correct::no)
         , HexSignedIntegerCastsU32::make(U"0x-56", -0x56, ::correct::no)
         , HexSignedIntegerCastsU32::elem_type{ U"-0x0000", -0x0,      ::correct::yes, U"0x0" }
         , HexSignedIntegerCastsU32::elem_type{ U"0x0000001", 0x1,   ::correct::yes, U"0x1" }
         , HexSignedIntegerCastsU32::make(U"x10423", 0x10423, ::correct::no)
         , HexSignedIntegerCastsU32::make(U"X10423", 0x10423, ::correct::no)
-        , HexSignedIntegerCastsU32::make(U"00x7A8B9", 0x7A8B9, ::correct::no)
+        , HexSignedIntegerCastsU32::make(U"00x7a8b9", 0x7a8b9, ::correct::no)
         , HexSignedIntegerCastsU32::make(U"0x 114", 0x114, ::correct::no)
+        , HexSignedIntegerCastsU32::elem_type(U"0X10A23", 0x10a23, ::correct::yes, U"0x10a23")
+        , HexSignedIntegerCastsU32::elem_type(U"0x7a8B8", 0x7a8b8, ::correct::yes, U"0x7a8b8")
+        , HexSignedIntegerCastsU32::elem_type(U"0x2aC304Ef68", 0x2ac304ef68, ::correct::yes, U"0x2ac304ef68")
+        , HexSignedIntegerCastsU32::elem_type(U"0X2Ac304eF68", 0x2ac304ef68, ::correct::yes, U"0x2ac304ef68")
+        , HexSignedIntegerCastsU32::elem_type(U"0x0123456789ABCDEF", 0x0123456789abcdef, ::correct::yes, U"0x123456789abcdef")
+        , HexSignedIntegerCastsU32::elem_type(U"0X0123456789ABCDEF", 0x0123456789abcdef, ::correct::yes, U"0x123456789abcdef")
+    )
+);
+
+
+class BinUnsignedIntegerCastsU32 : public ::IntegerCasts<unsigned long long int, ::std::u32string> {};
+
+TEST_P(BinUnsignedIntegerCastsU32, ForwardCastTest) {
+    using TestCaseFixture = BinUnsignedIntegerCastsU32;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            const TestCaseFixture::string_type string_variants[] = {
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::std::get<TestCaseFixture::string_equ>(GetParam())
+            };
+
+            ASSERT_TRUE(
+                (
+                    ::uns::string::to_bin<TestCaseFixture::string_type>(
+                        ::std::get<TestCaseFixture::expectation>(GetParam())
+                    )
+                    == string_variants[0]
+                )
+                || (
+                    ::uns::string::to_bin<TestCaseFixture::string_type>(
+                        ::std::get<TestCaseFixture::expectation>(GetParam())
+                    )
+                    == string_variants[1]
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            ASSERT_NE(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::to_bin<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+TEST_P(BinUnsignedIntegerCastsU32, BackwardCastTest) {
+    using TestCaseFixture = BinUnsignedIntegerCastsU32;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::expectation>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::numeric_type>(
+                    ::std::get<TestCaseFixture::string>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            bool comparison_result = false;
+
+            #pragma warning(push)
+            #pragma warning(disable: 4553)
+            ASSERT_THROW(
+                comparison_result = (
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                    == ::uns::string::cast<TestCaseFixture::numeric_type>(
+                        ::std::get<TestCaseFixture::string>(GetParam())
+                    )
+                )
+                , ::std::runtime_error
+            );
+            #pragma warning(pop)
+
+            ASSERT_FALSE(comparison_result);
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+INSTANTIATE_TEST_CASE_P(NumericCasts, BinUnsignedIntegerCastsU32,
+    ::testing::Values(
+        BinUnsignedIntegerCastsU32::make(U"0b0", 0, ::correct::yes)
+        , BinUnsignedIntegerCastsU32::make(U"0b1", 1, ::correct::yes)
+        , BinUnsignedIntegerCastsU32::elem_type(U"0B10110", 0b10110, ::correct::yes, U"0b10110")
+        , BinUnsignedIntegerCastsU32::make(U"0b1000101", 0b1000101, ::correct::yes)
+        , BinUnsignedIntegerCastsU32::make(U"0b11111101110110", 0b11111101110110, ::correct::yes)
+        , BinUnsignedIntegerCastsU32::elem_type(U"0B11111101110110", 0b11111101110110, ::correct::yes, U"0b11111101110110")
+        , BinUnsignedIntegerCastsU32::elem_type(U"0b000111111011101101000010", 0b111111011101101000010, ::correct::yes, U"0b111111011101101000010")
+        , BinUnsignedIntegerCastsU32::elem_type(U"0B000111111011101101000010", 0b111111011101101000010, ::correct::yes, U"0b111111011101101000010")
+        , BinUnsignedIntegerCastsU32::make(U"0b1000101 ", 0b1000101, ::correct::no)
+        , BinUnsignedIntegerCastsU32::make(U" 0b0", 0, ::correct::no)
+        , BinUnsignedIntegerCastsU32::make(U"0b1 ", 1, ::correct::no)
+        , BinUnsignedIntegerCastsU32::make(U"0b10_111", 0b10111, ::correct::no)
+        , BinUnsignedIntegerCastsU32::make(U"0b0-1", 0b01, ::correct::no)
+        , BinUnsignedIntegerCastsU32::make(U"0b1j1", 0b101, ::correct::no)
+        , BinUnsignedIntegerCastsU32::make(U"0b1110 1010 ", 0b11101010, ::correct::no)
+        , BinUnsignedIntegerCastsU32::make(U"0b-11", -0b11, ::correct::no)
+        , BinUnsignedIntegerCastsU32::elem_type{ U"0b0000", 0b0,      ::correct::yes, U"0b0" }
+        , BinUnsignedIntegerCastsU32::elem_type{ U"0b0000001", 0b1,   ::correct::yes, U"0b1" }
+        , BinUnsignedIntegerCastsU32::make(U"b10101", 0b10101, ::correct::no)
+        , BinUnsignedIntegerCastsU32::make(U"00b10010", 0b10010, ::correct::no)
+        , BinUnsignedIntegerCastsU32::make(U"0b 110", 0b110, ::correct::no)
+    )
+);
+
+
+class BinSignedIntegerCastsU32 : public ::IntegerCasts<long long int, ::std::u32string> {};
+
+TEST_P(BinSignedIntegerCastsU32, ForwardCastTest) {
+    using TestCaseFixture = BinSignedIntegerCastsU32;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            const TestCaseFixture::string_type string_variants[] = {
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::std::get<TestCaseFixture::string_equ>(GetParam())
+            };
+
+            ASSERT_TRUE(
+                (
+                    ::uns::string::to_bin<TestCaseFixture::string_type>(
+                        ::std::get<TestCaseFixture::expectation>(GetParam())
+                    )
+                    == string_variants[0]
+                )
+                || (
+                    ::uns::string::to_bin<TestCaseFixture::string_type>(
+                        ::std::get<TestCaseFixture::expectation>(GetParam())
+                    )
+                    == string_variants[1]
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            ASSERT_NE(
+                ::std::get<TestCaseFixture::string>(GetParam())
+                , ::uns::string::to_bin<TestCaseFixture::string_type>(
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                )
+            );
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+TEST_P(BinSignedIntegerCastsU32, BackwardCastTest) {
+    using TestCaseFixture = BinSignedIntegerCastsU32;
+
+    auto correctness = ::std::get<TestCaseFixture::correctness>(GetParam());
+    switch (correctness) {
+        case ::correct::yes: {
+            ASSERT_EQ(
+                ::std::get<TestCaseFixture::expectation>(GetParam())
+                , ::uns::string::cast<TestCaseFixture::numeric_type>(
+                    ::std::get<TestCaseFixture::string>(GetParam())
+                )
+            );
+
+            break;
+        }
+        case ::correct::no: {
+            bool comparison_result = false;
+
+            #pragma warning(push)
+            #pragma warning(disable: 4553)
+            ASSERT_THROW(
+                comparison_result = (
+                    ::std::get<TestCaseFixture::expectation>(GetParam())
+                    == ::uns::string::cast<TestCaseFixture::numeric_type>(
+                        ::std::get<TestCaseFixture::string>(GetParam())
+                    )
+                )
+                , ::std::runtime_error
+            );
+            #pragma warning(pop)
+
+            ASSERT_FALSE(comparison_result);
+
+            break;
+        }
+        default: {
+            ADD_FAILURE()
+                << "Correctness value is not expected "
+                << ::uns::string::cast<::std::string>(
+                    correctness.to_string()
+                );
+        }
+    };
+};
+
+INSTANTIATE_TEST_CASE_P(NumericCasts, BinSignedIntegerCastsU32,
+    ::testing::Values(
+        BinSignedIntegerCastsU32::make(U"0b0", 0, ::correct::yes)
+        , BinSignedIntegerCastsU32::make(U"0b1", 1, ::correct::yes)
+        , BinSignedIntegerCastsU32::elem_type(U"0B10110", 0b10110, ::correct::yes, U"0b10110")
+        , BinSignedIntegerCastsU32::make(U"0b1000101", 0b1000101, ::correct::yes)
+        , BinSignedIntegerCastsU32::make(U"0b11111101110110", 0b11111101110110, ::correct::yes)
+        , BinSignedIntegerCastsU32::elem_type(U"0B11111101110110", 0b11111101110110, ::correct::yes, U"0b11111101110110")
+        , BinSignedIntegerCastsU32::elem_type(U"0b000111111011101101000010", 0b111111011101101000010, ::correct::yes, U"0b111111011101101000010")
+        , BinSignedIntegerCastsU32::elem_type(U"0B000111111011101101000010", 0b111111011101101000010, ::correct::yes, U"0b111111011101101000010")
+        , BinSignedIntegerCastsU32::make(U"0b1000101 ", 0b1000101, ::correct::no)
+        , BinSignedIntegerCastsU32::make(U" 0b0", 0, ::correct::no)
+        , BinSignedIntegerCastsU32::make(U"0b1 ", 1, ::correct::no)
+        , BinSignedIntegerCastsU32::make(U"0b10_111", 0b10111, ::correct::no)
+        , BinSignedIntegerCastsU32::make(U"0b0-1", 0b01, ::correct::no)
+        , BinSignedIntegerCastsU32::make(U"0b1j1", 0b101, ::correct::no)
+        , BinSignedIntegerCastsU32::make(U"0b1110 1010 ", 0b11101010, ::correct::no)
+        , BinSignedIntegerCastsU32::make(U"0b-11", -0b11, ::correct::no)
+        , BinSignedIntegerCastsU32::elem_type{ U"0b0000", 0b0,      ::correct::yes, U"0b0" }
+        , BinSignedIntegerCastsU32::elem_type{ U"0b0000001", 0b1,   ::correct::yes, U"0b1" }
+        , BinSignedIntegerCastsU32::make(U"b10101", 0b10101, ::correct::no)
+        , BinSignedIntegerCastsU32::make(U"00b10010", 0b10010, ::correct::no)
+        , BinSignedIntegerCastsU32::make(U"0b 110", 0b110, ::correct::no)
     )
 );
 
