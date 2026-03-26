@@ -557,6 +557,141 @@ namespace uns::string {
 
         return { U"0b" + ::uns::string::auxiliary::integer_to_string<in_t>(2, Obj) };
     };
+
+
+    //STRING-SEEKER OPERATIONS
+    //positioning a seeker in the string relatively some mark symbols in it
+    template<::uns::is_basic_string string_t>
+    bool seeker_pos(
+        const string_t&                         target              //target string
+        , typename string_t::const_iterator&    seeker              //positioning seeker
+        , typename string_t::const_iterator     first_mark          //first mark at the target string, relatively to what the seeker should be positioned
+        , typename string_t::const_iterator     last_mark           // last mark at the target string, relatively to what the seeker should be positioned
+        , bool                                  from_begin          //if true, this flag indicates that seekers new position must be done relative to the first mark of positioning, false - if relative to the last mark
+        , typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type relative_position //this value indicates of how mutch symbols the seeker should be moved from first/last mark respectively (from first mark to the end of target string, from last mark - to the beginning)
+        , typename string_t::const_iterator     right_border_beg    //position of the first symbol of the right border, that serves as the limit for the first_mark
+        , typename string_t::const_iterator     right_border_end    //position of the last symbol of the right border, that serves as the limit for seeker positioning from the right
+    ) noexcept {
+        auto new_seeker_position = seeker;
+
+        if (first_mark == target.cend()) { return false; };
+        if (right_border_beg != target.cend() && first_mark > right_border_beg) return false;
+
+        if (!from_begin) {
+            if (last_mark == target.cend() || first_mark > last_mark) last_mark = first_mark;
+            if (last_mark - target.cbegin() < relative_position) return false;
+
+            new_seeker_position = last_mark - relative_position;
+        }
+        else {
+            if (target.cend() - first_mark <= relative_position) return false;
+            new_seeker_position = first_mark + relative_position;
+        };
+
+        if (right_border_end == target.cend() || new_seeker_position <= right_border_end) {
+            seeker = new_seeker_position;
+            return true;
+        }
+        else return false;
+    };
+    template<::uns::is_basic_string string_t>
+    bool seeker_pos(
+        const string_t&                         target              //target string
+        , typename string_t::const_iterator&    seeker              //positioning seeker
+        , typename string_t::const_iterator     first_mark          //first mark at the target string, relatively to what the seeker should be positioned
+        , typename string_t::const_iterator     last_mark           // last mark at the target string, relatively to what the seeker should be positioned
+        , bool                                  from_begin          //if true, this flag indicates that seekers new position must be done relative to the first mark of positioning, false - if relative to the last mark
+        , typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type relative_position //this value indicates of how mutch symbols the seeker should be moved from first/last mark respectively (from first mark to the end of target string, from last mark - to the beginning)
+        , typename string_t::const_iterator     right_border_beg    //position of the first symbol of the right border, that serves as the limit for the first_mark
+    ) noexcept {
+        return ::uns::string::seeker_pos<string_t>(target, seeker, first_mark, last_mark, from_begin, relative_position, right_border_beg, target.cend());
+    };
+    template<::uns::is_basic_string string_t>
+    bool seeker_pos(
+        const string_t&                         target              //target string
+        , typename string_t::const_iterator&    seeker              //positioning seeker
+        , typename string_t::const_iterator     first_mark          //first mark at the target string, relatively to what the seeker should be positioned
+        , typename string_t::const_iterator     last_mark           // last mark at the target string, relatively to what the seeker should be positioned
+        , bool                                  from_begin          //if true, this flag indicates that seekers new position must be done relative to the first mark of positioning, false - if relative to the last mark
+        , typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type relative_position //this value indicates of how mutch symbols the seeker should be moved from first/last mark respectively (from first mark to the end of target string, from last mark - to the beginning)
+    ) noexcept {
+        return ::uns::string::seeker_pos(target, seeker, first_mark, last_mark, from_begin, relative_position, target.cend());
+    };
+
+
+    //seeking for sample(s) at given target string (the leftmost appearance, but not lefter than the seeker)
+    template<::uns::is_basic_string string_t, ::uns::const_iterable_collection<string_t> collection_t>
+    typename string_t::const_iterator find(
+        const string_t&                         target              //target string
+        , const typename string_t::const_iterator& seeker           //seeker of symbol to start the search
+        , const collection_t&                   samples             //a collection of samples wich should be found within the target
+        , typename collection_t::const_iterator& found_sample       //iterator of found sample in the collection
+    ) noexcept {
+        found_sample = samples.cend();
+
+        if (seeker == target.cend()) return target.cend();
+        const auto seeker_pos = seeker - target.cbegin();
+        auto res_pos = target.cend() - target.cbegin();
+
+        for (auto sample = samples.cbegin(); sample != samples.cend(); ++sample) {
+            if (sample->empty()) continue;
+            if (
+                auto sample_pos = target.find(*sample, seeker_pos);
+                static_cast<decltype(seeker_pos)>(sample_pos) >= seeker_pos
+                && sample_pos != string_t::npos
+                && static_cast<decltype(res_pos)>(sample_pos) < res_pos
+            ) {
+                res_pos = static_cast<decltype(res_pos)>(sample_pos);
+                found_sample = sample;
+            };
+        };
+
+        return target.cbegin() + res_pos;
+    };
+    template<::uns::is_basic_string string_t, ::uns::const_iterable_collection<string_t> collection_t>
+    typename string_t::const_iterator find(
+        const string_t&                         target              //target string
+        , const typename string_t::const_iterator& seeker           //seeker of symbol to start the search
+        , const collection_t&                   samples             //a collection of samples wich should be found within the target
+    ) noexcept {
+        auto found_sample = samples.cend();
+
+        return ::uns::string::find<string_t>(target, seeker, samples, found_sample);
+    };
+    template<::uns::is_basic_string string_t>
+    typename string_t::const_iterator find(
+        const string_t&                         target              //target string
+        , const typename string_t::const_iterator& seeker           //seeker of symbol to start the search
+        , const string_t&                       sample              //a sample to seek within the target
+    ) noexcept {
+        if (seeker == target.cend() || sample.empty()) return target.cend();
+        const auto seeker_pos = seeker - target.cbegin();
+        auto res_pos = target.cend() - target.cbegin();
+
+        if (!sample.empty()) {
+            if (
+                auto sample_pos = target.find(sample, seeker_pos);
+                static_cast<decltype(seeker_pos)>(sample_pos) >= seeker_pos
+                && sample_pos != string_t::npos
+                && static_cast<decltype(res_pos)>(sample_pos) < res_pos
+            ) {
+                res_pos = static_cast<decltype(res_pos)>(sample_pos);
+            };
+        };
+
+        return target.cbegin() + res_pos;
+    };
+    template<::uns::is_basic_string string_t, typename unused_t>
+    typename string_t::const_iterator find(
+        const string_t&                         target              //target string
+        , const typename string_t::const_iterator& seeker           //seeker of symbol to start the search
+        , const string_t&                       sample              //a sample to seek within the target
+        , const unused_t&                       found_sample        //an unused parameter to deliver template compatibility with a collection-of-samples case (so it can be of any type and value)
+    ) noexcept {
+        return ::uns::string::find<string_t>(target, seeker, sample);
+    };
+
+
 };
 
 #endif

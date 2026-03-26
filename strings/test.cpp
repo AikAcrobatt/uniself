@@ -1,6 +1,8 @@
 
 #include <sstream>
-#include <algorithm>
+#include <iterator>
+#include <vector>
+#include <tuple>
 
 #include "uniself/strings.hpp"
 #include "uniself/renum.hpp"
@@ -103,7 +105,7 @@ TEST(StringCasts, U8U32Test) {
         , to
     );
 };
-TEST(StringCasts, U82U8Test) {
+TEST(StringCasts, U8U8Test) {
     const auto from = ::std::u8string{ u8"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
     const auto to = ::std::u8string{ u8"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
 
@@ -140,7 +142,7 @@ TEST(StringCasts, U16U32Test) {
         , to
     );
 };
-TEST(StringCasts, U162U8Test) {
+TEST(StringCasts, U16U8Test) {
     const auto from = ::std::u16string{ u"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
     const auto to = ::std::u8string{ u8"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
 
@@ -3389,3 +3391,191 @@ INSTANTIATE_TEST_CASE_P(NumericTests, DoublePrecisionFloatingPointCastsW,
     )
 );
 
+
+template<::uns::is_basic_string string_t>
+class SeekerMethods : public ::testing::TestWithParam<
+    ::std::tuple<
+        string_t
+        , typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type
+        , typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type
+        , typename ::std::iterator_traits<typename ::std::vector<string_t>::const_iterator>::difference_type
+    >
+> {
+public:
+    using string_type = string_t;
+    using seeker_shift_type = typename ::std::iterator_traits<typename string_type::const_iterator>::difference_type;
+    using sample_collection_type = ::std::vector<string_type>;
+    using sample_collection_shift_type = typename ::std::iterator_traits<typename sample_collection_type::const_iterator>::difference_type;
+    using elem_type = ::std::tuple<
+        string_type
+        , seeker_shift_type
+        , seeker_shift_type
+        , sample_collection_shift_type
+    >;
+public:
+    enum elem_part {
+        sample = 0
+        , seeker_shift1 = 1
+        , seeker_shift2 = 2
+        , collection_shift = 3
+    };
+public:
+    static ::std::string to_string(const elem_type& Elem) {
+        return "IntegerCasts::Elem{ "
+            + testing::PrintToString(
+                ::std::get<elem_part::sample>(Elem)
+            )
+            + ", sh1=" + ::uns::string::cast<::std::string>(::std::get<elem_part::seeker_shift1>(Elem))
+            + ", sh2=" + ::uns::string::cast<::std::string>(::std::get<elem_part::seeker_shift2>(Elem))
+            + ", in collection: " + ::uns::string::cast<::std::string>(::std::get<elem_part::collection_shift>(Elem))
+            + " }";
+    };
+};
+
+template<>
+::std::string testing::PrintToString(const ::SeekerMethods<::std::u32string>::elem_type& Elem) {
+    return ::SeekerMethods<::std::u32string>::to_string(Elem);
+};
+template<>
+::std::string testing::PrintToString(const ::SeekerMethods<::std::u8string>::elem_type& Elem) {
+    return ::SeekerMethods<::std::u8string>::to_string(Elem);
+};
+
+class SeekerFindU32 : public ::SeekerMethods<::std::u32string> {
+public:
+    inline static string_type target;
+    inline static sample_collection_type samples;
+public:
+    static void SetUpTestCase() {
+        target = U"0123456789ABCГEF";
+        samples = {
+            U"45"
+            , U"ABCГ"
+            , U"46Г"
+        };
+    };
+    static elem_type make(
+        seeker_shift_type shift1
+        , seeker_shift_type shift2
+        , sample_collection_shift_type sample_collection_shift
+    ) {
+        return elem_type{
+            U""
+            , shift1
+            , shift2
+            , sample_collection_shift
+        };
+    };
+};
+
+TEST_P(SeekerFindU32, FindSamples) {
+    using TestCaseFixture = SeekerFindU32;
+
+    auto found_sample = samples.cend();
+    const auto seeker = target.cbegin() + ::std::get<TestCaseFixture::seeker_shift1>(GetParam());
+
+    const auto result = ::uns::string::find(
+        target
+        , seeker
+        , samples
+        , found_sample
+    ) - target.cbegin();
+
+    ASSERT_EQ(result, ::std::get<TestCaseFixture::seeker_shift2>(GetParam()));
+
+    ASSERT_EQ(
+        found_sample - samples.cbegin()
+        , ::std::get<TestCaseFixture::collection_shift>(GetParam())
+    );
+};
+
+INSTANTIATE_TEST_CASE_P(SeekerMethodsTests, SeekerFindU32,
+    ::testing::Values(
+        ::SeekerFindU32::make(0, 4, 0)
+        , ::SeekerFindU32::make(1, 4, 0)
+        , ::SeekerFindU32::make(2, 4, 0)
+        , ::SeekerFindU32::make(3, 4, 0)
+        , ::SeekerFindU32::make(4, 4, 0)
+        , ::SeekerFindU32::make(5, 10, 1)
+        , ::SeekerFindU32::make(6, 10, 1)
+        , ::SeekerFindU32::make(7, 10, 1)
+        , ::SeekerFindU32::make(8, 10, 1)
+        , ::SeekerFindU32::make(9, 10, 1)
+        , ::SeekerFindU32::make(10, 10, 1)
+        , ::SeekerFindU32::make(11, 16, 3)
+        , ::SeekerFindU32::make(12, 16, 3)
+        , ::SeekerFindU32::make(13, 16, 3)
+        , ::SeekerFindU32::make(14, 16, 3)
+        , ::SeekerFindU32::make(15, 16, 3)
+        , ::SeekerFindU32::make(16, 16, 3)
+    )
+);
+
+
+class SeekerFindU8 : public ::SeekerMethods<::std::u8string> {
+public:
+    inline static string_type target;
+    inline static sample_collection_type samples;
+public:
+    static void SetUpTestCase() {
+        target = u8"\u304C\u3180абв\u0401";
+        samples = {
+            u8"\u3180"
+            , u8"бв"
+            , u8"Г"
+        };
+    };
+    static elem_type make(
+        seeker_shift_type shift1
+        , seeker_shift_type shift2
+        , sample_collection_shift_type sample_collection_shift
+    ) {
+        return elem_type{
+            u8""
+            , shift1
+            , shift2
+            , sample_collection_shift
+        };
+    };
+};
+
+TEST_P(SeekerFindU8, FindSamples) {
+    using TestCaseFixture = SeekerFindU8;
+
+    auto found_sample = samples.cend();
+    const auto seeker = target.cbegin() + ::std::get<TestCaseFixture::seeker_shift1>(GetParam());
+
+    const auto result = ::uns::string::find(
+        target
+        , seeker
+        , samples
+        , found_sample
+    ) - target.cbegin();
+
+    ASSERT_EQ(result, ::std::get<TestCaseFixture::seeker_shift2>(GetParam()));
+
+    ASSERT_EQ(
+        found_sample - samples.cbegin()
+        , ::std::get<TestCaseFixture::collection_shift>(GetParam())
+    );
+};
+
+INSTANTIATE_TEST_CASE_P(SeekerMethodsTests, SeekerFindU8,
+    ::testing::Values(
+        ::SeekerFindU8::make(0, 3, 0)
+        , ::SeekerFindU8::make(1, 3, 0)
+        , ::SeekerFindU8::make(2, 3, 0)
+        , ::SeekerFindU8::make(3, 3, 0)
+        , ::SeekerFindU8::make(4, 8, 1)
+        , ::SeekerFindU8::make(5, 8, 1)
+        , ::SeekerFindU8::make(6, 8, 1)
+        , ::SeekerFindU8::make(7, 8, 1)
+        , ::SeekerFindU8::make(8, 8, 1)
+        , ::SeekerFindU8::make(9, 14, 3)
+        , ::SeekerFindU8::make(10, 14, 3)
+        , ::SeekerFindU8::make(11, 14, 3)
+        , ::SeekerFindU8::make(12, 14, 3)
+        , ::SeekerFindU8::make(13, 14, 3)
+        , ::SeekerFindU8::make(14, 14, 3)
+    )
+);
