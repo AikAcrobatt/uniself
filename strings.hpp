@@ -97,6 +97,7 @@ namespace uns::string {
         }
     };
 
+
     //TRIM
     bool trim(::std::u32string& Str) {
         bool was_trimmed = false;
@@ -152,6 +153,7 @@ namespace uns::string {
 
         return result;
     };
+
 
     //STRING CAST FUNCTIONS
     // trivial ::std::u8string conversion
@@ -397,6 +399,10 @@ namespace uns::string {
     out_t cast(const ::std::u32string_view& str) {
         auto iter = str.cbegin();
 
+        if (str.cend() - iter < 1) {
+            throw ::std::runtime_error{ "An input string cannot be converted to numeric type" };
+        };
+
         out_t sign = 1;
         if (*iter == U'-') {
             if constexpr (!::std::is_signed<out_t>::value) {
@@ -405,9 +411,9 @@ namespace uns::string {
 
             sign *= -1;
             ++iter;
-        };
-        if (str.cend() - iter < 1) {
-            throw ::std::runtime_error{ "An input string cannot be converted to numeric type" };
+        }
+        else if (*iter == U'+') {
+            ++iter;
         };
 
         out_t result = 0;
@@ -473,24 +479,10 @@ namespace uns::string {
         return { ::uns::string::auxiliary::integer_to_string<in_t>(10, Obj)};
     };
     template<::std::floating_point out_t>
-    out_t cast(const ::std::u8string_view& str) {
-        auto start_pos = 0;
-        for (start_pos = 0; start_pos < str.size(); start_pos++) {
-            if (
-                char8_t lit = str[start_pos];
-                lit != U' '
-                && lit != U'\n'
-                && lit != U'\t'
-                && lit != U'\r'
-            ) {
-                break;
-            };
-        };
-
+    out_t cast(const ::std::u32string_view& Str) {
+        /*Currently uniself does not support of hexadecimal or binary floating point strings*/
+        auto one_byte_string = ::uns::string::cast<::std::string>(Str);
         auto res = out_t(0);
-        const char* begin = reinterpret_cast<const char*>(str.data() + start_pos);
-        const char* end = &begin[str.size()];
-
         for (auto format :
             {
                 ::std::chars_format::scientific,
@@ -498,9 +490,15 @@ namespace uns::string {
                 ::std::chars_format::fixed
             }
         ) {
-            auto conv = ::std::from_chars(begin, end, res, format);
-            if (conv.ec == ::std::errc())
+            auto conv = ::std::from_chars(
+                one_byte_string.c_str()
+                , one_byte_string.c_str() + one_byte_string.size()
+                , res
+                , format
+            );
+            if (conv.ec == ::std::errc()) {
                 return res;
+            };
         };
 
         throw ::std::runtime_error("An input string can't be converted to floating point");
@@ -508,10 +506,15 @@ namespace uns::string {
     template<::std::constructible_from<::std::u32string> out_t, ::std::floating_point in_t>
     out_t cast(const in_t& Obj) {
         auto res = ::std::string(64, '\0');
-        auto* begin = &(*res.begin());
-        auto* end = &res.back();
+        auto* begin = res.data();
+        auto* end = res.data() + res.size();
 
-        auto conv = ::std::to_chars(begin, end, Obj, ::std::chars_format::general);
+        auto conv = ::std::to_chars(
+            begin
+            , end
+            , Obj
+            , ::std::chars_format::general
+        );
         if (conv.ec == ::std::errc()) {
             return ::uns::string::cast<::std::u32string>(res);
         }
@@ -529,6 +532,7 @@ namespace uns::string {
             ::uns::string::cast<::std::u32string>(from)
         );
     };
+
 
     //CAST FUNCTIONS FOR NUMERICS TO FORMATTED STRING
     template<::std::constructible_from<::std::u32string> out_t, typename in_t>
