@@ -99,7 +99,7 @@ namespace uns::string {
 
 
     //TRIM
-    bool trim(::std::u32string& Str) {
+    inline bool trim(::std::u32string& Str) {
         bool was_trimmed = false;
 
         auto new_begin = Str.cbegin();
@@ -146,7 +146,7 @@ namespace uns::string {
 
         return was_trimmed;
     };
-    ::std::u32string trim(const ::std::u32string_view& StrView) {
+    inline ::std::u32string trim(const ::std::u32string_view& StrView) {
         auto result = ::std::u32string{ StrView };
 
         ::uns::string::trim(result);

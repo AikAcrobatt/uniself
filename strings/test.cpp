@@ -33,6 +33,28 @@ template<>
 };
 
 
+class TrimTests : public ::testing::Test {};
+
+TEST(TrimTests, ArgumentTrim) {
+    auto origin = ::std::u32string{ U"           \n\t\v\a\b\r\f   ABCD   efgh  \n\t\v\a\b\r\f  !@#% \u304CА \n\t\v\a\b\r\f  БВГдеёжзик_    \n\t\v\a\b\r\f      " };
+    const auto expectation = ::std::u32string{ U"ABCD   efgh  \n\t\v\a\b\r\f  !@#% \u304CА \n\t\v\a\b\r\f  БВГдеёжзик_" };
+
+    ASSERT_NO_THROW(::uns::string::trim(origin));
+    ASSERT_EQ(
+        origin
+        , expectation
+    );
+};
+TEST(TrimTests, TrimmedResult) {
+    const auto origin = ::std::u32string{ U"           \n\t\v\a\b\r\f   ABCD   efgh  \n\t\v\a\b\r\f  !@#% \u304CА \n\t\v\a\b\r\f  БВГдеёжзик_    \n\t\v\a\b\r\f      " };
+    const auto expectation = ::std::u32string{ U"ABCD   efgh  \n\t\v\a\b\r\f  !@#% \u304CА \n\t\v\a\b\r\f  БВГдеёжзик_" };
+
+    ASSERT_EQ(
+        ::uns::string::trim(origin)
+        , expectation
+    );
+};
+
 class StringCasts : public ::testing::Test {};
 
 TEST(StringCasts, U32U32Test) {
