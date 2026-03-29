@@ -35,11 +35,42 @@ template<>
 };
 
 
-class TrimTests : public ::testing::Test {};
+class TrimTests : public ::testing::TestWithParam<
+    ::std::tuple<::std::u32string, ::std::u32string, ::std::u32string>
+> {
+public:
+    using elem_type = ::std::tuple<::std::u32string, ::std::u32string, ::std::u32string>;
+    using string_type = ::std::u32string;
+public:
+    enum elem_part {
+        prefix = 0
+        , body = 1
+        , postfix = 2
+    };
+public:
+    static ::std::string to_string(const elem_type& Elem) {
+        return testing::PrintToString(
+                ::std::get<elem_part::prefix>(Elem)
+            )
+            + testing::PrintToString(
+                ::std::get<elem_part::body>(Elem)
+            )
+            + testing::PrintToString(
+                ::std::get<elem_part::postfix>(Elem)
+            );
+    };
+};
 
-TEST(TrimTests, ArgumentTrim) {
-    auto origin = ::std::u32string{ U"           \n\t\v\a\b\r\f   ABCD   efgh  \n\t\v\a\b\r\f  !@#% \u304CА \n\t\v\a\b\r\f  БВГдеёжзик_    \n\t\v\a\b\r\f      " };
-    const auto expectation = ::std::u32string{ U"ABCD   efgh  \n\t\v\a\b\r\f  !@#% \u304CА \n\t\v\a\b\r\f  БВГдеёжзик_" };
+template<>
+::std::string testing::PrintToString(const ::TrimTests::elem_type& Elem) {
+    return ::TrimTests::to_string(Elem);
+};
+
+TEST_P(TrimTests, ArgumentTrim) {
+    auto origin = ::std::get<::TrimTests::elem_part::prefix>(GetParam())
+        + ::std::get<::TrimTests::elem_part::body>(GetParam())
+        + ::std::get<::TrimTests::elem_part::postfix>(GetParam());
+    const auto expectation = ::std::get<::TrimTests::elem_part::body>(GetParam());
 
     ASSERT_NO_THROW(::uns::string::trim(origin));
     ASSERT_EQ(
@@ -47,15 +78,65 @@ TEST(TrimTests, ArgumentTrim) {
         , expectation
     );
 };
-TEST(TrimTests, TrimmedResult) {
-    const auto origin = ::std::u32string{ U"           \n\t\v\a\b\r\f   ABCD   efgh  \n\t\v\a\b\r\f  !@#% \u304CА \n\t\v\a\b\r\f  БВГдеёжзик_    \n\t\v\a\b\r\f      " };
-    const auto expectation = ::std::u32string{ U"ABCD   efgh  \n\t\v\a\b\r\f  !@#% \u304CА \n\t\v\a\b\r\f  БВГдеёжзик_" };
+TEST_P(TrimTests, TrimmedResult) {
+    const auto origin = ::std::get<::TrimTests::elem_part::prefix>(GetParam())
+        + ::std::get<::TrimTests::elem_part::body>(GetParam())
+        + ::std::get<::TrimTests::elem_part::postfix>(GetParam());
+    const auto expectation = ::std::get<::TrimTests::elem_part::body>(GetParam());
 
     ASSERT_EQ(
         ::uns::string::trim(origin)
         , expectation
     );
 };
+
+INSTANTIATE_TEST_CASE_P(Trim, TrimTests,
+    ::testing::Combine(
+        ::testing::Values(
+            ::std::u32string{ U"" }
+            , ::std::u32string{ U" " }
+            , ::std::u32string{ U"  " }
+            , ::std::u32string{ U"   " }
+            , ::std::u32string{ U"   \n" }
+            , ::std::u32string{ U"   \n\t" }
+            , ::std::u32string{ U"   \n\t\v" }
+            , ::std::u32string{ U"   \n\t\v\a" }
+            , ::std::u32string{ U"   \n\t\v\a\b" }
+            , ::std::u32string{ U"   \n\t\v\a\b\r" }
+            , ::std::u32string{ U"   \n\t\v\a\b\r\f" }
+            , ::std::u32string{ U"   \n\t\v\a\b\r\f   " }
+            , ::std::u32string{ U"           \n\t\v\a\b\r\f               " }
+            , ::std::u32string{ U"           \n\t\v\a\b\r\f        \n\t\v\a\b\r\f       " }
+        )
+        , ::testing::Values(
+            ::std::u32string{ U"A" }
+            , ::std::u32string{ U"ABCD" }
+            , ::std::u32string{ U"ABCD   efgh" }
+            , ::std::u32string{ U"ABCD   efgh  \n\t\v\a\b\r\f  !@#%" }
+            , ::std::u32string{ U"\u304C\u304C\u304C\u304C\u304C" }
+            , ::std::u32string{ U"!@#% \u304CА \n\t\v\a\b\r\f  Б" }
+            , ::std::u32string{ U"ЫЫЫ                         ЙЙЙ" }
+            , ::std::u32string{ U"ABCD   efgh  \n\t\v\a\b\r\f  !@#% \u304CА \n\t\v\a\b\r\f  БВГдеёжзик_" }
+        )
+        , ::testing::Values(
+            ::std::u32string{ U"" }
+            , ::std::u32string{ U" " }
+            , ::std::u32string{ U"  " }
+            , ::std::u32string{ U"   " }
+            , ::std::u32string{ U"   \n" }
+            , ::std::u32string{ U"   \n\t" }
+            , ::std::u32string{ U"   \n\t\v" }
+            , ::std::u32string{ U"   \n\t\v\a" }
+            , ::std::u32string{ U"   \n\t\v\a\b" }
+            , ::std::u32string{ U"   \n\t\v\a\b\r" }
+            , ::std::u32string{ U"   \n\t\v\a\b\r\f" }
+            , ::std::u32string{ U"   \n\t\v\a\b\r\f   " }
+            , ::std::u32string{ U"           \n\t\v\a\b\r\f               " }
+            , ::std::u32string{ U"           \n\t\v\a\b\r\f        \n\t\v\a\b\r\f       " }
+        )
+    )
+);
+
 
 class StringCasts : public ::testing::Test {};
 
