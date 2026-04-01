@@ -141,8 +141,8 @@ INSTANTIATE_TEST_CASE_P(Trim, TrimTests,
 class StringCasts : public ::testing::Test {};
 
 TEST(StringCasts, U32U32Test) {
-    const auto from = ::std::u32string{ U"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
-    const auto to = ::std::u32string{ U"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto from = ::std::u32string{ U"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u32string{ U"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
 
     ASSERT_EQ(
         ::uns::string::cast<decltype(to)>(from)
@@ -150,8 +150,8 @@ TEST(StringCasts, U32U32Test) {
     );
 };
 TEST(StringCasts, U32U8Test) {
-    const auto from = ::std::u32string{ U"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
-    const auto to = ::std::u8string{ u8"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto from = ::std::u32string{ U"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u8string{ u8"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
 
     ASSERT_EQ(
         ::uns::string::cast<decltype(to)>(from)
@@ -159,8 +159,8 @@ TEST(StringCasts, U32U8Test) {
     );
 };
 TEST(StringCasts, U32U16Test) {
-    const auto from = ::std::u32string{ U"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
-    const auto to = ::std::u16string{ u"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto from = ::std::u32string{ U"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u16string{ u"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
 
     ASSERT_EQ(
         ::uns::string::cast<decltype(to)>(from)
@@ -168,8 +168,8 @@ TEST(StringCasts, U32U16Test) {
     );
 };
 TEST(StringCasts, U32WTest) {
-    const auto from = ::std::u32string{ U"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
-    const auto to = ::std::wstring{ L"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto from = ::std::u32string{ U"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::wstring{ L"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
 
     ASSERT_EQ(
         ::uns::string::cast<decltype(to)>(from)
@@ -178,8 +178,8 @@ TEST(StringCasts, U32WTest) {
 };
 
 TEST(StringCasts, U8U32Test) {
-    const auto from = ::std::u8string{ u8"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
-    const auto to = ::std::u32string{ U"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto from = ::std::u8string{ u8"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u32string{ U"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
 
     ASSERT_EQ(
         ::uns::string::cast<decltype(to)>(from)
@@ -187,8 +187,8 @@ TEST(StringCasts, U8U32Test) {
     );
 };
 TEST(StringCasts, U8U8Test) {
-    const auto from = ::std::u8string{ u8"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
-    const auto to = ::std::u8string{ u8"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto from = ::std::u8string{ u8"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u8string{ u8"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
 
     ASSERT_EQ(
         ::uns::string::cast<decltype(to)>(from)
@@ -196,8 +196,8 @@ TEST(StringCasts, U8U8Test) {
     );
 };
 TEST(StringCasts, U8U16Test) {
-    const auto from = ::std::u8string{ u8"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
-    const auto to = ::std::u16string{ u"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto from = ::std::u8string{ u8"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u16string{ u"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
 
     ASSERT_EQ(
         ::uns::string::cast<decltype(to)>(from)
@@ -205,8 +205,8 @@ TEST(StringCasts, U8U16Test) {
     );
 };
 TEST(StringCasts, U8WTest) {
-    const auto from = ::std::u8string{ u8"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
-    const auto to = ::std::wstring{ L"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto from = ::std::u8string{ u8"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::wstring{ L"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
 
     ASSERT_EQ(
         ::uns::string::cast<decltype(to)>(from)
@@ -215,8 +215,8 @@ TEST(StringCasts, U8WTest) {
 };
 
 TEST(StringCasts, U16U32Test) {
-    const auto from = ::std::u16string{ u"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
-    const auto to = ::std::u32string{ U"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto from = ::std::u16string{ u"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u32string{ U"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
 
     ASSERT_EQ(
         ::uns::string::cast<decltype(to)>(from)
@@ -224,8 +224,8 @@ TEST(StringCasts, U16U32Test) {
     );
 };
 TEST(StringCasts, U16U8Test) {
-    const auto from = ::std::u16string{ u"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
-    const auto to = ::std::u8string{ u8"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto from = ::std::u16string{ u"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u8string{ u8"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
 
     ASSERT_EQ(
         ::uns::string::cast<decltype(to)>(from)
@@ -233,8 +233,8 @@ TEST(StringCasts, U16U8Test) {
     );
 };
 TEST(StringCasts, U16U16Test) {
-    const auto from = ::std::u16string{ u"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
-    const auto to = ::std::u16string{ u"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto from = ::std::u16string{ u"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u16string{ u"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
 
     ASSERT_EQ(
         ::uns::string::cast<decltype(to)>(from)
@@ -242,8 +242,8 @@ TEST(StringCasts, U16U16Test) {
     );
 };
 TEST(StringCasts, U16WTest) {
-    const auto from = ::std::u16string{ u"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
-    const auto to = ::std::wstring{ L"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto from = ::std::u16string{ u"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::wstring{ L"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
 
     ASSERT_EQ(
         ::uns::string::cast<decltype(to)>(from)
@@ -252,8 +252,8 @@ TEST(StringCasts, U16WTest) {
 };
 
 TEST(StringCasts, WU32Test) {
-    const auto from = ::std::wstring{ L"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
-    const auto to = ::std::u32string{ U"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto from = ::std::wstring{ L"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u32string{ U"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
 
     ASSERT_EQ(
         ::uns::string::cast<decltype(to)>(from)
@@ -261,8 +261,8 @@ TEST(StringCasts, WU32Test) {
     );
 };
 TEST(StringCasts, WU8Test) {
-    const auto from = ::std::wstring{ L"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
-    const auto to = ::std::u8string{ u8"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto from = ::std::wstring{ L"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u8string{ u8"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
 
     ASSERT_EQ(
         ::uns::string::cast<decltype(to)>(from)
@@ -270,8 +270,8 @@ TEST(StringCasts, WU8Test) {
     );
 };
 TEST(StringCasts, WU16Test) {
-    const auto from = ::std::wstring{ L"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
-    const auto to = ::std::u16string{ u"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto from = ::std::wstring{ L"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::u16string{ u"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
 
     ASSERT_EQ(
         ::uns::string::cast<decltype(to)>(from)
@@ -279,8 +279,8 @@ TEST(StringCasts, WU16Test) {
     );
 };
 TEST(StringCasts, WWTest) {
-    const auto from = ::std::wstring{ L"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
-    const auto to = ::std::wstring{ L"ABCD efgh !@#% \u304CАБВГдеёжзик_" };
+    const auto from = ::std::wstring{ L"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
+    const auto to = ::std::wstring{ L"ABCD efgh !@\uD7FF\uE000#% \u304CАБВГдеёжзик_" };
 
     ASSERT_EQ(
         ::uns::string::cast<decltype(to)>(from)
@@ -304,17 +304,83 @@ namespace uns::tests::string::casts {
 };
 
 template<::uns::is_basic_string string_t>
-class ForwardCrossStringCasts : public ::testing::Test {};
+class CrossStringCastsForward : public ::testing::Test {};
 
-TYPED_TEST_CASE(ForwardCrossStringCasts, ::uns::tests::string::casts::types_list);
+TYPED_TEST_CASE(CrossStringCastsForward, ::uns::tests::string::casts::types_list);
 
-TYPED_TEST(ForwardCrossStringCasts, IdenticalTest) {
+TYPED_TEST(CrossStringCastsForward, IdenticalTest) {
     ASSERT_TRUE(
         ::uns::tests::string::casts::testphrase == ::uns::string::cast<::std::u32string>(
             ::uns::string::cast<TypeParam>(::uns::tests::string::casts::testphrase)
         )
     );
 };
+
+namespace uns::testing {
+
+    class letter_casts : public ::testing::TestWithParam<char32_t> {
+    public:
+        using elem_type = char32_t;
+        using string_type = ::std::u32string;
+    public:
+        static string_type compose(const elem_type& Elem) {
+            return string_type{ Elem };
+        };
+        static ::std::string to_string(const elem_type& Elem) {
+            return ::testing::PrintToString(compose(Elem));
+        };
+    };
+
+};
+
+
+template<>
+::std::string testing::PrintToString(const ::uns::testing::letter_casts::elem_type& Elem) {
+    return ::uns::testing::letter_casts::to_string(Elem);
+};
+
+using NarrowLetterCasts = ::uns::testing::letter_casts;
+TEST_P(NarrowLetterCasts, U8Tests) {
+    ASSERT_TRUE(
+        compose(GetParam()) == ::uns::string::cast<::std::u32string>(
+            ::uns::string::cast<::std::u8string>(compose(GetParam()))
+        )
+    );
+};
+TEST_P(NarrowLetterCasts, STests) {
+    ASSERT_TRUE(
+        compose(GetParam()) == ::uns::string::cast<::std::u32string>(
+            ::uns::string::cast<::std::string>(compose(GetParam()))
+        )
+    );
+};
+
+INSTANTIATE_TEST_CASE_P(LetterCasts, NarrowLetterCasts,
+    ::testing::Range<char32_t>(0x0001, 0xFFFF)
+);
+
+using WideLetterCasts = ::uns::testing::letter_casts;
+TEST_P(WideLetterCasts, U16Tests) {
+    ASSERT_TRUE(
+        compose(GetParam()) == ::uns::string::cast<::std::u32string>(
+            ::uns::string::cast<::std::u16string>(compose(GetParam()))
+        )
+    );
+};
+TEST_P(WideLetterCasts, WTests) {
+    ASSERT_TRUE(
+        compose(GetParam()) == ::uns::string::cast<::std::u32string>(
+            ::uns::string::cast<::std::wstring>(compose(GetParam()))
+        )
+    );
+};
+
+INSTANTIATE_TEST_CASE_P(LowerLetterCasts, WideLetterCasts,
+    ::testing::Range<char32_t>(0x0001, 0xD7FF)
+);
+INSTANTIATE_TEST_CASE_P(UpperLetterCasts, WideLetterCasts,
+    ::testing::Range<char32_t>(0xE000, 0xFFFF)
+);
 
 
 UNS_RENUM(correct, int,
@@ -2410,20 +2476,20 @@ TEST_P(SinglePrecisionFloatingPointCastsU32, BackwardCastTest) {
 
 INSTANTIATE_TEST_CASE_P(NumericTests, SinglePrecisionFloatingPointCastsU32,
     ::testing::Values(
-        SinglePrecisionFloatingPointCastsU32::make(U"3.14159", 3.14159, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU32::make(U"2.71828", 2.71828, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU32::make(U"6.62607e-34", 6.62607e-34, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU32::make(U"-6.02214e+23", -6.02214e23, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU32::elem_type{ U"0.0", 0.0, ::correct::yes, U"0"}
-        , SinglePrecisionFloatingPointCastsU32::make(U"1.012", 1.012, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU32::make(U"10.423", 10.423, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU32::make(U"-8.8", -8.8, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU32::elem_type{ U"789.0e-12", 789.0e-12, ::correct::yes, U"7.89e-10" }
-        , SinglePrecisionFloatingPointCastsU32::make(U"-10.01234", -10.01234, ::correct::yes)
+        SinglePrecisionFloatingPointCastsU32::make(U"3.14159", 3.14159f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU32::make(U"2.71828", 2.71828f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU32::make(U"6.62607e-34", 6.62607e-34f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU32::make(U"-6.02214e+23", -6.02214e23f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU32::elem_type{ U"0.0", 0.0f, ::correct::yes, U"0"}
+        , SinglePrecisionFloatingPointCastsU32::make(U"1.012", 1.012f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU32::make(U"10.423", 10.423f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU32::make(U"-8.8", -8.8f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU32::elem_type{ U"789.0e-12", 789.0e-12f, ::correct::yes, U"7.89e-10" }
+        , SinglePrecisionFloatingPointCastsU32::make(U"-10.01234", -10.01234f, ::correct::yes)
         , SinglePrecisionFloatingPointCastsU32::make(U"0.7", 0.7, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU32::elem_type{ U"452.0", 452.0, ::correct::yes, U"452" }
-        , SinglePrecisionFloatingPointCastsU32::elem_type{ U"-1744.0", -1744.0, ::correct::yes, U"-1744" }
-        , SinglePrecisionFloatingPointCastsU32::elem_type{ U"12.0", 12.0, ::correct::yes, U"12" }
+        , SinglePrecisionFloatingPointCastsU32::elem_type{ U"452.0", 452.0f, ::correct::yes, U"452" }
+        , SinglePrecisionFloatingPointCastsU32::elem_type{ U"-1744.0", -1744.0f, ::correct::yes, U"-1744" }
+        , SinglePrecisionFloatingPointCastsU32::elem_type{ U"12.0", 12.0f, ::correct::yes, U"12" }
     )
 );
 
@@ -2522,20 +2588,20 @@ TEST_P(SinglePrecisionFloatingPointCastsS, BackwardCastTest) {
 
 INSTANTIATE_TEST_CASE_P(NumericTests, SinglePrecisionFloatingPointCastsS,
     ::testing::Values(
-        SinglePrecisionFloatingPointCastsS::make("3.14159", 3.14159, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsS::make("2.71828", 2.71828, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsS::make("6.62607e-34", 6.62607e-34, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsS::make("-6.02214e+23", -6.02214e23, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsS::elem_type{ "0.0", 0.0, ::correct::yes, "0" }
-        , SinglePrecisionFloatingPointCastsS::make("1.012", 1.012, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsS::make("10.423", 10.423, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsS::make("-8.8", -8.8, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsS::elem_type{ "789.0e-12", 789.0e-12, ::correct::yes, "7.89e-10" }
-        , SinglePrecisionFloatingPointCastsS::make("-10.01234", -10.01234, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsS::make("0.7", 0.7, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsS::elem_type{ "452.0", 452.0, ::correct::yes, "452" }
-        , SinglePrecisionFloatingPointCastsS::elem_type{ "-1744.0", -1744.0, ::correct::yes, "-1744" }
-        , SinglePrecisionFloatingPointCastsS::elem_type{ "12.0", 12.0, ::correct::yes, "12" }
+        SinglePrecisionFloatingPointCastsS::make("3.14159", 3.14159f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsS::make("2.71828", 2.71828f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsS::make("6.62607e-34", 6.62607e-34f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsS::make("-6.02214e+23", -6.02214e23f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsS::elem_type{ "0.0", 0.0f, ::correct::yes, "0" }
+        , SinglePrecisionFloatingPointCastsS::make("1.012", 1.012f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsS::make("10.423", 10.423f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsS::make("-8.8", -8.8f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsS::elem_type{ "789.0e-12", 789.0e-12f, ::correct::yes, "7.89e-10" }
+        , SinglePrecisionFloatingPointCastsS::make("-10.01234", -10.01234f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsS::make("0.7", 0.7f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsS::elem_type{ "452.0", 452.0f, ::correct::yes, "452" }
+        , SinglePrecisionFloatingPointCastsS::elem_type{ "-1744.0", -1744.0f, ::correct::yes, "-1744" }
+        , SinglePrecisionFloatingPointCastsS::elem_type{ "12.0", 12.0f, ::correct::yes, "12" }
     )
 );
 
@@ -2634,20 +2700,20 @@ TEST_P(SinglePrecisionFloatingPointCastsU8, BackwardCastTest) {
 
 INSTANTIATE_TEST_CASE_P(NumericTests, SinglePrecisionFloatingPointCastsU8,
     ::testing::Values(
-        SinglePrecisionFloatingPointCastsU8::make(u8"3.14159", 3.14159, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU8::make(u8"2.71828", 2.71828, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU8::make(u8"6.62607e-34", 6.62607e-34, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU8::make(u8"-6.02214e+23", -6.02214e23, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU8::elem_type{ u8"0.0", 0.0, ::correct::yes, u8"0" }
-        , SinglePrecisionFloatingPointCastsU8::make(u8"1.012", 1.012, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU8::make(u8"10.423", 10.423, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU8::make(u8"-8.8", -8.8, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU8::elem_type{ u8"789.0e-12", 789.0e-12, ::correct::yes, u8"7.89e-10" }
-        , SinglePrecisionFloatingPointCastsU8::make(u8"-10.01234", -10.01234, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU8::make(u8"0.7", 0.7, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU8::elem_type{ u8"452.0", 452.0, ::correct::yes, u8"452" }
-        , SinglePrecisionFloatingPointCastsU8::elem_type{ u8"-1744.0", -1744.0, ::correct::yes, u8"-1744" }
-        , SinglePrecisionFloatingPointCastsU8::elem_type{ u8"12.0", 12.0, ::correct::yes, u8"12" }
+        SinglePrecisionFloatingPointCastsU8::make(u8"3.14159", 3.14159f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU8::make(u8"2.71828", 2.71828f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU8::make(u8"6.62607e-34", 6.62607e-34f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU8::make(u8"-6.02214e+23", -6.02214e23f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU8::elem_type{ u8"0.0", 0.0f, ::correct::yes, u8"0" }
+        , SinglePrecisionFloatingPointCastsU8::make(u8"1.012", 1.012f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU8::make(u8"10.423", 10.423f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU8::make(u8"-8.8", -8.8f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU8::elem_type{ u8"789.0e-12", 789.0e-12f, ::correct::yes, u8"7.89e-10" }
+        , SinglePrecisionFloatingPointCastsU8::make(u8"-10.01234", -10.01234f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU8::make(u8"0.7", 0.7f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU8::elem_type{ u8"452.0", 452.0f, ::correct::yes, u8"452" }
+        , SinglePrecisionFloatingPointCastsU8::elem_type{ u8"-1744.0", -1744.0f, ::correct::yes, u8"-1744" }
+        , SinglePrecisionFloatingPointCastsU8::elem_type{ u8"12.0", 12.0f, ::correct::yes, u8"12" }
     )
 );
 
@@ -2746,20 +2812,20 @@ TEST_P(SinglePrecisionFloatingPointCastsU16, BackwardCastTest) {
 
 INSTANTIATE_TEST_CASE_P(NumericTests, SinglePrecisionFloatingPointCastsU16,
     ::testing::Values(
-        SinglePrecisionFloatingPointCastsU16::make(u"3.14159", 3.14159, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU16::make(u"2.71828", 2.71828, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU16::make(u"6.62607e-34", 6.62607e-34, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU16::make(u"-6.02214e+23", -6.02214e23, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU16::elem_type{ u"0.0", 0.0, ::correct::yes, u"0" }
-        , SinglePrecisionFloatingPointCastsU16::make(u"1.012", 1.012, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU16::make(u"10.423", 10.423, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU16::make(u"-8.8", -8.8, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU16::elem_type{ u"789.0e-12", 789.0e-12, ::correct::yes, u"7.89e-10" }
-        , SinglePrecisionFloatingPointCastsU16::make(u"-10.01234", -10.01234, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU16::make(u"0.7", 0.7, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsU16::elem_type{ u"452.0", 452.0, ::correct::yes, u"452" }
-        , SinglePrecisionFloatingPointCastsU16::elem_type{ u"-1744.0", -1744.0, ::correct::yes, u"-1744" }
-        , SinglePrecisionFloatingPointCastsU16::elem_type{ u"12.0", 12.0, ::correct::yes, u"12" }
+        SinglePrecisionFloatingPointCastsU16::make(u"3.14159", 3.14159f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU16::make(u"2.71828", 2.71828f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU16::make(u"6.62607e-34", 6.62607e-34f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU16::make(u"-6.02214e+23", -6.02214e23f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU16::elem_type{ u"0.0", 0.0f, ::correct::yes, u"0" }
+        , SinglePrecisionFloatingPointCastsU16::make(u"1.012", 1.012f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU16::make(u"10.423", 10.423f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU16::make(u"-8.8", -8.8f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU16::elem_type{ u"789.0e-12", 789.0e-12f, ::correct::yes, u"7.89e-10" }
+        , SinglePrecisionFloatingPointCastsU16::make(u"-10.01234", -10.01234f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU16::make(u"0.7", 0.7f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsU16::elem_type{ u"452.0", 452.0f, ::correct::yes, u"452" }
+        , SinglePrecisionFloatingPointCastsU16::elem_type{ u"-1744.0", -1744.0f, ::correct::yes, u"-1744" }
+        , SinglePrecisionFloatingPointCastsU16::elem_type{ u"12.0", 12.0f, ::correct::yes, u"12" }
     )
 );
 
@@ -2858,20 +2924,20 @@ TEST_P(SinglePrecisionFloatingPointCastsW, BackwardCastTest) {
 
 INSTANTIATE_TEST_CASE_P(NumericTests, SinglePrecisionFloatingPointCastsW,
     ::testing::Values(
-        SinglePrecisionFloatingPointCastsW::make(L"3.14159", 3.14159, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsW::make(L"2.71828", 2.71828, ::correct::yes)
+        SinglePrecisionFloatingPointCastsW::make(L"3.14159", 3.14159f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsW::make(L"2.71828", 2.71828f, ::correct::yes)
         , SinglePrecisionFloatingPointCastsW::make(L"6.62607e-34", 6.62607e-34, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsW::make(L"-6.02214e+23", -6.02214e23, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsW::elem_type{ L"0.0", 0.0, ::correct::yes, L"0" }
-        , SinglePrecisionFloatingPointCastsW::make(L"1.012", 1.012, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsW::make(L"10.423", 10.423, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsW::make(L"-8.8", -8.8, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsW::elem_type{ L"789.0e-12", 789.0e-12, ::correct::yes, L"7.89e-10" }
-        , SinglePrecisionFloatingPointCastsW::make(L"-10.01234", -10.01234, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsW::make(L"0.7", 0.7, ::correct::yes)
-        , SinglePrecisionFloatingPointCastsW::elem_type{ L"452.0", 452.0, ::correct::yes, L"452" }
-        , SinglePrecisionFloatingPointCastsW::elem_type{ L"-1744.0", -1744.0, ::correct::yes, L"-1744" }
-        , SinglePrecisionFloatingPointCastsW::elem_type{ L"12.0", 12.0, ::correct::yes, L"12" }
+        , SinglePrecisionFloatingPointCastsW::make(L"-6.02214e+23", -6.02214e23f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsW::elem_type{ L"0.0", 0.0f, ::correct::yes, L"0" }
+        , SinglePrecisionFloatingPointCastsW::make(L"1.012", 1.012f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsW::make(L"10.423", 10.423f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsW::make(L"-8.8", -8.8f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsW::elem_type{ L"789.0e-12", 789.0e-12f, ::correct::yes, L"7.89e-10" }
+        , SinglePrecisionFloatingPointCastsW::make(L"-10.01234", -10.01234f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsW::make(L"0.7", 0.7f, ::correct::yes)
+        , SinglePrecisionFloatingPointCastsW::elem_type{ L"452.0", 452.0f, ::correct::yes, L"452" }
+        , SinglePrecisionFloatingPointCastsW::elem_type{ L"-1744.0", -1744.0f, ::correct::yes, L"-1744" }
+        , SinglePrecisionFloatingPointCastsW::elem_type{ L"12.0", 12.0f, ::correct::yes, L"12" }
     )
 );
 
