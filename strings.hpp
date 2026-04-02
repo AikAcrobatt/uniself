@@ -602,8 +602,8 @@ namespace uns::string {
         };
         template<::uns::is_basic_string string_t>
         bool seeker_pos(
-            const string_t& target              //target string
-            , typename string_t::const_iterator& seeker              //positioning seeker
+            const string_t&                         target              //target string
+            , typename string_t::const_iterator&    seeker              //positioning seeker
             , const typename string_t::const_iterator first_mark        //first mark at the target string, relatively to what the seeker should be positioned
             , const typename string_t::const_iterator last_mark         // last mark at the target string, relatively to what the seeker should be positioned
             , const bool                            from_begin          //if true, this flag indicates that seekers new position must be done relative to the first mark of positioning, false - if relative to the last mark
@@ -623,8 +623,8 @@ namespace uns::string {
         };
         template<::uns::is_basic_string string_t>
         bool seeker_pos(
-            const string_t& target              //target string
-            , typename string_t::const_iterator& seeker              //positioning seeker
+            const string_t&                         target              //target string
+            , typename string_t::const_iterator&    seeker              //positioning seeker
             , const typename string_t::const_iterator first_mark        //first mark at the target string, relatively to what the seeker should be positioned
             , const typename string_t::const_iterator last_mark         // last mark at the target string, relatively to what the seeker should be positioned
             , const bool                            from_begin          //if true, this flag indicates that seekers new position must be done relative to the first mark of positioning, false - if relative to the last mark
