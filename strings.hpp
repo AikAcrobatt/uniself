@@ -559,7 +559,7 @@ namespace uns::string {
     };
 
 
-    namespace parse {
+    namespace parsing {
 
         struct seeker_position {
             enum sample_relative {
@@ -581,7 +581,7 @@ namespace uns::string {
                 , typename string_t::const_iterator&        Seeker          //positioning Seeker
                 , const typename string_t::const_iterator   SampleBegin     //first mark at the Source string, relatively to what the Seeker should be positioned
                 , const typename string_t::const_iterator   SampleEnd       // last mark at the Source string, relatively to what the Seeker should be positioned
-                , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+                , const ::uns::string::parsing::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
                 , const typename string_t::const_iterator   LimiterBegin    //position of the first symbol of the right border, that serves as the limit for the SampleBegin
                 , const typename string_t::const_iterator   LimiterEnd      //position of the last symbol of the right border, that serves as the limit for Seeker positioning from the right
             ) {
@@ -594,13 +594,13 @@ namespace uns::string {
                 if (SampleBegin == Source.cend()) { return false; };
                 if (LimiterBegin != Source.cend() && SampleBegin > LimiterBegin) { return false; };
 
-                typename string_t::const_iterator pivot_point Source.cend();
+                auto pivot_point = Source.cend();
                 switch (SeekerTargetPosition.qualifier) {
-                    case ::uns::string::parse::seeker_position::from_begin: {
+                    case ::uns::string::parsing::seeker_position::from_begin: {
                         pivot_point = SampleBegin;
                         break;
                     }
-                    case ::uns::string::parse::seeker_position::from_end: {
+                    case ::uns::string::parsing::seeker_position::from_end: {
                         pivot_point = SampleEnd;
                         break;
                     }
@@ -662,12 +662,13 @@ namespace uns::string {
             for (auto sample = Samples.cbegin(); sample != Samples.cend(); ++sample) {
                 if (sample->empty()) { continue; };
                 if (
-                    auto sample_seeker = ::uns::string::parse::auxiliary::find<string_t>(
+                    auto sample_seeker = ::uns::string::parsing::auxiliary::find<string_t>(
                         Source
                         , seeker_pos
-                        , sample
+                        , *sample
                     );
                     sample_seeker != Source.cend()
+                    && sample_seeker < found
                 ) {
                     found = sample_seeker;
                     FoundSample = sample;
@@ -686,7 +687,7 @@ namespace uns::string {
             , const collection_t&                       Samples         //a collection of Samples wich should be found within the Source
         ) {
             auto found_sample = Samples.cend();
-            return ::uns::string::parse::find<string_t>(Source, Seeker, Samples, found_sample);
+            return ::uns::string::parsing::find<string_t>(Source, Seeker, Samples, found_sample);
         };
         template<::uns::is_basic_string string_t>
         typename string_t::const_iterator find(
@@ -697,7 +698,7 @@ namespace uns::string {
             if (Seeker == Source.cend() || Sample.empty()) return Source.cend();
             const auto seeker_pos = Seeker - Source.cbegin();
 
-            return ::uns::string::parse::auxiliary::find<string_t>(
+            return ::uns::string::parsing::auxiliary::find<string_t>(
                 Source
                 , seeker_pos
                 , Sample
@@ -710,7 +711,7 @@ namespace uns::string {
             , const string_t& Sample              //a Sample to seek within the Source
             , const unused_t& FoundSample        //an unused parameter to deliver template compatibility with a collection-of-Samples case (so it can be of any type and value)
         ) {
-            return ::uns::string::parse::find<string_t>(Source, Seeker, Sample);
+            return ::uns::string::parsing::find<string_t>(Source, Seeker, Sample);
         };*/
 
 
@@ -727,18 +728,18 @@ namespace uns::string {
             const string_t&                             Source          //Source string
             , typename string_t::const_iterator&        Seeker          //positioning Seeker
             , const collection_t&                       Samples         //a collection of Samples wich should be found within the Source (only not lefter than the initial place of the Seeker)
-            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const ::uns::string::parsing::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
             , const typename string_t::const_iterator   LimiterBegin    //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
             , const typename string_t::const_iterator   LimiterEnd      //position of the last symbol of the right border, that serves as the limit of Seeker positioning from the right
         ) noexcept {
             auto found_sample = Samples.cend();
-            const auto found_sample_pos = ::uns::string::parse::find<string_t>(Source, Seeker, Samples, found_sample);
+            const auto found_sample_pos = ::uns::string::parsing::find<string_t>(Source, Seeker, Samples, found_sample);
 
             if (found_sample_pos == Source.cend()) {
                 return false;
             };
 
-            return ::uns::string::parse::auxiliary::offset<string_t>(
+            return ::uns::string::parsing::auxiliary::offset<string_t>(
                 Source
                 , Seeker
                 , found_sample_pos
@@ -753,17 +754,17 @@ namespace uns::string {
             const string_t&                             Source          //Source string
             , typename string_t::const_iterator&        Seeker          //positioning Seeker
             , const string_t&                           Sample          //a collection of Samples wich should be found within the Source (only not lefter than the initial place of the Seeker)
-            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const ::uns::string::parsing::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
             , const typename string_t::const_iterator   LimiterBegin    //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
             , const typename string_t::const_iterator   LimiterEnd      //position of the last symbol of the right border, that serves as the limit of Seeker positioning from the right
         ) noexcept {
-            const auto found_sample_pos = ::uns::string::parse::find<string_t>(Source, Seeker, Sample);
+            const auto found_sample_pos = ::uns::string::parsing::find<string_t>(Source, Seeker, Sample);
 
             if (found_sample_pos == Source.cend()) {
                 return false;
             };
 
-            return ::uns::string::parse::auxiliary::offset<string_t>(
+            return ::uns::string::parsing::auxiliary::offset<string_t>(
                 Source
                 , Seeker
                 , found_sample_pos
@@ -781,9 +782,9 @@ namespace uns::string {
             const string_t&                             Source          //Source string
             , typename string_t::const_iterator&        Seeker          //positioning Seeker
             , const collection_t&                       Samples         //a collection of Samples wich should be found within the Source (only not lefter than the initial place of the Seeker)
-            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const ::uns::string::parsing::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
         ) noexcept {
-            return ::uns::string::parse::seek<string_t>(
+            return ::uns::string::parsing::seek<string_t>(
                 Source
                 , Seeker
                 , Samples
@@ -797,9 +798,9 @@ namespace uns::string {
             const string_t&                             Source          //Source string
             , typename string_t::const_iterator&        Seeker          //positioning Seeker
             , const string_t&                           Sample          //a collection of Samples wich should be found within the Source (only not lefter than the initial place of the Seeker)
-            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const ::uns::string::parsing::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
         ) noexcept {
-            return ::uns::string::parse::seek<string_t>(
+            return ::uns::string::parsing::seek<string_t>(
                 Source
                 , Seeker
                 , Sample
@@ -817,11 +818,11 @@ namespace uns::string {
             const string_t&                             Source          //Source string
             , typename string_t::const_iterator&        Seeker          //positioning Seeker
             , const samples_t&                          Samples         //a collection of Samples wich should be found within the Source (only not lefter than the initial place of the Seeker)
-            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const ::uns::string::parsing::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
             , const limiter_t&                          Limiters        //collection of possible right borders of seeking (the mostleft will be considered an actual right border)
         ) noexcept {
             auto actual_limiter = Limiters.cend();
-            auto const limiter_beg = ::uns::string::parse::find<string_t>(
+            auto const limiter_beg = ::uns::string::parsing::find<string_t>(
                 Source
                 , Seeker
                 , Limiters
@@ -829,7 +830,7 @@ namespace uns::string {
             );
 
             if (limiter_beg != Source.cend() && actual_limiter != Limiters.cend()) {
-                return ::uns::string::parse::seek<string_t>(
+                return ::uns::string::parsing::seek<string_t>(
                     Source
                     , Seeker
                     , Samples
@@ -839,7 +840,7 @@ namespace uns::string {
                 );
             }
             else {
-                return ::uns::string::parse::seek<string_t>(
+                return ::uns::string::parsing::seek<string_t>(
                     Source
                     , Seeker
                     , Samples
@@ -855,11 +856,11 @@ namespace uns::string {
             const string_t&                             Source          //Source string
             , typename string_t::const_iterator&        Seeker          //positioning Seeker
             , const string_t&                           Sample          //a Sample wich should be found within the Source (only not lefter than the initial place of the Seeker)
-            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const ::uns::string::parsing::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
             , const limiter_t&                          Limiters        //collection of possible right borders of seeking (the mostleft will be considered an actual right border)
         ) noexcept {
             auto actual_limiter = Limiters.cend();
-            const auto limiter_beg = ::uns::string::parse::find<string_t>(
+            const auto limiter_beg = ::uns::string::parsing::find<string_t>(
                 Source
                 , Seeker
                 , Limiters
@@ -867,7 +868,7 @@ namespace uns::string {
             );
 
             if (limiter_beg != Source.cend() && actual_limiter != Limiters.cend()) {
-                return ::uns::string::parse::seek<string_t>(
+                return ::uns::string::parsing::seek<string_t>(
                     Source
                     , Seeker
                     , Sample
@@ -877,7 +878,7 @@ namespace uns::string {
                 );
             }
             else {
-                return ::uns::string::parse::seek<string_t>(
+                return ::uns::string::parsing::seek<string_t>(
                     Source
                     , Seeker
                     , Sample
@@ -893,18 +894,18 @@ namespace uns::string {
             const string_t&                             Source          //Source string
             , typename string_t::const_iterator&        Seeker          //positioning Seeker
             , const collection_t&                       Samples         //a collection of Samples wich should be found within the Source (only not lefter than the initial place of the Seeker)
-            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const ::uns::string::parsing::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
             , const string_t&                           Limiter         //a substring-actual right border of seeking
         ) noexcept {
             if (
-                const auto limiter_beg = ::uns::string::parse::find<string_t>(
+                const auto limiter_beg = ::uns::string::parsing::find<string_t>(
                     Source
                     , Seeker
                     , Limiter
                 );
                 limiter_beg != Source.cend()
             ) {
-                return ::uns::string::parse::seek<string_t>(
+                return ::uns::string::parsing::seek<string_t>(
                     Source
                     , Seeker
                     , Samples
@@ -914,7 +915,7 @@ namespace uns::string {
                 );
             }
             else {
-                return ::uns::string::parse::seek<string_t>(
+                return ::uns::string::parsing::seek<string_t>(
                     Source
                     , Seeker
                     , Samples
@@ -927,18 +928,18 @@ namespace uns::string {
             const string_t&                             Source          //Source string
             , typename string_t::const_iterator&        Seeker          //positioning Seeker
             , const string_t&                           Sample          //a Sample wich should be found within the Source (only not lefter than the initial place of the Seeker)
-            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const ::uns::string::parsing::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
             , const string_t&                           Limiter         //a substring-actual right border of seeking
         ) noexcept {
             if (
-                const auto limiter_beg = ::uns::string::parse::find<string_t>(
+                const auto limiter_beg = ::uns::string::parsing::find<string_t>(
                     Source
                     , Seeker
                     , Limiter
                 );
                 limiter_beg != Source.cend()
             ) {
-                return ::uns::string::parse::seek<string_t>(
+                return ::uns::string::parsing::seek<string_t>(
                     Source
                     , Seeker
                     , Sample
@@ -948,7 +949,7 @@ namespace uns::string {
                 );
             }
             else {
-                return ::uns::string::parse::seek<string_t>(
+                return ::uns::string::parsing::seek<string_t>(
                     Source
                     , Seeker
                     , Sample
@@ -970,13 +971,13 @@ namespace uns::string {
             , typename string_t::const_iterator&        Seeker          //positioning Seeker
             , string_t&                                 Fragment        //a Fragment string (in case of fail, it becomes empty)
             , const collection_t&                       Delimiters      //an iterable collection of delimiting strings
-            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const ::uns::string::parsing::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
             , const typename string_t::const_iterator   LimiterBegin    //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
             , const typename string_t::const_iterator   LimiterEnd      //position of the last symbol of the right border
         ) noexcept {
             auto delimiter = Delimiters.cend();
 
-            const auto delimiter_pos = ::uns::string::parse::find<string_t>(
+            const auto delimiter_pos = ::uns::string::parsing::find<string_t>(
                 Source
                 , Seeker
                 , Delimiters
@@ -987,7 +988,7 @@ namespace uns::string {
 
             Fragment = string_t{ Seeker, delimiter_pos };
 
-            return ::uns::string::parse::auxiliary::offset<string_t>(
+            return ::uns::string::parsing::auxiliary::offset<string_t>(
                 Source
                 , Seeker
                 , delimiter_pos
@@ -1003,17 +1004,17 @@ namespace uns::string {
             , typename string_t::const_iterator&        Seeker          //positioning Seeker
             , string_t&                                 Fragment        //a Fragment string (in case of fail, it becomes empty)
             , const string_t&                           Delimiter       //delimiting string
-            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const ::uns::string::parsing::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
             , const typename string_t::const_iterator   LimiterBegin    //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
             , const typename string_t::const_iterator   LimiterEnd      //position of the last symbol of the right border
         ) noexcept {
-            const auto delimiter_pos = ::uns::string::parse::find<string_t>(Source, Seeker, Delimiter);
+            const auto delimiter_pos = ::uns::string::parsing::find<string_t>(Source, Seeker, Delimiter);
 
             if (!(delimiter_pos > Seeker && delimiter_pos < Source.cend())) return false;
 
             Fragment = string_t{ Seeker, delimiter_pos };
 
-            return ::uns::string::parse::auxiliary::offset<string_t>(
+            return ::uns::string::parsing::auxiliary::offset<string_t>(
                 Source
                 , Seeker
                 , delimiter_pos
@@ -1032,9 +1033,9 @@ namespace uns::string {
             , typename string_t::const_iterator&        Seeker          //positioning Seeker
             , string_t&                                 Fragment        //a Fragment string (in case of fail, it becomes empty)
             , const collection_t&                       Delimiters      //an iterable collection of delimiting strings
-            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const ::uns::string::parsing::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
         ) noexcept {
-            return ::uns::string::parse::read<string_t>(
+            return ::uns::string::parsing::read<string_t>(
                 Source
                 , Seeker
                 , Fragment
@@ -1050,9 +1051,9 @@ namespace uns::string {
             , typename string_t::const_iterator&        Seeker          //positioning Seeker
             , string_t&                                 Fragment        //a Fragment string (in case of fail, it becomes empty)
             , const string_t&                           Delimiter       //delimiting string
-            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const ::uns::string::parsing::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
         ) noexcept {
-            return ::uns::string::parse::read<string_t>(
+            return ::uns::string::parsing::read<string_t>(
                 Source
                 , Seeker
                 , Fragment
@@ -1072,12 +1073,12 @@ namespace uns::string {
             , typename string_t::const_iterator&        Seeker          //positioning Seeker
             , string_t&                                 Fragment        //a Fragment string (in case of fail, it becomes empty)
             , const collection_t&                       Delimiters      //an iterable collection of delimiting strings
-            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const ::uns::string::parsing::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
             , const limiter_t&                          Limiters        //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
         ) noexcept {
             auto limiter = Limiters.cend();
 
-            const auto limiter_pos = ::uns::string::parse::find<string_t>(
+            const auto limiter_pos = ::uns::string::parsing::find<string_t>(
                 Source
                 , Seeker
                 , Limiters
@@ -1085,7 +1086,7 @@ namespace uns::string {
             );
 
             if (limiter != Limiters.cend()) {
-                return ::uns::string::parse::read<string_t>(
+                return ::uns::string::parsing::read<string_t>(
                     Source
                     , Seeker
                     , Fragment
@@ -1096,7 +1097,7 @@ namespace uns::string {
                 );
             }
             else {
-                return ::uns::string::parse::read<string_t>(
+                return ::uns::string::parsing::read<string_t>(
                     Source
                     , Seeker
                     , Fragment
@@ -1114,12 +1115,12 @@ namespace uns::string {
             , typename string_t::const_iterator&        Seeker          //positioning Seeker
             , string_t&                                 Fragment        //a Fragment string (in case of fail, it becomes empty)
             , const string_t&                           Delimiter       //delimiting string
-            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const ::uns::string::parsing::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
             , const limiter_t&                          Limiters        //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
         ) noexcept {
             auto limiter = Limiters.cend();
 
-            const auto limiter_pos = ::uns::string::parse::find<string_t>(
+            const auto limiter_pos = ::uns::string::parsing::find<string_t>(
                 Source
                 , Seeker
                 , Limiters
@@ -1127,7 +1128,7 @@ namespace uns::string {
             );
 
             if (limiter != Limiters.cend()) {
-                return ::uns::string::parse::read<string_t>(
+                return ::uns::string::parsing::read<string_t>(
                     Source
                     , Seeker
                     , Fragment
@@ -1138,7 +1139,7 @@ namespace uns::string {
                 );
             }
             else {
-                return ::uns::string::parse::read<string_t>(
+                return ::uns::string::parsing::read<string_t>(
                     Source
                     , Seeker
                     , Fragment
@@ -1156,13 +1157,13 @@ namespace uns::string {
             , typename string_t::const_iterator&        Seeker          //positioning Seeker
             , string_t&                                 Fragment        //a Fragment string (in case of fail, it becomes empty)
             , const collection_t&                       Delimiters      //an iterable collection of delimiting strings
-            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const ::uns::string::parsing::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
             , const string_t&                           Limiter         //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
         ) noexcept {
-            const auto limiter_pos = ::uns::string::parse::find<string_t>(Source, Seeker, Limiter);
+            const auto limiter_pos = ::uns::string::parsing::find<string_t>(Source, Seeker, Limiter);
 
             if (limiter_pos != Source.cend()) {
-                return ::uns::string::parse::read<string_t>(
+                return ::uns::string::parsing::read<string_t>(
                     Source
                     , Seeker
                     , Fragment
@@ -1173,7 +1174,7 @@ namespace uns::string {
                 );
             }
             else {
-                return ::uns::string::parse::read<string_t>(
+                return ::uns::string::parsing::read<string_t>(
                     Source
                     , Seeker
                     , Fragment
@@ -1188,17 +1189,17 @@ namespace uns::string {
             , typename string_t::const_iterator&        Seeker          //positioning Seeker
             , string_t&                                 Fragment        //a Fragment string (in case of fail, it becomes empty)
             , const string_t&                           Delimiter       //delimiting string
-            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const ::uns::string::parsing::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
             , const string_t&                           Limiter         //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
         ) noexcept {
-            const auto limiter_pos = ::uns::string::parse::find<string_t>(
+            const auto limiter_pos = ::uns::string::parsing::find<string_t>(
                 Source
                 , Seeker
                 , Limiter
             );
 
             if (limiter_pos != Source.cend()) {
-                return ::uns::string::parse::read<string_t>(
+                return ::uns::string::parsing::read<string_t>(
                     Source
                     , Seeker
                     , Fragment
@@ -1209,7 +1210,7 @@ namespace uns::string {
                 );
             }
             else {
-                return ::uns::string::parse::read<string_t>(
+                return ::uns::string::parsing::read<string_t>(
                     Source
                     , Seeker
                     , Fragment

@@ -3545,7 +3545,7 @@ template<
     , ::std::integral shift2_t
     , ::std::integral shift3_t
 >
-class SeekerMethods : public ::testing::TestWithParam<
+class ParsingMethods : public ::testing::TestWithParam<
     ::std::tuple<
         string_t
         , shift1_t
@@ -3585,7 +3585,7 @@ public:
 };
 
 
-class SeekerFindU32 : public ::SeekerMethods<
+class FindU32 : public ::ParsingMethods<
     ::std::u32string
     , typename ::std::iterator_traits<typename ::std::u32string::const_iterator>::difference_type
     , typename ::std::iterator_traits<typename ::std::u32string::const_iterator>::difference_type
@@ -3620,17 +3620,17 @@ public:
 };
 
 template<>
-::std::string testing::PrintToString(const ::SeekerFindU32::elem_type& Elem) {
-    return ::SeekerFindU32::to_string(Elem);
+::std::string testing::PrintToString(const ::FindU32::elem_type& Elem) {
+    return ::FindU32::to_string(Elem);
 };
 
-TEST_P(SeekerFindU32, FindSamples) {
-    using TestCaseFixture = SeekerFindU32;
+TEST_P(FindU32, FindSamples) {
+    using TestCaseFixture = FindU32;
 
     auto found_sample = samples.cend();
     const auto seeker = target.cbegin() + ::std::get<TestCaseFixture::shift1>(GetParam());
 
-    const auto result = ::uns::string::parse::find(
+    const auto result = ::uns::string::parsing::find(
         target
         , seeker
         , samples
@@ -3645,30 +3645,30 @@ TEST_P(SeekerFindU32, FindSamples) {
     );
 };
 
-INSTANTIATE_TEST_CASE_P(SeekerMethodsTests, SeekerFindU32,
+INSTANTIATE_TEST_CASE_P(ParsingMethodsTests, FindU32,
     ::testing::Values(
-        ::SeekerFindU32::make(0, 4, 0)
-        , ::SeekerFindU32::make(1, 4, 0)
-        , ::SeekerFindU32::make(2, 4, 0)
-        , ::SeekerFindU32::make(3, 4, 0)
-        , ::SeekerFindU32::make(4, 4, 0)
-        , ::SeekerFindU32::make(5, 10, 1)
-        , ::SeekerFindU32::make(6, 10, 1)
-        , ::SeekerFindU32::make(7, 10, 1)
-        , ::SeekerFindU32::make(8, 10, 1)
-        , ::SeekerFindU32::make(9, 10, 1)
-        , ::SeekerFindU32::make(10, 10, 1)
-        , ::SeekerFindU32::make(11, 16, 3)
-        , ::SeekerFindU32::make(12, 16, 3)
-        , ::SeekerFindU32::make(13, 16, 3)
-        , ::SeekerFindU32::make(14, 16, 3)
-        , ::SeekerFindU32::make(15, 16, 3)
-        , ::SeekerFindU32::make(16, 16, 3)
+        ::FindU32::make(0, 4, 0)
+        , ::FindU32::make(1, 4, 0)
+        , ::FindU32::make(2, 4, 0)
+        , ::FindU32::make(3, 4, 0)
+        , ::FindU32::make(4, 4, 0)
+        , ::FindU32::make(5, 10, 1)
+        , ::FindU32::make(6, 10, 1)
+        , ::FindU32::make(7, 10, 1)
+        , ::FindU32::make(8, 10, 1)
+        , ::FindU32::make(9, 10, 1)
+        , ::FindU32::make(10, 10, 1)
+        , ::FindU32::make(11, 16, 3)
+        , ::FindU32::make(12, 16, 3)
+        , ::FindU32::make(13, 16, 3)
+        , ::FindU32::make(14, 16, 3)
+        , ::FindU32::make(15, 16, 3)
+        , ::FindU32::make(16, 16, 3)
     )
 );
 
 
-class SeekerFindU8 : public ::SeekerMethods<
+class FindU8 : public ::ParsingMethods<
     ::std::u8string
     , typename ::std::iterator_traits<typename ::std::u8string::const_iterator>::difference_type
     , typename ::std::iterator_traits<typename ::std::u8string::const_iterator>::difference_type
@@ -3703,18 +3703,18 @@ public:
 };
 
 template<>
-::std::string testing::PrintToString(const ::SeekerFindU8::elem_type& Elem) {
-    return ::SeekerFindU8::to_string(Elem);
+::std::string testing::PrintToString(const ::FindU8::elem_type& Elem) {
+    return ::FindU8::to_string(Elem);
 };
 
 
-TEST_P(SeekerFindU8, FindSamples) {
-    using TestCaseFixture = SeekerFindU8;
+TEST_P(FindU8, FindSamples) {
+    using TestCaseFixture = FindU8;
 
     auto found_sample = samples.cend();
     const auto seeker = target.cbegin() + ::std::get<TestCaseFixture::shift1>(GetParam());
 
-    const auto result = ::uns::string::parse::find(
+    const auto result = ::uns::string::parsing::find(
         target
         , seeker
         , samples
@@ -3729,28 +3729,28 @@ TEST_P(SeekerFindU8, FindSamples) {
     );
 };
 
-INSTANTIATE_TEST_CASE_P(SeekerMethodsTests, SeekerFindU8,
+INSTANTIATE_TEST_CASE_P(ParsingMethodsTests, FindU8,
     ::testing::Values(
-        ::SeekerFindU8::make(0, 3, 0)
-        , ::SeekerFindU8::make(1, 3, 0)
-        , ::SeekerFindU8::make(2, 3, 0)
-        , ::SeekerFindU8::make(3, 3, 0)
-        , ::SeekerFindU8::make(4, 8, 1)
-        , ::SeekerFindU8::make(5, 8, 1)
-        , ::SeekerFindU8::make(6, 8, 1)
-        , ::SeekerFindU8::make(7, 8, 1)
-        , ::SeekerFindU8::make(8, 8, 1)
-        , ::SeekerFindU8::make(9, 14, 3)
-        , ::SeekerFindU8::make(10, 14, 3)
-        , ::SeekerFindU8::make(11, 14, 3)
-        , ::SeekerFindU8::make(12, 14, 3)
-        , ::SeekerFindU8::make(13, 14, 3)
-        , ::SeekerFindU8::make(14, 14, 3)
+        ::FindU8::make(0, 3, 0)
+        , ::FindU8::make(1, 3, 0)
+        , ::FindU8::make(2, 3, 0)
+        , ::FindU8::make(3, 3, 0)
+        , ::FindU8::make(4, 8, 1)
+        , ::FindU8::make(5, 8, 1)
+        , ::FindU8::make(6, 8, 1)
+        , ::FindU8::make(7, 8, 1)
+        , ::FindU8::make(8, 8, 1)
+        , ::FindU8::make(9, 14, 3)
+        , ::FindU8::make(10, 14, 3)
+        , ::FindU8::make(11, 14, 3)
+        , ::FindU8::make(12, 14, 3)
+        , ::FindU8::make(13, 14, 3)
+        , ::FindU8::make(14, 14, 3)
     )
 );
 
 
-class SeekerSetU32 : public ::SeekerMethods<
+class SeekU32 : public ::ParsingMethods<
     ::std::u32string
     , typename ::std::iterator_traits<typename ::std::u32string::const_iterator>::difference_type
     , typename ::std::iterator_traits<typename ::std::u32string::const_iterator>::difference_type
@@ -3759,17 +3759,19 @@ class SeekerSetU32 : public ::SeekerMethods<
 public:
     using samples_collection_type = ::std::vector<::std::u32string>;
 public:
-    inline static samples_collection_type samples;
-    inline static string_type equality = U" = ";
-    inline static string_type target = U"start:some_key1" + equality + U"some_val1; некий_ключ2" + equality + U"некое_значение2; some_key3" + equality + U"some_val3; xvx";
-public:
-    static void SetUpTestCase() {
-        samples = {
-            U"some_key1"
-            , U"некий_ключ2"
-            , U"some_key3"
-        };
+    inline static samples_collection_type samples = {
+        U"some_key1"
+        , U"некий_ключ2"
+        , U"ani_clue3"
     };
+    inline static samples_collection_type values = {
+        U"SOME_VAL1"
+        , U"некое_значение2"
+        , U"ani_mean3"
+    };
+    inline static string_type equality = U" = ";
+    inline static string_type target = U"start:" + samples[0] + equality + values[0] + U"; " + samples[1] + equality + values[1] + U"; " + samples[2] + equality + values[2] + U"; " + U"xvx";
+public:
     static elem_type make(
         shift1_type shift1
         , shift2_type shift2
@@ -3784,121 +3786,134 @@ public:
     };
 };
 
-TEST_P(SeekerSetU32, RepresentativeTests) {
-    const auto sample = ::std::get<::SeekerSetU32::elem_part::sample>(GetParam());
-    auto seeker = target.cbegin() + ::std::get<::SeekerSetU32::elem_part::shift1>(GetParam());
-    const auto rborder_beg = target.cbegin() + ::std::get<::SeekerSetU32::elem_part::shift2>(GetParam());
-    const auto rborder_end = target.cbegin() + ::std::get<::SeekerSetU32::elem_part::shift3>(GetParam());
+TEST_P(SeekU32, RepresentativeTests) {
+    const auto sample = ::std::get<::SeekU32::elem_part::sample>(GetParam());
+    auto seeker = target.cbegin() + ::std::get<::SeekU32::elem_part::shift1>(GetParam());
+    auto limiter_beg = target.cbegin() + ::std::get<::SeekU32::elem_part::shift2>(GetParam());
+    auto limiter_end = target.cbegin() + ::std::get<::SeekU32::elem_part::shift3>(GetParam());
+    if (limiter_end < limiter_beg) {
+        ::std::swap(limiter_end, limiter_beg);
+    };
 
-    auto pos_of_key = ::uns::string::parse::find(target, target.begin(), sample);
+    auto pos_of_key = ::uns::string::parsing::find(target, target.begin(), sample);
 
     auto seeking_result =
         pos_of_key != target.cend()
         && (seeker <= pos_of_key)
-        && (pos_of_key + sample.size() + equality.size() <= rborder_end)
-        && (pos_of_key <= rborder_beg);
+        && (pos_of_key + sample.size() + equality.size() <= limiter_end)
+        && (pos_of_key <= limiter_beg);
 
     const auto seeker_before_seeking = seeker;
     ASSERT_EQ(
         seeking_result
-        , ::uns::string::parse::seek<::SeekerSetU32::string_type>(
+        , ::uns::string::parsing::seek<::SeekU32::string_type>(
             target
             , seeker
             , samples
-            , false
-            , -4
-            , rborder_beg
-            , rborder_end
+            , {
+                .qualifier = ::uns::string::parsing::seeker_position::from_end
+                , .offset = static_cast<int>(equality.size()) + 1
+            }
+            , limiter_beg
+            , limiter_end
         )
     ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+        << "; sample=" << ::testing::PrintToString(sample)
         << "; pos_of_key=" << (pos_of_key - target.cbegin())
         << "; sample.size()=" << sample.size()
         << "; equality.size()=" << equality.size()
-        << "; seeker=" << (seeker - target.cbegin());
+        << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
+        << "; seeker=" << (seeker_before_seeking - target.cbegin())
+        << "; limiter=" << ::testing::PrintToString(::std::u32string{ limiter_beg, limiter_end });
 
     if (seeking_result) {
         ASSERT_EQ(
             pos_of_key + sample.size() + equality.size()
             , seeker
         ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+            << "; sample=" << ::testing::PrintToString(sample)
             << "; pos_of_key=" << (pos_of_key - target.cbegin())
             << "; sample.size()=" << sample.size()
             << "; equality.size()=" << equality.size()
-            << "; seeker=" << (seeker - target.cbegin());
+            << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
+            << "; seeker=" << (seeker_before_seeking - target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(::std::u32string{ limiter_beg, limiter_end });
     }
     else {
         ASSERT_EQ(
             seeker_before_seeking
             , seeker
         ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+            << "; sample=" << ::testing::PrintToString(sample)
             << "; pos_of_key=" << (pos_of_key - target.cbegin())
             << "; sample.size()=" << sample.size()
             << "; equality.size()=" << equality.size()
             << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
-            << "; seeker=" << (seeker - target.cbegin());
+            << "; seeker=" << (seeker_before_seeking - target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(::std::u32string{ limiter_beg, limiter_end });
     };
 
 };
 
-INSTANTIATE_TEST_CASE_P(SeekerMethodsTests_Key0, SeekerSetU32,
+INSTANTIATE_TEST_CASE_P(ParsingMethodsTests_Key0, SeekU32,
     ::testing::Combine(
         ::testing::Values(::std::u32string{ U"some_key1" })
         , ::testing::Values(0, 3, 6)
         , ::testing::Range<
-            ::SeekerSetU32::shift2_type
-            , ::SeekerSetU32::shift2_type
-        >(0, ::SeekerSetU32::target.size(), 5)
+            ::SeekU32::shift2_type
+            , ::SeekU32::shift2_type
+        >(0, ::SeekU32::target.size(), 5)
         , ::testing::Range<
-            ::SeekerSetU32::shift3_type
-            , ::SeekerSetU32::shift3_type
-        >(0, ::SeekerSetU32::target.size(), 5)
+            ::SeekU32::shift3_type
+            , ::SeekU32::shift3_type
+        >(0, ::SeekU32::target.size(), 5)
     )
 );
-INSTANTIATE_TEST_CASE_P(SeekerMethodsTests_Key1, SeekerSetU32,
+INSTANTIATE_TEST_CASE_P(ParsingMethodsTests_Key1, SeekU32,
     ::testing::Combine(
         ::testing::Values(::std::u32string{ U"некий_ключ2" })
         , ::testing::Values(7, 20, 28, 29)
         , ::testing::Range<
-            ::SeekerSetU32::shift2_type
-            , ::SeekerSetU32::shift2_type
-        >(0, ::SeekerSetU32::target.size(), 5)
+            ::SeekU32::shift2_type
+            , ::SeekU32::shift2_type
+        >(0, ::SeekU32::target.size(), 5)
         , ::testing::Range<
-            ::SeekerSetU32::shift3_type
-            , ::SeekerSetU32::shift3_type
-        >(0, ::SeekerSetU32::target.size(), 5)
+            ::SeekU32::shift3_type
+            , ::SeekU32::shift3_type
+        >(0, ::SeekU32::target.size(), 5)
     )
 );
-INSTANTIATE_TEST_CASE_P(SeekerMethodsTests_Key2, SeekerSetU32,
+INSTANTIATE_TEST_CASE_P(ParsingMethodsTests_Key2, SeekU32,
     ::testing::Combine(
-        ::testing::Values(::std::u32string{ U"some_key3" })
+        ::testing::Values(::std::u32string{ U"ani_clue3" })
         , ::testing::Values(30, 40, 50, 60)
         , ::testing::Range<
-            ::SeekerSetU32::shift2_type
-            , ::SeekerSetU32::shift2_type
-        >(0, ::SeekerSetU32::target.size(), 5)
+            ::SeekU32::shift2_type
+            , ::SeekU32::shift2_type
+        >(0, ::SeekU32::target.size(), 5)
         , ::testing::Range<
-            ::SeekerSetU32::shift3_type
-            , ::SeekerSetU32::shift3_type
-        >(0, ::SeekerSetU32::target.size(), 5)
+            ::SeekU32::shift3_type
+            , ::SeekU32::shift3_type
+        >(0, ::SeekU32::target.size(), 5)
     )
 );
-INSTANTIATE_TEST_CASE_P(SeekerMethodsTests_Key3, SeekerSetU32,
+INSTANTIATE_TEST_CASE_P(ParsingMethodsTests_Key3, SeekU32,
     ::testing::Combine(
         ::testing::Values(::std::u32string{ U"false_key" })
         , ::testing::Values(61, 70)
         , ::testing::Range<
-            ::SeekerSetU32::shift2_type
-            , ::SeekerSetU32::shift2_type
-        >(0, ::SeekerSetU32::target.size(), 5)
+            ::SeekU32::shift2_type
+            , ::SeekU32::shift2_type
+        >(0, ::SeekU32::target.size(), 5)
         , ::testing::Range<
-            ::SeekerSetU32::shift3_type
-            , ::SeekerSetU32::shift3_type
-        >(0, ::SeekerSetU32::target.size(), 5)
+            ::SeekU32::shift3_type
+            , ::SeekU32::shift3_type
+        >(0, ::SeekU32::target.size(), 5)
     )
 );
 
 
-class SeekerSetU8 : public ::SeekerMethods<
+class SeekU8 : public ::ParsingMethods<
     ::std::u8string
     , typename ::std::iterator_traits<typename ::std::u8string::const_iterator>::difference_type
     , typename ::std::iterator_traits<typename ::std::u8string::const_iterator>::difference_type
@@ -3907,17 +3922,19 @@ class SeekerSetU8 : public ::SeekerMethods<
 public:
     using samples_collection_type = ::std::vector<::std::u8string>;
 public:
-    inline static samples_collection_type samples;
-    inline static string_type equality = u8" = ";
-    inline static string_type target = u8"start:some_key1" + equality + u8"SOME_VAL1; некий_ключ2" + equality + u8"некое_значение2; ani_clue3" + equality + u8"ani_mean3; xvx";
-public:
-    static void SetUpTestCase() {
-        samples = {
-            u8"some_key1"
-            , u8"некий_ключ2"
-            , u8"ani_clue3"
-        };
+    inline static samples_collection_type samples = {
+        u8"some_key1"
+        , u8"некий_ключ2"
+        , u8"ani_clue3"
     };
+    inline static samples_collection_type values = {
+        u8"SOME_VAL1"
+        , u8"некое_значение2"
+        , u8"ani_mean3"
+    };
+    inline static string_type equality = u8" = ";
+    inline static string_type target = u8"start:" + samples[0] + equality + values[0] + u8"; " + samples[1] + equality + values[1] + u8"; " + samples[2] + equality + values[2] + u8"; " + u8"xvx";
+public:
     static elem_type make(
         shift1_type shift1
         , shift2_type shift2
@@ -3932,141 +3949,161 @@ public:
     };
 };
 
-TEST_P(SeekerSetU8, SamplesExplicitRightBorders) {
-    const auto sample = ::std::get<::SeekerSetU8::elem_part::sample>(GetParam());
-    auto seeker = target.cbegin() + ::std::get<::SeekerSetU8::elem_part::shift1>(GetParam());
-    const auto rborder_beg = target.cbegin() + (
-        ::std::get<::SeekerSetU8::elem_part::shift2>(GetParam())
-        <= ::std::get<::SeekerSetU8::elem_part::shift3>(GetParam())
-        ? ::std::get<::SeekerSetU8::elem_part::shift2>(GetParam())
-        : ::std::get<::SeekerSetU8::elem_part::shift3>(GetParam())
+TEST_P(SeekU8, SamplesExplicitLimiters) {
+    const auto sample = ::std::get<::SeekU8::elem_part::sample>(GetParam());
+    auto seeker = target.cbegin() + ::std::get<::SeekU8::elem_part::shift1>(GetParam());
+    const auto limiter_beg = target.cbegin() + (
+        ::std::get<::SeekU8::elem_part::shift2>(GetParam())
+        <= ::std::get<::SeekU8::elem_part::shift3>(GetParam())
+        ? ::std::get<::SeekU8::elem_part::shift2>(GetParam())
+        : ::std::get<::SeekU8::elem_part::shift3>(GetParam())
     );
-    const auto rborder_end = target.cbegin() + (
-        ::std::get<::SeekerSetU8::elem_part::shift2>(GetParam())
-        <= ::std::get<::SeekerSetU8::elem_part::shift3>(GetParam())
-        ? ::std::get<::SeekerSetU8::elem_part::shift3>(GetParam())
-        : ::std::get<::SeekerSetU8::elem_part::shift2>(GetParam())
+    const auto limiter_end = target.cbegin() + (
+        ::std::get<::SeekU8::elem_part::shift2>(GetParam())
+        <= ::std::get<::SeekU8::elem_part::shift3>(GetParam())
+        ? ::std::get<::SeekU8::elem_part::shift3>(GetParam())
+        : ::std::get<::SeekU8::elem_part::shift2>(GetParam())
     );
 
-    auto pos_of_key = ::uns::string::parse::find(target, target.begin(), sample);
+    auto pos_of_key = ::uns::string::parsing::find(target, target.begin(), sample);
 
     auto seeking_result =
         pos_of_key != target.cend()
         && (seeker <= pos_of_key)
-        && (pos_of_key + sample.size() + equality.size() <= rborder_end)
-        && (pos_of_key <= rborder_beg);
+        && (pos_of_key <= limiter_beg)
+        && (pos_of_key + sample.size() + equality.size() <= limiter_end);
 
     const auto seeker_before_seeking = seeker;
     ASSERT_EQ(
         seeking_result
-        , ::uns::string::parse::seek<::SeekerSetU8::string_type>(
+        , ::uns::string::parsing::seek<::SeekU8::string_type>(
             target
             , seeker
             , samples
-            , false
-            , -4
-            , rborder_beg
-            , rborder_end
+            , {
+                .qualifier = ::uns::string::parsing::seeker_position::from_end
+                , .offset = static_cast<int>(equality.size()) + 1
+            }
+            , limiter_beg
+            , limiter_end
         )
     ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+        << "; sample=" << ::testing::PrintToString(sample)
         << "; pos_of_key=" << (pos_of_key - target.cbegin())
         << "; sample.size()=" << sample.size()
         << "; equality.size()=" << equality.size()
-        << "; seeker=" << (seeker - target.cbegin());
+        << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
+        << "; seeker=" << (seeker_before_seeking - target.cbegin())
+        << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
 
     if (seeking_result) {
         ASSERT_EQ(
             pos_of_key + sample.size() + equality.size()
             , seeker
         ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+            << "; sample=" << ::testing::PrintToString(sample)
             << "; pos_of_key=" << (pos_of_key - target.cbegin())
             << "; sample.size()=" << sample.size()
             << "; equality.size()=" << equality.size()
-            << "; seeker=" << (seeker - target.cbegin());
+            << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
+            << "; seeker=" << (seeker_before_seeking - target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
     }
     else {
         ASSERT_EQ(
             seeker_before_seeking
             , seeker
         ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+            << "; sample=" << ::testing::PrintToString(sample)
             << "; pos_of_key=" << (pos_of_key - target.cbegin())
             << "; sample.size()=" << sample.size()
             << "; equality.size()=" << equality.size()
             << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
-            << "; seeker=" << (seeker - target.cbegin());
+            << "; seeker=" << (seeker_before_seeking - target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
     };
 
 };
-TEST_P(SeekerSetU8, SampleExplicitRightBorders) {
-    const auto sample = ::std::get<::SeekerSetU8::elem_part::sample>(GetParam());
-    auto seeker = target.cbegin() + ::std::get<::SeekerSetU8::elem_part::shift1>(GetParam());
-    const auto rborder_beg = target.cbegin() + (
-        ::std::get<::SeekerSetU8::elem_part::shift2>(GetParam())
-        <= ::std::get<::SeekerSetU8::elem_part::shift3>(GetParam())
-        ? ::std::get<::SeekerSetU8::elem_part::shift2>(GetParam())
-        : ::std::get<::SeekerSetU8::elem_part::shift3>(GetParam())
+TEST_P(SeekU8, SampleExplicitLimiters) {
+    const auto sample = ::std::get<::SeekU8::elem_part::sample>(GetParam());
+    auto seeker = target.cbegin() + ::std::get<::SeekU8::elem_part::shift1>(GetParam());
+    const auto limiter_beg = target.cbegin() + (
+        ::std::get<::SeekU8::elem_part::shift2>(GetParam())
+        <= ::std::get<::SeekU8::elem_part::shift3>(GetParam())
+        ? ::std::get<::SeekU8::elem_part::shift2>(GetParam())
+        : ::std::get<::SeekU8::elem_part::shift3>(GetParam())
     );
-    const auto rborder_end = target.cbegin() + (
-        ::std::get<::SeekerSetU8::elem_part::shift2>(GetParam())
-        <= ::std::get<::SeekerSetU8::elem_part::shift3>(GetParam())
-        ? ::std::get<::SeekerSetU8::elem_part::shift3>(GetParam())
-        : ::std::get<::SeekerSetU8::elem_part::shift2>(GetParam())
+    const auto limiter_end = target.cbegin() + (
+        ::std::get<::SeekU8::elem_part::shift2>(GetParam())
+        <= ::std::get<::SeekU8::elem_part::shift3>(GetParam())
+        ? ::std::get<::SeekU8::elem_part::shift3>(GetParam())
+        : ::std::get<::SeekU8::elem_part::shift2>(GetParam())
     );
 
-    auto pos_of_key = ::uns::string::parse::find(target, target.begin(), sample);
+    auto pos_of_key = ::uns::string::parsing::find(target, target.begin(), sample);
 
     auto seeking_result =
         pos_of_key != target.cend()
         && (seeker <= pos_of_key)
-        && (pos_of_key + sample.size() + equality.size() <= rborder_end)
-        && (pos_of_key <= rborder_beg);
+        && (pos_of_key <= limiter_beg)
+        && (pos_of_key + sample.size() + equality.size() <= limiter_end);
 
     const auto seeker_before_seeking = seeker;
     ASSERT_EQ(
         seeking_result
-        , ::uns::string::parse::seek<::SeekerSetU8::string_type>(
+        , ::uns::string::parsing::seek<::SeekU8::string_type>(
             target
             , seeker
             , sample
-            , false
-            , -4
-            , rborder_beg
-            , rborder_end
+            , {
+                .qualifier = ::uns::string::parsing::seeker_position::from_end
+                , .offset = static_cast<int>(equality.size()) + 1
+            }
+            , limiter_beg
+            , limiter_end
         )
     ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+        << "; sample=" << ::testing::PrintToString(sample)
         << "; pos_of_key=" << (pos_of_key - target.cbegin())
         << "; sample.size()=" << sample.size()
         << "; equality.size()=" << equality.size()
-        << "; seeker=" << (seeker - target.cbegin());
+        << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
+        << "; seeker=" << (seeker_before_seeking - target.cbegin())
+        << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
 
     if (seeking_result) {
         ASSERT_EQ(
             pos_of_key + sample.size() + equality.size()
             , seeker
         ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+            << "; sample=" << ::testing::PrintToString(sample)
             << "; pos_of_key=" << (pos_of_key - target.cbegin())
             << "; sample.size()=" << sample.size()
             << "; equality.size()=" << equality.size()
-            << "; seeker=" << (seeker - target.cbegin());
+            << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
+            << "; seeker=" << (seeker_before_seeking - target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
     }
     else {
         ASSERT_EQ(
             seeker_before_seeking
             , seeker
         ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+            << "; sample=" << ::testing::PrintToString(sample)
             << "; pos_of_key=" << (pos_of_key - target.cbegin())
             << "; sample.size()=" << sample.size()
             << "; equality.size()=" << equality.size()
             << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
-            << "; seeker=" << (seeker - target.cbegin());
+            << "; seeker=" << (seeker_before_seeking - target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
     };
 
 };
-TEST_P(SeekerSetU8, SamplesNoRightBorders) {
-    const auto sample = ::std::get<::SeekerSetU8::elem_part::sample>(GetParam());
-    auto seeker = target.cbegin() + ::std::get<::SeekerSetU8::elem_part::shift1>(GetParam());
+TEST_P(SeekU8, SamplesNoLimiters) {
+    const auto sample = ::std::get<::SeekU8::elem_part::sample>(GetParam());
+    auto seeker = target.cbegin() + ::std::get<::SeekU8::elem_part::shift1>(GetParam());
 
-    auto pos_of_key = ::uns::string::parse::find(target, target.begin(), sample);
+    auto pos_of_key = ::uns::string::parsing::find(target, target.begin(), sample);
 
     auto seeking_result =
         pos_of_key != target.cend()
@@ -4075,46 +4112,53 @@ TEST_P(SeekerSetU8, SamplesNoRightBorders) {
     const auto seeker_before_seeking = seeker;
     ASSERT_EQ(
         seeking_result
-        , ::uns::string::parse::seek<::SeekerSetU8::string_type>(
+        , ::uns::string::parsing::seek<::SeekU8::string_type>(
             target
             , seeker
             , samples
-            , false
-            , -4
+            , {
+                .qualifier = ::uns::string::parsing::seeker_position::from_end
+                , .offset = static_cast<int>(equality.size()) + 1
+            }
         )
     ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+        << "; sample=" << ::testing::PrintToString(sample)
         << "; pos_of_key=" << (pos_of_key - target.cbegin())
         << "; sample.size()=" << sample.size()
         << "; equality.size()=" << equality.size()
-        << "; seeker=" << (seeker - target.cbegin());
+        << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
+        << "; seeker=" << (seeker_before_seeking - target.cbegin());
 
     if (seeking_result) {
         ASSERT_EQ(
             pos_of_key + sample.size() + equality.size()
             , seeker
         ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+            << "; sample=" << ::testing::PrintToString(sample)
             << "; pos_of_key=" << (pos_of_key - target.cbegin())
             << "; sample.size()=" << sample.size()
             << "; equality.size()=" << equality.size()
-            << "; seeker=" << (seeker - target.cbegin());
+            << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
+            << "; seeker=" << (seeker_before_seeking - target.cbegin());
     }
     else {
         ASSERT_EQ(
             seeker_before_seeking
             , seeker
         ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+            << "; sample=" << ::testing::PrintToString(sample)
             << "; pos_of_key=" << (pos_of_key - target.cbegin())
             << "; sample.size()=" << sample.size()
             << "; equality.size()=" << equality.size()
             << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
-            << "; seeker=" << (seeker - target.cbegin());
+            << "; seeker=" << (seeker_before_seeking - target.cbegin());
     };
 };
-TEST_P(SeekerSetU8, SampleNoRightBorders) {
-    const auto sample = ::std::get<::SeekerSetU8::elem_part::sample>(GetParam());
-    auto seeker = target.cbegin() + ::std::get<::SeekerSetU8::elem_part::shift1>(GetParam());
+TEST_P(SeekU8, SampleNoLimiters) {
+    const auto sample = ::std::get<::SeekU8::elem_part::sample>(GetParam());
+    auto seeker = target.cbegin() + ::std::get<::SeekU8::elem_part::shift1>(GetParam());
 
-    auto pos_of_key = ::uns::string::parse::find(target, target.begin(), sample);
+    auto pos_of_key = ::uns::string::parsing::find(target, target.begin(), sample);
 
     auto seeking_result =
         pos_of_key != target.cend()
@@ -4123,201 +4167,234 @@ TEST_P(SeekerSetU8, SampleNoRightBorders) {
     const auto seeker_before_seeking = seeker;
     ASSERT_EQ(
         seeking_result
-        , ::uns::string::parse::seek<::SeekerSetU8::string_type>(
+        , ::uns::string::parsing::seek<::SeekU8::string_type>(
             target
             , seeker
             , sample
-            , false
-            , -4
+            , {
+                .qualifier = ::uns::string::parsing::seeker_position::from_end
+                , .offset = static_cast<int>(equality.size()) + 1
+            }
         )
     ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+        << "; sample=" << ::testing::PrintToString(sample)
         << "; pos_of_key=" << (pos_of_key - target.cbegin())
         << "; sample.size()=" << sample.size()
         << "; equality.size()=" << equality.size()
-        << "; seeker=" << (seeker - target.cbegin());
+        << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
+        << "; seeker=" << (seeker_before_seeking - target.cbegin());
 
     if (seeking_result) {
         ASSERT_EQ(
             pos_of_key + sample.size() + equality.size()
             , seeker
         ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+            << "; sample=" << ::testing::PrintToString(sample)
             << "; pos_of_key=" << (pos_of_key - target.cbegin())
             << "; sample.size()=" << sample.size()
             << "; equality.size()=" << equality.size()
-            << "; seeker=" << (seeker - target.cbegin());
+            << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
+            << "; seeker=" << (seeker_before_seeking - target.cbegin());
     }
     else {
         ASSERT_EQ(
             seeker_before_seeking
             , seeker
         ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+            << "; sample=" << ::testing::PrintToString(sample)
             << "; pos_of_key=" << (pos_of_key - target.cbegin())
             << "; sample.size()=" << sample.size()
             << "; equality.size()=" << equality.size()
             << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
-            << "; seeker=" << (seeker - target.cbegin());
+            << "; seeker=" << (seeker_before_seeking - target.cbegin());
     };
 };
-TEST_P(SeekerSetU8, SamplesRightBorders) {
-    const auto sample = ::std::get<::SeekerSetU8::elem_part::sample>(GetParam());
-    auto seeker = target.cbegin() + ::std::get<::SeekerSetU8::elem_part::shift1>(GetParam());
-    const auto rborders = ::std::vector<::std::u8string>{
+TEST_P(SeekU8, SamplesLimiters) {
+    const auto sample = ::std::get<::SeekU8::elem_part::sample>(GetParam());
+    auto seeker = target.cbegin() + ::std::get<::SeekU8::elem_part::shift1>(GetParam());
+    const auto limiters = ::std::vector<::std::u8string>{
         u8" x"
         , u8"xv"
         , u8"vx"
     };
-    const auto rborder_beg = ::uns::string::parse::find(target, seeker, rborders);
-    const auto rborder_end = target.cend();
-    ASSERT_LT(rborder_beg, rborder_end);
+    const auto limiter_beg = ::uns::string::parsing::find(target, seeker, limiters);
+    const auto limiter_end = target.cend();
+    ASSERT_LT(limiter_beg, limiter_end);
 
-    auto pos_of_key = ::uns::string::parse::find(target, target.begin(), sample);
+    auto pos_of_key = ::uns::string::parsing::find(target, target.begin(), sample);
 
     auto seeking_result =
         pos_of_key != target.cend()
         && (seeker <= pos_of_key)
-        && (pos_of_key + sample.size() + equality.size() <= rborder_end)
-        && (pos_of_key <= rborder_beg);
+        && (pos_of_key + sample.size() + equality.size() <= limiter_end)
+        && (pos_of_key <= limiter_beg);
 
     const auto seeker_before_seeking = seeker;
     ASSERT_EQ(
         seeking_result
-        , ::uns::string::parse::seek<::SeekerSetU8::string_type>(
+        , ::uns::string::parsing::seek<::SeekU8::string_type>(
             target
             , seeker
             , samples
-            , false
-            , -4
-            , rborders
+            , {
+                .qualifier = ::uns::string::parsing::seeker_position::from_end
+                , .offset = static_cast<int>(equality.size()) + 1
+            }
+            , limiters
         )
     ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+        << "; sample=" << ::testing::PrintToString(sample)
         << "; pos_of_key=" << (pos_of_key - target.cbegin())
         << "; sample.size()=" << sample.size()
         << "; equality.size()=" << equality.size()
-        << "; seeker=" << (seeker - target.cbegin());
+        << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
+        << "; seeker=" << (seeker_before_seeking - target.cbegin())
+        << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
 
     if (seeking_result) {
         ASSERT_EQ(
             pos_of_key + sample.size() + equality.size()
             , seeker
         ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+            << "; sample=" << ::testing::PrintToString(sample)
             << "; pos_of_key=" << (pos_of_key - target.cbegin())
             << "; sample.size()=" << sample.size()
             << "; equality.size()=" << equality.size()
-            << "; seeker=" << (seeker - target.cbegin());
+            << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
+            << "; seeker=" << (seeker_before_seeking - target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
     }
     else {
         ASSERT_EQ(
             seeker_before_seeking
             , seeker
         ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+            << "; sample=" << ::testing::PrintToString(sample)
             << "; pos_of_key=" << (pos_of_key - target.cbegin())
             << "; sample.size()=" << sample.size()
             << "; equality.size()=" << equality.size()
             << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
-            << "; seeker=" << (seeker - target.cbegin());
+            << "; seeker=" << (seeker_before_seeking - target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
     };
 
 };
-TEST_P(SeekerSetU8, SampleRightBorders) {
-    const auto sample = ::std::get<::SeekerSetU8::elem_part::sample>(GetParam());
-    auto seeker = target.cbegin() + ::std::get<::SeekerSetU8::elem_part::shift1>(GetParam());
-    const auto rborders = ::std::vector<::std::u8string>{
+TEST_P(SeekU8, SampleLimiters) {
+    const auto sample = ::std::get<::SeekU8::elem_part::sample>(GetParam());
+    auto seeker = target.cbegin() + ::std::get<::SeekU8::elem_part::shift1>(GetParam());
+    const auto limiters = ::std::vector<::std::u8string>{
         u8" x"
         , u8"xv"
         , u8"vx"
     };
-    const auto rborder_beg = ::uns::string::parse::find(target, seeker, rborders);
-    const auto rborder_end = target.cend();
-    ASSERT_LT(rborder_beg, rborder_end);
+    const auto limiter_beg = ::uns::string::parsing::find(target, seeker, limiters);
+    const auto limiter_end = target.cend();
+    ASSERT_LT(limiter_beg, limiter_end);
 
-    auto pos_of_key = ::uns::string::parse::find(target, target.begin(), sample);
+    auto pos_of_key = ::uns::string::parsing::find(target, target.begin(), sample);
 
     auto seeking_result =
         pos_of_key != target.cend()
         && (seeker <= pos_of_key)
-        && (pos_of_key + sample.size() + equality.size() <= rborder_end)
-        && (pos_of_key <= rborder_beg);
+        && (pos_of_key + sample.size() + equality.size() <= limiter_end)
+        && (pos_of_key <= limiter_beg);
 
     const auto seeker_before_seeking = seeker;
     ASSERT_EQ(
         seeking_result
-        , ::uns::string::parse::seek<::SeekerSetU8::string_type>(
+        , ::uns::string::parsing::seek<::SeekU8::string_type>(
             target
             , seeker
             , sample
-            , false
-            , -4
-            , rborders
+            , {
+                .qualifier = ::uns::string::parsing::seeker_position::from_end
+                , .offset = static_cast<int>(equality.size()) + 1
+            }
+            , limiters
         )
     ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+        << "; sample=" << ::testing::PrintToString(sample)
         << "; pos_of_key=" << (pos_of_key - target.cbegin())
         << "; sample.size()=" << sample.size()
         << "; equality.size()=" << equality.size()
-        << "; seeker=" << (seeker - target.cbegin());
+        << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
+        << "; seeker=" << (seeker_before_seeking - target.cbegin())
+        << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
 
     if (seeking_result) {
         ASSERT_EQ(
             pos_of_key + sample.size() + equality.size()
             , seeker
         ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+            << "; sample=" << ::testing::PrintToString(sample)
             << "; pos_of_key=" << (pos_of_key - target.cbegin())
             << "; sample.size()=" << sample.size()
             << "; equality.size()=" << equality.size()
-            << "; seeker=" << (seeker - target.cbegin());
+            << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
+            << "; seeker=" << (seeker_before_seeking - target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
     }
     else {
         ASSERT_EQ(
             seeker_before_seeking
             , seeker
         ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+            << "; sample=" << ::testing::PrintToString(sample)
             << "; pos_of_key=" << (pos_of_key - target.cbegin())
             << "; sample.size()=" << sample.size()
             << "; equality.size()=" << equality.size()
             << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
-            << "; seeker=" << (seeker - target.cbegin());
+            << "; seeker=" << (seeker_before_seeking - target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
     };
 
 };
-TEST_P(SeekerSetU8, SamplesRightBorder) {
-    const auto sample = ::std::get<::SeekerSetU8::elem_part::sample>(GetParam());
-    auto seeker = target.cbegin() + ::std::get<::SeekerSetU8::elem_part::shift1>(GetParam());
-    const auto rborder = ::std::u8string{
+TEST_P(SeekU8, SamplesLimiter) {
+    const auto sample = ::std::get<::SeekU8::elem_part::sample>(GetParam());
+    auto seeker = target.cbegin() + ::std::get<::SeekU8::elem_part::shift1>(GetParam());
+    auto limiter = ::std::u8string{
         target.cbegin() + (
-            ::std::get<::SeekerSetU8::elem_part::shift2>(GetParam())
-            <= ::std::get<::SeekerSetU8::elem_part::shift3>(GetParam())
-            ? ::std::get<::SeekerSetU8::elem_part::shift2>(GetParam())
-            : ::std::get<::SeekerSetU8::elem_part::shift3>(GetParam())
+            ::std::get<::SeekU8::elem_part::shift2>(GetParam())
+            <= ::std::get<::SeekU8::elem_part::shift3>(GetParam())
+            ? ::std::get<::SeekU8::elem_part::shift2>(GetParam())
+            : ::std::get<::SeekU8::elem_part::shift3>(GetParam())
         )
         , target.cbegin() + (
-            ::std::get<::SeekerSetU8::elem_part::shift2>(GetParam())
-            <= ::std::get<::SeekerSetU8::elem_part::shift3>(GetParam())
-            ? ::std::get<::SeekerSetU8::elem_part::shift3>(GetParam())
-            : ::std::get<::SeekerSetU8::elem_part::shift2>(GetParam())
+            ::std::get<::SeekU8::elem_part::shift2>(GetParam())
+            <= ::std::get<::SeekU8::elem_part::shift3>(GetParam())
+            ? ::std::get<::SeekU8::elem_part::shift3>(GetParam())
+            : ::std::get<::SeekU8::elem_part::shift2>(GetParam())
         )
     };
-    const auto rborder_beg = ::uns::string::parse::find(target, seeker, rborder);
-    const auto rborder_end = (
-        rborder_beg != target.cend()
-        ? rborder_beg + rborder.size()
+    const auto limiter_beg = ::uns::string::parsing::find(target, seeker, limiter);
+    const auto limiter_end = (
+        limiter_beg != target.cend()
+        ? limiter_beg + limiter.size()
         : target.cend()
     );
+    if (
+        limiter_beg == limiter_end
+        && limiter_end == target.cend()
+    ) {
+        limiter.clear();
+    };
 
-    auto pos_of_key = ::uns::string::parse::find(target, target.begin(), sample);
+    auto pos_of_key = ::uns::string::parsing::find(target, target.begin(), sample);
 
     auto seeking_result =
         pos_of_key != target.cend()
         && (seeker <= pos_of_key)
         && (
-            rborder.empty()
+            limiter.empty()
             || (
-                !rborder.empty()
+                !limiter.empty()
                 && (
-                    (rborder_end != target.cend())
-                    && (pos_of_key + sample.size() + equality.size() <= rborder_end)
+                    (limiter_end != target.cend())
+                    && (pos_of_key + sample.size() + equality.size() <= limiter_end)
                 )
                 && (
-                    (rborder_beg != target.cend())
-                    && (pos_of_key <= rborder_beg)
+                    (limiter_beg != target.cend())
+                    && (pos_of_key <= limiter_beg)
                 )
             )
         );
@@ -4325,30 +4402,37 @@ TEST_P(SeekerSetU8, SamplesRightBorder) {
     const auto seeker_before_seeking = seeker;
     ASSERT_EQ(
         seeking_result
-        , ::uns::string::parse::seek<::SeekerSetU8::string_type>(
+        , ::uns::string::parsing::seek<::SeekU8::string_type>(
             target
             , seeker
             , samples
-            , false
-            , -4
-            , rborder
+            , {
+                .qualifier = ::uns::string::parsing::seeker_position::from_end
+                , .offset = static_cast<int>(equality.size()) + 1
+            }
+            , limiter
         )
     ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+        << "; sample=" << ::testing::PrintToString(sample)
         << "; pos_of_key=" << (pos_of_key - target.cbegin())
         << "; sample.size()=" << sample.size()
         << "; equality.size()=" << equality.size()
+        << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
         << "; seeker=" << (seeker_before_seeking - target.cbegin())
-        << "; rborder=" << ::testing::PrintToString(rborder);
+        << "; limiter=" << ::testing::PrintToString(limiter);
 
     if (seeking_result) {
         ASSERT_EQ(
             pos_of_key + sample.size() + equality.size()
             , seeker
         ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+            << "; sample=" << ::testing::PrintToString(sample)
             << "; pos_of_key=" << (pos_of_key - target.cbegin())
             << "; sample.size()=" << sample.size()
             << "; equality.size()=" << equality.size()
-            << "; seeker=" << (seeker_before_seeking - target.cbegin());
+            << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
+            << "; seeker=" << (seeker_before_seeking - target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(limiter);
     }
     else {
         ASSERT_EQ(
@@ -4363,46 +4447,52 @@ TEST_P(SeekerSetU8, SamplesRightBorder) {
     };
 
 };
-TEST_P(SeekerSetU8, SampleRightBorder) {
-    const auto sample = ::std::get<::SeekerSetU8::elem_part::sample>(GetParam());
-    auto seeker = target.cbegin() + ::std::get<::SeekerSetU8::elem_part::shift1>(GetParam());
-    const auto rborder = ::std::u8string{
+TEST_P(SeekU8, SampleLimiter) {
+    const auto sample = ::std::get<::SeekU8::elem_part::sample>(GetParam());
+    auto seeker = target.cbegin() + ::std::get<::SeekU8::elem_part::shift1>(GetParam());
+    auto limiter = ::std::u8string{
         target.cbegin() + (
-            ::std::get<::SeekerSetU8::elem_part::shift2>(GetParam())
-            <= ::std::get<::SeekerSetU8::elem_part::shift3>(GetParam())
-            ? ::std::get<::SeekerSetU8::elem_part::shift2>(GetParam())
-            : ::std::get<::SeekerSetU8::elem_part::shift3>(GetParam())
+            ::std::get<::SeekU8::elem_part::shift2>(GetParam())
+            <= ::std::get<::SeekU8::elem_part::shift3>(GetParam())
+            ? ::std::get<::SeekU8::elem_part::shift2>(GetParam())
+            : ::std::get<::SeekU8::elem_part::shift3>(GetParam())
         )
         , target.cbegin() + (
-            ::std::get<::SeekerSetU8::elem_part::shift2>(GetParam())
-            <= ::std::get<::SeekerSetU8::elem_part::shift3>(GetParam())
-            ? ::std::get<::SeekerSetU8::elem_part::shift3>(GetParam())
-            : ::std::get<::SeekerSetU8::elem_part::shift2>(GetParam())
+            ::std::get<::SeekU8::elem_part::shift2>(GetParam())
+            <= ::std::get<::SeekU8::elem_part::shift3>(GetParam())
+            ? ::std::get<::SeekU8::elem_part::shift3>(GetParam())
+            : ::std::get<::SeekU8::elem_part::shift2>(GetParam())
         )
     };
-    const auto rborder_beg = ::uns::string::parse::find(target, seeker, rborder);
-    const auto rborder_end = (
-        rborder_beg != target.cend()
-        ? rborder_beg + rborder.size()
+    const auto limiter_beg = ::uns::string::parsing::find(target, seeker, limiter);
+    const auto limiter_end = (
+        limiter_beg != target.cend()
+        ? limiter_beg + limiter.size()
         : target.cend()
     );
+    if (
+        limiter_beg == limiter_end
+        && limiter_end == target.cend()
+    ) {
+        limiter.clear();
+    };
 
-    auto pos_of_key = ::uns::string::parse::find(target, seeker, sample);
+    auto pos_of_key = ::uns::string::parsing::find(target, seeker, sample);
 
     auto seeking_result =
         pos_of_key != target.cend()
         && (seeker <= pos_of_key)
         && (
-            rborder.empty()
+            limiter.empty()
             || (
-                !rborder.empty()
+                !limiter.empty()
                 && (
-                    (rborder_end != target.cend())
-                    && (pos_of_key + sample.size() + equality.size() <= rborder_end)
+                    (limiter_end != target.cend())
+                    && (pos_of_key + sample.size() + equality.size() <= limiter_end)
                 )
                 && (
-                    (rborder_beg != target.cend())
-                    && (pos_of_key <= rborder_beg)
+                    (limiter_beg != target.cend())
+                    && (pos_of_key <= limiter_beg)
                 )
             )
         );
@@ -4410,99 +4500,108 @@ TEST_P(SeekerSetU8, SampleRightBorder) {
     const auto seeker_before_seeking = seeker;
     ASSERT_EQ(
         seeking_result
-        , ::uns::string::parse::seek<::SeekerSetU8::string_type>(
+        , ::uns::string::parsing::seek<::SeekU8::string_type>(
             target
             , seeker
             , sample
-            , false
-            , -4
-            , rborder
+            , {
+                .qualifier = ::uns::string::parsing::seeker_position::from_end
+                , .offset = static_cast<int>(equality.size()) + 1
+            }
+            , limiter
         )
     ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+        << "; sample=" << ::testing::PrintToString(sample)
         << "; pos_of_key=" << (pos_of_key - target.cbegin())
         << "; sample.size()=" << sample.size()
         << "; equality.size()=" << equality.size()
+        << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
         << "; seeker=" << (seeker_before_seeking - target.cbegin())
-        << "; rborder=" << ::testing::PrintToString(rborder);
+        << "; limiter=" << ::testing::PrintToString(limiter);
 
     if (seeking_result) {
         ASSERT_EQ(
             pos_of_key + sample.size() + equality.size()
             , seeker
         ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+            << "; sample=" << ::testing::PrintToString(sample)
             << "; pos_of_key=" << (pos_of_key - target.cbegin())
             << "; sample.size()=" << sample.size()
             << "; equality.size()=" << equality.size()
-            << "; seeker=" << (seeker_before_seeking - target.cbegin());
+            << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
+            << "; seeker=" << (seeker_before_seeking - target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(limiter);
     }
     else {
         ASSERT_EQ(
             seeker_before_seeking
             , seeker
         ) << "Target=\"" << ::testing::PrintToString(target) << "\"\n"
+            << "; sample=" << ::testing::PrintToString(sample)
             << "; pos_of_key=" << (pos_of_key - target.cbegin())
             << "; sample.size()=" << sample.size()
             << "; equality.size()=" << equality.size()
             << "seeker_before_seeking=" << (seeker_before_seeking - target.cbegin())
-            << "; seeker=" << (seeker_before_seeking - target.cbegin());
+            << "; seeker=" << (seeker_before_seeking - target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(limiter);
     };
 
 };
 
-INSTANTIATE_TEST_CASE_P(SeekerMethodsTests_Key0, SeekerSetU8,
+INSTANTIATE_TEST_CASE_P(ParsingMethodsTests_Key0, SeekU8,
     ::testing::Combine(
         ::testing::Values(::std::u8string{ u8"some_key1" })
         , ::testing::Values(0, 3, 6)
         , ::testing::Range<
-            ::SeekerSetU8::shift2_type
-            , ::SeekerSetU8::shift2_type
-        >(0, ::SeekerSetU8::target.size(), 5)
+            ::SeekU8::shift2_type
+            , ::SeekU8::shift2_type
+        >(0, ::SeekU8::target.size(), 5)
         , ::testing::Range<
-            ::SeekerSetU8::shift3_type
-            , ::SeekerSetU8::shift3_type
-        >(0, ::SeekerSetU8::target.size(), 5)
+            ::SeekU8::shift3_type
+            , ::SeekU8::shift3_type
+        >(0, ::SeekU8::target.size(), 5)
     )
 );
-INSTANTIATE_TEST_CASE_P(SeekerMethodsTests_Key1, SeekerSetU8,
+INSTANTIATE_TEST_CASE_P(ParsingMethodsTests_Key1, SeekU8,
     ::testing::Combine(
         ::testing::Values(::std::u8string{ u8"некий_ключ2" })
         , ::testing::Values(7, 20, 28, 29)
         , ::testing::Range<
-            ::SeekerSetU8::shift2_type
-            , ::SeekerSetU8::shift2_type
-        >(0, ::SeekerSetU8::target.size(), 5)
+            ::SeekU8::shift2_type
+            , ::SeekU8::shift2_type
+        >(0, ::SeekU8::target.size(), 5)
         , ::testing::Range<
-            ::SeekerSetU8::shift3_type
-            , ::SeekerSetU8::shift3_type
-        >(0, ::SeekerSetU8::target.size(), 5)
+            ::SeekU8::shift3_type
+            , ::SeekU8::shift3_type
+        >(0, ::SeekU8::target.size(), 5)
     )
 );
-INSTANTIATE_TEST_CASE_P(SeekerMethodsTests_Key2, SeekerSetU8,
+INSTANTIATE_TEST_CASE_P(ParsingMethodsTests_Key2, SeekU8,
     ::testing::Combine(
         ::testing::Values(::std::u8string{ u8"ani_clue3" })
         , ::testing::Values(30, 50, 70, 80, 82)
         , ::testing::Range<
-            ::SeekerSetU8::shift2_type
-            , ::SeekerSetU8::shift2_type
-        >(0, ::SeekerSetU8::target.size(), 5)
+            ::SeekU8::shift2_type
+            , ::SeekU8::shift2_type
+        >(0, ::SeekU8::target.size(), 5)
         , ::testing::Range<
-            ::SeekerSetU8::shift3_type
-            , ::SeekerSetU8::shift3_type
-        >(0, ::SeekerSetU8::target.size(), 5)
+            ::SeekU8::shift3_type
+            , ::SeekU8::shift3_type
+        >(0, ::SeekU8::target.size(), 5)
     )
 );
-INSTANTIATE_TEST_CASE_P(SeekerMethodsTests_Key3, SeekerSetU8,
+INSTANTIATE_TEST_CASE_P(ParsingMethodsTests_Key3, SeekU8,
     ::testing::Combine(
         ::testing::Values(::std::u8string{ u8"false_key" })
         , ::testing::Values(83, 90)
         , ::testing::Range<
-            ::SeekerSetU8::shift2_type
-            , ::SeekerSetU8::shift2_type
-        >(0, ::SeekerSetU8::target.size(), 5)
+            ::SeekU8::shift2_type
+            , ::SeekU8::shift2_type
+        >(0, ::SeekU8::target.size(), 5)
         , ::testing::Range<
-            ::SeekerSetU8::shift3_type
-            , ::SeekerSetU8::shift3_type
-        >(0, ::SeekerSetU8::target.size(), 5)
+            ::SeekU8::shift3_type
+            , ::SeekU8::shift3_type
+        >(0, ::SeekU8::target.size(), 5)
     )
 );
 
