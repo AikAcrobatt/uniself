@@ -577,13 +577,13 @@ namespace uns::string {
             //positioning a Seeker in the string near some mark symbols in it
             template<::uns::is_basic_string string_t>
             bool offset(
-                const string_t&                                 Source              //Source string
-                , typename string_t::const_iterator&            Seeker              //positioning Seeker
-                , const typename string_t::const_iterator       SampleBegin         //first mark at the Source string, relatively to what the Seeker should be positioned
-                , const typename string_t::const_iterator       SampleEnd           // last mark at the Source string, relatively to what the Seeker should be positioned
-                , const ::uns::string::parse::seeker_position   SeekerTargetPosition //defines where to put seeker in case of success
-                , const typename string_t::const_iterator       LimiterBegin        //position of the first symbol of the right border, that serves as the limit for the SampleBegin
-                , const typename string_t::const_iterator       LimiterEnd          //position of the last symbol of the right border, that serves as the limit for Seeker positioning from the right
+                const string_t&                             Source          //Source string
+                , typename string_t::const_iterator&        Seeker          //positioning Seeker
+                , const typename string_t::const_iterator   SampleBegin     //first mark at the Source string, relatively to what the Seeker should be positioned
+                , const typename string_t::const_iterator   SampleEnd       // last mark at the Source string, relatively to what the Seeker should be positioned
+                , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+                , const typename string_t::const_iterator   LimiterBegin    //position of the first symbol of the right border, that serves as the limit for the SampleBegin
+                , const typename string_t::const_iterator   LimiterEnd      //position of the last symbol of the right border, that serves as the limit for Seeker positioning from the right
             ) {
                 auto seeker_new_pos = Seeker;
 
@@ -621,121 +621,97 @@ namespace uns::string {
                     return false;
                 };
             };
+
+
             template<::uns::is_basic_string string_t>
-            bool offset(
-                const string_t&                                 Source              //Source string
-                , typename string_t::const_iterator&            Seeker              //positioning Seeker
-                , const typename string_t::const_iterator       SampleBegin         //first mark at the Source string, relatively to what the Seeker should be positioned
-                , const typename string_t::const_iterator       SampleEnd           // last mark at the Source string, relatively to what the Seeker should be positioned
-                , const ::uns::string::parse::seeker_position   SeekerTargetPosition //defines where to put seeker in case of success
-                , const typename string_t::const_iterator       LimiterBegin        //position of the first symbol of the right border, that serves as the limit for the SampleBegin
+            typename string_t::const_iterator find(
+                const string_t&                             Source          //Source string
+                , const typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type& SeekerOffset //seeker's offset from Source's begin
+                , const string_t&                           Sample          //a Sample to seek within the Source
             ) {
-                return ::uns::string::parse::auxiliary::offset<string_t>(
-                    Source
-                    , Seeker
-                    , SampleBegin
-                    , SampleEnd
-                    , SeekerTargetPosition
-                    , LimiterBegin
-                    , Source.cend()
-                );
-            };
-            template<::uns::is_basic_string string_t>
-            bool offset(
-                const string_t&                                 Source              //Source string
-                , typename string_t::const_iterator&            Seeker              //positioning Seeker
-                , const typename string_t::const_iterator       SampleBegin         //first mark at the Source string, relatively to what the Seeker should be positioned
-                , const typename string_t::const_iterator       SampleEnd           // last mark at the Source string, relatively to what the Seeker should be positioned
-                , const ::uns::string::parse::seeker_position   SeekerTargetPosition //defines where to put seeker in case of success
-            ) {
-                return ::uns::string::parse::auxiliary::offset<string_t>(
-                    Source
-                    , Seeker
-                    , SampleBegin
-                    , SampleEnd
-                    , SeekerTargetPosition
-                    , Source.cend()
-                );
+                if (
+                    auto sample_offset = Source.find(Sample, SeekerOffset);
+                    sample_offset != string_t::npos
+                    && sample_offset >= SeekerOffset
+                ) {
+                    return sample_offset + Source.cbegin();
+                };
+
+                return Source.cend();
             };
 
         };
 
         //seeking for Sample(s) at given Source string (the leftmost appearance, but not lefter than the Seeker)
-        template<::uns::is_basic_string string_t, ::uns::const_iterable_collection<string_t> collection_t>
+        template<
+            ::uns::is_basic_string string_t
+            , ::uns::const_iterable_collection<string_t> collection_t
+        >
         typename string_t::const_iterator find(
-            const string_t& Source              //Source string
-            , const typename string_t::const_iterator& Seeker           //Seeker of symbol to start the search
-            , const collection_t& Samples             //a collection of Samples wich should be found within the Source
-            , typename collection_t::const_iterator& FoundSample       //iterator of found Sample in the collection
-        ) noexcept {
+            const string_t&                             Source          //Source string
+            , const typename string_t::const_iterator&  Seeker          //Seeker of symbol to start the search
+            , const collection_t&                       Samples         //a collection of Samples wich should be found within the Source
+            , typename collection_t::const_iterator&    FoundSample     //iterator of found Sample in the collection
+        ) {
             FoundSample = Samples.cend();
 
             if (Seeker == Source.cend()) { return Source.cend(); };
             const auto seeker_pos = Seeker - Source.cbegin();
             auto found = Source.cend();
 
-            for (auto Sample = Samples.cbegin(); Sample != Samples.cend(); ++Sample) {
-                if (Sample->empty()) { continue; };
+            for (auto sample = Samples.cbegin(); sample != Samples.cend(); ++sample) {
+                if (sample->empty()) { continue; };
                 if (
-                    const auto sample_pos = Source.find(*Sample, seeker_pos);
-                    sample_pos != string_t::npos
-                    ) {
-                    if (
-                        auto sample_seeker = sample_pos + Source.cbegin();
-                        sample_seeker >= Seeker
-                        && sample_seeker < found
-                        ) {
-                        found = sample_seeker;
-                        FoundSample = Sample;
-                    };
+                    auto sample_seeker = ::uns::string::parse::auxiliary::find<string_t>(
+                        Source
+                        , seeker_pos
+                        , sample
+                    );
+                    sample_seeker != Source.cend()
+                ) {
+                    found = sample_seeker;
+                    FoundSample = sample;
                 };
             };
 
             return found;
         };
-        template<::uns::is_basic_string string_t, ::uns::const_iterable_collection<string_t> collection_t>
+        template<
+            ::uns::is_basic_string string_t
+            , ::uns::const_iterable_collection<string_t> collection_t
+        >
         typename string_t::const_iterator find(
-            const string_t& Source              //Source string
-            , const typename string_t::const_iterator& Seeker           //Seeker of symbol to start the search
-            , const collection_t& Samples             //a collection of Samples wich should be found within the Source
-        ) noexcept {
+            const string_t&                             Source          //Source string
+            , const typename string_t::const_iterator&  Seeker          //Seeker of symbol to start the search
+            , const collection_t&                       Samples         //a collection of Samples wich should be found within the Source
+        ) {
             auto found_sample = Samples.cend();
-
             return ::uns::string::parse::find<string_t>(Source, Seeker, Samples, found_sample);
         };
         template<::uns::is_basic_string string_t>
         typename string_t::const_iterator find(
-            const string_t& Source              //Source string
-            , const typename string_t::const_iterator& Seeker           //Seeker of symbol to start the search
-            , const string_t& Sample              //a Sample to seek within the Source
-        ) noexcept {
+            const string_t&                             Source          //Source string
+            , const typename string_t::const_iterator&  Seeker          //Seeker of symbol to start the search
+            , const string_t&                           Sample          //a Sample to seek within the Source
+        ) {
             if (Seeker == Source.cend() || Sample.empty()) return Source.cend();
             const auto seeker_pos = Seeker - Source.cbegin();
-            auto found = Source.cend();
 
-            if (
-                auto sample_pos = Source.find(Sample, seeker_pos);
-                sample_pos != string_t::npos
-                ) {
-                if (
-                    const auto sample_seeker = sample_pos + Source.cbegin();
-                    sample_seeker >= Seeker
-                    ) {
-                    found = sample_seeker;
-                };
-            };
-
-            return found;
+            return ::uns::string::parse::auxiliary::find<string_t>(
+                Source
+                , seeker_pos
+                , Sample
+            );
         };
-        template<::uns::is_basic_string string_t, typename unused_t>
+        /*template<::uns::is_basic_string string_t, typename unused_t>
         typename string_t::const_iterator find(
             const string_t& Source              //Source string
             , const typename string_t::const_iterator& Seeker           //Seeker of symbol to start the search
             , const string_t& Sample              //a Sample to seek within the Source
             , const unused_t& FoundSample        //an unused parameter to deliver template compatibility with a collection-of-Samples case (so it can be of any type and value)
-        ) noexcept {
+        ) {
             return ::uns::string::parse::find<string_t>(Source, Seeker, Sample);
-        };
+        };*/
 
 
         //seeking for Sample(s) at given Source string (the leftmost appearance of one of the Sample(s) if it is,
@@ -743,15 +719,17 @@ namespace uns::string {
         // relatively of found Sample(s) (only if at least one Sample found)
         //
         //returns true only if both: some Sample found at not lefter than Seeker pos AND Seeker was successfully placed to new pos
-        template<::uns::is_basic_string string_t, ::uns::const_iterable_collection<string_t> collection_t>
+        template<
+            ::uns::is_basic_string string_t
+            , ::uns::const_iterable_collection<string_t> collection_t
+        >
         bool seek(
-            const string_t& Source              //Source string
-            , typename string_t::const_iterator& Seeker              //positioning Seeker
-            , const collection_t& Samples             //a collection of Samples wich should be found within the Source (only not lefter than the initial place of the Seeker)
-            , const bool                            FromBegin          //if true, this flag indicates that Seeker's new position must be made relative to the begin of found Sample, false - to the end of found Sample
-            , const typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type Offset //this value indicates of how mutch symbols the Seeker should be moved from first/last symbol of found Sample (if from begin than to the end of Source string, if from end than to the beginning)
-            , const typename string_t::const_iterator LimiterBegin  //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
-            , const typename string_t::const_iterator LimiterEnd  //position of the last symbol of the right border, that serves as the limit of Seeker positioning from the right
+            const string_t&                             Source          //Source string
+            , typename string_t::const_iterator&        Seeker          //positioning Seeker
+            , const collection_t&                       Samples         //a collection of Samples wich should be found within the Source (only not lefter than the initial place of the Seeker)
+            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const typename string_t::const_iterator   LimiterBegin    //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
+            , const typename string_t::const_iterator   LimiterEnd      //position of the last symbol of the right border, that serves as the limit of Seeker positioning from the right
         ) noexcept {
             auto found_sample = Samples.cend();
             const auto found_sample_pos = ::uns::string::parse::find<string_t>(Source, Seeker, Samples, found_sample);
@@ -765,21 +743,19 @@ namespace uns::string {
                 , Seeker
                 , found_sample_pos
                 , found_sample_pos + found_sample->size() - 1
-                , FromBegin
-                , Offset
+                , SeekerTargetPosition
                 , LimiterBegin
                 , LimiterEnd
             );
         };
         template<::uns::is_basic_string string_t>
         bool seek(
-            const string_t& Source              //Source string
-            , typename string_t::const_iterator& Seeker              //positioning Seeker
-            , const string_t& Sample              //a collection of Samples wich should be found within the Source (only not lefter than the initial place of the Seeker)
-            , const bool                            FromBegin          //if true, this flag indicates that Seeker's new position must be made relative to the begin of found Sample, false - to the end of found Sample
-            , const typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type Offset //this value indicates of how mutch symbols the Seeker should be moved from first/last symbol of found Sample (if from begin than to the end of Source string, if from end than to the beginning)
-            , const typename string_t::const_iterator LimiterBegin  //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
-            , const typename string_t::const_iterator LimiterEnd  //position of the last symbol of the right border, that serves as the limit of Seeker positioning from the right
+            const string_t&                             Source          //Source string
+            , typename string_t::const_iterator&        Seeker          //positioning Seeker
+            , const string_t&                           Sample          //a collection of Samples wich should be found within the Source (only not lefter than the initial place of the Seeker)
+            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const typename string_t::const_iterator   LimiterBegin    //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
+            , const typename string_t::const_iterator   LimiterEnd      //position of the last symbol of the right border, that serves as the limit of Seeker positioning from the right
         ) noexcept {
             const auto found_sample_pos = ::uns::string::parse::find<string_t>(Source, Seeker, Sample);
 
@@ -792,72 +768,74 @@ namespace uns::string {
                 , Seeker
                 , found_sample_pos
                 , found_sample_pos + Sample.size() - 1
-                , FromBegin
-                , Offset
+                , SeekerTargetPosition
                 , LimiterBegin
                 , LimiterEnd
             );
         };
-        template<::uns::is_basic_string string_t, ::uns::const_iterable_collection<string_t> collection_t>
+        template<
+            ::uns::is_basic_string string_t
+            , ::uns::const_iterable_collection<string_t> collection_t
+        >
         bool seek(
-            const string_t& Source              //Source string
-            , typename string_t::const_iterator& Seeker              //positioning Seeker
-            , const collection_t& Samples             //a collection of Samples wich should be found within the Source (only not lefter than the initial place of the Seeker)
-            , const bool                            FromBegin          //if true, this flag indicates that Seeker's new position must be made relative to the begin of found Sample, false - to the end of found Sample
-            , const typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type Offset //this value indicates of how mutch symbols the Seeker should be moved from first/last symbol of found Sample (if from begin than to the end of Source string, if from end than to the beginning)
+            const string_t&                             Source          //Source string
+            , typename string_t::const_iterator&        Seeker          //positioning Seeker
+            , const collection_t&                       Samples         //a collection of Samples wich should be found within the Source (only not lefter than the initial place of the Seeker)
+            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
         ) noexcept {
             return ::uns::string::parse::seek<string_t>(
                 Source
                 , Seeker
                 , Samples
-                , FromBegin
-                , Offset
+                , SeekerTargetPosition
                 , Source.cend()
                 , Source.cend()
             );
         };
         template<::uns::is_basic_string string_t>
         bool seek(
-            const string_t& Source              //Source string
-            , typename string_t::const_iterator& Seeker              //positioning Seeker
-            , const string_t& Sample              //a collection of Samples wich should be found within the Source (only not lefter than the initial place of the Seeker)
-            , const bool                            FromBegin          //if true, this flag indicates that Seeker's new position must be made relative to the begin of found Sample, false - to the end of found Sample
-            , const typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type Offset        //this value indicates of how mutch symbols the Seeker should be moved from first/last symbol of found Sample (if from begin than to the end of Source string, if from end than to the beginning)
+            const string_t&                             Source          //Source string
+            , typename string_t::const_iterator&        Seeker          //positioning Seeker
+            , const string_t&                           Sample          //a collection of Samples wich should be found within the Source (only not lefter than the initial place of the Seeker)
+            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
         ) noexcept {
             return ::uns::string::parse::seek<string_t>(
                 Source
                 , Seeker
                 , Sample
-                , FromBegin
-                , Offset
+                , SeekerTargetPosition
                 , Source.cend()
                 , Source.cend()
             );
         };
-        template<::uns::is_basic_string string_t, ::uns::const_iterable_collection<string_t> samples_t, ::uns::const_iterable_collection<string_t> rborder_t>
+        template<
+            ::uns::is_basic_string string_t
+            , ::uns::const_iterable_collection<string_t> samples_t
+            , ::uns::const_iterable_collection<string_t> limiter_t
+        >
         bool seek(
-            const string_t& Source              //Source string
-            , typename string_t::const_iterator& Seeker              //positioning Seeker
-            , const samples_t& Samples             //a collection of Samples wich should be found within the Source (only not lefter than the initial place of the Seeker)
-            , const bool                            FromBegin          //if true, this flag indicates that Seeker's new position must be made relative to the begin of found Sample, false - to the end of found Sample
-            , const typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type Offset //this value indicates of how mutch symbols the Seeker should be moved from first/last symbol of found Sample (if from begin than to the end of Source string, if from end than to the beginning)
-            , const rborder_t& Limiters       //collection of possible right borders of seeking (the mostleft will be considered an actual right border)
+            const string_t&                             Source          //Source string
+            , typename string_t::const_iterator&        Seeker          //positioning Seeker
+            , const samples_t&                          Samples         //a collection of Samples wich should be found within the Source (only not lefter than the initial place of the Seeker)
+            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const limiter_t&                          Limiters        //collection of possible right borders of seeking (the mostleft will be considered an actual right border)
         ) noexcept {
-            auto actual_right_border = Limiters.cend();
+            auto actual_limiter = Limiters.cend();
             auto const limiter_beg = ::uns::string::parse::find<string_t>(
                 Source
                 , Seeker
                 , Limiters
-                , actual_right_border
+                , actual_limiter
             );
 
-            if (limiter_beg != Source.cend() && actual_right_border != Limiters.cend()) {
+            if (limiter_beg != Source.cend() && actual_limiter != Limiters.cend()) {
                 return ::uns::string::parse::seek<string_t>(
-                    Source, Seeker, Samples
-                    , FromBegin
-                    , Offset
+                    Source
+                    , Seeker
+                    , Samples
+                    , SeekerTargetPosition
                     , limiter_beg
-                    , limiter_beg + actual_right_border->size()
+                    , limiter_beg + actual_limiter->size()
                 );
             }
             else {
@@ -865,37 +843,37 @@ namespace uns::string {
                     Source
                     , Seeker
                     , Samples
-                    , FromBegin
-                    , Offset
+                    , SeekerTargetPosition
                 );
             };
         };
-        template<::uns::is_basic_string string_t, ::uns::const_iterable_collection<string_t> rborder_t>
+        template<
+            ::uns::is_basic_string string_t
+            , ::uns::const_iterable_collection<string_t> limiter_t
+        >
         bool seek(
-            const string_t& Source              //Source string
-            , typename string_t::const_iterator& Seeker              //positioning Seeker
-            , const string_t& Sample              //a Sample wich should be found within the Source (only not lefter than the initial place of the Seeker)
-            , const bool                            FromBegin          //if true, this flag indicates that Seeker's new position must be made relative to the begin of found Sample, false - to the end of found Sample
-            , const typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type Offset //this value indicates of how mutch symbols the Seeker should be moved from first/last symbol of found Sample (if from begin than to the end of Source string, if from end than to the beginning)
-            , const rborder_t& Limiters       //collection of possible right borders of seeking (the mostleft will be considered an actual right border)
+            const string_t&                             Source          //Source string
+            , typename string_t::const_iterator&        Seeker          //positioning Seeker
+            , const string_t&                           Sample          //a Sample wich should be found within the Source (only not lefter than the initial place of the Seeker)
+            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const limiter_t&                          Limiters        //collection of possible right borders of seeking (the mostleft will be considered an actual right border)
         ) noexcept {
-            auto actual_right_border = Limiters.cend();
+            auto actual_limiter = Limiters.cend();
             const auto limiter_beg = ::uns::string::parse::find<string_t>(
                 Source
                 , Seeker
                 , Limiters
-                , actual_right_border
+                , actual_limiter
             );
 
-            if (limiter_beg != Source.cend() && actual_right_border != Limiters.cend()) {
+            if (limiter_beg != Source.cend() && actual_limiter != Limiters.cend()) {
                 return ::uns::string::parse::seek<string_t>(
                     Source
                     , Seeker
                     , Sample
-                    , FromBegin
-                    , Offset
+                    , SeekerTargetPosition
                     , limiter_beg
-                    , limiter_beg + actual_right_border->size()
+                    , limiter_beg + actual_limiter->size()
                 );
             }
             else {
@@ -903,19 +881,20 @@ namespace uns::string {
                     Source
                     , Seeker
                     , Sample
-                    , FromBegin
-                    , Offset
+                    , SeekerTargetPosition
                 );
             };
         };
-        template<::uns::is_basic_string string_t, ::uns::const_iterable_collection<string_t> collection_t>
+        template<
+            ::uns::is_basic_string string_t
+            , ::uns::const_iterable_collection<string_t> collection_t
+        >
         bool seek(
-            const string_t& Source              //Source string
-            , typename string_t::const_iterator& Seeker              //positioning Seeker
-            , const collection_t& Samples             //a collection of Samples wich should be found within the Source (only not lefter than the initial place of the Seeker)
-            , const bool                            FromBegin          //if true, this flag indicates that Seeker's new position must be made relative to the begin of found Sample, false - to the end of found Sample
-            , const typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type Offset //this value indicates of how mutch symbols the Seeker should be moved from first/last symbol of found Sample (if from begin than to the end of Source string, if from end than to the beginning)
-            , const string_t& Limiter        //a substring-actual right border of seeking
+            const string_t&                             Source          //Source string
+            , typename string_t::const_iterator&        Seeker          //positioning Seeker
+            , const collection_t&                       Samples         //a collection of Samples wich should be found within the Source (only not lefter than the initial place of the Seeker)
+            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const string_t&                           Limiter         //a substring-actual right border of seeking
         ) noexcept {
             if (
                 const auto limiter_beg = ::uns::string::parse::find<string_t>(
@@ -924,13 +903,12 @@ namespace uns::string {
                     , Limiter
                 );
                 limiter_beg != Source.cend()
-                ) {
+            ) {
                 return ::uns::string::parse::seek<string_t>(
                     Source
                     , Seeker
                     , Samples
-                    , FromBegin
-                    , Offset
+                    , SeekerTargetPosition
                     , limiter_beg
                     , limiter_beg + Limiter.size()
                 );
@@ -940,19 +918,17 @@ namespace uns::string {
                     Source
                     , Seeker
                     , Samples
-                    , FromBegin
-                    , Offset
+                    , SeekerTargetPosition
                 );
             };
         };
         template<::uns::is_basic_string string_t>
         bool seek(
-            const string_t& Source              //Source string
-            , typename string_t::const_iterator& Seeker              //positioning Seeker
-            , const string_t& Sample              //a Sample wich should be found within the Source (only not lefter than the initial place of the Seeker)
-            , const bool                            FromBegin          //if true, this flag indicates that Seeker's new position must be made relative to the begin of found Sample, false - to the end of found Sample
-            , const typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type Offset //this value indicates of how mutch symbols the Seeker should be moved from first/last symbol of found Sample (if from begin than to the end of Source string, if from end than to the beginning)
-            , const string_t& Limiter        //a substring-actual right border of seeking
+            const string_t&                             Source          //Source string
+            , typename string_t::const_iterator&        Seeker          //positioning Seeker
+            , const string_t&                           Sample          //a Sample wich should be found within the Source (only not lefter than the initial place of the Seeker)
+            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const string_t&                           Limiter         //a substring-actual right border of seeking
         ) noexcept {
             if (
                 const auto limiter_beg = ::uns::string::parse::find<string_t>(
@@ -961,13 +937,12 @@ namespace uns::string {
                     , Limiter
                 );
                 limiter_beg != Source.cend()
-                ) {
+            ) {
                 return ::uns::string::parse::seek<string_t>(
                     Source
                     , Seeker
                     , Sample
-                    , FromBegin
-                    , Offset
+                    , SeekerTargetPosition
                     , limiter_beg
                     , limiter_beg + Limiter.size()
                 );
@@ -977,128 +952,128 @@ namespace uns::string {
                     Source
                     , Seeker
                     , Sample
-                    , FromBegin
-                    , Offset
+                    , SeekerTargetPosition
                 );
             };
         };
 
 
-        //reading a substring from the Source string from the current Seeker's pos till the Delimiter string (not including it)
-        //    returns true only if the Delimiter string was found righter(!) than current Seeker AND the Seeker was successfully placed to
+        //reading a Fragment(a substring) from the Source string from the current Seeker's pos till the Delimiter string (not including it)
+        //    returns true only if the Delimiter string was found farther(!) than current Seeker AND the Seeker was successfully placed to
         //    specified position, relatively to the found Delimiter
-        template<::uns::is_basic_string string_t, ::uns::const_iterable_collection<string_t> collection_t>
+        template<
+            ::uns::is_basic_string string_t
+            , ::uns::const_iterable_collection<string_t> collection_t
+        >
         bool read(
-            const string_t& Source              //Source string
-            , typename string_t::const_iterator& Seeker              //positioning Seeker
-            , string_t& Read              //a Read string (in case of fail, it becomes empty)
-            , const collection_t& Delimiters          //an iterable collection of delimiting strings
-            , const bool                            FromBegin          //if true, this flag indicates that Seeker's new position must be made relative to the begin of found Sample, false - to the end of found Sample
-            , const typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type Offset //this value indicates of how mutch symbols the Seeker should be moved from first/last symbol of found Sample (if from begin than to the end of Source string, if from end than to the beginning)
-            , const typename string_t::const_iterator LimiterBegin  //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
-            , const typename string_t::const_iterator LimiterEnd  //position of the last symbol of the right border
+            const string_t&                             Source          //Source string
+            , typename string_t::const_iterator&        Seeker          //positioning Seeker
+            , string_t&                                 Fragment        //a Fragment string (in case of fail, it becomes empty)
+            , const collection_t&                       Delimiters      //an iterable collection of delimiting strings
+            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const typename string_t::const_iterator   LimiterBegin    //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
+            , const typename string_t::const_iterator   LimiterEnd      //position of the last symbol of the right border
         ) noexcept {
             auto delimiter = Delimiters.cend();
 
-            const auto pos_delimiter = ::uns::string::parse::find<string_t>(
+            const auto delimiter_pos = ::uns::string::parse::find<string_t>(
                 Source
                 , Seeker
                 , Delimiters
                 , delimiter
             );
             if (delimiter == Delimiters.cend()) return false;
-            if (!(pos_delimiter > Seeker && pos_delimiter < Source.cend())) return false;
+            if (!(delimiter_pos > Seeker && delimiter_pos < Source.cend())) return false;
 
-            Read = string_t{ Seeker, pos_delimiter };
+            Fragment = string_t{ Seeker, delimiter_pos };
 
             return ::uns::string::parse::auxiliary::offset<string_t>(
                 Source
                 , Seeker
-                , pos_delimiter
-                , pos_delimiter + delimiter->size() - 1
-                , FromBegin
-                , Offset
+                , delimiter_pos
+                , delimiter_pos + delimiter->size() - 1
+                , SeekerTargetPosition
                 , LimiterBegin
                 , LimiterEnd
             );
         };
         template<::uns::is_basic_string string_t>
         bool read(
-            const string_t& Source              //Source string
-            , typename string_t::const_iterator& Seeker              //positioning Seeker
-            , string_t& Read              //a Read string (in case of fail, it becomes empty)
-            , const string_t& Delimiter           //delimiting string
-            , const bool                            FromBegin          //if true, this flag indicates that Seeker's new position must be made relative to the begin of found Sample, false - to the end of found Sample
-            , const typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type Offset //this value indicates of how mutch symbols the Seeker should be moved from first/last symbol of found Sample (if from begin than to the end of Source string, if from end than to the beginning)
-            , const typename string_t::const_iterator LimiterBegin  //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
-            , const typename string_t::const_iterator LimiterEnd  //position of the last symbol of the right border
+            const string_t&                             Source          //Source string
+            , typename string_t::const_iterator&        Seeker          //positioning Seeker
+            , string_t&                                 Fragment        //a Fragment string (in case of fail, it becomes empty)
+            , const string_t&                           Delimiter       //delimiting string
+            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const typename string_t::const_iterator   LimiterBegin    //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
+            , const typename string_t::const_iterator   LimiterEnd      //position of the last symbol of the right border
         ) noexcept {
-            const auto pos_delimiter = ::uns::string::parse::find<string_t>(Source, Seeker, Delimiter);
+            const auto delimiter_pos = ::uns::string::parse::find<string_t>(Source, Seeker, Delimiter);
 
-            if (!(pos_delimiter > Seeker && pos_delimiter < Source.cend())) return false;
+            if (!(delimiter_pos > Seeker && delimiter_pos < Source.cend())) return false;
 
-            Read = string_t{ Seeker, pos_delimiter };
+            Fragment = string_t{ Seeker, delimiter_pos };
 
             return ::uns::string::parse::auxiliary::offset<string_t>(
                 Source
                 , Seeker
-                , pos_delimiter
-                , pos_delimiter + Delimiter.size() - 1
-                , FromBegin
-                , Offset
+                , delimiter_pos
+                , delimiter_pos + Delimiter.size() - 1
+                , SeekerTargetPosition
                 , LimiterBegin
                 , LimiterEnd
             );
         };
-        template<::uns::is_basic_string string_t, ::uns::const_iterable_collection<string_t> collection_t>
+        template<
+            ::uns::is_basic_string string_t
+            , ::uns::const_iterable_collection<string_t> collection_t
+        >
         bool read(
-            const string_t& Source              //Source string
-            , typename string_t::const_iterator& Seeker              //positioning Seeker
-            , string_t& Read              //a Read string (in case of fail, it becomes empty)
-            , const collection_t& Delimiters          //an iterable collection of delimiting strings
-            , const bool                            FromBegin          //if true, this flag indicates that Seeker's new position must be made relative to the begin of found Sample, false - to the end of found Sample
-            , const typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type Offset //this value indicates of how mutch symbols the Seeker should be moved from first/last symbol of found Sample (if from begin than to the end of Source string, if from end than to the beginning)
+            const string_t&                             Source          //Source string
+            , typename string_t::const_iterator&        Seeker          //positioning Seeker
+            , string_t&                                 Fragment        //a Fragment string (in case of fail, it becomes empty)
+            , const collection_t&                       Delimiters      //an iterable collection of delimiting strings
+            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
         ) noexcept {
             return ::uns::string::parse::read<string_t>(
                 Source
                 , Seeker
-                , Read
+                , Fragment
                 , Delimiters
-                , FromBegin
-                , Offset
+                , SeekerTargetPosition
                 , Source.cend()
                 , Source.cend()
             );
         };
         template<::uns::is_basic_string string_t>
         bool read(
-            const string_t& Source              //Source string
-            , typename string_t::const_iterator& Seeker              //positioning Seeker
-            , string_t& Read              //a Read string (in case of fail, it becomes empty)
-            , const string_t& Delimiter           //delimiting string
-            , const bool                            FromBegin          //if true, this flag indicates that Seeker's new position must be made relative to the begin of found Sample, false - to the end of found Sample
-            , const typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type Offset //this value indicates of how mutch symbols the Seeker should be moved from first/last symbol of found Sample (if from begin than to the end of Source string, if from end than to the beginning)
+            const string_t&                             Source          //Source string
+            , typename string_t::const_iterator&        Seeker          //positioning Seeker
+            , string_t&                                 Fragment        //a Fragment string (in case of fail, it becomes empty)
+            , const string_t&                           Delimiter       //delimiting string
+            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
         ) noexcept {
             return ::uns::string::parse::read<string_t>(
                 Source
                 , Seeker
-                , Read
+                , Fragment
                 , Delimiter
-                , FromBegin
-                , Offset
+                , SeekerTargetPosition
                 , Source.cend()
                 , Source.cend()
             );
         };
-        template<::uns::is_basic_string string_t, ::uns::const_iterable_collection<string_t> collection_t, ::uns::const_iterable_collection<string_t> rborder_t>
+        template<
+            ::uns::is_basic_string string_t
+            , ::uns::const_iterable_collection<string_t> collection_t
+            , ::uns::const_iterable_collection<string_t> limiter_t
+        >
         bool read(
-            const string_t& Source              //Source string
-            , typename string_t::const_iterator& Seeker              //positioning Seeker
-            , string_t& Read              //a Read string (in case of fail, it becomes empty)
-            , const collection_t& Delimiters          //an iterable collection of delimiting strings
-            , const bool                            FromBegin          //if true, this flag indicates that Seeker's new position must be made relative to the begin of found Sample, false - to the end of found Sample
-            , const typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type Offset //this value indicates of how mutch symbols the Seeker should be moved from first/last symbol of found Sample (if from begin than to the end of Source string, if from end than to the beginning)
-            , const rborder_t& Limiters       //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
+            const string_t&                             Source          //Source string
+            , typename string_t::const_iterator&        Seeker          //positioning Seeker
+            , string_t&                                 Fragment        //a Fragment string (in case of fail, it becomes empty)
+            , const collection_t&                       Delimiters      //an iterable collection of delimiting strings
+            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const limiter_t&                          Limiters        //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
         ) noexcept {
             auto limiter = Limiters.cend();
 
@@ -1113,10 +1088,9 @@ namespace uns::string {
                 return ::uns::string::parse::read<string_t>(
                     Source
                     , Seeker
-                    , Read
+                    , Fragment
                     , Delimiters
-                    , FromBegin
-                    , Offset
+                    , SeekerTargetPosition
                     , limiter_pos
                     , limiter_pos + limiter->size() - 1
                 );
@@ -1125,22 +1099,23 @@ namespace uns::string {
                 return ::uns::string::parse::read<string_t>(
                     Source
                     , Seeker
-                    , Read
+                    , Fragment
                     , Delimiters
-                    , FromBegin
-                    , Offset
+                    , SeekerTargetPosition
                 );
             };
         };
-        template<::uns::is_basic_string string_t, ::uns::const_iterable_collection<string_t> rborder_t>
+        template<
+            ::uns::is_basic_string string_t
+            , ::uns::const_iterable_collection<string_t> limiter_t
+        >
         bool read(
-            const string_t& Source              //Source string
-            , typename string_t::const_iterator& Seeker              //positioning Seeker
-            , string_t& Read              //a Read string (in case of fail, it becomes empty)
-            , const string_t& Delimiter           //delimiting string
-            , const bool                            FromBegin          //if true, this flag indicates that Seeker's new position must be made relative to the begin of found Sample, false - to the end of found Sample
-            , const typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type Offset //this value indicates of how mutch symbols the Seeker should be moved from first/last symbol of found Sample (if from begin than to the end of Source string, if from end than to the beginning)
-            , const rborder_t& Limiters       //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
+            const string_t&                             Source          //Source string
+            , typename string_t::const_iterator&        Seeker          //positioning Seeker
+            , string_t&                                 Fragment        //a Fragment string (in case of fail, it becomes empty)
+            , const string_t&                           Delimiter       //delimiting string
+            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const limiter_t&                          Limiters        //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
         ) noexcept {
             auto limiter = Limiters.cend();
 
@@ -1155,10 +1130,9 @@ namespace uns::string {
                 return ::uns::string::parse::read<string_t>(
                     Source
                     , Seeker
-                    , Read
+                    , Fragment
                     , Delimiter
-                    , FromBegin
-                    , Offset
+                    , SeekerTargetPosition
                     , limiter_pos
                     , limiter_pos + limiter->size() - 1
                 );
@@ -1167,22 +1141,23 @@ namespace uns::string {
                 return ::uns::string::parse::read<string_t>(
                     Source
                     , Seeker
-                    , Read
+                    , Fragment
                     , Delimiter
-                    , FromBegin
-                    , Offset
+                    , SeekerTargetPosition
                 );
             };
         };
-        template<::uns::is_basic_string string_t, ::uns::const_iterable_collection<string_t> collection_t>
+        template<
+            ::uns::is_basic_string string_t
+            , ::uns::const_iterable_collection<string_t> collection_t
+        >
         bool read(
-            const string_t& Source              //Source string
-            , typename string_t::const_iterator& Seeker              //positioning Seeker
-            , string_t& Read              //a Read string (in case of fail, it becomes empty)
-            , const collection_t& Delimiters          //an iterable collection of delimiting strings
-            , const bool                            FromBegin          //if true, this flag indicates that Seeker's new position must be made relative to the begin of found Sample, false - to the end of found Sample
-            , const typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type Offset //this value indicates of how mutch symbols the Seeker should be moved from first/last symbol of found Sample (if from begin than to the end of Source string, if from end than to the beginning)
-            , const string_t& Limiter        //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
+            const string_t&                             Source          //Source string
+            , typename string_t::const_iterator&        Seeker          //positioning Seeker
+            , string_t&                                 Fragment        //a Fragment string (in case of fail, it becomes empty)
+            , const collection_t&                       Delimiters      //an iterable collection of delimiting strings
+            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const string_t&                           Limiter         //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
         ) noexcept {
             const auto limiter_pos = ::uns::string::parse::find<string_t>(Source, Seeker, Limiter);
 
@@ -1190,10 +1165,9 @@ namespace uns::string {
                 return ::uns::string::parse::read<string_t>(
                     Source
                     , Seeker
-                    , Read
+                    , Fragment
                     , Delimiters
-                    , FromBegin
-                    , Offset
+                    , SeekerTargetPosition
                     , limiter_pos
                     , limiter_pos + Limiter.size() - 1
                 );
@@ -1202,22 +1176,20 @@ namespace uns::string {
                 return ::uns::string::parse::read<string_t>(
                     Source
                     , Seeker
-                    , Read
+                    , Fragment
                     , Delimiters
-                    , FromBegin
-                    , Offset
+                    , SeekerTargetPosition
                 );
             };
         };
         template<::uns::is_basic_string string_t>
         bool read(
-            const string_t& Source              //Source string
-            , typename string_t::const_iterator& Seeker              //positioning Seeker
-            , string_t& Read              //a Read string (in case of fail, it becomes empty)
-            , const string_t& Delimiter           //delimiting string
-            , const bool                            FromBegin          //if true, this flag indicates that Seeker's new position must be made relative to the begin of found Sample, false - to the end of found Sample
-            , const typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type Offset //this value indicates of how mutch symbols the Seeker should be moved from first/last symbol of found Sample (if from begin than to the end of Source string, if from end than to the beginning)
-            , const string_t& Limiter        //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
+            const string_t&                             Source          //Source string
+            , typename string_t::const_iterator&        Seeker          //positioning Seeker
+            , string_t&                                 Fragment        //a Fragment string (in case of fail, it becomes empty)
+            , const string_t&                           Delimiter       //delimiting string
+            , const ::uns::string::parse::seeker_position SeekerTargetPosition //defines where to put seeker in case of success
+            , const string_t&                           Limiter         //position of the first symbol of the right border, that serves as the limit for finding Delimiters (including LimiterBegin)
         ) noexcept {
             const auto limiter_pos = ::uns::string::parse::find<string_t>(
                 Source
@@ -1229,10 +1201,9 @@ namespace uns::string {
                 return ::uns::string::parse::read<string_t>(
                     Source
                     , Seeker
-                    , Read
+                    , Fragment
                     , Delimiter
-                    , FromBegin
-                    , Offset
+                    , SeekerTargetPosition
                     , limiter_pos
                     , limiter_pos + Limiter.size() - 1
                 );
@@ -1241,10 +1212,9 @@ namespace uns::string {
                 return ::uns::string::parse::read<string_t>(
                     Source
                     , Seeker
-                    , Read
+                    , Fragment
                     , Delimiter
-                    , FromBegin
-                    , Offset
+                    , SeekerTargetPosition
                 );
             };
         };
