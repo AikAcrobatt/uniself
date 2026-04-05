@@ -3630,7 +3630,7 @@ TEST_P(SeekerFindU32, FindSamples) {
     auto found_sample = samples.cend();
     const auto seeker = target.cbegin() + ::std::get<TestCaseFixture::shift1>(GetParam());
 
-    const auto result = ::uns::string::find(
+    const auto result = ::uns::string::parse::find(
         target
         , seeker
         , samples
@@ -3714,7 +3714,7 @@ TEST_P(SeekerFindU8, FindSamples) {
     auto found_sample = samples.cend();
     const auto seeker = target.cbegin() + ::std::get<TestCaseFixture::shift1>(GetParam());
 
-    const auto result = ::uns::string::find(
+    const auto result = ::uns::string::parse::find(
         target
         , seeker
         , samples
@@ -3790,7 +3790,7 @@ TEST_P(SeekerSetU32, RepresentativeTests) {
     const auto rborder_beg = target.cbegin() + ::std::get<::SeekerSetU32::elem_part::shift2>(GetParam());
     const auto rborder_end = target.cbegin() + ::std::get<::SeekerSetU32::elem_part::shift3>(GetParam());
 
-    auto pos_of_key = ::uns::string::find(target, target.begin(), sample);
+    auto pos_of_key = ::uns::string::parse::find(target, target.begin(), sample);
 
     auto seeking_result =
         pos_of_key != target.cend()
@@ -3801,7 +3801,7 @@ TEST_P(SeekerSetU32, RepresentativeTests) {
     const auto seeker_before_seeking = seeker;
     ASSERT_EQ(
         seeking_result
-        , ::uns::string::seeker_set<::SeekerSetU32::string_type>(
+        , ::uns::string::parse::seek<::SeekerSetU32::string_type>(
             target
             , seeker
             , samples
@@ -3948,7 +3948,7 @@ TEST_P(SeekerSetU8, SamplesExplicitRightBorders) {
         : ::std::get<::SeekerSetU8::elem_part::shift2>(GetParam())
     );
 
-    auto pos_of_key = ::uns::string::find(target, target.begin(), sample);
+    auto pos_of_key = ::uns::string::parse::find(target, target.begin(), sample);
 
     auto seeking_result =
         pos_of_key != target.cend()
@@ -3959,7 +3959,7 @@ TEST_P(SeekerSetU8, SamplesExplicitRightBorders) {
     const auto seeker_before_seeking = seeker;
     ASSERT_EQ(
         seeking_result
-        , ::uns::string::seeker_set<::SeekerSetU8::string_type>(
+        , ::uns::string::parse::seek<::SeekerSetU8::string_type>(
             target
             , seeker
             , samples
@@ -4013,7 +4013,7 @@ TEST_P(SeekerSetU8, SampleExplicitRightBorders) {
         : ::std::get<::SeekerSetU8::elem_part::shift2>(GetParam())
     );
 
-    auto pos_of_key = ::uns::string::find(target, target.begin(), sample);
+    auto pos_of_key = ::uns::string::parse::find(target, target.begin(), sample);
 
     auto seeking_result =
         pos_of_key != target.cend()
@@ -4024,7 +4024,7 @@ TEST_P(SeekerSetU8, SampleExplicitRightBorders) {
     const auto seeker_before_seeking = seeker;
     ASSERT_EQ(
         seeking_result
-        , ::uns::string::seeker_set<::SeekerSetU8::string_type>(
+        , ::uns::string::parse::seek<::SeekerSetU8::string_type>(
             target
             , seeker
             , sample
@@ -4066,7 +4066,7 @@ TEST_P(SeekerSetU8, SamplesNoRightBorders) {
     const auto sample = ::std::get<::SeekerSetU8::elem_part::sample>(GetParam());
     auto seeker = target.cbegin() + ::std::get<::SeekerSetU8::elem_part::shift1>(GetParam());
 
-    auto pos_of_key = ::uns::string::find(target, target.begin(), sample);
+    auto pos_of_key = ::uns::string::parse::find(target, target.begin(), sample);
 
     auto seeking_result =
         pos_of_key != target.cend()
@@ -4075,7 +4075,7 @@ TEST_P(SeekerSetU8, SamplesNoRightBorders) {
     const auto seeker_before_seeking = seeker;
     ASSERT_EQ(
         seeking_result
-        , ::uns::string::seeker_set<::SeekerSetU8::string_type>(
+        , ::uns::string::parse::seek<::SeekerSetU8::string_type>(
             target
             , seeker
             , samples
@@ -4114,7 +4114,7 @@ TEST_P(SeekerSetU8, SampleNoRightBorders) {
     const auto sample = ::std::get<::SeekerSetU8::elem_part::sample>(GetParam());
     auto seeker = target.cbegin() + ::std::get<::SeekerSetU8::elem_part::shift1>(GetParam());
 
-    auto pos_of_key = ::uns::string::find(target, target.begin(), sample);
+    auto pos_of_key = ::uns::string::parse::find(target, target.begin(), sample);
 
     auto seeking_result =
         pos_of_key != target.cend()
@@ -4123,7 +4123,7 @@ TEST_P(SeekerSetU8, SampleNoRightBorders) {
     const auto seeker_before_seeking = seeker;
     ASSERT_EQ(
         seeking_result
-        , ::uns::string::seeker_set<::SeekerSetU8::string_type>(
+        , ::uns::string::parse::seek<::SeekerSetU8::string_type>(
             target
             , seeker
             , sample
@@ -4166,11 +4166,11 @@ TEST_P(SeekerSetU8, SamplesRightBorders) {
         , u8"xv"
         , u8"vx"
     };
-    const auto rborder_beg = ::uns::string::find(target, seeker, rborders);
+    const auto rborder_beg = ::uns::string::parse::find(target, seeker, rborders);
     const auto rborder_end = target.cend();
     ASSERT_LT(rborder_beg, rborder_end);
 
-    auto pos_of_key = ::uns::string::find(target, target.begin(), sample);
+    auto pos_of_key = ::uns::string::parse::find(target, target.begin(), sample);
 
     auto seeking_result =
         pos_of_key != target.cend()
@@ -4181,7 +4181,7 @@ TEST_P(SeekerSetU8, SamplesRightBorders) {
     const auto seeker_before_seeking = seeker;
     ASSERT_EQ(
         seeking_result
-        , ::uns::string::seeker_set<::SeekerSetU8::string_type>(
+        , ::uns::string::parse::seek<::SeekerSetU8::string_type>(
             target
             , seeker
             , samples
@@ -4226,11 +4226,11 @@ TEST_P(SeekerSetU8, SampleRightBorders) {
         , u8"xv"
         , u8"vx"
     };
-    const auto rborder_beg = ::uns::string::find(target, seeker, rborders);
+    const auto rborder_beg = ::uns::string::parse::find(target, seeker, rborders);
     const auto rborder_end = target.cend();
     ASSERT_LT(rborder_beg, rborder_end);
 
-    auto pos_of_key = ::uns::string::find(target, target.begin(), sample);
+    auto pos_of_key = ::uns::string::parse::find(target, target.begin(), sample);
 
     auto seeking_result =
         pos_of_key != target.cend()
@@ -4241,7 +4241,7 @@ TEST_P(SeekerSetU8, SampleRightBorders) {
     const auto seeker_before_seeking = seeker;
     ASSERT_EQ(
         seeking_result
-        , ::uns::string::seeker_set<::SeekerSetU8::string_type>(
+        , ::uns::string::parse::seek<::SeekerSetU8::string_type>(
             target
             , seeker
             , sample
@@ -4295,14 +4295,14 @@ TEST_P(SeekerSetU8, SamplesRightBorder) {
             : ::std::get<::SeekerSetU8::elem_part::shift2>(GetParam())
         )
     };
-    const auto rborder_beg = ::uns::string::find(target, seeker, rborder);
+    const auto rborder_beg = ::uns::string::parse::find(target, seeker, rborder);
     const auto rborder_end = (
         rborder_beg != target.cend()
         ? rborder_beg + rborder.size()
         : target.cend()
     );
 
-    auto pos_of_key = ::uns::string::find(target, target.begin(), sample);
+    auto pos_of_key = ::uns::string::parse::find(target, target.begin(), sample);
 
     auto seeking_result =
         pos_of_key != target.cend()
@@ -4325,7 +4325,7 @@ TEST_P(SeekerSetU8, SamplesRightBorder) {
     const auto seeker_before_seeking = seeker;
     ASSERT_EQ(
         seeking_result
-        , ::uns::string::seeker_set<::SeekerSetU8::string_type>(
+        , ::uns::string::parse::seek<::SeekerSetU8::string_type>(
             target
             , seeker
             , samples
@@ -4380,14 +4380,14 @@ TEST_P(SeekerSetU8, SampleRightBorder) {
             : ::std::get<::SeekerSetU8::elem_part::shift2>(GetParam())
         )
     };
-    const auto rborder_beg = ::uns::string::find(target, seeker, rborder);
+    const auto rborder_beg = ::uns::string::parse::find(target, seeker, rborder);
     const auto rborder_end = (
         rborder_beg != target.cend()
         ? rborder_beg + rborder.size()
         : target.cend()
     );
 
-    auto pos_of_key = ::uns::string::find(target, target.begin(), sample);
+    auto pos_of_key = ::uns::string::parse::find(target, seeker, sample);
 
     auto seeking_result =
         pos_of_key != target.cend()
@@ -4410,7 +4410,7 @@ TEST_P(SeekerSetU8, SampleRightBorder) {
     const auto seeker_before_seeking = seeker;
     ASSERT_EQ(
         seeking_result
-        , ::uns::string::seeker_set<::SeekerSetU8::string_type>(
+        , ::uns::string::parse::seek<::SeekerSetU8::string_type>(
             target
             , seeker
             , sample
