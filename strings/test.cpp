@@ -3922,6 +3922,7 @@ class SeekU8 : public ::ParsingMethods<
 public:
     using samples_collection_type = ::std::vector<::std::u8string>;
 public:
+    inline static string_type start = u8"start:";
     inline static samples_collection_type samples = {
         u8"some_key1"
         , u8"некий_ключ2"
@@ -3933,7 +3934,9 @@ public:
         , u8"ani_mean3"
     };
     inline static string_type equality = u8" = ";
-    inline static string_type target = u8"start:" + samples[0] + equality + values[0] + u8"; " + samples[1] + equality + values[1] + u8"; " + samples[2] + equality + values[2] + u8"; " + u8"xvx";
+    inline static string_type delimiter = u8"; ";
+    inline static string_type finish = u8"xvx";
+    inline static string_type target = start + samples[0] + equality + values[0] + delimiter + samples[1] + equality + values[1] + delimiter + samples[2] + equality + values[2] + delimiter + finish;
 public:
     static elem_type make(
         shift1_type shift1
@@ -4602,6 +4605,667 @@ INSTANTIATE_TEST_CASE_P(ParsingMethodsTests_Key3, SeekU8,
             ::SeekU8::shift3_type
             , ::SeekU8::shift3_type
         >(0, ::SeekU8::target.size(), 5)
+    )
+);
+
+
+class ReadU8 : public ::SeekU8 {};
+
+TEST_P(ReadU8, DelimitersExplicitLimiters) {
+    const auto value = ::std::get<::ReadU8::elem_part::sample>(GetParam());
+    auto seeker = ::ReadU8::target.cbegin() + ::std::get<::ReadU8::elem_part::shift1>(GetParam());
+    const auto limiter_beg = ::ReadU8::target.cbegin() + (
+        ::std::get<::ReadU8::elem_part::shift2>(GetParam())
+        <= ::std::get<::ReadU8::elem_part::shift3>(GetParam())
+        ? ::std::get<::ReadU8::elem_part::shift2>(GetParam())
+        : ::std::get<::ReadU8::elem_part::shift3>(GetParam())
+    );
+    const auto limiter_end = ::ReadU8::target.cbegin() + (
+        ::std::get<::ReadU8::elem_part::shift2>(GetParam())
+        <= ::std::get<::ReadU8::elem_part::shift3>(GetParam())
+        ? ::std::get<::ReadU8::elem_part::shift3>(GetParam())
+        : ::std::get<::ReadU8::elem_part::shift2>(GetParam())
+    );
+    const auto delimiters = ::std::vector<::ReadU8::string_type>{
+        ::ReadU8::delimiter
+        , ::ReadU8::finish
+    };
+
+    const auto pos_of_delimiters = ::uns::string::parsing::find(::ReadU8::target, seeker, delimiters);
+
+    const auto seeking_result =
+        pos_of_delimiters != ::ReadU8::target.cend()
+        && (seeker < pos_of_delimiters)
+        && (pos_of_delimiters <= limiter_beg)
+        && (pos_of_delimiters < limiter_end);
+
+    ::ReadU8::string_type fragment = u8"";
+    const auto seeker_before_seeking = seeker;
+    ASSERT_EQ(
+        seeking_result
+        , ::uns::string::parsing::read<::ReadU8::string_type>(
+            ::ReadU8::target
+            , seeker
+            , fragment
+            , delimiters
+            , {
+                .qualifier = ::uns::string::parsing::seeker_position::from_end
+                , .offset = 1
+            }
+            , limiter_beg
+            , limiter_end
+        )
+    ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+        << "; value=" << ::testing::PrintToString(value)
+        << "; value.size()=" << value.size()
+        << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+        << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+        << "; seeker=" << (seeker - ::ReadU8::target.cbegin())
+        << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
+
+    if (seeking_result) {
+        ASSERT_EQ(
+            fragment
+            , value
+        ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+            << "; value=" << ::testing::PrintToString(value)
+            << "; value.size()=" << value.size()
+            << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+            << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+            << "; seeker=" << (seeker - ::ReadU8::target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
+    }
+    else {
+        ASSERT_EQ(
+            seeker_before_seeking
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+            << "; value=" << ::testing::PrintToString(value)
+            << "; value.size()=" << value.size()
+            << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+            << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+            << "; seeker=" << (seeker - ::ReadU8::target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
+    };
+};
+TEST_P(ReadU8, DelimiterExplicitLimiters) {
+    const auto value = ::std::get<::ReadU8::elem_part::sample>(GetParam());
+    auto seeker = ::ReadU8::target.cbegin() + ::std::get<::ReadU8::elem_part::shift1>(GetParam());
+    const auto limiter_beg = ::ReadU8::target.cbegin() + (
+        ::std::get<::ReadU8::elem_part::shift2>(GetParam())
+        <= ::std::get<::ReadU8::elem_part::shift3>(GetParam())
+        ? ::std::get<::ReadU8::elem_part::shift2>(GetParam())
+        : ::std::get<::ReadU8::elem_part::shift3>(GetParam())
+    );
+    const auto limiter_end = ::ReadU8::target.cbegin() + (
+        ::std::get<::ReadU8::elem_part::shift2>(GetParam())
+        <= ::std::get<::ReadU8::elem_part::shift3>(GetParam())
+        ? ::std::get<::ReadU8::elem_part::shift3>(GetParam())
+        : ::std::get<::ReadU8::elem_part::shift2>(GetParam())
+    );
+    const auto delimiter = ::ReadU8::delimiter;
+
+    const auto pos_of_delimiters = ::uns::string::parsing::find(::ReadU8::target, seeker, delimiter);
+
+    const auto seeking_result =
+        pos_of_delimiters != ::ReadU8::target.cend()
+        && (seeker < pos_of_delimiters)
+        && (pos_of_delimiters <= limiter_beg)
+        && (pos_of_delimiters < limiter_end);
+
+    ::ReadU8::string_type fragment = u8"";
+    const auto seeker_before_seeking = seeker;
+    ASSERT_EQ(
+        seeking_result
+        , ::uns::string::parsing::read<::ReadU8::string_type>(
+            ::ReadU8::target
+            , seeker
+            , fragment
+            , delimiter
+            , {
+                .qualifier = ::uns::string::parsing::seeker_position::from_end
+                , .offset = 1
+            }
+            , limiter_beg
+            , limiter_end
+        )
+    ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+        << "; value=" << ::testing::PrintToString(value)
+        << "; value.size()=" << value.size()
+        << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+        << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+        << "; seeker=" << (seeker - ::ReadU8::target.cbegin())
+        << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
+
+    if (seeking_result) {
+        ASSERT_EQ(
+            fragment
+            , value
+        ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+            << "; value=" << ::testing::PrintToString(value)
+            << "; value.size()=" << value.size()
+            << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+            << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+            << "; seeker=" << (seeker - ::ReadU8::target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
+    }
+    else {
+        ASSERT_EQ(
+            seeker_before_seeking
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+            << "; value=" << ::testing::PrintToString(value)
+            << "; value.size()=" << value.size()
+            << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+            << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+            << "; seeker=" << (seeker - ::ReadU8::target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
+    };
+};
+TEST_P(ReadU8, DelimitersNoLimiters) {
+    const auto value = ::std::get<::ReadU8::elem_part::sample>(GetParam());
+    auto seeker = ::ReadU8::target.cbegin() + ::std::get<::ReadU8::elem_part::shift1>(GetParam());
+    const auto delimiters = ::std::vector<::ReadU8::string_type>{
+        ::ReadU8::delimiter
+        , ::ReadU8::finish
+    };
+
+    const auto pos_of_delimiters = ::uns::string::parsing::find(::ReadU8::target, seeker, delimiters);
+
+    const auto seeking_result =
+        pos_of_delimiters != ::ReadU8::target.cend()
+        && (seeker < pos_of_delimiters);
+
+    ::ReadU8::string_type fragment = u8"";
+    const auto seeker_before_seeking = seeker;
+    ASSERT_EQ(
+        seeking_result
+        , ::uns::string::parsing::read<::ReadU8::string_type>(
+            ::ReadU8::target
+            , seeker
+            , fragment
+            , delimiters
+            , {
+                .qualifier = ::uns::string::parsing::seeker_position::from_end
+                , .offset = 1
+            }
+        )
+    ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+        << "; value=" << ::testing::PrintToString(value)
+        << "; value.size()=" << value.size()
+        << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+        << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+        << "; seeker=" << (seeker - ::ReadU8::target.cbegin());
+
+    if (seeking_result) {
+        ASSERT_EQ(
+            fragment
+            , value
+        ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+            << "; value=" << ::testing::PrintToString(value)
+            << "; value.size()=" << value.size()
+            << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+            << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+            << "; seeker=" << (seeker - ::ReadU8::target.cbegin());
+    }
+    else {
+        ASSERT_EQ(
+            seeker_before_seeking
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+            << "; value=" << ::testing::PrintToString(value)
+            << "; value.size()=" << value.size()
+            << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+            << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+            << "; seeker=" << (seeker - ::ReadU8::target.cbegin());
+    };
+};
+TEST_P(ReadU8, DelimiterNoLimiters) {
+    const auto value = ::std::get<::ReadU8::elem_part::sample>(GetParam());
+    auto seeker = ::ReadU8::target.cbegin() + ::std::get<::ReadU8::elem_part::shift1>(GetParam());
+    const auto delimiters = ::ReadU8::delimiter;
+
+    const auto pos_of_delimiters = ::uns::string::parsing::find(::ReadU8::target, seeker, delimiter);
+
+    const auto seeking_result =
+        pos_of_delimiters != ::ReadU8::target.cend()
+        && (seeker < pos_of_delimiters);
+
+    ::ReadU8::string_type fragment = u8"";
+    const auto seeker_before_seeking = seeker;
+    ASSERT_EQ(
+        seeking_result
+        , ::uns::string::parsing::read<::ReadU8::string_type>(
+            ::ReadU8::target
+            , seeker
+            , fragment
+            , delimiter
+            , {
+                .qualifier = ::uns::string::parsing::seeker_position::from_end
+                , .offset = 1
+            }
+        )
+    ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+        << "; value=" << ::testing::PrintToString(value)
+        << "; value.size()=" << value.size()
+        << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+        << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+        << "; seeker=" << (seeker - ::ReadU8::target.cbegin());
+
+    if (seeking_result) {
+        ASSERT_EQ(
+            fragment
+            , value
+        ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+            << "; value=" << ::testing::PrintToString(value)
+            << "; value.size()=" << value.size()
+            << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+            << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+            << "; seeker=" << (seeker - ::ReadU8::target.cbegin());
+    }
+    else {
+        ASSERT_EQ(
+            seeker_before_seeking
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+            << "; value=" << ::testing::PrintToString(value)
+            << "; value.size()=" << value.size()
+            << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+            << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+            << "; seeker=" << (seeker - ::ReadU8::target.cbegin());
+    };
+};
+TEST_P(ReadU8, DelimitersLimiters) {
+    const auto value = ::std::get<::ReadU8::elem_part::sample>(GetParam());
+    auto seeker = ::ReadU8::target.cbegin() + ::std::get<::ReadU8::elem_part::shift1>(GetParam());
+    const auto limiters = ::std::vector<::std::u8string>{
+        u8" x"
+        , u8"xv"
+        , u8"vx"
+    };
+    const auto limiter_beg = ::uns::string::parsing::find(target, seeker, limiters);
+    const auto limiter_end = target.cend();
+    ASSERT_LT(limiter_beg, limiter_end);
+
+    const auto delimiters = ::std::vector<::ReadU8::string_type>{
+        ::ReadU8::delimiter
+        , ::ReadU8::finish
+    };
+    const auto pos_of_delimiters = ::uns::string::parsing::find(::ReadU8::target, seeker, delimiters);
+
+    const auto seeking_result =
+        pos_of_delimiters != ::ReadU8::target.cend()
+        && (seeker < pos_of_delimiters)
+        && (pos_of_delimiters <= limiter_beg)
+        && (pos_of_delimiters < limiter_end);
+
+    ::ReadU8::string_type fragment = u8"";
+    const auto seeker_before_seeking = seeker;
+    ASSERT_EQ(
+        seeking_result
+        , ::uns::string::parsing::read<::ReadU8::string_type>(
+            ::ReadU8::target
+            , seeker
+            , fragment
+            , delimiters
+            , {
+                .qualifier = ::uns::string::parsing::seeker_position::from_end
+                , .offset = 1
+            }
+            , limiters
+        )
+    ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+        << "; value=" << ::testing::PrintToString(value)
+        << "; value.size()=" << value.size()
+        << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+        << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+        << "; seeker=" << (seeker - ::ReadU8::target.cbegin())
+        << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
+
+    if (seeking_result) {
+        ASSERT_EQ(
+            fragment
+            , value
+        ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+            << "; value=" << ::testing::PrintToString(value)
+            << "; value.size()=" << value.size()
+            << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+            << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+            << "; seeker=" << (seeker - ::ReadU8::target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
+    }
+    else {
+        ASSERT_EQ(
+            seeker_before_seeking
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+            << "; value=" << ::testing::PrintToString(value)
+            << "; value.size()=" << value.size()
+            << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+            << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+            << "; seeker=" << (seeker - ::ReadU8::target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
+    };
+};
+TEST_P(ReadU8, DelimiterLimiters) {
+    const auto value = ::std::get<::ReadU8::elem_part::sample>(GetParam());
+    auto seeker = ::ReadU8::target.cbegin() + ::std::get<::ReadU8::elem_part::shift1>(GetParam());
+    const auto limiters = ::std::vector<::std::u8string>{
+        u8" x"
+        , u8"xv"
+        , u8"vx"
+    };
+    const auto limiter_beg = ::uns::string::parsing::find(target, seeker, limiters);
+    const auto limiter_end = target.cend();
+    ASSERT_LT(limiter_beg, limiter_end);
+
+    const auto delimiters = ::ReadU8::delimiter;
+    const auto pos_of_delimiters = ::uns::string::parsing::find(::ReadU8::target, seeker, delimiters);
+
+    const auto seeking_result =
+        pos_of_delimiters != ::ReadU8::target.cend()
+        && (seeker < pos_of_delimiters)
+        && (pos_of_delimiters <= limiter_beg)
+        && (pos_of_delimiters < limiter_end);
+
+    ::ReadU8::string_type fragment = u8"";
+    const auto seeker_before_seeking = seeker;
+    ASSERT_EQ(
+        seeking_result
+        , ::uns::string::parsing::read<::ReadU8::string_type>(
+            ::ReadU8::target
+            , seeker
+            , fragment
+            , delimiter
+            , {
+                .qualifier = ::uns::string::parsing::seeker_position::from_end
+                , .offset = 1
+            }
+            , limiters
+        )
+    ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+        << "; value=" << ::testing::PrintToString(value)
+        << "; value.size()=" << value.size()
+        << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+        << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+        << "; seeker=" << (seeker - ::ReadU8::target.cbegin())
+        << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
+
+    if (seeking_result) {
+        ASSERT_EQ(
+            fragment
+            , value
+        ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+            << "; value=" << ::testing::PrintToString(value)
+            << "; value.size()=" << value.size()
+            << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+            << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+            << "; seeker=" << (seeker - ::ReadU8::target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
+    }
+    else {
+        ASSERT_EQ(
+            seeker_before_seeking
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+            << "; value=" << ::testing::PrintToString(value)
+            << "; value.size()=" << value.size()
+            << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+            << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+            << "; seeker=" << (seeker - ::ReadU8::target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(::std::u8string{ limiter_beg, limiter_end });
+    };
+};
+TEST_P(ReadU8, DelimitersLimiter) {
+    const auto value = ::std::get<::ReadU8::elem_part::sample>(GetParam());
+    auto seeker = ::ReadU8::target.cbegin() + ::std::get<::ReadU8::elem_part::shift1>(GetParam());
+    auto limiter = ::std::u8string{
+        target.cbegin() + (
+            ::std::get<::SeekU8::elem_part::shift2>(GetParam())
+            <= ::std::get<::SeekU8::elem_part::shift3>(GetParam())
+            ? ::std::get<::SeekU8::elem_part::shift2>(GetParam())
+            : ::std::get<::SeekU8::elem_part::shift3>(GetParam())
+        )
+        , target.cbegin() + (
+            ::std::get<::SeekU8::elem_part::shift2>(GetParam())
+            <= ::std::get<::SeekU8::elem_part::shift3>(GetParam())
+            ? ::std::get<::SeekU8::elem_part::shift3>(GetParam())
+            : ::std::get<::SeekU8::elem_part::shift2>(GetParam())
+        )
+    };
+    const auto limiter_beg = ::uns::string::parsing::find(target, seeker, limiter);
+    const auto limiter_end = (
+        limiter_beg != target.cend()
+        ? limiter_beg + limiter.size()
+        : target.cend()
+    );
+    if (
+        limiter_beg == limiter_end
+        && limiter_end == target.cend()
+    ) {
+        limiter.clear();
+    };
+
+    const auto delimiters = ::std::vector<::ReadU8::string_type>{
+        ::ReadU8::delimiter
+        , ::ReadU8::finish
+    };
+    const auto pos_of_delimiters = ::uns::string::parsing::find(::ReadU8::target, seeker, delimiters);
+
+    const auto seeking_result =
+        pos_of_delimiters != ::ReadU8::target.cend()
+        && (seeker < pos_of_delimiters)
+        && (pos_of_delimiters <= limiter_beg)
+        && (pos_of_delimiters < limiter_end);
+
+    ::ReadU8::string_type fragment = u8"";
+    const auto seeker_before_seeking = seeker;
+    ASSERT_EQ(
+        seeking_result
+        , ::uns::string::parsing::read<::ReadU8::string_type>(
+            ::ReadU8::target
+            , seeker
+            , fragment
+            , delimiters
+            , {
+                .qualifier = ::uns::string::parsing::seeker_position::from_end
+                , .offset = 1
+            }
+            , limiter
+        )
+    ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+        << "; value=" << ::testing::PrintToString(value)
+        << "; value.size()=" << value.size()
+        << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+        << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+        << "; seeker=" << (seeker - ::ReadU8::target.cbegin())
+        << "; limiter=" << ::testing::PrintToString(limiter);
+
+    if (seeking_result) {
+        ASSERT_EQ(
+            fragment
+            , value
+        ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+            << "; value=" << ::testing::PrintToString(value)
+            << "; value.size()=" << value.size()
+            << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+            << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+            << "; seeker=" << (seeker - ::ReadU8::target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_EQ(
+            seeker_before_seeking
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+            << "; value=" << ::testing::PrintToString(value)
+            << "; value.size()=" << value.size()
+            << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+            << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+            << "; seeker=" << (seeker - ::ReadU8::target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(limiter);
+    };
+};
+TEST_P(ReadU8, DelimiterLimiter) {
+    const auto value = ::std::get<::ReadU8::elem_part::sample>(GetParam());
+    auto seeker = ::ReadU8::target.cbegin() + ::std::get<::ReadU8::elem_part::shift1>(GetParam());
+    auto limiter = ::std::u8string{
+        target.cbegin() + (
+            ::std::get<::SeekU8::elem_part::shift2>(GetParam())
+            <= ::std::get<::SeekU8::elem_part::shift3>(GetParam())
+            ? ::std::get<::SeekU8::elem_part::shift2>(GetParam())
+            : ::std::get<::SeekU8::elem_part::shift3>(GetParam())
+        )
+        , target.cbegin() + (
+            ::std::get<::SeekU8::elem_part::shift2>(GetParam())
+            <= ::std::get<::SeekU8::elem_part::shift3>(GetParam())
+            ? ::std::get<::SeekU8::elem_part::shift3>(GetParam())
+            : ::std::get<::SeekU8::elem_part::shift2>(GetParam())
+        )
+    };
+    const auto limiter_beg = ::uns::string::parsing::find(target, seeker, limiter);
+    const auto limiter_end = (
+        limiter_beg != target.cend()
+        ? limiter_beg + limiter.size()
+        : target.cend()
+    );
+    if (
+        limiter_beg == limiter_end
+        && limiter_end == target.cend()
+    ) {
+        limiter.clear();
+    };
+
+    const auto delimiter = ::ReadU8::delimiter;
+    const auto pos_of_delimiters = ::uns::string::parsing::find(::ReadU8::target, seeker, delimiter);
+
+    const auto seeking_result =
+        pos_of_delimiters != ::ReadU8::target.cend()
+        && (seeker < pos_of_delimiters)
+        && (pos_of_delimiters <= limiter_beg)
+        && (pos_of_delimiters < limiter_end);
+
+    ::ReadU8::string_type fragment = u8"";
+    const auto seeker_before_seeking = seeker;
+    ASSERT_EQ(
+        seeking_result
+        , ::uns::string::parsing::read<::ReadU8::string_type>(
+            ::ReadU8::target
+            , seeker
+            , fragment
+            , delimiter
+            , {
+                .qualifier = ::uns::string::parsing::seeker_position::from_end
+                , .offset = 1
+            }
+            , limiter
+        )
+    ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+        << "; value=" << ::testing::PrintToString(value)
+        << "; value.size()=" << value.size()
+        << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+        << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+        << "; seeker=" << (seeker - ::ReadU8::target.cbegin())
+        << "; limiter=" << ::testing::PrintToString(limiter);
+
+    if (seeking_result) {
+        ASSERT_EQ(
+            fragment
+            , value
+        ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+            << "; value=" << ::testing::PrintToString(value)
+            << "; value.size()=" << value.size()
+            << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+            << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+            << "; seeker=" << (seeker - ::ReadU8::target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_EQ(
+            seeker_before_seeking
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(::ReadU8::target) << "\"\n"
+            << "; value=" << ::testing::PrintToString(value)
+            << "; value.size()=" << value.size()
+            << "; pos_of_delimiters=" << (pos_of_delimiters - ::ReadU8::target.cbegin())
+            << "seeker_before_seeking=" << (seeker_before_seeking - ::ReadU8::target.cbegin())
+            << "; seeker=" << (seeker - ::ReadU8::target.cbegin())
+            << "; limiter=" << ::testing::PrintToString(limiter);
+    };
+};
+
+INSTANTIATE_TEST_CASE_P(ParsingMethodsTests_Val0, ReadU8,
+    ::testing::Combine(
+        ::testing::Values(::ReadU8::values[0])
+        , ::testing::Values(::ReadU8::start.size() + ::ReadU8::samples[0].size() + ::ReadU8::equality.size())
+        , ::testing::Range<
+            ::ReadU8::shift2_type
+            , ::ReadU8::shift2_type
+        >(0, ::ReadU8::target.size(), 5)
+        , ::testing::Range<
+            ::ReadU8::shift3_type
+            , ::ReadU8::shift3_type
+        >(0, ::ReadU8::target.size(), 5)
+    )
+);
+INSTANTIATE_TEST_CASE_P(ParsingMethodsTests_Val1, ReadU8,
+    ::testing::Combine(
+        ::testing::Values(::ReadU8::values[1])
+        , ::testing::Values(
+            ::ReadU8::start.size()
+            + ::ReadU8::samples[0].size() + ::ReadU8::equality.size() + ::ReadU8::values[0].size() + ::ReadU8::delimiter.size()
+            + ::ReadU8::samples[1].size() + ::ReadU8::equality.size()
+        )
+        , ::testing::Range<
+            ::ReadU8::shift2_type
+            , ::ReadU8::shift2_type
+        >(0, ::ReadU8::target.size(), 5)
+        , ::testing::Range<
+            ::ReadU8::shift3_type
+            , ::ReadU8::shift3_type
+        >(0, ::ReadU8::target.size(), 5)
+    )
+);
+INSTANTIATE_TEST_CASE_P(ParsingMethodsTests_Val2, ReadU8,
+    ::testing::Combine(
+        ::testing::Values(::ReadU8::values[2])
+        , ::testing::Values(
+            ::ReadU8::start.size()
+            + ::ReadU8::samples[0].size() + ::ReadU8::equality.size() + ::ReadU8::values[0].size() + ::ReadU8::delimiter.size()
+            + ::ReadU8::samples[1].size() + ::ReadU8::equality.size() + ::ReadU8::values[1].size() + ::ReadU8::delimiter.size()
+            + ::ReadU8::samples[2].size() + ::ReadU8::equality.size()
+        )
+        , ::testing::Range<
+            ::ReadU8::shift2_type
+            , ::ReadU8::shift2_type
+        >(0, ::ReadU8::target.size(), 5)
+        , ::testing::Range<
+            ::ReadU8::shift3_type
+            , ::ReadU8::shift3_type
+        >(0, ::ReadU8::target.size(), 5)
+    )
+);
+INSTANTIATE_TEST_CASE_P(ParsingMethodsTests_ValNone, ReadU8,
+    ::testing::Combine(
+        ::testing::Values(::ReadU8::string_type{})
+        , ::testing::Values(
+            ::ReadU8::start.size()
+            + ::ReadU8::samples[0].size() + ::ReadU8::equality.size() + ::ReadU8::values[0].size() + ::ReadU8::delimiter.size()
+            + ::ReadU8::samples[1].size() + ::ReadU8::equality.size() + ::ReadU8::values[1].size() + ::ReadU8::delimiter.size()
+            + ::ReadU8::samples[2].size() + ::ReadU8::equality.size() + ::ReadU8::values[2].size()
+            , ::ReadU8::start.size()
+            + ::ReadU8::samples[0].size() + ::ReadU8::equality.size() + ::ReadU8::values[0].size() + ::ReadU8::delimiter.size()
+            + ::ReadU8::samples[1].size() + ::ReadU8::equality.size() + ::ReadU8::values[1].size() + ::ReadU8::delimiter.size()
+            + ::ReadU8::samples[2].size() + ::ReadU8::equality.size() + ::ReadU8::values[2].size() + ::ReadU8::delimiter.size()
+        )
+        , ::testing::Range<
+            ::ReadU8::shift2_type
+            , ::ReadU8::shift2_type
+        >(0, ::ReadU8::target.size(), 5)
+        , ::testing::Range<
+            ::ReadU8::shift3_type
+            , ::ReadU8::shift3_type
+        >(0, ::ReadU8::target.size(), 5)
     )
 );
 
