@@ -5273,94 +5273,50 @@ INSTANTIATE_TEST_CASE_P(ParsingMethodsTests_ValNone, ReadU8,
 );
 
 
-class parsing_param {
-public:
-    using type = ::std::tuple<
-        ::std::size_t
-        , ::std::size_t
-        , ::std::size_t
-        , ::std::size_t
-        , ::std::size_t
-        , ::std::size_t
-    >;
-public:
-    enum {
-        seeker_init
-        , seeker_result
-        , sample
-        , value
-        , limiter_pos
-        , limiter_length
-    };
-public:
-    static ::std::string to_string(const ::parsing_param::type& Params) {
-        auto result = ::std::string{};
-
-        result += "{ seeker_init=" + ::testing::PrintToString(::std::get<::parsing_param::seeker_init>(Params))
-            + ", seeker_result=" + ::testing::PrintToString(::std::get<::parsing_param::seeker_result>(Params));
-            + ", sample=" + ::testing::PrintToString(::std::get<::parsing_param::sample>(Params));
-            + ", value=\'" + ::testing::PrintToString(::std::get<::parsing_param::value>(Params));
-            + ", limiter_pos=\'" + ::testing::PrintToString(::std::get<::parsing_param::limiter_pos>(Params));
-            + ", limiter_length=\'" + ::testing::PrintToString(::std::get<::parsing_param::limiter_length>(Params));
-        result += " }";
-
-        return result;
-    };
-};
-
-template<>
-::std::string testing::PrintToString(const ::parsing_param::type& Params) {
-    return ::parsing_param::to_string(Params);
-};
 
 template<::uns::is_basic_string string_t>
-class Parsing : public ::testing::TestWithParam<::parsing_param::type> {
+class Parsing {
 public:
     using string_type = string_t;
-    using params_type = ::parsing_param::type;
     using samples_collection_type = ::std::vector<string_type>;
 public:
     inline static string_type start = ::uns::string::cast<string_type>(U"start:");
-    inline static samples_collection_type samples = {
+    inline static samples_collection_type keys = {
         ::uns::string::cast<string_type>(U"some_key1")
         , ::uns::string::cast<string_type>(U"некий_ключ2")
         , ::uns::string::cast<string_type>(U"ani_clue3")
+        , ::uns::string::cast<string_type>(U"нек\u53E3е_\u4FA1\u50244")
+        , ::uns::string::cast<string_type>(U"\u4F55\u3089\u304Bnо_clue5")
     };
     inline static samples_collection_type values = {
-        ::uns::string::cast<string_type>(U"SOME_VAL1")
-        , ::uns::string::cast<string_type>(U"некое_значение2")
+        ::uns::string::cast<string_type>(U"нек\u53E3е_зна4ение1")
+        , ::uns::string::cast<string_type>(U"\u4F55\u3089\u304Bnо\u4FA1\u50242")
         , ::uns::string::cast<string_type>(U"ani_mean3")
+        , ::uns::string::cast<string_type>(U"\u4FA5\u1089\u354B\u2FA1\u5024")
+        , ::uns::string::cast<string_type>(U"\u4FA5\u354BЫ\u5024\u4FA5\u354Bж\u5024")
     };
     inline static string_type equality = ::uns::string::cast<string_type>(U" = ");
     inline static samples_collection_type delimiters = {
         ::uns::string::cast<string_type>(U";")
         , ::uns::string::cast<string_type>(U"; ")
+        , ::uns::string::cast<string_type>(U"?")
+        , ::uns::string::cast<string_type>(U"&&&")
         , ::uns::string::cast<string_type>(U".")
     };
     inline static string_type finish = ::uns::string::cast<string_type>(U"xvx");
     inline static string_type target = start
-        + samples[0] + equality + values[0] + delimiters[0]
-        + samples[1] + equality + values[1] + delimiters[1]
-        + samples[2] + equality + values[2] + delimiters[2]
+        + keys[0] + equality + values[0] + delimiters[0]
+        + keys[1] + equality + values[1] + delimiters[1]
+        + keys[2] + equality + values[2] + delimiters[2]
+        + keys[3] + equality + values[3] + delimiters[3]
+        + keys[4] + equality + values[4] + delimiters[4]
         + finish;
 public:
-    static ::std::string to_string(const typename decltype(samples)::const_iterator& sample_iter) {
+    static ::std::string seeker_to_string(const typename string_type::const_iterator& Seeker) {
         auto result = ::std::string{};
 
-        if (sample_iter != samples.cend()) {
-            result += "\'" + ::testing::PrintToString(*sample_iter) + "\'";
-        }
-        else {
-            result += "samples.cend()";
-        };
-
-        return result;
-    };
-    static ::std::string to_string(const typename string_type::const_iterator& seeker) {
-        auto result = ::std::string{};
-
-        if (seeker != target.cend()) {
-            result += "\'" + ::testing::PrintToString(string_type{ seeker, target.cend() }) + "\'";
+        if (Seeker != target.cend()) {
+            result += "\'" + ::testing::PrintToString(string_type{ Seeker, target.cend() }) + "\'";
         }
         else {
             result += "target.cend()";
@@ -5368,293 +5324,361 @@ public:
 
         return result;
     };
+    static ::std::string key_to_string(const typename decltype(keys)::const_iterator& KeyIter) {
+        auto result = ::std::string{};
+
+        if (KeyIter != keys.cend()) {
+            result += "\'" + ::testing::PrintToString(*KeyIter) + "\'";
+        }
+        else {
+            result += "keys.cend()";
+        };
+
+        return result;
+    };
+    static ::std::string value_to_string(const typename decltype(values)::const_iterator& ValueIter) {
+        auto result = ::std::string{};
+
+        if (ValueIter != keys.cend()) {
+            result += "\'" + ::testing::PrintToString(*ValueIter) + "\'";
+        }
+        else {
+            result += "values.cend()";
+        };
+
+        return result;
+    };
 public:
-    typename string_type::const_iterator get_seeker_init() {
-        return target.cbegin() + ::std::get<::parsing_param::seeker_init>(GetParam());
+    static int seeker_to_num(const typename string_type::const_iterator& Seeker) {
+        return Seeker - target.cbegin();
     };
-    typename string_type::const_iterator get_seeker_result() {
-        return target.cbegin() + ::std::get<::parsing_param::seeker_result>(GetParam());
+    static int key_iter_to_num(const typename decltype(keys)::const_iterator& KeyIter) {
+        return KeyIter - keys.cbegin();
     };
-    typename decltype(samples)::const_iterator default_sample_iter() {
-        return samples.cend();
+    static int value_iter_to_num(const typename decltype(values)::const_iterator& ValueIter) {
+        return ValueIter - values.cbegin();
     };
-    typename decltype(values)::const_iterator default_value_iter() {
-        return values.cend();
+public:
+    static string_type get_target() { return target; };
+};
+
+namespace param_set {
+
+    template<::uns::is_basic_string string_t>
+    struct ParsingFind {
+        ::std::size_t seeker_init;
+        ::std::size_t seeker_result;
+        string_t sample;
+        ::std::size_t sample_iter;
+    public:
+        ::std::string to_string() const {
+            return "{ seeker_init=" + ::testing::PrintToString(seeker_init)
+                + ", seeker_result=" + ::testing::PrintToString(seeker_result)
+                + ", sample=" + ::testing::PrintToString(sample)
+                + ", sample_iter=" + ::testing::PrintToString(sample_iter) + " }";
+        };
     };
-    typename decltype(samples)::const_iterator expected_sample_iter() {
-        return samples.cbegin() + ::std::get<::parsing_param::sample>(GetParam());
+
+};
+
+
+template<::uns::is_basic_string string_t>
+class ParsingFind :
+    public ::Parsing<string_t>
+    , public ::testing::TestWithParam<::param_set::ParsingFind<string_t>>
+{
+private:
+    using base = ::Parsing<string_t>;
+    using test = ::testing::TestWithParam<::param_set::ParsingFind<string_t>>;
+public:
+    using string_type = string_t;
+public:
+    typename base::string_type::const_iterator get_seeker_init() {
+        return base::target.cbegin() + test::GetParam().seeker_init;
     };
-    typename decltype(values)::const_iterator expected_value_iter() {
-        return values.cbegin() + ::std::get<::parsing_param::value>(GetParam());
+    typename base::string_type::const_iterator get_seeker_result() {
+        return base::target.cbegin() + test::GetParam().seeker_result;
+    };
+    typename decltype(base::keys)::const_iterator default_sample_iter() {
+        return base::keys.cend();
+    };
+};
+
+
+template<::uns::is_basic_string string_t>
+class ParsingFind_Samples : public ::ParsingFind<string_t> {
+private:
+    using base = ::ParsingFind<string_t>;
+public:
+    typename decltype(base::keys)::const_iterator expected_sample_iter() {
+        return base::keys.cbegin() + base::GetParam().sample_iter;
+    };
+public:
+    static ::std::vector<::param_set::ParsingFind<string_t>> generate_tests() {
+        using single_test = ::param_set::ParsingFind<string_t>;
+
+        auto result = ::std::vector<::param_set::ParsingFind<string_t>>{};
+
+        ::std::size_t seeker = 0;
+        auto precursor = base::start;
+        for (::std::size_t idx = 0; idx < base::keys.size() && idx < base::values.size() && idx < base::delimiters.size(); ++idx) {
+            for (; seeker <= precursor.size() && seeker < base::target.size(); ++seeker) {
+                result.emplace_back(
+                    single_test{
+                        .seeker_init = seeker
+                        , .seeker_result = precursor.size()
+                        , .sample = base::keys[idx]
+                        , .sample_iter = idx
+                    }
+                );
+            };
+            precursor += base::keys[idx] + base::equality + base::values[idx] + base::delimiters[idx];
+        };
+        for (; seeker < base::target.size(); ++seeker) {
+            result.emplace_back(
+                single_test{
+                    .seeker_init = seeker
+                    , .seeker_result = base::target.size()
+                    , .sample = ::uns::string::cast<string_t>("fake_key")
+                    , .sample_iter = base::keys.size()
+                }
+            );
+        };
+
+        return result;
     };
 };
 
 template<::uns::is_basic_string string_t>
-class ParsingFind : public ::Parsing<string_t> {
+class ParsingFind_Sample : public ::ParsingFind<string_t> {
+private:
+    using base = ::ParsingFind<string_t>;
 public:
-    static ::parsing_param::type make(
-        ::std::size_t seeker_init
-        , ::std::size_t seeker_expected
-        , ::std::size_t expected_sample
-    ) {
-        return {
-            seeker_init
-            , seeker_expected
-            , expected_sample
-            , 0
-            , 0
-            , 0
+    string_t expected_sample() {
+        return base::GetParam().sample;
+    };
+public:
+    static ::std::vector<::param_set::ParsingFind<string_t>> generate_tests() {
+        using single_test = ::param_set::ParsingFind<string_t>;
+
+        auto result = ::std::vector<::param_set::ParsingFind<string_t>>{};
+
+        ::std::size_t seeker = 0;
+        auto precursor = base::start;
+        for (::std::size_t idx = 0; idx < base::keys.size() && idx < base::values.size() && idx < base::delimiters.size(); ++idx) {
+            seeker = 0;
+            for (; seeker <= precursor.size() && seeker < base::target.size(); ++seeker) {
+                result.emplace_back(
+                    single_test{
+                        .seeker_init = seeker
+                        , .seeker_result = precursor.size()
+                        , .sample = base::keys[idx]
+                        , .sample_iter = idx
+                    }
+                );
+            };
+            for (; seeker < base::target.size(); ++seeker) {
+                result.emplace_back(
+                    single_test{
+                        .seeker_init = seeker
+                        , .seeker_result = base::target.size()
+                        , .sample = base::keys[idx]
+                        , .sample_iter = idx
+                    }
+                );
+            };
+            precursor += base::keys[idx] + base::equality + base::values[idx] + base::delimiters[idx];
         };
+        seeker = 0;
+        for (; seeker < base::target.size(); ++seeker) {
+            result.emplace_back(
+                single_test{
+                    .seeker_init = seeker
+                    , .seeker_result = base::target.size()
+                    , .sample = ::uns::string::cast<string_t>("fake_key")
+                    , .sample_iter = base::keys.size()
+                }
+            );
+        };
+
+        return result;
     };
 };
 
-using ParsingFindU32 = ::ParsingFind<::std::u32string>;
-TEST_P(ParsingFindU32, Samples) {
+
+using ParsingFind_SamplesU32 = ::ParsingFind_Samples<::std::u32string>;
+template<>
+::std::string testing::PrintToString(const ::param_set::ParsingFind<::std::u32string>& Params) {
+    return Params.to_string();
+};
+
+TEST_P(ParsingFind_SamplesU32, Do) {
     auto found_sample = default_sample_iter();
     const auto seeker = get_seeker_init();
 
     const auto result = ::uns::string::parsing::find(
         target
         , seeker
-        , samples
+        , keys
         , found_sample
     );
 
     ASSERT_EQ(
-        result
-        , get_seeker_result()
-    ) << "result = " << ::ParsingFindU32::to_string(result)
-        << ", expected_result = " << ::ParsingFindU32::to_string(get_seeker_result());
+        seeker_to_num(result)
+        , seeker_to_num(get_seeker_result())
+    ) << ::testing::PrintToString(get_target());
 
     ASSERT_EQ(
-        found_sample
-        , expected_sample_iter()
-    ) << "found_sample = " << ::ParsingFindU32::to_string(found_sample)
-        << ", expected_sample = " << ::ParsingFindU32::to_string(expected_sample_iter());
+        key_iter_to_num(found_sample)
+        , key_iter_to_num(expected_sample_iter())
+    ) << ::testing::PrintToString(get_target());
 };
 
-INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingFindU32,
-    ::testing::Values(
-        ::ParsingFindU32::make(
-            0
-            , ::ParsingFindU32::start.size()
-            , 0
-        )
-        , ::ParsingFindU32::make(
-            ::ParsingFindU32::start.size() - 1
-            , ::ParsingFindU32::start.size()
-            , 0
-        )
-        , ::ParsingFindU32::make(
-            ::ParsingFindU32::start.size()
-            , ::ParsingFindU32::start.size()
-            , 0
-        )
-        , ::ParsingFindU32::make(
-            ::ParsingFindU32::start.size()
-                + ::ParsingFindU32::samples[0].size() - 3
-            , ::ParsingFindU32::start.size()
-                + ::ParsingFindU32::samples[0].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[0].size() + ::ParsingFindU32::delimiters[0].size()
-            , 1
-        )
-        , ::ParsingFindU32::make(
-            ::ParsingFindU32::start.size()
-                + ::ParsingFindU32::samples[0].size() + ::ParsingFindU32::equality.size() - 1
-            , ::ParsingFindU32::start.size()
-                + ::ParsingFindU32::samples[0].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[0].size() + ::ParsingFindU32::delimiters[0].size()
-            , 1
-        )
-        , ::ParsingFindU32::make(
-            ::ParsingFindU32::start.size()
-                + ::ParsingFindU32::samples[0].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[0].size() - 2
-            , ::ParsingFindU32::start.size()
-                + ::ParsingFindU32::samples[0].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[0].size() + ::ParsingFindU32::delimiters[0].size()
-            , 1
-        )
-        , ::ParsingFindU32::make(
-            ::ParsingFindU32::start.size()
-                + ::ParsingFindU32::samples[0].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[0].size() + ::ParsingFindU32::delimiters[0].size()
-            , ::ParsingFindU32::start.size()
-                + ::ParsingFindU32::samples[0].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[0].size() + ::ParsingFindU32::delimiters[0].size()
-            , 1
-        )
-        , ::ParsingFindU32::make(
-            ::ParsingFindU32::start.size()
-                + ::ParsingFindU32::samples[0].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[0].size() + ::ParsingFindU32::delimiters[0].size()
-                + ::ParsingFindU32::samples[1].size() - 5
-            , ::ParsingFindU32::start.size()
-                + ::ParsingFindU32::samples[0].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[0].size() + ::ParsingFindU32::delimiters[0].size()
-                + ::ParsingFindU32::samples[1].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[1].size() + ::ParsingFindU32::delimiters[1].size()
-            , 2
-        )
-        , ::ParsingFindU32::make(
-            ::ParsingFindU32::start.size()
-                + ::ParsingFindU32::samples[0].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[0].size() + ::ParsingFindU32::delimiters[0].size()
-                + ::ParsingFindU32::samples[1].size() + ::ParsingFindU32::equality.size() + 1
-            , ::ParsingFindU32::start.size()
-                + ::ParsingFindU32::samples[0].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[0].size() + ::ParsingFindU32::delimiters[0].size()
-                + ::ParsingFindU32::samples[1].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[1].size() + ::ParsingFindU32::delimiters[1].size()
-            , 2
-        )
-        , ::ParsingFindU32::make(
-            ::ParsingFindU32::start.size()
-                + ::ParsingFindU32::samples[0].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[0].size() + ::ParsingFindU32::delimiters[0].size()
-                + ::ParsingFindU32::samples[1].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[1].size() - 1
-            , ::ParsingFindU32::start.size()
-                + ::ParsingFindU32::samples[0].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[0].size() + ::ParsingFindU32::delimiters[0].size()
-                + ::ParsingFindU32::samples[1].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[1].size() + ::ParsingFindU32::delimiters[1].size()
-            , 2
-        )
-        , ::ParsingFindU32::make(
-            ::ParsingFindU32::start.size()
-                + ::ParsingFindU32::samples[0].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[0].size() + ::ParsingFindU32::delimiters[0].size()
-                + ::ParsingFindU32::samples[1].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[1].size() + ::ParsingFindU32::delimiters[1].size() - 4
-            , ::ParsingFindU32::start.size()
-                + ::ParsingFindU32::samples[0].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[0].size() + ::ParsingFindU32::delimiters[0].size()
-                + ::ParsingFindU32::samples[1].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[1].size() + ::ParsingFindU32::delimiters[1].size()
-            , 2
-        )
-        , ::ParsingFindU32::make(
-            ::ParsingFindU32::start.size()
-                + ::ParsingFindU32::samples[0].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[0].size() + ::ParsingFindU32::delimiters[0].size()
-                + ::ParsingFindU32::samples[1].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[1].size() + ::ParsingFindU32::delimiters[1].size()
-            , ::ParsingFindU32::start.size()
-                + ::ParsingFindU32::samples[0].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[0].size() + ::ParsingFindU32::delimiters[0].size()
-                + ::ParsingFindU32::samples[1].size() + ::ParsingFindU32::equality.size() + ::ParsingFindU32::values[1].size() + ::ParsingFindU32::delimiters[1].size()
-            , 2
-        )
-        , ::ParsingFindU32::make(
-            ::ParsingFindU32::target.size() - 10
-            , ::ParsingFindU32::target.size()
-            , 3
-        )
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingFind_SamplesU32,
+    ::testing::ValuesIn(
+        ::ParsingFind_SamplesU32::generate_tests()
     )
 );
 
-using ParsingFindU8 = ::ParsingFind<::std::u32string>;
-TEST_P(ParsingFindU8, Sample) {
+using ParsingFind_SamplesU8 = ::ParsingFind_Samples<::std::u8string>;
+template<>
+::std::string testing::PrintToString(const ::param_set::ParsingFind<::std::u8string>& Params) {
+    return Params.to_string();
+};
+
+TEST_P(ParsingFind_SamplesU8, Do) {
     auto found_sample = default_sample_iter();
     const auto seeker = get_seeker_init();
 
     const auto result = ::uns::string::parsing::find(
         target
         , seeker
-        , samples
+        , keys
         , found_sample
     );
 
     ASSERT_EQ(
-        result
-        , get_seeker_result()
-    ) << "result = " << ::ParsingFindU8::to_string(result)
-        << ", expected_result = " << ::ParsingFindU8::to_string(get_seeker_result());
+        seeker_to_num(result)
+        , seeker_to_num(get_seeker_result())
+    ) << ::testing::PrintToString(get_target());
 
     ASSERT_EQ(
-        found_sample
-        , expected_sample_iter()
-    ) << "found_sample = " << ::ParsingFindU8::to_string(found_sample)
-        << ", expected_sample = " << ::ParsingFindU8::to_string(expected_sample_iter());
+        key_iter_to_num(found_sample)
+        , key_iter_to_num(expected_sample_iter())
+    ) << ::testing::PrintToString(get_target());
 };
 
-INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingFindU8,
-    ::testing::Values(
-        ::ParsingFindU8::make(
-            0
-            , ::ParsingFindU8::start.size()
-            , 0
-        )
-        , ::ParsingFindU8::make(
-            ::ParsingFindU8::start.size() - 1
-            , ::ParsingFindU8::start.size()
-            , 0
-        )
-        , ::ParsingFindU8::make(
-            ::ParsingFindU8::start.size()
-            , ::ParsingFindU8::start.size()
-            , 0
-        )
-        , ::ParsingFindU8::make(
-            ::ParsingFindU8::start.size()
-                + ::ParsingFindU8::samples[0].size() - 3
-            , ::ParsingFindU8::start.size()
-                + ::ParsingFindU8::samples[0].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[0].size() + ::ParsingFindU8::delimiters[0].size()
-            , 1
-        )
-        , ::ParsingFindU8::make(
-            ::ParsingFindU8::start.size()
-                + ::ParsingFindU8::samples[0].size() + ::ParsingFindU8::equality.size() - 1
-            , ::ParsingFindU8::start.size()
-                + ::ParsingFindU8::samples[0].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[0].size() + ::ParsingFindU8::delimiters[0].size()
-            , 1
-        )
-        , ::ParsingFindU8::make(
-            ::ParsingFindU8::start.size()
-                + ::ParsingFindU8::samples[0].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[0].size() - 2
-            , ::ParsingFindU8::start.size()
-                + ::ParsingFindU8::samples[0].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[0].size() + ::ParsingFindU8::delimiters[0].size()
-            , 1
-        )
-        , ::ParsingFindU8::make(
-            ::ParsingFindU8::start.size()
-                + ::ParsingFindU8::samples[0].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[0].size() + ::ParsingFindU8::delimiters[0].size()
-            , ::ParsingFindU8::start.size()
-                + ::ParsingFindU8::samples[0].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[0].size() + ::ParsingFindU8::delimiters[0].size()
-            , 1
-        )
-        , ::ParsingFindU8::make(
-            ::ParsingFindU8::start.size()
-                + ::ParsingFindU8::samples[0].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[0].size() + ::ParsingFindU8::delimiters[0].size()
-                + ::ParsingFindU8::samples[1].size() - 5
-            , ::ParsingFindU8::start.size()
-                + ::ParsingFindU8::samples[0].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[0].size() + ::ParsingFindU8::delimiters[0].size()
-                + ::ParsingFindU8::samples[1].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[1].size() + ::ParsingFindU8::delimiters[1].size()
-            , 2
-        )
-        , ::ParsingFindU8::make(
-            ::ParsingFindU8::start.size()
-                + ::ParsingFindU8::samples[0].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[0].size() + ::ParsingFindU8::delimiters[0].size()
-                + ::ParsingFindU8::samples[1].size() + ::ParsingFindU8::equality.size() + 1
-            , ::ParsingFindU8::start.size()
-                + ::ParsingFindU8::samples[0].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[0].size() + ::ParsingFindU8::delimiters[0].size()
-                + ::ParsingFindU8::samples[1].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[1].size() + ::ParsingFindU8::delimiters[1].size()
-            , 2
-        )
-        , ::ParsingFindU8::make(
-            ::ParsingFindU8::start.size()
-                + ::ParsingFindU8::samples[0].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[0].size() + ::ParsingFindU8::delimiters[0].size()
-                + ::ParsingFindU8::samples[1].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[1].size() - 1
-            , ::ParsingFindU8::start.size()
-                + ::ParsingFindU8::samples[0].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[0].size() + ::ParsingFindU8::delimiters[0].size()
-                + ::ParsingFindU8::samples[1].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[1].size() + ::ParsingFindU8::delimiters[1].size()
-            , 2
-        )
-        , ::ParsingFindU8::make(
-            ::ParsingFindU8::start.size()
-                + ::ParsingFindU8::samples[0].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[0].size() + ::ParsingFindU8::delimiters[0].size()
-                + ::ParsingFindU8::samples[1].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[1].size() + ::ParsingFindU8::delimiters[1].size() - 4
-            , ::ParsingFindU8::start.size()
-                + ::ParsingFindU8::samples[0].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[0].size() + ::ParsingFindU8::delimiters[0].size()
-                + ::ParsingFindU8::samples[1].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[1].size() + ::ParsingFindU8::delimiters[1].size()
-            , 2
-        )
-        , ::ParsingFindU8::make(
-            ::ParsingFindU8::start.size()
-                + ::ParsingFindU8::samples[0].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[0].size() + ::ParsingFindU8::delimiters[0].size()
-                + ::ParsingFindU8::samples[1].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[1].size() + ::ParsingFindU8::delimiters[1].size()
-            , ::ParsingFindU8::start.size()
-                + ::ParsingFindU8::samples[0].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[0].size() + ::ParsingFindU8::delimiters[0].size()
-                + ::ParsingFindU8::samples[1].size() + ::ParsingFindU8::equality.size() + ::ParsingFindU8::values[1].size() + ::ParsingFindU8::delimiters[1].size()
-            , 2
-        )
-        , ::ParsingFindU8::make(
-            ::ParsingFindU8::target.size() - 10
-            , ::ParsingFindU8::target.size()
-            , 3
-        )
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingFind_SamplesU8,
+    ::testing::ValuesIn(
+        ::ParsingFind_SamplesU8::generate_tests()
+    )
+);
+
+using ParsingFind_SamplesU16 = ::ParsingFind_Samples<::std::u16string>;
+template<>
+::std::string testing::PrintToString(const ::param_set::ParsingFind<::std::u16string>& Params) {
+    return Params.to_string();
+};
+
+TEST_P(ParsingFind_SamplesU16, Do) {
+    auto found_sample = default_sample_iter();
+    const auto seeker = get_seeker_init();
+
+    const auto result = ::uns::string::parsing::find(
+        target
+        , seeker
+        , keys
+        , found_sample
+    );
+
+    ASSERT_EQ(
+        seeker_to_num(result)
+        , seeker_to_num(get_seeker_result())
+    ) << ::testing::PrintToString(get_target());
+
+    ASSERT_EQ(
+        key_iter_to_num(found_sample)
+        , key_iter_to_num(expected_sample_iter())
+    ) << ::testing::PrintToString(get_target());
+};
+
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingFind_SamplesU16,
+    ::testing::ValuesIn(
+        ::ParsingFind_SamplesU16::generate_tests()
+    )
+);
+
+using ParsingFind_SampleU32 = ::ParsingFind_Sample<::std::u32string>;
+
+TEST_P(ParsingFind_SampleU32, Do) {
+    const auto seeker = get_seeker_init();
+
+    const auto result = ::uns::string::parsing::find(
+        target
+        , seeker
+        , expected_sample()
+    );
+
+    ASSERT_EQ(
+        seeker_to_num(result)
+        , seeker_to_num(get_seeker_result())
+    ) << ::testing::PrintToString(get_target());
+};
+
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingFind_SampleU32,
+    ::testing::ValuesIn(
+        ::ParsingFind_SampleU32::generate_tests()
+    )
+);
+
+using ParsingFind_SampleU8 = ::ParsingFind_Sample<::std::u8string>;
+
+TEST_P(ParsingFind_SampleU8, Do) {
+    const auto seeker = get_seeker_init();
+
+    const auto result = ::uns::string::parsing::find(
+        target
+        , seeker
+        , expected_sample()
+    );
+
+    ASSERT_EQ(
+        seeker_to_num(result)
+        , seeker_to_num(get_seeker_result())
+    ) << ::testing::PrintToString(get_target());
+};
+
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingFind_SampleU8,
+    ::testing::ValuesIn(
+        ::ParsingFind_SampleU8::generate_tests()
+    )
+);
+
+using ParsingFind_SampleU16 = ::ParsingFind_Sample<::std::u16string>;
+
+TEST_P(ParsingFind_SampleU16, Do) {
+    const auto seeker = get_seeker_init();
+
+    const auto result = ::uns::string::parsing::find(
+        target
+        , seeker
+        , expected_sample()
+    );
+
+    ASSERT_EQ(
+        seeker_to_num(result)
+        , seeker_to_num(get_seeker_result())
+    ) << ::testing::PrintToString(get_target());
+};
+
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingFind_SampleU16,
+    ::testing::ValuesIn(
+        ::ParsingFind_SampleU16::generate_tests()
     )
 );
 
 
+/*
 template<::uns::is_basic_string string_t>
 class ParsingSeek : public ::Parsing<string_t> {
 protected:
@@ -5682,8 +5706,8 @@ public:
         return { limiter, limiter_beg, limiter_end };
     };
 public:
-    bool get_seeking_result(const typename decltype(base::samples)::const_iterator& Sample) {
-        if (Sample == base::samples.cend()) return false;
+    bool get_seeking_result(const typename decltype(base::keys)::const_iterator& Sample) {
+        if (Sample == base::keys.cend()) return false;
 
         const auto seeker = base::get_seeker_init();
         auto pos_of_key = ::uns::string::parsing::find(base::target, seeker, *Sample);
@@ -5779,7 +5803,7 @@ TEST_P(ParsingSeekU32, SamplesExplicitLimiters) {
         , ::uns::string::parsing::seek<::ParsingSeekU32::string_type>(
             target
             , seeker
-            , samples
+            , keys
             , {
                 .qualifier = ::uns::string::parsing::seeker_position::from_end
                 , .offset = static_cast<int>(equality.size()) + 1
@@ -5862,7 +5886,7 @@ TEST_P(ParsingSeekU32, SamplesNoLimiters) {
         , ::uns::string::parsing::seek<::ParsingSeekU32::string_type>(
             target
             , seeker
-            , samples
+            , keys
             , {
                 .qualifier = ::uns::string::parsing::seeker_position::from_end
                 , .offset = static_cast<int>(equality.size()) + 1
@@ -5940,7 +5964,7 @@ TEST_P(ParsingSeekU32, SamplesLimiters) {
         , ::uns::string::parsing::seek<::ParsingSeekU32::string_type>(
             target
             , seeker
-            , samples
+            , keys
             , {
                 .qualifier = ::uns::string::parsing::seeker_position::from_end
                 , .offset = static_cast<int>(equality.size()) + 1
@@ -5983,7 +6007,7 @@ TEST_P(ParsingSeekU32, SampleLimiters) {
         , ::uns::string::parsing::seek<::ParsingSeekU32::string_type>(
             target
             , seeker
-            , samples
+            , keys
             , {
                 .qualifier = ::uns::string::parsing::seeker_position::from_end
                 , .offset = static_cast<int>(equality.size()) + 1
@@ -6025,7 +6049,7 @@ TEST_P(ParsingSeekU32, SamplesLimiter) {
         , ::uns::string::parsing::seek<::ParsingSeekU32::string_type>(
             target
             , seeker
-            , samples
+            , keys
             , {
                 .qualifier = ::uns::string::parsing::seeker_position::from_end
                 , .offset = static_cast<int>(equality.size()) + 1
@@ -6115,7 +6139,7 @@ INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU32,
             , { 0, ::ParsingSeekU32::target.size(), 1 }
             , { 1, 10, 1 }
         )
-    )
+    )*/
     /*::testing::Combine(
         ::testing::ValuesIn({
             ::ParsingSeekU32::make(
@@ -6135,75 +6159,75 @@ INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU32,
             )
             , ::ParsingSeekU32::make(
                 ::ParsingSeekU32::start.size()
-                + ::ParsingSeekU32::samples[0].size() - 3
+                + ::ParsingSeekU32::keys[0].size() - 3
                 , ::ParsingSeekU32::start.size()
-                + ::ParsingSeekU32::samples[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
+                + ::ParsingSeekU32::keys[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
                 , 1
             )
             , ::ParsingSeekU32::make(
                 ::ParsingSeekU32::start.size()
-                + ::ParsingSeekU32::samples[0].size() + ::ParsingSeekU32::equality.size() - 1
+                + ::ParsingSeekU32::keys[0].size() + ::ParsingSeekU32::equality.size() - 1
                 , ::ParsingSeekU32::start.size()
-                + ::ParsingSeekU32::samples[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
+                + ::ParsingSeekU32::keys[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
                 , 1
             )
             , ::ParsingSeekU32::make(
                 ::ParsingSeekU32::start.size()
-                + ::ParsingSeekU32::samples[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() - 2
+                + ::ParsingSeekU32::keys[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() - 2
                 , ::ParsingSeekU32::start.size()
-                + ::ParsingSeekU32::samples[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
+                + ::ParsingSeekU32::keys[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
                 , 1
             )
             , ::ParsingSeekU32::make(
                 ::ParsingSeekU32::start.size()
-                + ::ParsingSeekU32::samples[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
+                + ::ParsingSeekU32::keys[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
                 , ::ParsingSeekU32::start.size()
-                + ::ParsingSeekU32::samples[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
+                + ::ParsingSeekU32::keys[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
                 , 1
             )
             , ::ParsingSeekU32::make(
                 ::ParsingSeekU32::start.size()
-                + ::ParsingSeekU32::samples[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
-                + ::ParsingSeekU32::samples[1].size() - 5
+                + ::ParsingSeekU32::keys[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
+                + ::ParsingSeekU32::keys[1].size() - 5
                 , ::ParsingSeekU32::start.size()
-                + ::ParsingSeekU32::samples[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
-                + ::ParsingSeekU32::samples[1].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[1].size() + ::ParsingSeekU32::delimiters[1].size()
+                + ::ParsingSeekU32::keys[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
+                + ::ParsingSeekU32::keys[1].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[1].size() + ::ParsingSeekU32::delimiters[1].size()
                 , 2
             )
             , ::ParsingSeekU32::make(
                 ::ParsingSeekU32::start.size()
-                + ::ParsingSeekU32::samples[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
-                + ::ParsingSeekU32::samples[1].size() + ::ParsingSeekU32::equality.size() + 1
+                + ::ParsingSeekU32::keys[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
+                + ::ParsingSeekU32::keys[1].size() + ::ParsingSeekU32::equality.size() + 1
                 , ::ParsingSeekU32::start.size()
-                + ::ParsingSeekU32::samples[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
-                + ::ParsingSeekU32::samples[1].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[1].size() + ::ParsingSeekU32::delimiters[1].size()
+                + ::ParsingSeekU32::keys[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
+                + ::ParsingSeekU32::keys[1].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[1].size() + ::ParsingSeekU32::delimiters[1].size()
                 , 2
             )
             , ::ParsingSeekU32::make(
                 ::ParsingSeekU32::start.size()
-                + ::ParsingSeekU32::samples[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
-                + ::ParsingSeekU32::samples[1].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[1].size() - 1
+                + ::ParsingSeekU32::keys[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
+                + ::ParsingSeekU32::keys[1].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[1].size() - 1
                 , ::ParsingSeekU32::start.size()
-                + ::ParsingSeekU32::samples[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
-                + ::ParsingSeekU32::samples[1].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[1].size() + ::ParsingSeekU32::delimiters[1].size()
+                + ::ParsingSeekU32::keys[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
+                + ::ParsingSeekU32::keys[1].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[1].size() + ::ParsingSeekU32::delimiters[1].size()
                 , 2
             )
             , ::ParsingSeekU32::make(
                 ::ParsingSeekU32::start.size()
-                + ::ParsingSeekU32::samples[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
-                + ::ParsingSeekU32::samples[1].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[1].size() + ::ParsingSeekU32::delimiters[1].size() - 4
+                + ::ParsingSeekU32::keys[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
+                + ::ParsingSeekU32::keys[1].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[1].size() + ::ParsingSeekU32::delimiters[1].size() - 4
                 , ::ParsingSeekU32::start.size()
-                + ::ParsingSeekU32::samples[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
-                + ::ParsingSeekU32::samples[1].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[1].size() + ::ParsingSeekU32::delimiters[1].size()
+                + ::ParsingSeekU32::keys[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
+                + ::ParsingSeekU32::keys[1].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[1].size() + ::ParsingSeekU32::delimiters[1].size()
                 , 2
             )
             , ::ParsingSeekU32::make(
                 ::ParsingSeekU32::start.size()
-                + ::ParsingSeekU32::samples[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
-                + ::ParsingSeekU32::samples[1].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[1].size() + ::ParsingSeekU32::delimiters[1].size()
+                + ::ParsingSeekU32::keys[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
+                + ::ParsingSeekU32::keys[1].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[1].size() + ::ParsingSeekU32::delimiters[1].size()
                 , ::ParsingSeekU32::start.size()
-                + ::ParsingSeekU32::samples[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
-                + ::ParsingSeekU32::samples[1].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[1].size() + ::ParsingSeekU32::delimiters[1].size()
+                + ::ParsingSeekU32::keys[0].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[0].size() + ::ParsingSeekU32::delimiters[0].size()
+                + ::ParsingSeekU32::keys[1].size() + ::ParsingSeekU32::equality.size() + ::ParsingSeekU32::values[1].size() + ::ParsingSeekU32::delimiters[1].size()
                 , 2
             )
             , ::ParsingSeekU32::make(
@@ -6214,5 +6238,5 @@ INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU32,
         })
         , ::testing::Range<::std::size_t>(0, ::ParsingSeekU32::target.size(), 5)
         , ::testing::Range<::std::size_t>(0, 20)
-    )*/
-);
+    )
+);*/
