@@ -5312,43 +5312,6 @@ public:
         + keys[4] + equality + values[4] + delimiters[4]
         + finish;
 public:
-    static ::std::string seeker_to_string(const typename string_type::const_iterator& Seeker) {
-        auto result = ::std::string{};
-
-        if (Seeker != target.cend()) {
-            result += "\'" + ::testing::PrintToString(string_type{ Seeker, target.cend() }) + "\'";
-        }
-        else {
-            result += "target.cend()";
-        };
-
-        return result;
-    };
-    static ::std::string key_to_string(const typename decltype(keys)::const_iterator& KeyIter) {
-        auto result = ::std::string{};
-
-        if (KeyIter != keys.cend()) {
-            result += "\'" + ::testing::PrintToString(*KeyIter) + "\'";
-        }
-        else {
-            result += "keys.cend()";
-        };
-
-        return result;
-    };
-    static ::std::string value_to_string(const typename decltype(values)::const_iterator& ValueIter) {
-        auto result = ::std::string{};
-
-        if (ValueIter != keys.cend()) {
-            result += "\'" + ::testing::PrintToString(*ValueIter) + "\'";
-        }
-        else {
-            result += "values.cend()";
-        };
-
-        return result;
-    };
-public:
     static int seeker_to_num(const typename string_type::const_iterator& Seeker) {
         return Seeker - target.cbegin();
     };
@@ -5448,63 +5411,6 @@ public:
         return result;
     };
 };
-
-template<::uns::is_basic_string string_t>
-class ParsingFind_Sample : public ::ParsingFind<string_t> {
-private:
-    using base = ::ParsingFind<string_t>;
-public:
-    string_t expected_sample() {
-        return base::GetParam().sample;
-    };
-public:
-    static ::std::vector<::param_set::ParsingFind<string_t>> generate_tests() {
-        using single_test = ::param_set::ParsingFind<string_t>;
-
-        auto result = ::std::vector<::param_set::ParsingFind<string_t>>{};
-
-        ::std::size_t seeker = 0;
-        auto precursor = base::start;
-        for (::std::size_t idx = 0; idx < base::keys.size() && idx < base::values.size() && idx < base::delimiters.size(); ++idx) {
-            seeker = 0;
-            for (; seeker <= precursor.size() && seeker < base::target.size(); ++seeker) {
-                result.emplace_back(
-                    single_test{
-                        .seeker_init = seeker
-                        , .seeker_result = precursor.size()
-                        , .sample = base::keys[idx]
-                        , .sample_iter = idx
-                    }
-                );
-            };
-            for (; seeker < base::target.size(); ++seeker) {
-                result.emplace_back(
-                    single_test{
-                        .seeker_init = seeker
-                        , .seeker_result = base::target.size()
-                        , .sample = base::keys[idx]
-                        , .sample_iter = idx
-                    }
-                );
-            };
-            precursor += base::keys[idx] + base::equality + base::values[idx] + base::delimiters[idx];
-        };
-        seeker = 0;
-        for (; seeker < base::target.size(); ++seeker) {
-            result.emplace_back(
-                single_test{
-                    .seeker_init = seeker
-                    , .seeker_result = base::target.size()
-                    , .sample = ::uns::string::cast<string_t>("fake_key")
-                    , .sample_iter = base::keys.size()
-                }
-            );
-        };
-
-        return result;
-    };
-};
-
 
 using ParsingFind_SamplesU32 = ::ParsingFind_Samples<::std::u32string>;
 template<>
@@ -5608,6 +5514,63 @@ INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingFind_SamplesU16,
     )
 );
 
+
+template<::uns::is_basic_string string_t>
+class ParsingFind_Sample : public ::ParsingFind<string_t> {
+private:
+    using base = ::ParsingFind<string_t>;
+public:
+    string_t expected_sample() {
+        return base::GetParam().sample;
+    };
+public:
+    static ::std::vector<::param_set::ParsingFind<string_t>> generate_tests() {
+        using single_test = ::param_set::ParsingFind<string_t>;
+
+        auto result = ::std::vector<::param_set::ParsingFind<string_t>>{};
+
+        ::std::size_t seeker = 0;
+        auto precursor = base::start;
+        for (::std::size_t idx = 0; idx < base::keys.size() && idx < base::values.size() && idx < base::delimiters.size(); ++idx) {
+            seeker = 0;
+            for (; seeker <= precursor.size() && seeker < base::target.size(); ++seeker) {
+                result.emplace_back(
+                    single_test{
+                        .seeker_init = seeker
+                        , .seeker_result = precursor.size()
+                        , .sample = base::keys[idx]
+                        , .sample_iter = idx
+                    }
+                );
+            };
+            for (; seeker < base::target.size(); ++seeker) {
+                result.emplace_back(
+                    single_test{
+                        .seeker_init = seeker
+                        , .seeker_result = base::target.size()
+                        , .sample = base::keys[idx]
+                        , .sample_iter = idx
+                    }
+                );
+            };
+            precursor += base::keys[idx] + base::equality + base::values[idx] + base::delimiters[idx];
+        };
+        seeker = 0;
+        for (; seeker < base::target.size(); ++seeker) {
+            result.emplace_back(
+                single_test{
+                    .seeker_init = seeker
+                    , .seeker_result = base::target.size()
+                    , .sample = ::uns::string::cast<string_t>("fake_key")
+                    , .sample_iter = base::keys.size()
+                }
+            );
+        };
+
+        return result;
+    };
+};
+
 using ParsingFind_SampleU32 = ::ParsingFind_Sample<::std::u32string>;
 
 TEST_P(ParsingFind_SampleU32, Do) {
@@ -5677,6 +5640,996 @@ INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingFind_SampleU16,
     )
 );
 
+
+namespace param_set {
+
+    struct ParsingSeek {
+        ::std::size_t seeker_init = 0;
+        ::std::size_t seeker_expected = 0;
+        ::std::size_t sample_idx = 0;
+        ::uns::string::parsing::seeker_position seeker_pos_in_sample;
+        ::std::size_t limiter_begin = 0;
+        ::std::size_t limiter_length = 0;
+        bool seeking_result = false;
+    private:
+        static ::std::string to_string(const ::uns::string::parsing::seeker_position& SeekerPosInSample) {
+            return "{ qualifier=" + ::std::string{
+                    SeekerPosInSample.qualifier == ::uns::string::parsing::seeker_position::from_begin
+                    ? "from_begin"
+                    : "from_end"
+                }
+                + ", offset=" + ::testing::PrintToString(SeekerPosInSample.offset) + " }";
+        };
+    public:
+        ::std::string to_string() const {
+            return "{ seeker_init=" + ::testing::PrintToString(seeker_init)
+                + ", seeker_expected=" + ::testing::PrintToString(seeker_expected)
+                + ", sample_idx=" + ::testing::PrintToString(sample_idx)
+                + ", seeker_pos_in_sample=" + to_string(seeker_pos_in_sample)
+                + ", limiter_begin=" + ::testing::PrintToString(limiter_begin)
+                + ", limiter_length=" + ::testing::PrintToString(limiter_length)
+                + ", seeking_result=" + ::uns::string::cast<::std::string>(seeking_result) + " }";
+        };
+    };
+
+};
+
+template<>
+::std::string testing::PrintToString(const ::param_set::ParsingSeek& Params) {
+    return Params.to_string();
+};
+
+template<::uns::is_basic_string string_t>
+class ParsingSeek :
+    public ::Parsing<string_t>
+    , public ::testing::TestWithParam<::param_set::ParsingSeek>
+{
+private:
+    using base = ::ParsingSeek<string_t>;
+    using test = ::testing::TestWithParam<::param_set::ParsingSeek>;
+public:
+    using string_type = string_t;
+public:
+    typename string_type::const_iterator get_seeker_init() const {
+        return base::target.cbegin() + GetParam().seeker_init;
+    };
+    const typename string_type::const_iterator get_seeker_expected() const  {
+        return base::target.cbegin() + GetParam().seeker_expected;
+    };
+    typename string_type get_sample() const {
+        return *(base::keys.cbegin() + GetParam().sample_idx);
+    };
+    ::uns::string::parsing::seeker_position get_seeker_pos_in_sample() const  {
+        return GetParam().seeker_pos_in_sample;
+    };
+    const ::std::tuple<
+        string_type
+        , typename string_type::const_iterator
+        , typename string_type::const_iterator
+    > get_limiter() const {
+        if (
+            GetParam().limiter_begin < target.size()
+            && GetParam().limiter_begin + GetParam().limiter_length < target.size()
+        ) {
+            const auto limiter_beg = target.cbegin() + GetParam().limiter_begin;
+            const auto limiter_end = target.cbegin() + GetParam().limiter_begin + GetParam().limiter_length;
+
+            return {
+                string_type{ limiter_beg, limiter_end }
+                , limiter_beg
+                , limiter_end
+            };
+        }
+        else {
+            return {
+                string_type{}
+                , target.cend()
+                , target.cend()
+            };
+        };
+    };
+public:
+    bool get_seeking_result() const  {
+        return GetParam().seeking_result;
+    };
+public:
+    static ::std::vector<::param_set::ParsingSeek> generate_tests_SamplesExplicitLimiters() {
+
+    };
+    static ::std::vector<::param_set::ParsingSeek> generate_tests_SampleExplicitLimiters() {
+
+    };
+    static ::std::vector<::param_set::ParsingSeek> generate_tests_SamplesNoLimiters() {
+
+    };
+    static ::std::vector<::param_set::ParsingSeek> generate_tests_SampleNoLimiters() {
+
+    };
+    static ::std::vector<::param_set::ParsingSeek> generate_tests_SamplesLimiters() {
+
+    };
+    static ::std::vector<::param_set::ParsingSeek> generate_tests_SampleLimiters() {
+
+    };
+    static ::std::vector<::param_set::ParsingSeek> generate_tests_SamplesLimiter() {
+
+    };
+    static ::std::vector<::param_set::ParsingSeek> generate_tests_SampleLimiter() {
+
+    };
+};
+
+using ParsingSeekU32_SamplesExplicitLimiters = ::ParsingSeek<::std::u32string>;
+TEST_P(ParsingSeekU32_SamplesExplicitLimiters, Do) {
+    using fixture = ParsingSeekU32_SamplesExplicitLimiters;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , keys
+            , get_seeker_pos_in_sample()
+            , limiter_beg
+            , limiter_end
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU32_SamplesExplicitLimiters,
+    ::testing::ValuesIn(
+        ::ParsingSeekU32_SamplesExplicitLimiters::generate_tests_SamplesExplicitLimiters()
+    )
+);
+using ParsingSeekU16_SamplesExplicitLimiters = ::ParsingSeek<::std::u16string>;
+TEST_P(ParsingSeekU16_SamplesExplicitLimiters, Do) {
+    using fixture = ParsingSeekU16_SamplesExplicitLimiters;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , keys
+            , get_seeker_pos_in_sample()
+            , limiter_beg
+            , limiter_end
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU16_SamplesExplicitLimiters,
+    ::testing::ValuesIn(
+        ::ParsingSeekU16_SamplesExplicitLimiters::generate_tests_SamplesExplicitLimiters()
+    )
+);
+using ParsingSeekU8_SamplesExplicitLimiters = ::ParsingSeek<::std::u8string>;
+TEST_P(ParsingSeekU8_SamplesExplicitLimiters, Do) {
+    using fixture = ParsingSeekU8_SamplesExplicitLimiters;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , keys
+            , get_seeker_pos_in_sample()
+            , limiter_beg
+            , limiter_end
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU8_SamplesExplicitLimiters,
+    ::testing::ValuesIn(
+        ::ParsingSeekU8_SamplesExplicitLimiters::generate_tests_SamplesExplicitLimiters()
+    )
+);
+
+using ParsingSeekU32_SampleExplicitLimiters = ::ParsingSeek<::std::u32string>;
+TEST_P(ParsingSeekU32_SampleExplicitLimiters, Do) {
+    using fixture = ParsingSeekU32_SampleExplicitLimiters;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , get_sample()
+            , get_seeker_pos_in_sample()
+            , limiter_beg
+            , limiter_end
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU32_SampleExplicitLimiters,
+    ::testing::ValuesIn(
+        ::ParsingSeekU32_SampleExplicitLimiters::generate_tests_SampleExplicitLimiters()
+    )
+);
+using ParsingSeekU16_SampleExplicitLimiters = ::ParsingSeek<::std::u16string>;
+TEST_P(ParsingSeekU16_SampleExplicitLimiters, Do) {
+    using fixture = ParsingSeekU16_SampleExplicitLimiters;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , get_sample()
+            , get_seeker_pos_in_sample()
+            , limiter_beg
+            , limiter_end
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU16_SampleExplicitLimiters,
+    ::testing::ValuesIn(
+        ::ParsingSeekU16_SampleExplicitLimiters::generate_tests_SampleExplicitLimiters()
+    )
+);
+using ParsingSeekU8_SampleExplicitLimiters = ::ParsingSeek<::std::u8string>;
+TEST_P(ParsingSeekU8_SampleExplicitLimiters, Do) {
+    using fixture = ParsingSeekU8_SampleExplicitLimiters;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , get_sample()
+            , get_seeker_pos_in_sample()
+            , limiter_beg
+            , limiter_end
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU8_SampleExplicitLimiters,
+    ::testing::ValuesIn(
+        ::ParsingSeekU8_SampleExplicitLimiters::generate_tests_SampleExplicitLimiters()
+    )
+);
+
+using ParsingSeekU32_SamplesNoLimiters = ::ParsingSeek<::std::u32string>;
+TEST_P(ParsingSeekU32_SamplesNoLimiters, Do) {
+    using fixture = ParsingSeekU32_SamplesNoLimiters;
+    auto seeker = get_seeker_init();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , keys
+            , get_seeker_pos_in_sample()
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU32_SamplesNoLimiters,
+    ::testing::ValuesIn(
+        ::ParsingSeekU32_SamplesNoLimiters::generate_tests_SamplesNoLimiters()
+    )
+);
+using ParsingSeekU16_SamplesNoLimiters = ::ParsingSeek<::std::u16string>;
+TEST_P(ParsingSeekU16_SamplesNoLimiters, Do) {
+    using fixture = ParsingSeekU16_SamplesNoLimiters;
+    auto seeker = get_seeker_init();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , keys
+            , get_seeker_pos_in_sample()
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU16_SamplesNoLimiters,
+    ::testing::ValuesIn(
+        ::ParsingSeekU16_SamplesNoLimiters::generate_tests_SamplesNoLimiters()
+    )
+);
+using ParsingSeekU8_SamplesNoLimiters = ::ParsingSeek<::std::u8string>;
+TEST_P(ParsingSeekU8_SamplesNoLimiters, Do) {
+    using fixture = ParsingSeekU8_SamplesNoLimiters;
+    auto seeker = get_seeker_init();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , keys
+            , get_seeker_pos_in_sample()
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU8_SamplesNoLimiters,
+    ::testing::ValuesIn(
+        ::ParsingSeekU8_SamplesNoLimiters::generate_tests_SamplesNoLimiters()
+    )
+);
+
+using ParsingSeekU32_SampleNoLimiters = ::ParsingSeek<::std::u32string>;
+TEST_P(ParsingSeekU32_SampleNoLimiters, Do) {
+    using fixture = ParsingSeekU32_SampleNoLimiters;
+    auto seeker = get_seeker_init();;
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , get_sample()
+            , get_seeker_pos_in_sample()
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU32_SampleNoLimiters,
+    ::testing::ValuesIn(
+        ::ParsingSeekU32_SampleNoLimiters::generate_tests_SampleNoLimiters()
+    )
+);
+using ParsingSeekU16_SampleNoLimiters = ::ParsingSeek<::std::u16string>;
+TEST_P(ParsingSeekU16_SampleNoLimiters, Do) {
+    using fixture = ParsingSeekU16_SampleNoLimiters;
+    auto seeker = get_seeker_init();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , get_sample()
+            , get_seeker_pos_in_sample()
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU16_SampleNoLimiters,
+    ::testing::ValuesIn(
+        ::ParsingSeekU16_SampleNoLimiters::generate_tests_SampleNoLimiters()
+    )
+);
+using ParsingSeekU8_SampleNoLimiters = ::ParsingSeek<::std::u8string>;
+TEST_P(ParsingSeekU8_SampleNoLimiters, Do) {
+    using fixture = ParsingSeekU8_SampleNoLimiters;
+    auto seeker = get_seeker_init();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , get_sample()
+            , get_seeker_pos_in_sample()
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU8_SampleNoLimiters,
+    ::testing::ValuesIn(
+        ::ParsingSeekU8_SampleNoLimiters::generate_tests_SampleNoLimiters()
+    )
+);
+
+using ParsingSeekU32_SamplesLimiters = ::ParsingSeek<::std::u32string>;
+TEST_P(ParsingSeekU32_SamplesLimiters, Do) {
+    using fixture = ParsingSeekU32_SamplesLimiters;
+    auto seeker = get_seeker_init();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , keys
+            , get_seeker_pos_in_sample()
+            , delimiters
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU32_SamplesLimiters,
+    ::testing::ValuesIn(
+        ::ParsingSeekU32_SamplesLimiters::generate_tests_SamplesLimiters()
+    )
+);
+using ParsingSeekU16_SamplesLimiters = ::ParsingSeek<::std::u16string>;
+TEST_P(ParsingSeekU16_SamplesLimiters, Do) {
+    using fixture = ParsingSeekU16_SamplesLimiters;
+    auto seeker = get_seeker_init();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , keys
+            , get_seeker_pos_in_sample()
+            , delimiters
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU16_SamplesLimiters,
+    ::testing::ValuesIn(
+        ::ParsingSeekU16_SamplesLimiters::generate_tests_SamplesLimiters()
+    )
+);
+using ParsingSeekU8_SamplesLimiters = ::ParsingSeek<::std::u8string>;
+TEST_P(ParsingSeekU8_SamplesLimiters, Do) {
+    using fixture = ParsingSeekU8_SamplesLimiters;
+    auto seeker = get_seeker_init();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , keys
+            , get_seeker_pos_in_sample()
+            , delimiters
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU8_SamplesLimiters,
+    ::testing::ValuesIn(
+        ::ParsingSeekU8_SamplesLimiters::generate_tests_SamplesLimiters()
+    )
+);
+
+using ParsingSeekU32_SampleLimiters = ::ParsingSeek<::std::u32string>;
+TEST_P(ParsingSeekU32_SampleLimiters, Do) {
+    using fixture = ParsingSeekU32_SamplesLimiters;
+    auto seeker = get_seeker_init();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , get_sample()
+            , get_seeker_pos_in_sample()
+            , delimiters
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU32_SampleLimiters,
+    ::testing::ValuesIn(
+        ::ParsingSeekU32_SampleLimiters::generate_tests_SampleLimiters()
+    )
+);
+using ParsingSeekU16_SampleLimiters = ::ParsingSeek<::std::u16string>;
+TEST_P(ParsingSeekU16_SampleLimiters, Do) {
+    using fixture = ParsingSeekU16_SampleLimiters;
+    auto seeker = get_seeker_init();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , get_sample()
+            , get_seeker_pos_in_sample()
+            , delimiters
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU16_SampleLimiters,
+    ::testing::ValuesIn(
+        ::ParsingSeekU16_SampleLimiters::generate_tests_SampleLimiters()
+    )
+);
+using ParsingSeekU8_SampleLimiters = ::ParsingSeek<::std::u8string>;
+TEST_P(ParsingSeekU8_SampleLimiters, Do) {
+    using fixture = ParsingSeekU8_SampleLimiters;
+    auto seeker = get_seeker_init();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , get_sample()
+            , get_seeker_pos_in_sample()
+            , delimiters
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU8_SampleLimiters,
+    ::testing::ValuesIn(
+        ::ParsingSeekU8_SampleLimiters::generate_tests_SampleLimiters()
+    )
+);
+
+using ParsingSeekU32_SamplesLimiter = ::ParsingSeek<::std::u32string>;
+TEST_P(ParsingSeekU32_SamplesLimiter, Do) {
+    using fixture = ParsingSeekU32_SamplesLimiter;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , keys
+            , get_seeker_pos_in_sample()
+            , limiter
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU32_SamplesLimiter,
+    ::testing::ValuesIn(
+        ::ParsingSeekU32_SamplesLimiter::generate_tests_SamplesLimiter()
+    )
+);
+using ParsingSeekU16_SamplesLimiter = ::ParsingSeek<::std::u16string>;
+TEST_P(ParsingSeekU16_SamplesLimiter, Do) {
+    using fixture = ParsingSeekU16_SamplesLimiter;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , keys
+            , get_seeker_pos_in_sample()
+            , limiter
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU16_SamplesLimiter,
+    ::testing::ValuesIn(
+        ::ParsingSeekU16_SamplesLimiter::generate_tests_SamplesLimiter()
+    )
+);
+using ParsingSeekU8_SamplesLimiter = ::ParsingSeek<::std::u8string>;
+TEST_P(ParsingSeekU8_SamplesLimiter, Do) {
+    using fixture = ParsingSeekU8_SamplesLimiter;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , keys
+            , get_seeker_pos_in_sample()
+            , limiter
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU8_SamplesLimiter,
+    ::testing::ValuesIn(
+        ::ParsingSeekU8_SamplesLimiter::generate_tests_SamplesLimiter()
+    )
+);
+
+using ParsingSeekU32_SampleLimiter = ::ParsingSeek<::std::u32string>;
+TEST_P(ParsingSeekU32_SampleLimiter, Do) {
+    using fixture = ParsingSeekU32_SampleLimiter;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , get_sample()
+            , get_seeker_pos_in_sample()
+            , limiter
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU32_SampleLimiter,
+    ::testing::ValuesIn(
+        ::ParsingSeekU32_SampleLimiter::generate_tests_SampleLimiter()
+    )
+);
+using ParsingSeekU16_SampleLimiter = ::ParsingSeek<::std::u16string>;
+TEST_P(ParsingSeekU16_SampleLimiter, Do) {
+    using fixture = ParsingSeekU16_SampleLimiter;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , get_sample()
+            , get_seeker_pos_in_sample()
+            , limiter
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU16_SampleLimiter,
+    ::testing::ValuesIn(
+        ::ParsingSeekU16_SampleLimiter::generate_tests_SampleLimiter()
+    )
+);
+using ParsingSeekU8_SampleLimiter = ::ParsingSeek<::std::u8string>;
+TEST_P(ParsingSeekU8_SampleLimiter, Do) {
+    using fixture = ParsingSeekU8_SampleLimiter;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    ASSERT_EQ(
+        get_seeking_result()
+        , ::uns::string::parsing::seek<fixture::string_type>(
+            target
+            , seeker
+            , get_sample()
+            , get_seeker_pos_in_sample()
+            , limiter
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (get_seeking_result()) {
+        ASSERT_EQ(
+            get_seeker_expected()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingSeekU8_SampleLimiter,
+    ::testing::ValuesIn(
+        ::ParsingSeekU8_SampleLimiter::generate_tests_SampleLimiter()
+    )
+);
 
 /*
 template<::uns::is_basic_string string_t>
