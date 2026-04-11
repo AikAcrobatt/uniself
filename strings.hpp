@@ -613,7 +613,7 @@ namespace uns::string {
 
                 seeker_new_pos = pivot_point + SeekerTargetPosition.offset;
 
-                if (LimiterEnd == Source.cend() || seeker_new_pos <= LimiterEnd) {
+                if (LimiterEnd == Source.cend() || seeker_new_pos < LimiterEnd) {
                     Seeker = seeker_new_pos;
                     return true;
                 }
@@ -743,7 +743,7 @@ namespace uns::string {
                 Source
                 , Seeker
                 , found_sample_pos
-                , found_sample_pos + found_sample->size() - 1
+                , found_sample_pos + found_sample->size()
                 , SeekerTargetPosition
                 , LimiterBegin
                 , LimiterEnd
@@ -768,7 +768,7 @@ namespace uns::string {
                 Source
                 , Seeker
                 , found_sample_pos
-                , found_sample_pos + Sample.size() - 1
+                , found_sample_pos + Sample.size()
                 , SeekerTargetPosition
                 , LimiterBegin
                 , LimiterEnd

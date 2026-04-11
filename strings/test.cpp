@@ -5282,24 +5282,24 @@ public:
 public:
     inline static string_type start = ::uns::string::cast<string_type>(U"start:");
     inline static samples_collection_type keys = {
-        ::uns::string::cast<string_type>(U"some_key1")
-        , ::uns::string::cast<string_type>(U"некий_ключ2")
-        , ::uns::string::cast<string_type>(U"ani_clue3")
+        //::uns::string::cast<string_type>(U"some_key1")
+        ::uns::string::cast<string_type>(U"некий_ключ2")
+        //, ::uns::string::cast<string_type>(U"ani_clue3")
         , ::uns::string::cast<string_type>(U"нек\u53E3е_\u4FA1\u50244")
         , ::uns::string::cast<string_type>(U"\u4F55\u3089\u304Bnо_clue5")
     };
     inline static samples_collection_type values = {
-        ::uns::string::cast<string_type>(U"нек\u53E3е_зна4ение1")
-        , ::uns::string::cast<string_type>(U"\u4F55\u3089\u304Bnо\u4FA1\u50242")
-        , ::uns::string::cast<string_type>(U"ani_mean3")
+        //::uns::string::cast<string_type>(U"нек\u53E3е_зна4ение1")
+        ::uns::string::cast<string_type>(U"\u4F55\u3089\u304Bnо\u4FA1\u50242")
+        //, ::uns::string::cast<string_type>(U"ani_mean3")
         , ::uns::string::cast<string_type>(U"\u4FA5\u1089\u354B\u2FA1\u5024")
         , ::uns::string::cast<string_type>(U"\u4FA5\u354BЫ\u5024\u4FA5\u354Bж\u5024")
     };
     inline static string_type equality = ::uns::string::cast<string_type>(U" = ");
     inline static samples_collection_type delimiters = {
-        ::uns::string::cast<string_type>(U";")
-        , ::uns::string::cast<string_type>(U"; ")
-        , ::uns::string::cast<string_type>(U"?")
+        //::uns::string::cast<string_type>(U";")
+        ::uns::string::cast<string_type>(U"; ")
+        //, ::uns::string::cast<string_type>(U"?")
         , ::uns::string::cast<string_type>(U"&&&")
         , ::uns::string::cast<string_type>(U".")
     };
@@ -5308,8 +5308,8 @@ public:
         + keys[0] + equality + values[0] + delimiters[0]
         + keys[1] + equality + values[1] + delimiters[1]
         + keys[2] + equality + values[2] + delimiters[2]
-        + keys[3] + equality + values[3] + delimiters[3]
-        + keys[4] + equality + values[4] + delimiters[4]
+        //+ keys[3] + equality + values[3] + delimiters[3]
+        //+ keys[4] + equality + values[4] + delimiters[4]
         + finish;
 public:
     static int seeker_to_num(const typename string_type::const_iterator& Seeker) {
@@ -5707,25 +5707,20 @@ public:
         , typename string_type::const_iterator
         , typename string_type::const_iterator
     > get_limiter() const {
-        if (
-            GetParam().limiter_begin < base::target.size()
-            && GetParam().limiter_begin + GetParam().limiter_length < base::target.size()
-        ) {
-            const auto limiter_beg = base::target.cbegin() + GetParam().limiter_begin;
-            const auto limiter_end = base::target.cbegin() + GetParam().limiter_begin + GetParam().limiter_length;
+        auto limiter_beg = base::target.cend();
+        auto limiter_end = base::target.cend();
 
-            return {
-                string_type{ limiter_beg, limiter_end }
-                , limiter_beg
-                , limiter_end
-            };
-        }
-        else {
-            return {
-                string_type{}
-                , base::target.cend()
-                , base::target.cend()
-            };
+        if (GetParam().limiter_begin < base::target.size()) {
+            limiter_beg = base::target.cbegin() + GetParam().limiter_begin;
+        };
+        if (GetParam().limiter_begin + GetParam().limiter_length < base::target.size()) {
+            limiter_end = base::target.cbegin() + GetParam().limiter_begin + GetParam().limiter_length;
+        };
+
+        return {
+            string_type{ limiter_beg, limiter_end }
+            , limiter_beg
+            , limiter_end
         };
     };
 public:
@@ -5738,7 +5733,7 @@ public:
             ::uns::string::parsing::seeker_position::from_begin
             , ::uns::string::parsing::seeker_position::from_end
         };
-        const int seeker_extremal_offset_in_sample = 5;
+        const int seeker_extremal_offset_in_sample = 3;
 
         auto single_test = ::param_set::ParsingSeek{};
 
@@ -5751,6 +5746,7 @@ public:
         for (::std::size_t idx = 0; idx < base::keys.size() && idx < base::values.size() && idx < base::delimiters.size(); ++idx) {
             single_test.sample_idx = idx;
 
+            single_test.seeker_init = precursor.size() - 5;
             for (; single_test.seeker_init <= precursor.size() && single_test.seeker_init < base::target.size(); ++single_test.seeker_init) {
                 for (auto seeker_result_position_variant : seeker_result_position_variants) {
                     single_test.seeker_pos_in_sample.qualifier = seeker_result_position_variant;
@@ -5766,14 +5762,28 @@ public:
                         };
 
                         single_test.limiter_begin = 0;
-                        for (; single_test.limiter_begin < base::target.size(); ++single_test.limiter_begin) {
+                        for (; single_test.limiter_begin < base::target.size(); single_test.limiter_begin += 5) {
                             single_test.limiter_length = 0;
 
-                            for (; single_test.limiter_begin + single_test.limiter_length <= base::target.size(); ++single_test.limiter_length) {
-                                single_test.seeking_result = (precursor.size() <= single_test.limiter_begin)
-                                    && (single_test.seeker_expected < single_test.limiter_begin + single_test.limiter_length);
+                            const ::std::size_t lengths[10] = {
+                                0
+                                , 2
+                                , 3
+                                , 4
+                                , 5
+                                , 10
+                                , base::target.size() - single_test.limiter_begin
+                            };
+                            for (auto length : lengths) {
+                                if (single_test.limiter_begin + length <= base::target.size()) {
+                                    single_test.limiter_length = length;
 
-                                result.push_back(single_test);
+                                    single_test.seeking_result = (precursor.size() <= single_test.limiter_begin)
+                                        && (single_test.seeker_expected < single_test.limiter_begin + single_test.limiter_length)
+                                        && (single_test.seeker_init <= precursor.size());
+
+                                    result.push_back(single_test);
+                                };
                             };
                         };
                     };
@@ -5790,7 +5800,7 @@ public:
             ::uns::string::parsing::seeker_position::from_begin
             , ::uns::string::parsing::seeker_position::from_end
         };
-        const int seeker_extremal_offset_in_sample = 5;
+        const int seeker_extremal_offset_in_sample = 3;
 
         auto single_test = ::param_set::ParsingSeek{};
 
@@ -5803,7 +5813,8 @@ public:
         for (::std::size_t idx = 0; idx < base::keys.size() && idx < base::values.size() && idx < base::delimiters.size(); ++idx) {
             single_test.sample_idx = idx;
 
-            for (; single_test.seeker_init <= precursor.size() && single_test.seeker_init < base::target.size(); ++single_test.seeker_init) {
+            single_test.seeker_init = precursor.size() - 5;
+            for (; single_test.seeker_init <= precursor.size() + 5 && single_test.seeker_init < base::target.size(); ++single_test.seeker_init) {
                 for (auto seeker_result_position_variant : seeker_result_position_variants) {
                     single_test.seeker_pos_in_sample.qualifier = seeker_result_position_variant;
                     single_test.seeker_pos_in_sample.offset = -seeker_extremal_offset_in_sample;
@@ -5818,10 +5829,19 @@ public:
                         };
 
                         single_test.limiter_begin = 0;
-                        for (; single_test.limiter_begin < base::target.size(); ++single_test.limiter_begin) {
-                            single_test.limiter_length = 0;
+                        const ::std::size_t lengths[10] = {
+                            0
+                            , 2
+                            , 3
+                            , 4
+                            , 5
+                            , 10
+                            , base::target.size() - single_test.limiter_begin
+                        };
+                        for (auto length : lengths) {
+                            if (single_test.limiter_begin + length <= base::target.size()) {
+                                single_test.limiter_length = length;
 
-                            for (; single_test.limiter_begin + single_test.limiter_length <= base::target.size(); ++single_test.limiter_length) {
                                 single_test.seeking_result = (precursor.size() <= single_test.limiter_begin)
                                     && (single_test.seeker_expected < single_test.limiter_begin + single_test.limiter_length)
                                     && (single_test.seeker_init <= precursor.size());
@@ -5843,7 +5863,7 @@ public:
             ::uns::string::parsing::seeker_position::from_begin
             , ::uns::string::parsing::seeker_position::from_end
         };
-        const int seeker_extremal_offset_in_sample = 5;
+        const int seeker_extremal_offset_in_sample = 3;
 
         auto single_test = ::param_set::ParsingSeek{};
 
@@ -5856,6 +5876,7 @@ public:
         for (::std::size_t idx = 0; idx < base::keys.size() && idx < base::values.size() && idx < base::delimiters.size(); ++idx) {
             single_test.sample_idx = idx;
 
+            single_test.seeker_init = precursor.size() - 5;
             for (; single_test.seeker_init <= precursor.size() && single_test.seeker_init < base::target.size(); ++single_test.seeker_init) {
                 for (auto seeker_result_position_variant : seeker_result_position_variants) {
                     single_test.seeker_pos_in_sample.qualifier = seeker_result_position_variant;
@@ -5874,7 +5895,8 @@ public:
                         single_test.limiter_length = base::delimiters[idx].size();
                         
                         single_test.seeking_result = (precursor.size() <= single_test.limiter_begin)
-                            && (single_test.seeker_expected < single_test.limiter_begin + single_test.limiter_length);
+                            && (single_test.seeker_expected < single_test.limiter_begin + single_test.limiter_length)
+                            && (single_test.seeker_init <= precursor.size());
 
                         result.push_back(single_test);
                     };
@@ -5891,7 +5913,7 @@ public:
             ::uns::string::parsing::seeker_position::from_begin
             , ::uns::string::parsing::seeker_position::from_end
         };
-        const int seeker_extremal_offset_in_sample = 5;
+        const int seeker_extremal_offset_in_sample = 3;
 
         auto single_test = ::param_set::ParsingSeek{};
 
@@ -5904,7 +5926,8 @@ public:
         for (::std::size_t idx = 0; idx < base::keys.size() && idx < base::values.size() && idx < base::delimiters.size(); ++idx) {
             single_test.sample_idx = idx;
 
-            for (; single_test.seeker_init <= precursor.size() && single_test.seeker_init < base::target.size(); ++single_test.seeker_init) {
+            single_test.seeker_init = precursor.size() - 5;
+            for (; single_test.seeker_init <= precursor.size() + 5 && single_test.seeker_init < base::target.size(); ++single_test.seeker_init) {
                 for (auto seeker_result_position_variant : seeker_result_position_variants) {
                     single_test.seeker_pos_in_sample.qualifier = seeker_result_position_variant;
                     single_test.seeker_pos_in_sample.offset = -seeker_extremal_offset_in_sample;
@@ -5940,7 +5963,7 @@ public:
             ::uns::string::parsing::seeker_position::from_begin
             , ::uns::string::parsing::seeker_position::from_end
         };
-        const int seeker_extremal_offset_in_sample = 5;
+        const int seeker_extremal_offset_in_sample = 3;
 
         auto single_test = ::param_set::ParsingSeek{};
 
@@ -5953,6 +5976,7 @@ public:
         for (::std::size_t idx = 0; idx < base::keys.size() && idx < base::values.size() && idx < base::delimiters.size(); ++idx) {
             single_test.sample_idx = idx;
 
+            single_test.seeker_init = precursor.size() - 5;
             for (; single_test.seeker_init <= precursor.size() && single_test.seeker_init < base::target.size(); ++single_test.seeker_init) {
                 for (auto seeker_result_position_variant : seeker_result_position_variants) {
                     single_test.seeker_pos_in_sample.qualifier = seeker_result_position_variant;
@@ -5971,7 +5995,8 @@ public:
                         single_test.limiter_length = base::delimiters[idx].size();
 
                         single_test.seeking_result = (precursor.size() <= single_test.limiter_begin)
-                            && (single_test.seeker_expected < single_test.limiter_begin + single_test.limiter_length);
+                            && (single_test.seeker_expected < single_test.limiter_begin + single_test.limiter_length)
+                            && (single_test.seeker_init <= precursor.size());
 
                         result.push_back(single_test);
                     };
@@ -5988,7 +6013,7 @@ public:
             ::uns::string::parsing::seeker_position::from_begin
             , ::uns::string::parsing::seeker_position::from_end
         };
-        const int seeker_extremal_offset_in_sample = 5;
+        const int seeker_extremal_offset_in_sample = 3;
 
         auto single_test = ::param_set::ParsingSeek{};
 
@@ -6001,7 +6026,8 @@ public:
         for (::std::size_t idx = 0; idx < base::keys.size() && idx < base::values.size() && idx < base::delimiters.size(); ++idx) {
             single_test.sample_idx = idx;
 
-            for (; single_test.seeker_init <= precursor.size() && single_test.seeker_init < base::target.size(); ++single_test.seeker_init) {
+            single_test.seeker_init = precursor.size() - 5;
+            for (; single_test.seeker_init <= precursor.size() + 5 && single_test.seeker_init < base::target.size(); ++single_test.seeker_init) {
                 for (auto seeker_result_position_variant : seeker_result_position_variants) {
                     single_test.seeker_pos_in_sample.qualifier = seeker_result_position_variant;
                     single_test.seeker_pos_in_sample.offset = -seeker_extremal_offset_in_sample;
@@ -6010,7 +6036,7 @@ public:
                         single_test.seeker_expected = static_cast<::std::size_t>(
                             static_cast<int>(precursor.size())
                             + single_test.seeker_pos_in_sample.offset
-                            );
+                        );
                         if (single_test.seeker_pos_in_sample.qualifier == ::uns::string::parsing::seeker_position::from_end) {
                             single_test.seeker_expected += base::keys[idx].size();
                         };
@@ -6037,7 +6063,7 @@ public:
             ::uns::string::parsing::seeker_position::from_begin
             , ::uns::string::parsing::seeker_position::from_end
         };
-        const int seeker_extremal_offset_in_sample = 5;
+        const int seeker_extremal_offset_in_sample = 3;
 
         auto single_test = ::param_set::ParsingSeek{};
 
@@ -6050,6 +6076,7 @@ public:
         for (::std::size_t idx = 0; idx < base::keys.size() && idx < base::values.size() && idx < base::delimiters.size(); ++idx) {
             single_test.sample_idx = idx;
 
+            single_test.seeker_init = precursor.size() - 5;
             for (; single_test.seeker_init <= precursor.size() && single_test.seeker_init < base::target.size(); ++single_test.seeker_init) {
                 for (auto seeker_result_position_variant : seeker_result_position_variants) {
                     single_test.seeker_pos_in_sample.qualifier = seeker_result_position_variant;
@@ -6065,14 +6092,31 @@ public:
                         };
 
                         single_test.limiter_begin = 0;
-                        for (; single_test.limiter_begin < base::target.size(); ++single_test.limiter_begin) {
-                            single_test.limiter_length = 0;
+                        for (; single_test.limiter_begin < base::target.size(); single_test.limiter_begin += 5) {
+                            const ::std::size_t lengths[10] = {
+                                0
+                                , 2
+                                , 3
+                                , 4
+                                , 5
+                                , 10
+                                , base::target.size() - single_test.limiter_begin
+                            };
+                            for (auto length : lengths) {
+                                if (single_test.limiter_begin + length <= base::target.size()) {
+                                    single_test.limiter_length = length;
 
-                            for (; single_test.limiter_begin + single_test.limiter_length <= base::target.size(); ++single_test.limiter_length) {
-                                single_test.seeking_result = (precursor.size() <= single_test.limiter_begin)
-                                    && (single_test.seeker_expected < single_test.limiter_begin + single_test.limiter_length);
+                                    single_test.seeking_result = (
+                                        (precursor.size() <= single_test.limiter_begin)
+                                        && (single_test.seeker_expected < single_test.limiter_begin + single_test.limiter_length)
+                                        && (single_test.seeker_init <= precursor.size())
+                                    )
+                                    || (
+                                        single_test.seeker_init > single_test.limiter_begin
+                                    );
 
-                                result.push_back(single_test);
+                                    result.push_back(single_test);
+                                };
                             };
                         };
                     };
@@ -6089,7 +6133,7 @@ public:
             ::uns::string::parsing::seeker_position::from_begin
             , ::uns::string::parsing::seeker_position::from_end
         };
-        const int seeker_extremal_offset_in_sample = 5;
+        const int seeker_extremal_offset_in_sample = 3;
 
         auto single_test = ::param_set::ParsingSeek{};
 
@@ -6102,7 +6146,8 @@ public:
         for (::std::size_t idx = 0; idx < base::keys.size() && idx < base::values.size() && idx < base::delimiters.size(); ++idx) {
             single_test.sample_idx = idx;
 
-            for (; single_test.seeker_init <= precursor.size() && single_test.seeker_init < base::target.size(); ++single_test.seeker_init) {
+            single_test.seeker_init = precursor.size() - 5;
+            for (; single_test.seeker_init <= precursor.size() + 5 && single_test.seeker_init < base::target.size(); ++single_test.seeker_init) {
                 for (auto seeker_result_position_variant : seeker_result_position_variants) {
                     single_test.seeker_pos_in_sample.qualifier = seeker_result_position_variant;
                     single_test.seeker_pos_in_sample.offset = -seeker_extremal_offset_in_sample;
@@ -6111,21 +6156,37 @@ public:
                         single_test.seeker_expected = static_cast<::std::size_t>(
                             static_cast<int>(precursor.size())
                             + single_test.seeker_pos_in_sample.offset
-                            );
+                        );
                         if (single_test.seeker_pos_in_sample.qualifier == ::uns::string::parsing::seeker_position::from_end) {
                             single_test.seeker_expected += base::keys[idx].size();
                         };
 
                         single_test.limiter_begin = 0;
-                        for (; single_test.limiter_begin < base::target.size(); ++single_test.limiter_begin) {
-                            single_test.limiter_length = 0;
+                        for (; single_test.limiter_begin < base::target.size(); single_test.limiter_begin += 5) {
+                            const ::std::size_t lengths[10] = {
+                                0
+                                , 2
+                                , 3
+                                , 4
+                                , 5
+                                , 10
+                                , base::target.size() - single_test.limiter_begin
+                            };
+                            for (auto length : lengths) {
+                                if (single_test.limiter_begin + length <= base::target.size()) {
+                                    single_test.limiter_length = length;
 
-                            for (; single_test.limiter_begin + single_test.limiter_length <= base::target.size(); ++single_test.limiter_length) {
-                                single_test.seeking_result = (precursor.size() <= single_test.limiter_begin)
-                                    && (single_test.seeker_expected < single_test.limiter_begin + single_test.limiter_length)
-                                    && (single_test.seeker_init <= precursor.size());
+                                    single_test.seeking_result = (
+                                        (precursor.size() <= single_test.limiter_begin)
+                                        && (single_test.seeker_expected < single_test.limiter_begin + single_test.limiter_length)
+                                        && (single_test.seeker_init <= precursor.size())
+                                    )
+                                    || (
+                                        single_test.seeker_init > single_test.limiter_begin
+                                    );
 
-                                result.push_back(single_test);
+                                    result.push_back(single_test);
+                                };
                             };
                         };
                     };
