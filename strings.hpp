@@ -992,7 +992,7 @@ namespace uns::string {
                 Source
                 , Seeker
                 , delimiter_pos
-                , delimiter_pos + delimiter->size() - 1
+                , delimiter_pos + delimiter->size()
                 , SeekerTargetPosition
                 , LimiterBegin
                 , LimiterEnd
@@ -1018,7 +1018,7 @@ namespace uns::string {
                 Source
                 , Seeker
                 , delimiter_pos
-                , delimiter_pos + Delimiter.size() - 1
+                , delimiter_pos + Delimiter.size()
                 , SeekerTargetPosition
                 , LimiterBegin
                 , LimiterEnd
@@ -1093,7 +1093,7 @@ namespace uns::string {
                     , Delimiters
                     , SeekerTargetPosition
                     , limiter_pos
-                    , limiter_pos + limiter->size() - 1
+                    , limiter_pos + limiter->size()
                 );
             }
             else {
@@ -1135,7 +1135,7 @@ namespace uns::string {
                     , Delimiter
                     , SeekerTargetPosition
                     , limiter_pos
-                    , limiter_pos + limiter->size() - 1
+                    , limiter_pos + limiter->size()
                 );
             }
             else {
@@ -1170,7 +1170,7 @@ namespace uns::string {
                     , Delimiters
                     , SeekerTargetPosition
                     , limiter_pos
-                    , limiter_pos + Limiter.size() - 1
+                    , limiter_pos + Limiter.size()
                 );
             }
             else {
@@ -1206,7 +1206,7 @@ namespace uns::string {
                     , Delimiter
                     , SeekerTargetPosition
                     , limiter_pos
-                    , limiter_pos + Limiter.size() - 1
+                    , limiter_pos + Limiter.size()
                 );
             }
             else {
