@@ -988,15 +988,23 @@ namespace uns::string {
 
             Fragment = string_t{ Seeker, delimiter_pos };
 
-            return ::uns::string::parsing::auxiliary::offset<string_t>(
-                Source
-                , Seeker
-                , delimiter_pos
-                , delimiter_pos + delimiter->size()
-                , SeekerTargetPosition
-                , LimiterBegin
-                , LimiterEnd
-            );
+            if (
+                !::uns::string::parsing::auxiliary::offset<string_t>(
+                    Source
+                    , Seeker
+                    , delimiter_pos
+                    , delimiter_pos + delimiter->size()
+                    , SeekerTargetPosition
+                    , LimiterBegin
+                    , LimiterEnd
+                )
+            ) {
+                Fragment.clear();
+                return false;
+            }
+            else {
+                return true;
+            };
         };
         template<::uns::is_basic_string string_t>
         bool read(
@@ -1014,15 +1022,23 @@ namespace uns::string {
 
             Fragment = string_t{ Seeker, delimiter_pos };
 
-            return ::uns::string::parsing::auxiliary::offset<string_t>(
-                Source
-                , Seeker
-                , delimiter_pos
-                , delimiter_pos + Delimiter.size()
-                , SeekerTargetPosition
-                , LimiterBegin
-                , LimiterEnd
-            );
+            if (
+                !::uns::string::parsing::auxiliary::offset<string_t>(
+                    Source
+                    , Seeker
+                    , delimiter_pos
+                    , delimiter_pos + Delimiter.size()
+                    , SeekerTargetPosition
+                    , LimiterBegin
+                    , LimiterEnd
+                )
+            ) {
+                Fragment.clear();
+                return false;
+            }
+            else {
+                return true;
+            };
         };
         template<
             ::uns::is_basic_string string_t

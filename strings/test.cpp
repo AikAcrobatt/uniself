@@ -6474,6 +6474,9 @@ TEST_P(ParsingRead_DelimitersExplicitLimiters_U32, Do) {
             << ", limiter=\"" << ::testing::PrintToString(limiter);
     }
     else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
         ASSERT_EQ(
             get_seeker_init()
             , seeker
@@ -6529,6 +6532,9 @@ TEST_P(ParsingRead_DelimitersExplicitLimiters_U16, Do) {
             << ", limiter=\"" << ::testing::PrintToString(limiter);
     }
     else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
         ASSERT_EQ(
             get_seeker_init()
             , seeker
@@ -6584,6 +6590,9 @@ TEST_P(ParsingRead_DelimitersExplicitLimiters_U8, Do) {
             << ", limiter=\"" << ::testing::PrintToString(limiter);
     }
     else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
         ASSERT_EQ(
             get_seeker_init()
             , seeker
@@ -6652,6 +6661,9 @@ TEST_P(ParsingRead_DelimiterExplicitLimiters_U32, Do) {
             << ", limiter=\"" << ::testing::PrintToString(limiter);
     }
     else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
         ASSERT_EQ(
             get_seeker_init()
             , seeker
@@ -6707,6 +6719,9 @@ TEST_P(ParsingRead_DelimiterExplicitLimiters_U16, Do) {
             << ", limiter=\"" << ::testing::PrintToString(limiter);
     }
     else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
         ASSERT_EQ(
             get_seeker_init()
             , seeker
@@ -6762,6 +6777,9 @@ TEST_P(ParsingRead_DelimiterExplicitLimiters_U8, Do) {
             << ", limiter=\"" << ::testing::PrintToString(limiter);
     }
     else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
         ASSERT_EQ(
             get_seeker_init()
             , seeker
@@ -6822,6 +6840,8 @@ TEST_P(ParsingRead_DelimitersNoLimiters_U32, Do) {
         ) << "Target=\"" << ::testing::PrintToString(target);
     }
     else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target);
+
         ASSERT_EQ(
             get_seeker_init()
             , seeker
@@ -6868,6 +6888,8 @@ TEST_P(ParsingRead_DelimitersNoLimiters_U16, Do) {
         ) << "Target=\"" << ::testing::PrintToString(target);
     }
     else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target);
+
         ASSERT_EQ(
             get_seeker_init()
             , seeker
@@ -6914,6 +6936,8 @@ TEST_P(ParsingRead_DelimitersNoLimiters_U8, Do) {
         ) << "Target=\"" << ::testing::PrintToString(target);
     }
     else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target);
+
         ASSERT_EQ(
             get_seeker_init()
             , seeker
@@ -6973,6 +6997,8 @@ TEST_P(ParsingRead_DelimiterNoLimiters_U32, Do) {
         ) << "Target=\"" << ::testing::PrintToString(target);
     }
     else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target);
+
         ASSERT_EQ(
             get_seeker_init()
             , seeker
@@ -7019,6 +7045,8 @@ TEST_P(ParsingRead_DelimiterNoLimiters_U16, Do) {
         ) << "Target=\"" << ::testing::PrintToString(target);
     }
     else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target);
+
         ASSERT_EQ(
             get_seeker_init()
             , seeker
@@ -7065,6 +7093,8 @@ TEST_P(ParsingRead_DelimiterNoLimiters_U8, Do) {
         ) << "Target=\"" << ::testing::PrintToString(target);
     }
     else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target);
+
         ASSERT_EQ(
             get_seeker_init()
             , seeker
@@ -7074,5 +7104,755 @@ TEST_P(ParsingRead_DelimiterNoLimiters_U8, Do) {
 INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingRead_DelimiterNoLimiters_U8,
     ::testing::ValuesIn(
         ::ParsingRead_DelimiterNoLimiters_U8::generate_tests()
+    )
+);
+
+template<::uns::is_basic_string string_t>
+class ParsingRead_DelimitersLimiters : public::ParsingRead<string_t> {
+private:
+    using base = ::ParsingRead<string_t>;
+public:
+    using string_type = string_t;
+public:
+    ::std::vector<string_type> get_limiters() {
+        return {
+            base::delimiters.back()
+            , base::finish
+        };
+    };
+public:
+    static ::std::vector<::param_set::ParsingRead> generate_tests() {
+        return base::generate_tests_common();
+    };
+};
+
+using ParsingRead_DelimitersLimiters_U32 = ::ParsingRead_DelimitersLimiters<::std::u32string>;
+TEST_P(ParsingRead_DelimitersLimiters_U32, Do) {
+    using fixture = ParsingRead_DelimitersLimiters_U32;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    const auto delimiters_pos = ::uns::string::parsing::find(target, seeker, delimiters);
+
+    const auto expected_result =
+        delimiters_pos != target.cend()
+        && (seeker < delimiters_pos)
+        && (delimiters_pos <= limiter_beg)
+        && (get_seeker_expected() < limiter_end);
+
+    auto fragment = fixture::string_type{};
+    ASSERT_EQ(
+        expected_result
+        , ::uns::string::parsing::read<fixture::string_type>(
+            target
+            , seeker
+            , fragment
+            , delimiters
+            , get_seeker_pos_in_delimiter()
+            , get_limiters()
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (expected_result) {
+        ASSERT_EQ(
+            fragment
+            , get_fragment()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            seeker
+            , get_seeker_expected()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingRead_DelimitersLimiters_U32,
+    ::testing::ValuesIn(
+        ::ParsingRead_DelimitersLimiters_U32::generate_tests()
+    )
+);
+using ParsingRead_DelimitersLimiters_U16 = ::ParsingRead_DelimitersLimiters<::std::u16string>;
+TEST_P(ParsingRead_DelimitersLimiters_U16, Do) {
+    using fixture = ParsingRead_DelimitersLimiters_U16;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    const auto delimiters_pos = ::uns::string::parsing::find(target, seeker, delimiters);
+
+    const auto expected_result =
+        delimiters_pos != target.cend()
+        && (seeker < delimiters_pos)
+        && (delimiters_pos <= limiter_beg)
+        && (get_seeker_expected() < limiter_end);
+
+    auto fragment = fixture::string_type{};
+    ASSERT_EQ(
+        expected_result
+        , ::uns::string::parsing::read<fixture::string_type>(
+            target
+            , seeker
+            , fragment
+            , delimiters
+            , get_seeker_pos_in_delimiter()
+            , get_limiters()
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (expected_result) {
+        ASSERT_EQ(
+            fragment
+            , get_fragment()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            seeker
+            , get_seeker_expected()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingRead_DelimitersLimiters_U16,
+    ::testing::ValuesIn(
+        ::ParsingRead_DelimitersLimiters_U16::generate_tests()
+    )
+);
+using ParsingRead_DelimitersLimiters_U8 = ::ParsingRead_DelimitersLimiters<::std::u8string>;
+TEST_P(ParsingRead_DelimitersLimiters_U8, Do) {
+    using fixture = ParsingRead_DelimitersLimiters_U8;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    const auto delimiters_pos = ::uns::string::parsing::find(target, seeker, delimiters);
+
+    const auto expected_result =
+        delimiters_pos != target.cend()
+        && (seeker < delimiters_pos)
+        && (delimiters_pos <= limiter_beg)
+        && (get_seeker_expected() < limiter_end);
+
+    auto fragment = fixture::string_type{};
+    ASSERT_EQ(
+        expected_result
+        , ::uns::string::parsing::read<fixture::string_type>(
+            target
+            , seeker
+            , fragment
+            , delimiters
+            , get_seeker_pos_in_delimiter()
+            , get_limiters()
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (expected_result) {
+        ASSERT_EQ(
+            fragment
+            , get_fragment()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            seeker
+            , get_seeker_expected()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingRead_DelimitersLimiters_U8,
+    ::testing::ValuesIn(
+        ::ParsingRead_DelimitersLimiters_U8::generate_tests()
+    )
+);
+
+template<::uns::is_basic_string string_t>
+class ParsingRead_DelimiterLimiters : public::ParsingRead<string_t> {
+private:
+    using base = ::ParsingRead<string_t>;
+public:
+    using string_type = string_t;
+public:
+    ::std::vector<string_type> get_limiters() {
+        return {
+            base::delimiters.back()
+            , base::finish
+        };
+    };
+public:
+    static ::std::vector<::param_set::ParsingRead> generate_tests() {
+        return base::generate_tests_common();
+    };
+};
+
+using ParsingRead_DelimiterLimiters_U32 = ::ParsingRead_DelimiterLimiters<::std::u32string>;
+TEST_P(ParsingRead_DelimiterLimiters_U32, Do) {
+    using fixture = ParsingRead_DelimiterLimiters_U32;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    const auto delimiters_pos = ::uns::string::parsing::find(target, seeker, delimiters);
+
+    const auto expected_result =
+        delimiters_pos != target.cend()
+        && (seeker < delimiters_pos)
+        && (delimiters_pos <= limiter_beg)
+        && (get_seeker_expected() < limiter_end);
+
+    auto fragment = fixture::string_type{};
+    ASSERT_EQ(
+        expected_result
+        , ::uns::string::parsing::read<fixture::string_type>(
+            target
+            , seeker
+            , fragment
+            , get_delimiter()
+            , get_seeker_pos_in_delimiter()
+            , get_limiters()
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (expected_result) {
+        ASSERT_EQ(
+            fragment
+            , get_fragment()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            seeker
+            , get_seeker_expected()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingRead_DelimiterLimiters_U32,
+    ::testing::ValuesIn(
+        ::ParsingRead_DelimiterLimiters_U32::generate_tests()
+    )
+);
+using ParsingRead_DelimiterLimiters_U16 = ::ParsingRead_DelimiterLimiters<::std::u16string>;
+TEST_P(ParsingRead_DelimiterLimiters_U16, Do) {
+    using fixture = ParsingRead_DelimiterLimiters_U16;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    const auto delimiters_pos = ::uns::string::parsing::find(target, seeker, delimiters);
+
+    const auto expected_result =
+        delimiters_pos != target.cend()
+        && (seeker < delimiters_pos)
+        && (delimiters_pos <= limiter_beg)
+        && (get_seeker_expected() < limiter_end);
+
+    auto fragment = fixture::string_type{};
+    ASSERT_EQ(
+        expected_result
+        , ::uns::string::parsing::read<fixture::string_type>(
+            target
+            , seeker
+            , fragment
+            , get_delimiter()
+            , get_seeker_pos_in_delimiter()
+            , get_limiters()
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (expected_result) {
+        ASSERT_EQ(
+            fragment
+            , get_fragment()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            seeker
+            , get_seeker_expected()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingRead_DelimiterLimiters_U16,
+    ::testing::ValuesIn(
+        ::ParsingRead_DelimiterLimiters_U16::generate_tests()
+    )
+);
+using ParsingRead_DelimiterLimiters_U8 = ::ParsingRead_DelimiterLimiters<::std::u8string>;
+TEST_P(ParsingRead_DelimiterLimiters_U8, Do) {
+    using fixture = ParsingRead_DelimiterLimiters_U8;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    const auto delimiters_pos = ::uns::string::parsing::find(target, seeker, delimiters);
+
+    const auto expected_result =
+        delimiters_pos != target.cend()
+        && (seeker < delimiters_pos)
+        && (delimiters_pos <= limiter_beg)
+        && (get_seeker_expected() < limiter_end);
+
+    auto fragment = fixture::string_type{};
+    ASSERT_EQ(
+        expected_result
+        , ::uns::string::parsing::read<fixture::string_type>(
+            target
+            , seeker
+            , fragment
+            , get_delimiter()
+            , get_seeker_pos_in_delimiter()
+            , get_limiters()
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (expected_result) {
+        ASSERT_EQ(
+            fragment
+            , get_fragment()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            seeker
+            , get_seeker_expected()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingRead_DelimiterLimiters_U8,
+    ::testing::ValuesIn(
+        ::ParsingRead_DelimiterLimiters_U8::generate_tests()
+    )
+);
+
+template<::uns::is_basic_string string_t>
+class ParsingRead_DelimitersLimiter : public::ParsingRead<string_t> {
+private:
+    using base = ::ParsingRead<string_t>;
+public:
+    using string_type = string_t;
+public:
+    static ::std::vector<::param_set::ParsingRead> generate_tests() {
+        return base::generate_tests_common();
+    };
+};
+
+using ParsingRead_DelimitersLimiter_U32 = ::ParsingRead_DelimitersLimiter<::std::u32string>;
+TEST_P(ParsingRead_DelimitersLimiter_U32, Do) {
+    using fixture = ParsingRead_DelimitersLimiter_U32;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    const auto delimiters_pos = ::uns::string::parsing::find(target, seeker, delimiters);
+
+    const auto expected_result =
+        delimiters_pos != target.cend()
+        && (seeker < delimiters_pos)
+        && (delimiters_pos <= limiter_beg)
+        && (get_seeker_expected() < limiter_end);
+
+    auto fragment = fixture::string_type{};
+    ASSERT_EQ(
+        expected_result
+        , ::uns::string::parsing::read<fixture::string_type>(
+            target
+            , seeker
+            , fragment
+            , delimiters
+            , get_seeker_pos_in_delimiter()
+            , limiter
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (expected_result) {
+        ASSERT_EQ(
+            fragment
+            , get_fragment()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            seeker
+            , get_seeker_expected()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingRead_DelimitersLimiter_U32,
+    ::testing::ValuesIn(
+        ::ParsingRead_DelimitersLimiter_U32::generate_tests()
+    )
+);
+using ParsingRead_DelimitersLimiter_U16 = ::ParsingRead_DelimitersLimiter<::std::u16string>;
+TEST_P(ParsingRead_DelimitersLimiter_U16, Do) {
+    using fixture = ParsingRead_DelimitersLimiter_U16;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    const auto delimiters_pos = ::uns::string::parsing::find(target, seeker, delimiters);
+
+    const auto expected_result =
+        delimiters_pos != target.cend()
+        && (seeker < delimiters_pos)
+        && (delimiters_pos <= limiter_beg)
+        && (get_seeker_expected() < limiter_end);
+
+    auto fragment = fixture::string_type{};
+    ASSERT_EQ(
+        expected_result
+        , ::uns::string::parsing::read<fixture::string_type>(
+            target
+            , seeker
+            , fragment
+            , delimiters
+            , get_seeker_pos_in_delimiter()
+            , limiter
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (expected_result) {
+        ASSERT_EQ(
+            fragment
+            , get_fragment()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            seeker
+            , get_seeker_expected()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingRead_DelimitersLimiter_U16,
+    ::testing::ValuesIn(
+        ::ParsingRead_DelimitersLimiter_U16::generate_tests()
+    )
+);
+using ParsingRead_DelimitersLimiter_U8 = ::ParsingRead_DelimitersLimiter<::std::u8string>;
+TEST_P(ParsingRead_DelimitersLimiter_U8, Do) {
+    using fixture = ParsingRead_DelimitersLimiter_U8;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    const auto delimiters_pos = ::uns::string::parsing::find(target, seeker, delimiters);
+
+    const auto expected_result =
+        delimiters_pos != target.cend()
+        && (seeker < delimiters_pos)
+        && (delimiters_pos <= limiter_beg)
+        && (get_seeker_expected() < limiter_end);
+
+    auto fragment = fixture::string_type{};
+    ASSERT_EQ(
+        expected_result
+        , ::uns::string::parsing::read<fixture::string_type>(
+            target
+            , seeker
+            , fragment
+            , delimiters
+            , get_seeker_pos_in_delimiter()
+            , limiter
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (expected_result) {
+        ASSERT_EQ(
+            fragment
+            , get_fragment()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            seeker
+            , get_seeker_expected()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingRead_DelimitersLimiter_U8,
+    ::testing::ValuesIn(
+        ::ParsingRead_DelimitersLimiter_U8::generate_tests()
+    )
+);
+
+template<::uns::is_basic_string string_t>
+class ParsingRead_DelimiterLimiter : public::ParsingRead<string_t> {
+private:
+    using base = ::ParsingRead<string_t>;
+public:
+    using string_type = string_t;
+public:
+    static ::std::vector<::param_set::ParsingRead> generate_tests() {
+        return base::generate_tests_common();
+    };
+};
+
+using ParsingRead_DelimiterLimiter_U32 = ::ParsingRead_DelimiterLimiter<::std::u32string>;
+TEST_P(ParsingRead_DelimiterLimiter_U32, Do) {
+    using fixture = ParsingRead_DelimiterLimiter_U32;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    const auto delimiters_pos = ::uns::string::parsing::find(target, seeker, delimiters);
+
+    const auto expected_result =
+        delimiters_pos != target.cend()
+        && (seeker < delimiters_pos)
+        && (delimiters_pos <= limiter_beg)
+        && (get_seeker_expected() < limiter_end);
+
+    auto fragment = fixture::string_type{};
+    ASSERT_EQ(
+        expected_result
+        , ::uns::string::parsing::read<fixture::string_type>(
+            target
+            , seeker
+            , fragment
+            , get_delimiter()
+            , get_seeker_pos_in_delimiter()
+            , limiter
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (expected_result) {
+        ASSERT_EQ(
+            fragment
+            , get_fragment()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            seeker
+            , get_seeker_expected()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingRead_DelimiterLimiter_U32,
+    ::testing::ValuesIn(
+        ::ParsingRead_DelimiterLimiter_U32::generate_tests()
+    )
+);
+using ParsingRead_DelimiterLimiter_U16 = ::ParsingRead_DelimiterLimiter<::std::u16string>;
+TEST_P(ParsingRead_DelimiterLimiter_U16, Do) {
+    using fixture = ParsingRead_DelimiterLimiter_U16;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    const auto delimiters_pos = ::uns::string::parsing::find(target, seeker, delimiters);
+
+    const auto expected_result =
+        delimiters_pos != target.cend()
+        && (seeker < delimiters_pos)
+        && (delimiters_pos <= limiter_beg)
+        && (get_seeker_expected() < limiter_end);
+
+    auto fragment = fixture::string_type{};
+    ASSERT_EQ(
+        expected_result
+        , ::uns::string::parsing::read<fixture::string_type>(
+            target
+            , seeker
+            , fragment
+            , get_delimiter()
+            , get_seeker_pos_in_delimiter()
+            , limiter
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (expected_result) {
+        ASSERT_EQ(
+            fragment
+            , get_fragment()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            seeker
+            , get_seeker_expected()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingRead_DelimiterLimiter_U16,
+    ::testing::ValuesIn(
+        ::ParsingRead_DelimiterLimiter_U16::generate_tests()
+    )
+);
+using ParsingRead_DelimiterLimiter_U8 = ::ParsingRead_DelimiterLimiter<::std::u8string>;
+TEST_P(ParsingRead_DelimiterLimiter_U8, Do) {
+    using fixture = ParsingRead_DelimiterLimiter_U8;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    const auto delimiters_pos = ::uns::string::parsing::find(target, seeker, delimiters);
+
+    const auto expected_result =
+        delimiters_pos != target.cend()
+        && (seeker < delimiters_pos)
+        && (delimiters_pos <= limiter_beg)
+        && (get_seeker_expected() < limiter_end);
+
+    auto fragment = fixture::string_type{};
+    ASSERT_EQ(
+        expected_result
+        , ::uns::string::parsing::read<fixture::string_type>(
+            target
+            , seeker
+            , fragment
+            , get_delimiter()
+            , get_seeker_pos_in_delimiter()
+            , limiter
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (expected_result) {
+        ASSERT_EQ(
+            fragment
+            , get_fragment()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            seeker
+            , get_seeker_expected()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingRead_DelimiterLimiter_U8,
+    ::testing::ValuesIn(
+        ::ParsingRead_DelimiterLimiter_U8::generate_tests()
     )
 );
