@@ -30,7 +30,6 @@ class RenumTyped : public ::testing::Test {};
 
 using types_list = ::testing::Types<::abyss::layers, void, int, char, ::std::string>;
 TYPED_TEST_CASE(RenumTyped, types_list);
-
 TYPED_TEST(RenumTyped, TraitsTest) {
     if (typeid(TypeParam) == typeid(::abyss::layers)) {
         ASSERT_TRUE(::uns::renum_traits<TypeParam>::value);
@@ -57,7 +56,6 @@ TEST_P(ComparationChecks, EqualityCheckRenumEnum) {
         EXPECT_FALSE(renum_enum == renum_obj);
     };
 };
-
 TEST_P(ComparationChecks, UnEqualityCheckRenumEnum) {
     const ::abyss::layers renum_obj = ::abyss::layers::enum_type{ ::std::get<0>(GetParam()) };
     const auto renum_enum = ::abyss::layers::enum_type{ ::std::get<1>(GetParam()) };
@@ -70,7 +68,6 @@ TEST_P(ComparationChecks, UnEqualityCheckRenumEnum) {
         EXPECT_TRUE(renum_enum != renum_obj);
     };
 };
-
 TEST_P(ComparationChecks, EqualityCheckRenumRenum) {
     const ::abyss::layers renum_obj_1 = ::abyss::layers::enum_type{ ::std::get<0>(GetParam()) };
     const ::abyss::layers renum_obj_2 = ::abyss::layers::enum_type{ ::std::get<1>(GetParam()) };
@@ -81,7 +78,6 @@ TEST_P(ComparationChecks, EqualityCheckRenumRenum) {
         EXPECT_FALSE(renum_obj_1 == renum_obj_2);
     };
 };
-
 TEST_P(ComparationChecks, UnEqualityCheckRenumRenum) {
     const ::abyss::layers renum_obj_1 = ::abyss::layers::enum_type{ ::std::get<0>(GetParam()) };
     const ::abyss::layers renum_obj_2 = ::abyss::layers::enum_type{ ::std::get<1>(GetParam()) };
@@ -92,7 +88,6 @@ TEST_P(ComparationChecks, UnEqualityCheckRenumRenum) {
         EXPECT_TRUE(renum_obj_1 != renum_obj_2);
     };
 };
-
 INSTANTIATE_TEST_CASE_P(RenumGeneral, ComparationChecks,
     ::testing::Combine(
         ::testing::Range<::abyss::layers::integral_type>(0, ::abyss::layers::size()),
@@ -140,14 +135,12 @@ TEST_P(RenumConvertStringsCorrect, RenumFromStrings) {
             == ::renum_test::from_string(::std::get<::RenumStrings::string>(GetParam()))
     );
 };
-
 TEST_P(RenumConvertStringsCorrect, RenumToStrings) {
     ASSERT_TRUE(
         ::std::get<::RenumStrings::renum>(GetParam()).to_string()
             == ::std::get<::RenumStrings::string>(GetParam())
     );
 };
-
 INSTANTIATE_TEST_CASE_P(RenumGeneral, RenumConvertStringsCorrect,
     ::testing::Values(
         ::RenumStrings::elem_type{ ::renum_test::t1, U"t1" }
@@ -166,14 +159,12 @@ TEST_P(RenumConvertStringsInCorrect, RenumFromStrings) {
         , ::std::runtime_error
     );
 };
-
 TEST_P(RenumConvertStringsInCorrect, RenumToStrings) {
     ASSERT_FALSE(
         ::std::get<::RenumStrings::renum>(GetParam()).to_string()
             == ::std::get<::RenumStrings::string>(GetParam())
     );
 };
-
 INSTANTIATE_TEST_CASE_P(RenumGeneral, RenumConvertStringsInCorrect,
     ::testing::Values(
         ::RenumStrings::elem_type{ ::renum_test::t1, U" t1" }
@@ -212,7 +203,6 @@ TEST_P(RenumIdenticalCastRenum, FromRenumToRenum) {
         GetParam() == ::unconditioned::from_string(GetParam().to_string())
     );
 };
-
 INSTANTIATE_TEST_CASE_P(RenumGeneral, RenumIdenticalCastRenum,
     ::testing::Values(
         ::unconditioned::_
@@ -241,7 +231,6 @@ TEST_P(RenumIdenticalCastString, FromStringToString) {
         GetParam() == ::unconditioned::from_string(GetParam()).to_string()
     );
 };
-
 INSTANTIATE_TEST_CASE_P(RenumGeneral, RenumIdenticalCastString,
     ::testing::Values(
         U"_"
