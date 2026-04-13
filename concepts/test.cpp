@@ -51,7 +51,6 @@ template<typename basic_string_candidate_t>
 class ConceptStringCheck : public ::testing::Test {};
 
 TYPED_TEST_CASE(ConceptStringCheck, ::uns::tests::concepts::string::types_list);
-
 TYPED_TEST(ConceptStringCheck, IsBasicString) {
     if (::uns::tests::concepts::string::is_basic<TypeParam>()) {
         ASSERT_TRUE(::uns::tests::concepts::string::test<TypeParam>());
@@ -131,7 +130,6 @@ template<typename collection_candidate_t>
 class ConceptCollectionConstCorrect : public ::testing::Test {};
 
 TYPED_TEST_CASE(ConceptCollectionConstCorrect, ::uns::tests::concepts::collections::const_types_list);
-
 TYPED_TEST(ConceptCollectionConstCorrect, Test) {
     ASSERT_TRUE(::uns::tests::concepts::collections::test_const_iter<TypeParam>());
 };
@@ -162,7 +160,6 @@ template<typename collection_candidate_t>
 class ConceptCollectionConstInCorrect : public ::testing::Test {};
 
 TYPED_TEST_CASE(ConceptCollectionConstInCorrect, ::uns::tests::concepts::collections::fake_const_types_list);
-
 TYPED_TEST(ConceptCollectionConstInCorrect, Test) {
     ASSERT_FALSE(::uns::tests::concepts::collections::test_const_iter<TypeParam>());
 };
@@ -185,7 +182,6 @@ template<typename collection_candidate_t>
 class ConceptCollectionCorrect : public ::testing::Test {};
 
 TYPED_TEST_CASE(ConceptCollectionCorrect, ::uns::tests::concepts::collections::nonconst_types_list);
-
 TYPED_TEST(ConceptCollectionCorrect, Test) {
     ASSERT_TRUE(::uns::tests::concepts::collections::test_iter<TypeParam>());
 };
@@ -215,7 +211,6 @@ template<typename collection_candidate_t>
 class ConceptCollectionInCorrect : public ::testing::Test {};
 
 TYPED_TEST_CASE(ConceptCollectionInCorrect, ::uns::tests::concepts::collections::fake_nonconst_types_list);
-
 TYPED_TEST(ConceptCollectionInCorrect, Test) {
     ASSERT_FALSE(::uns::tests::concepts::collections::test_iter<TypeParam>());
 };
