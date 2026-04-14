@@ -7934,3 +7934,179 @@ INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingRead_DelimiterLimiter_U8,
         ::ParsingRead_DelimiterLimiter_U8::generate_tests()
     )
 );
+
+
+
+namespace param_set {
+
+    struct ParsingObtain {
+        ::std::size_t key_idx = 0;
+        ::uns::string::parsing::seeker_position seeker_pos_in_delimiter;
+        ::std::size_t limiter_begin = 0;
+        ::std::size_t limiter_length = 0;
+    private:
+        static ::std::string to_string(const ::uns::string::parsing::seeker_position& SeekerPosInDelimiter) {
+            return "{ qualifier=" + ::std::string{
+                    SeekerPosInDelimiter.qualifier == ::uns::string::parsing::seeker_position::from_begin
+                    ? "from_begin"
+                    : "from_end"
+            }
+            + ", offset=" + ::testing::PrintToString(SeekerPosInDelimiter.offset) + " }";
+        };
+    public:
+        ::std::string to_string() const {
+            return "{ key_idx=" + ::testing::PrintToString(key_idx)
+                + ", seeker_pos_in_sample=" + to_string(seeker_pos_in_delimiter)
+                + ", limiter_begin=" + ::testing::PrintToString(limiter_begin)
+                + ", limiter_length=" + ::testing::PrintToString(limiter_length) + " }";
+        };
+    };
+
+};
+
+template<>
+::std::string testing::PrintToString(const ::param_set::ParsingObtain& Params) {
+    return Params.to_string();
+};
+
+template<::uns::is_basic_string string_t>
+class ParsingObtain :
+    public ::Parsing<string_t>
+    , public ::testing::TestWithParam<::param_set::ParsingObtain>
+{
+private:
+    using base = ::ParsingObtain<string_t>;
+    using test = ::testing::TestWithParam<::param_set::ParsingObtain>;
+public:
+    using string_type = string_t;
+private:
+    ::std::vector<::std::size_t> m_key_poss;
+public:
+    virtual void SetUp() override {
+        for (const auto& key : base::keys) {
+            m_key_poss.push_back(base::target.find(key));
+        };
+    };
+public:
+    typename string_type::const_iterator get_key() const {
+        return base::target.cbegin() + GetParam().key_idx;
+    };
+    typename string_type get_value() const {
+        const auto delimiter_pos = base::target.find(get_delimiter());
+
+        if (GetParam().seeker_pos_in_delimiter.qualifier == ::uns::string::parsing::seeker_position::from_begin) {
+            return string_type{
+                base::target.cbegin()
+                    + m_key_poss.at(GetParam().key_idx)
+                    + GetParam().seeker_pos_in_delimiter.offset
+                , base::target.cbegin()
+                    + delimiter_pos
+            };
+        }
+        else {
+            return string_type{
+                base::target.cbegin()
+                    + m_key_poss.at(GetParam().key_idx)
+                    + base::keys[GetParam().key_idx].size()
+                    + GetParam().seeker_pos_in_delimiter.offset
+                , base::target.cbegin()
+                    + delimiter_pos
+            };
+        };
+    };
+    typename string_type get_delimiter() const {
+        return *(base::delimiters.cbegin() + GetParam().key_idx);
+    };
+    ::uns::string::parsing::seeker_position get_seeker_pos_in_delimiter() const {
+        return GetParam().seeker_pos_in_delimiter;
+    };
+    const ::std::tuple<
+        string_type
+        , typename string_type::const_iterator
+        , typename string_type::const_iterator
+    > get_limiter() const {
+        auto limiter_beg = base::target.cend();
+        auto limiter_end = base::target.cend();
+
+        if (GetParam().limiter_begin < base::target.size()) {
+            limiter_beg = base::target.cbegin() + GetParam().limiter_begin;
+        };
+        if (GetParam().limiter_begin + GetParam().limiter_length < base::target.size()) {
+            limiter_end = base::target.cbegin() + GetParam().limiter_begin + GetParam().limiter_length;
+        };
+
+        return {
+            string_type{ limiter_beg, limiter_end }
+            , limiter_beg
+            , limiter_end
+        };
+    };
+public:
+    static ::std::vector<::param_set::ParsingRead> generate_tests_common() {
+        const ::uns::string::parsing::seeker_position::sample_relative seeker_result_position_variants[2] = {
+            ::uns::string::parsing::seeker_position::from_begin
+            , ::uns::string::parsing::seeker_position::from_end
+        };
+        const int seeker_extremal_offset = 3;
+
+        auto result = ::std::vector<::param_set::ParsingRead>{};
+        auto single_test = ::param_set::ParsingRead{};
+
+        single_test.seeker_pos_in_delimiter.qualifier = ::uns::string::parsing::seeker_position::from_begin;
+        single_test.seeker_pos_in_delimiter.offset = 0;
+        single_test.seeker_init = 0;
+        auto precursor = base::start.size() + base::keys[0].size() + base::equality.size();
+        for (::std::size_t idx = 0; idx < base::keys.size() && idx < base::values.size() && idx < base::delimiters.size(); ++idx) {
+            single_test.fragment_idx = idx;
+            single_test.delimiter_idx = idx;
+
+            single_test.seeker_init = precursor;
+            precursor += base::values[idx].size();
+            for (auto seeker_result_position_variant : seeker_result_position_variants) {
+                single_test.seeker_pos_in_delimiter.qualifier = seeker_result_position_variant;
+                single_test.seeker_pos_in_delimiter.offset = -seeker_extremal_offset;
+
+                for (; single_test.seeker_pos_in_delimiter.offset < seeker_extremal_offset; ++single_test.seeker_pos_in_delimiter.offset) {
+                    single_test.seeker_expected = static_cast<::std::size_t>(
+                        static_cast<int>(precursor)
+                        + single_test.seeker_pos_in_delimiter.offset
+                        );
+                    if (single_test.seeker_pos_in_delimiter.qualifier == ::uns::string::parsing::seeker_position::from_end) {
+                        single_test.seeker_expected += base::delimiters[idx].size();
+                    };
+
+                    single_test.limiter_begin = 0;
+                    const ::std::size_t lengths[10] = {
+                        0
+                        , 3
+                        , 4
+                        , 5
+                        , 10
+                        , base::target.size() - single_test.limiter_begin
+                    };
+                    for (; single_test.limiter_begin < base::target.size(); single_test.limiter_begin += 5) {
+                        single_test.limiter_length = 0;
+
+                        for (auto length : lengths) {
+                            if (single_test.limiter_begin + length <= base::target.size()) {
+                                single_test.limiter_length = length;
+
+                                result.push_back(single_test);
+                            };
+                        };
+                    };
+                };
+            };
+
+            precursor += base::delimiters[idx].size();
+            if (
+                auto key_idx = idx + 1;
+                key_idx < base::keys.size()
+                ) {
+                precursor += base::keys[key_idx].size() + base::equality.size();
+            };
+        };
+
+        return result;
+    };
+};
