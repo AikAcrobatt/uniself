@@ -7310,17 +7310,33 @@ public:
 public:
     ::std::vector<string_type> get_limiters() {
         return {
-            base::delimiters.back()
+            base::delimiters[1]
+            , base::delimiters[2]
             , base::finish
         };
     };
-    typename string_type::const_iterator get_seeker_limit() {
-        return ::uns::string::parsing::find<string_type>(
-            base::target
-            , base::target.cbegin()
-            , base::delimiters.back()
-        )
-            + base::delimiters.back().size();
+    typename string_type::const_iterator get_seeker_limit(
+        const typename string_type::const_iterator& Seeker
+    ) {
+        if (
+            auto limiter_end = ::uns::string::parsing::find<string_type>(
+                base::target
+                , base::target.cbegin()
+                , base::delimiters[1]
+            )
+            + base::delimiters[1].size();
+            Seeker < limiter_end
+        ) {
+            return limiter_end;
+        }
+        else {
+            return ::uns::string::parsing::find<string_type>(
+                base::target
+                , base::target.cbegin()
+                , base::delimiters[2]
+            )
+                + base::delimiters[2].size();
+        };
     };
 public:
     static ::std::vector<::param_set::ParsingRead> generate_tests() {
@@ -7333,12 +7349,12 @@ TEST_P(ParsingRead_DelimiterLimiters_U32, Do) {
     using fixture = ParsingRead_DelimiterLimiters_U32;
     auto seeker = get_seeker_init();
 
-    const auto delimiters_pos = ::uns::string::parsing::find(target, seeker, delimiters);
+    const auto delimiter_pos = ::uns::string::parsing::find(target, seeker, get_delimiter());
 
     const auto expected_result =
-        delimiters_pos != target.cend()
-        && (seeker < delimiters_pos)
-        && (get_seeker_expected() < get_seeker_limit());
+        delimiter_pos != target.cend()
+        && (seeker < delimiter_pos)
+        && (get_seeker_expected() < get_seeker_limit(seeker));
 
     auto fragment = fixture::string_type{};
     ASSERT_EQ(
@@ -7383,12 +7399,12 @@ TEST_P(ParsingRead_DelimiterLimiters_U16, Do) {
     using fixture = ParsingRead_DelimiterLimiters_U16;
     auto seeker = get_seeker_init();
 
-    const auto delimiters_pos = ::uns::string::parsing::find(target, seeker, delimiters);
+    const auto delimiter_pos = ::uns::string::parsing::find(target, seeker, get_delimiter());
 
     const auto expected_result =
-        delimiters_pos != target.cend()
-        && (seeker < delimiters_pos)
-        && (get_seeker_expected() < get_seeker_limit());
+        delimiter_pos != target.cend()
+        && (seeker < delimiter_pos)
+        && (get_seeker_expected() < get_seeker_limit(seeker));
 
     auto fragment = fixture::string_type{};
     ASSERT_EQ(
@@ -7433,12 +7449,12 @@ TEST_P(ParsingRead_DelimiterLimiters_U8, Do) {
     using fixture = ParsingRead_DelimiterLimiters_U8;
     auto seeker = get_seeker_init();
 
-    const auto delimiters_pos = ::uns::string::parsing::find(target, seeker, delimiters);
+    const auto delimiter_pos = ::uns::string::parsing::find(target, seeker, get_delimiter());
 
     const auto expected_result =
-        delimiters_pos != target.cend()
-        && (seeker < delimiters_pos)
-        && (get_seeker_expected() < get_seeker_limit());
+        delimiter_pos != target.cend()
+        && (seeker < delimiter_pos)
+        && (get_seeker_expected() < get_seeker_limit(seeker));
 
     auto fragment = fixture::string_type{};
     ASSERT_EQ(
