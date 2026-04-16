@@ -1359,7 +1359,7 @@ namespace uns::string {
             , const delimiters_t&                       Delimiters      //an iterable collection of delimiting strings
             , const limiters_t&                         Limiters        //position of the first symbol of the limiter, that serves as the limit for finding delimiters (including right_border_beg)
         ) noexcept {
-            auto pos_limiter = ::uns::string::find<string_t>(
+            auto pos_limiter = ::uns::string::parsing::find<string_t>(
                 Target
                 , Target.cbegin()
                 , Limiters
@@ -1383,7 +1383,7 @@ namespace uns::string {
             , const string_t&                           Delimiter       //an iterable collection of delimiting strings
             , const limiters_t&                         Limiters        //position of the first symbol of the limiter, that serves as the limit for finding delimiters (including right_border_beg)
         ) noexcept {
-            auto pos_limiter = ::uns::string::find<string_t>(
+            auto pos_limiter = ::uns::string::parsing::find<string_t>(
                 Target
                 , Target.cbegin()
                 , Limiters
@@ -1407,7 +1407,7 @@ namespace uns::string {
             , const delimiters_t&                       Delimiters      //an iterable collection of delimiting strings
             , const string_t&                           Limiter         //position of the first symbol of the limiter, that serves as the limit for finding delimiters (including right_border_beg)
         ) noexcept {
-            auto pos_limiter = ::uns::string::find<string_t>(
+            auto pos_limiter = ::uns::string::parsing::find<string_t>(
                 Target
                 , Target.cbegin()
                 , Limiter
@@ -1431,7 +1431,7 @@ namespace uns::string {
             , const string_t&                           Delimiter       //an iterable collection of delimiting strings
             , const string_t&                           Limiter         //position of the first symbol of the limiter, that serves as the limit for finding delimiters (including right_border_beg)
         ) noexcept {
-            auto pos_limiter = ::uns::string::find<string_t>(
+            auto pos_limiter = ::uns::string::parsing::find<string_t>(
                 Target
                 , Target.cbegin()
                 , Limiter

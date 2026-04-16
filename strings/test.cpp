@@ -4632,7 +4632,7 @@ public:
                         };
 
                         single_test.limiter_begin = 0;
-                        const ::std::size_t lengths[10] = {
+                        const ::std::size_t lengths[6] = {
                             0
                             , 3
                             , 4
@@ -4854,7 +4854,7 @@ public:
                         };
 
                         single_test.limiter_begin = 0;
-                        const ::std::size_t lengths[10] = {
+                        const ::std::size_t lengths[6] = {
                             0
                             , 3
                             , 4
@@ -5805,7 +5805,7 @@ public:
 
                         single_test.limiter_begin = 0;
                         for (; single_test.limiter_begin < base::target.size(); single_test.limiter_begin += 5) {
-                            const ::std::size_t lengths[10] = {
+                            const ::std::size_t lengths[6] = {
                                 0
                                 , 3
                                 , 4
@@ -6058,7 +6058,7 @@ public:
 
                         single_test.limiter_begin = 0;
                         for (; single_test.limiter_begin < base::target.size(); single_test.limiter_begin += 5) {
-                            const ::std::size_t lengths[10] = {
+                            const ::std::size_t lengths[6] = {
                                 0
                                 , 3
                                 , 4
@@ -6384,7 +6384,7 @@ public:
                     };
 
                     single_test.limiter_begin = 0;
-                    const ::std::size_t lengths[10] = {
+                    const ::std::size_t lengths[6] = {
                         0
                         , 3
                         , 4
@@ -7980,38 +7980,76 @@ private:
 public:
     using string_type = string_t;
 private:
-    ::std::vector<::std::size_t> m_key_poss;
+    inline static ::std::vector<::std::size_t> s_key_poss;
 public:
-    virtual void SetUp() override {
+    static void SetUpTestCase() {
+        if (!s_key_poss.empty()) return;
         for (const auto& key : base::keys) {
-            m_key_poss.push_back(base::target.find(key));
+            s_key_poss.push_back(base::target.find(key));
         };
     };
 public:
-    typename string_type::const_iterator get_key() const {
-        return base::target.cbegin() + GetParam().key_idx;
+    string_type get_key() const {
+        return *(base::keys.cbegin() + GetParam().key_idx);
     };
-    typename string_type get_value() const {
-        const auto delimiter_pos = base::target.find(get_delimiter());
-
+    typename string_type::const_iterator get_value_pos() const {
         if (GetParam().seeker_pos_in_delimiter.qualifier == ::uns::string::parsing::seeker_position::from_begin) {
-            return string_type{
-                base::target.cbegin()
-                    + m_key_poss.at(GetParam().key_idx)
-                    + GetParam().seeker_pos_in_delimiter.offset
-                , base::target.cbegin()
-                    + delimiter_pos
+            if (
+                static_cast<long int>(s_key_poss.at(GetParam().key_idx))
+                + GetParam().seeker_pos_in_delimiter.offset < 0
+            ) {
+                return base::target.cend();
+            }
+            else if (
+                static_cast<long int>(s_key_poss.at(GetParam().key_idx))
+                + GetParam().seeker_pos_in_delimiter.offset >= static_cast<long int>(base::target.size())
+            ) {
+                return base::target.cend();
+            }
+            else {
+                return base::target.cbegin()
+                    + static_cast<::std::size_t>(
+                        static_cast<long int>(s_key_poss.at(GetParam().key_idx))
+                        + GetParam().seeker_pos_in_delimiter.offset
+                    );
             };
         }
         else {
-            return string_type{
-                base::target.cbegin()
-                    + m_key_poss.at(GetParam().key_idx)
-                    + base::keys[GetParam().key_idx].size()
-                    + GetParam().seeker_pos_in_delimiter.offset
-                , base::target.cbegin()
-                    + delimiter_pos
+            if (
+                static_cast<long int>(s_key_poss.at(GetParam().key_idx))
+                + static_cast<long int>(base::keys[GetParam().key_idx].size())
+                + GetParam().seeker_pos_in_delimiter.offset < 0
+            ) {
+                return base::target.cend();
+            }
+            else if (
+                static_cast<long int>(s_key_poss.at(GetParam().key_idx))
+                + static_cast<long int>(base::keys[GetParam().key_idx].size())
+                + GetParam().seeker_pos_in_delimiter.offset >= static_cast<long int>(base::target.size())
+            ) {
+                return base::target.cend();
+            }
+            else {
+                return base::target.cbegin()
+                    + static_cast<::std::size_t>(
+                        static_cast<long int>(s_key_poss.at(GetParam().key_idx))
+                        + static_cast<long int>(base::keys[GetParam().key_idx].size())
+                        + GetParam().seeker_pos_in_delimiter.offset
+                    );
             };
+        };
+    };
+    string_type get_value(const typename string_type::const_iterator& DelimiterPos) const {
+        if (
+            get_value_pos() < DelimiterPos
+        ) {
+            return string_type{
+                get_value_pos()
+                , DelimiterPos
+            };
+        }
+        else {
+            return {};
         };
     };
     typename string_type get_delimiter() const {
@@ -8042,51 +8080,35 @@ public:
         };
     };
 public:
-    static ::std::vector<::param_set::ParsingRead> generate_tests_common() {
+    static ::std::vector<::param_set::ParsingObtain> generate_tests() {
         const ::uns::string::parsing::seeker_position::sample_relative seeker_result_position_variants[2] = {
             ::uns::string::parsing::seeker_position::from_begin
             , ::uns::string::parsing::seeker_position::from_end
         };
-        const int seeker_extremal_offset = 3;
+        const int seeker_extremal_offset = 20;
 
-        auto result = ::std::vector<::param_set::ParsingRead>{};
-        auto single_test = ::param_set::ParsingRead{};
+        auto result = ::std::vector<::param_set::ParsingObtain>{};
+        auto single_test = ::param_set::ParsingObtain{};
 
-        single_test.seeker_pos_in_delimiter.qualifier = ::uns::string::parsing::seeker_position::from_begin;
-        single_test.seeker_pos_in_delimiter.offset = 0;
-        single_test.seeker_init = 0;
-        auto precursor = base::start.size() + base::keys[0].size() + base::equality.size();
-        for (::std::size_t idx = 0; idx < base::keys.size() && idx < base::values.size() && idx < base::delimiters.size(); ++idx) {
-            single_test.fragment_idx = idx;
-            single_test.delimiter_idx = idx;
-
-            single_test.seeker_init = precursor;
-            precursor += base::values[idx].size();
+        single_test.key_idx = 0;
+        for (; single_test.key_idx < base::keys.size(); single_test.key_idx++) {
             for (auto seeker_result_position_variant : seeker_result_position_variants) {
                 single_test.seeker_pos_in_delimiter.qualifier = seeker_result_position_variant;
                 single_test.seeker_pos_in_delimiter.offset = -seeker_extremal_offset;
 
                 for (; single_test.seeker_pos_in_delimiter.offset < seeker_extremal_offset; ++single_test.seeker_pos_in_delimiter.offset) {
-                    single_test.seeker_expected = static_cast<::std::size_t>(
-                        static_cast<int>(precursor)
-                        + single_test.seeker_pos_in_delimiter.offset
-                        );
-                    if (single_test.seeker_pos_in_delimiter.qualifier == ::uns::string::parsing::seeker_position::from_end) {
-                        single_test.seeker_expected += base::delimiters[idx].size();
-                    };
-
                     single_test.limiter_begin = 0;
-                    const ::std::size_t lengths[10] = {
-                        0
-                        , 3
-                        , 4
-                        , 5
-                        , 10
-                        , base::target.size() - single_test.limiter_begin
-                    };
                     for (; single_test.limiter_begin < base::target.size(); single_test.limiter_begin += 5) {
                         single_test.limiter_length = 0;
 
+                        const ::std::size_t lengths[6] = {
+                            0
+                            , 3
+                            , 4
+                            , 5
+                            , 10
+                            , base::target.size() - single_test.limiter_begin
+                        };
                         for (auto length : lengths) {
                             if (single_test.limiter_begin + length <= base::target.size()) {
                                 single_test.limiter_length = length;
@@ -8097,16 +8119,268 @@ public:
                     };
                 };
             };
-
-            precursor += base::delimiters[idx].size();
-            if (
-                auto key_idx = idx + 1;
-                key_idx < base::keys.size()
-                ) {
-                precursor += base::keys[key_idx].size() + base::equality.size();
-            };
         };
 
         return result;
     };
 };
+
+
+using ParsingObtain_DelimitersExplicitLimiters_U32 = ::ParsingObtain<::std::u32string>;
+TEST_P(ParsingObtain_DelimitersExplicitLimiters_U32, Do) {
+    using fixture = ParsingObtain_DelimitersExplicitLimiters_U32;
+    const auto key = get_key();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    const auto key_pos = ::uns::string::parsing::find(target, target.cbegin(), key);
+    const auto delimiters_pos = ::uns::string::parsing::find(target, get_value_pos(), delimiters);
+
+    const auto expected_result =
+        key_pos <= limiter_beg
+        && delimiters_pos != target.cend()
+        && delimiters_pos <= limiter_beg
+        && get_value_pos() < limiter_beg
+        && get_value_pos() < delimiters_pos;
+
+    auto value = fixture::string_type{};
+    ASSERT_EQ(
+        expected_result
+        , ::uns::string::parsing::obtain<fixture::string_type>(
+            target
+            , key
+            , get_seeker_pos_in_delimiter()
+            , value
+            , delimiters
+            , limiter_beg
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (expected_result) {
+        ASSERT_EQ(
+            value
+            , get_value(delimiters_pos)
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_TRUE(value.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingObtain_DelimitersExplicitLimiters_U32,
+    ::testing::ValuesIn(
+        ::ParsingObtain_DelimitersExplicitLimiters_U32::generate_tests()
+    )
+);
+using ParsingObtain_DelimitersExplicitLimiters_U16 = ::ParsingObtain<::std::u32string>;
+TEST_P(ParsingObtain_DelimitersExplicitLimiters_U16, Do) {
+    using fixture = ParsingObtain_DelimitersExplicitLimiters_U16;
+    const auto key = get_key();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    const auto key_pos = ::uns::string::parsing::find(target, target.cbegin(), key);
+    const auto delimiters_pos = ::uns::string::parsing::find(target, get_value_pos(), delimiters);
+
+    const auto expected_result =
+        key_pos <= limiter_beg
+        && delimiters_pos != target.cend()
+        && delimiters_pos <= limiter_beg
+        && get_value_pos() < limiter_beg
+        && get_value_pos() < delimiters_pos;
+
+    auto value = fixture::string_type{};
+    ASSERT_EQ(
+        expected_result
+        , ::uns::string::parsing::obtain<fixture::string_type>(
+            target
+            , key
+            , get_seeker_pos_in_delimiter()
+            , value
+            , delimiters
+            , limiter_beg
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (expected_result) {
+        ASSERT_EQ(
+            value
+            , get_value(delimiters_pos)
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_TRUE(value.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingObtain_DelimitersExplicitLimiters_U16,
+    ::testing::ValuesIn(
+        ::ParsingObtain_DelimitersExplicitLimiters_U16::generate_tests()
+    )
+);
+using ParsingObtain_DelimitersExplicitLimiters_U8 = ::ParsingObtain<::std::u32string>;
+TEST_P(ParsingObtain_DelimitersExplicitLimiters_U8, Do) {
+    using fixture = ParsingObtain_DelimitersExplicitLimiters_U8;
+    const auto key = get_key();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    const auto key_pos = ::uns::string::parsing::find(target, target.cbegin(), key);
+    const auto delimiters_pos = ::uns::string::parsing::find(target, get_value_pos(), delimiters);
+
+    const auto expected_result =
+        key_pos <= limiter_beg
+        && delimiters_pos != target.cend()
+        && delimiters_pos <= limiter_beg
+        && get_value_pos() < limiter_beg
+        && get_value_pos() < delimiters_pos;
+
+    auto value = fixture::string_type{};
+    ASSERT_EQ(
+        expected_result
+        , ::uns::string::parsing::obtain<fixture::string_type>(
+            target
+            , key
+            , get_seeker_pos_in_delimiter()
+            , value
+            , delimiters
+            , limiter_beg
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (expected_result) {
+        ASSERT_EQ(
+            value
+            , get_value(delimiters_pos)
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_TRUE(value.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingObtain_DelimitersExplicitLimiters_U8,
+    ::testing::ValuesIn(
+        ::ParsingObtain_DelimitersExplicitLimiters_U8::generate_tests()
+    )
+);
+/*using ParsingRead_DelimitersExplicitLimiters_U16 = ::ParsingRead_DelimitersExplicitLimiters<::std::u16string>;
+TEST_P(ParsingRead_DelimitersExplicitLimiters_U16, Do) {
+    using fixture = ParsingRead_DelimitersExplicitLimiters_U16;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    const auto delimiters_pos = ::uns::string::parsing::find(target, seeker, delimiters);
+
+    const auto expected_result =
+        delimiters_pos != target.cend()
+        && (seeker < delimiters_pos)
+        && (delimiters_pos <= limiter_beg)
+        && (get_seeker_expected() < limiter_end);
+
+    auto fragment = fixture::string_type{};
+    ASSERT_EQ(
+        expected_result
+        , ::uns::string::parsing::read<fixture::string_type>(
+            target
+            , seeker
+            , fragment
+            , delimiters
+            , get_seeker_pos_in_delimiter()
+            , limiter_beg
+            , limiter_end
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (expected_result) {
+        ASSERT_EQ(
+            fragment
+            , get_fragment()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            seeker
+            , get_seeker_expected()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingRead_DelimitersExplicitLimiters_U16,
+    ::testing::ValuesIn(
+        ::ParsingRead_DelimitersExplicitLimiters_U16::generate_tests()
+    )
+);
+using ParsingRead_DelimitersExplicitLimiters_U8 = ::ParsingRead_DelimitersExplicitLimiters<::std::u8string>;
+TEST_P(ParsingRead_DelimitersExplicitLimiters_U8, Do) {
+    using fixture = ParsingRead_DelimitersExplicitLimiters_U8;
+    auto seeker = get_seeker_init();
+    const auto [limiter, limiter_beg, limiter_end] = get_limiter();
+
+    const auto delimiters_pos = ::uns::string::parsing::find(target, seeker, delimiters);
+
+    const auto expected_result =
+        delimiters_pos != target.cend()
+        && (seeker < delimiters_pos)
+        && (delimiters_pos <= limiter_beg)
+        && (get_seeker_expected() < limiter_end);
+
+    auto fragment = fixture::string_type{};
+    ASSERT_EQ(
+        expected_result
+        , ::uns::string::parsing::read<fixture::string_type>(
+            target
+            , seeker
+            , fragment
+            , delimiters
+            , get_seeker_pos_in_delimiter()
+            , limiter_beg
+            , limiter_end
+        )
+    ) << "Target=\"" << ::testing::PrintToString(target)
+        << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+    if (expected_result) {
+        ASSERT_EQ(
+            fragment
+            , get_fragment()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            seeker
+            , get_seeker_expected()
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    }
+    else {
+        ASSERT_TRUE(fragment.empty()) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+
+        ASSERT_EQ(
+            get_seeker_init()
+            , seeker
+        ) << "Target=\"" << ::testing::PrintToString(target)
+            << ", limiter=\"" << ::testing::PrintToString(limiter);
+    };
+};
+INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingRead_DelimitersExplicitLimiters_U8,
+    ::testing::ValuesIn(
+        ::ParsingRead_DelimitersExplicitLimiters_U8::generate_tests()
+    )
+);*/
+
