@@ -8125,7 +8125,6 @@ public:
     };
 };
 
-
 using ParsingObtain_DelimitersExplicitLimiters_U32 = ::ParsingObtain<::std::u32string>;
 TEST_P(ParsingObtain_DelimitersExplicitLimiters_U32, Do) {
     using fixture = ParsingObtain_DelimitersExplicitLimiters_U32;
@@ -8267,7 +8266,6 @@ INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingObtain_DelimitersExplicitLimiters
         ::ParsingObtain_DelimitersExplicitLimiters_U8::generate_tests()
     )
 );
-
 
 using ParsingObtain_DelimiterExplicitLimiters_U32 = ::ParsingObtain<::std::u32string>;
 TEST_P(ParsingObtain_DelimiterExplicitLimiters_U32, Do) {
@@ -8411,7 +8409,6 @@ INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingObtain_DelimiterExplicitLimiters_
     )
 );
 
-
 using ParsingObtain_DelimitersNoLimiters_U32 = ::ParsingObtain<::std::u32string>;
 TEST_P(ParsingObtain_DelimitersNoLimiters_U32, Do) {
     using fixture = ParsingObtain_DelimitersNoLimiters_U32;
@@ -8532,7 +8529,6 @@ INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingObtain_DelimitersNoLimiters_U8,
         ::ParsingObtain_DelimitersNoLimiters_U8::generate_tests()
     )
 );
-
 
 using ParsingObtain_DelimiterNoLimiters_U32 = ::ParsingObtain<::std::u32string>;
 TEST_P(ParsingObtain_DelimiterNoLimiters_U32, Do) {
@@ -8656,11 +8652,10 @@ INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingObtain_DelimiterNoLimiters_U8,
 );
 
 
-
 template<::uns::is_basic_string string_t>
-class ParsingRead_DelimitersLimiters : public::ParsingRead<string_t> {
+class ParsingObtain_Limiters : public::ParsingObtain<string_t> {
 private:
-    using base = ::ParsingRead<string_t>;
+    using base = ::ParsingObtain<string_t>;
 public:
     using string_type = string_t;
 public:
@@ -8672,23 +8667,25 @@ public:
         };
     };
 public:
-    static ::std::vector<::param_set::ParsingRead> generate_tests() {
+    static ::std::vector<::param_set::ParsingObtain> generate_tests() {
         return base::generate_tests();
     };
 };
 
-
-using ParsingObtain_DelimitersLimiters_U32 = ::ParsingRead_DelimitersLimiters<::std::u32string>;
+using ParsingObtain_DelimitersLimiters_U32 = ::ParsingObtain_Limiters<::std::u32string>;
 TEST_P(ParsingObtain_DelimitersLimiters_U32, Do) {
     using fixture = ParsingObtain_DelimitersLimiters_U32;
     const auto key = get_key();
 
     const auto key_pos = ::uns::string::parsing::find(target, target.cbegin(), key);
     const auto delimiters_pos = ::uns::string::parsing::find(target, get_value_pos(), delimiters);
+    const auto limiter_beg = ::uns::string::parsing::find(target, target.cbegin(), get_limiters());
 
     const auto expected_result =
-        key_pos <= target.cend()
+        key_pos <= limiter_beg
         && delimiters_pos != target.cend()
+        && delimiters_pos <= limiter_beg
+        && get_value_pos() < limiter_beg
         && get_value_pos() < delimiters_pos;
 
     auto value = fixture::string_type{};
@@ -8700,6 +8697,7 @@ TEST_P(ParsingObtain_DelimitersLimiters_U32, Do) {
             , get_seeker_pos_in_delimiter()
             , value
             , delimiters
+            , get_limiters()
         )
     ) << "Target=\"" << ::testing::PrintToString(target);
 
@@ -8718,17 +8716,20 @@ INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingObtain_DelimitersLimiters_U32,
         ::ParsingObtain_DelimitersLimiters_U32::generate_tests()
     )
 );
-using ParsingObtain_DelimitersLimiters_U16 = ::ParsingObtain<::std::u16string>;
+using ParsingObtain_DelimitersLimiters_U16 = ::ParsingObtain_Limiters<::std::u16string>;
 TEST_P(ParsingObtain_DelimitersLimiters_U16, Do) {
     using fixture = ParsingObtain_DelimitersLimiters_U16;
     const auto key = get_key();
 
     const auto key_pos = ::uns::string::parsing::find(target, target.cbegin(), key);
     const auto delimiters_pos = ::uns::string::parsing::find(target, get_value_pos(), delimiters);
+    const auto limiter_beg = ::uns::string::parsing::find(target, target.cbegin(), get_limiters());
 
     const auto expected_result =
-        key_pos <= target.cend()
+        key_pos <= limiter_beg
         && delimiters_pos != target.cend()
+        && delimiters_pos <= limiter_beg
+        && get_value_pos() < limiter_beg
         && get_value_pos() < delimiters_pos;
 
     auto value = fixture::string_type{};
@@ -8740,6 +8741,7 @@ TEST_P(ParsingObtain_DelimitersLimiters_U16, Do) {
             , get_seeker_pos_in_delimiter()
             , value
             , delimiters
+            , get_limiters()
         )
     ) << "Target=\"" << ::testing::PrintToString(target);
 
@@ -8758,17 +8760,20 @@ INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingObtain_DelimitersLimiters_U16,
         ::ParsingObtain_DelimitersLimiters_U16::generate_tests()
     )
 );
-using ParsingObtain_DelimitersLimiters_U8 = ::ParsingObtain<::std::u8string>;
+using ParsingObtain_DelimitersLimiters_U8 = ::ParsingObtain_Limiters<::std::u8string>;
 TEST_P(ParsingObtain_DelimitersLimiters_U8, Do) {
     using fixture = ParsingObtain_DelimitersLimiters_U8;
     const auto key = get_key();
 
     const auto key_pos = ::uns::string::parsing::find(target, target.cbegin(), key);
     const auto delimiters_pos = ::uns::string::parsing::find(target, get_value_pos(), delimiters);
+    const auto limiter_beg = ::uns::string::parsing::find(target, target.cbegin(), get_limiters());
 
     const auto expected_result =
-        key_pos <= target.cend()
+        key_pos <= limiter_beg
         && delimiters_pos != target.cend()
+        && delimiters_pos <= limiter_beg
+        && get_value_pos() < limiter_beg
         && get_value_pos() < delimiters_pos;
 
     auto value = fixture::string_type{};
@@ -8780,6 +8785,7 @@ TEST_P(ParsingObtain_DelimitersLimiters_U8, Do) {
             , get_seeker_pos_in_delimiter()
             , value
             , delimiters
+            , get_limiters()
         )
     ) << "Target=\"" << ::testing::PrintToString(target);
 
@@ -8799,18 +8805,20 @@ INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingObtain_DelimitersLimiters_U8,
     )
 );
 
-
-using ParsingObtain_DelimiterLimiters_U32 = ::ParsingObtain<::std::u32string>;
+using ParsingObtain_DelimiterLimiters_U32 = ::ParsingObtain_Limiters<::std::u32string>;
 TEST_P(ParsingObtain_DelimiterLimiters_U32, Do) {
     using fixture = ParsingObtain_DelimiterLimiters_U32;
     const auto key = get_key();
 
     const auto key_pos = ::uns::string::parsing::find(target, target.cbegin(), key);
     const auto delimiters_pos = ::uns::string::parsing::find(target, get_value_pos(), get_delimiter());
+    const auto limiter_beg = ::uns::string::parsing::find(target, target.cbegin(), get_limiters());
 
     const auto expected_result =
-        key_pos <= target.cend()
+        key_pos <= limiter_beg
         && delimiters_pos != target.cend()
+        && delimiters_pos <= limiter_beg
+        && get_value_pos() < limiter_beg
         && get_value_pos() < delimiters_pos;
 
     auto value = fixture::string_type{};
@@ -8822,6 +8830,7 @@ TEST_P(ParsingObtain_DelimiterLimiters_U32, Do) {
             , get_seeker_pos_in_delimiter()
             , value
             , get_delimiter()
+            , get_limiters()
         )
     ) << "Target=\"" << ::testing::PrintToString(target);
 
@@ -8840,17 +8849,20 @@ INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingObtain_DelimiterLimiters_U32,
         ::ParsingObtain_DelimiterLimiters_U32::generate_tests()
     )
 );
-using ParsingObtain_DelimiterLimiters_U16 = ::ParsingObtain<::std::u16string>;
+using ParsingObtain_DelimiterLimiters_U16 = ::ParsingObtain_Limiters<::std::u16string>;
 TEST_P(ParsingObtain_DelimiterLimiters_U16, Do) {
     using fixture = ParsingObtain_DelimiterLimiters_U16;
     const auto key = get_key();
 
     const auto key_pos = ::uns::string::parsing::find(target, target.cbegin(), key);
     const auto delimiters_pos = ::uns::string::parsing::find(target, get_value_pos(), get_delimiter());
+    const auto limiter_beg = ::uns::string::parsing::find(target, target.cbegin(), get_limiters());
 
     const auto expected_result =
-        key_pos <= target.cend()
+        key_pos <= limiter_beg
         && delimiters_pos != target.cend()
+        && delimiters_pos <= limiter_beg
+        && get_value_pos() < limiter_beg
         && get_value_pos() < delimiters_pos;
 
     auto value = fixture::string_type{};
@@ -8862,6 +8874,7 @@ TEST_P(ParsingObtain_DelimiterLimiters_U16, Do) {
             , get_seeker_pos_in_delimiter()
             , value
             , get_delimiter()
+            , get_limiters()
         )
     ) << "Target=\"" << ::testing::PrintToString(target);
 
@@ -8880,17 +8893,20 @@ INSTANTIATE_TEST_CASE_P(ParsingMethods, ParsingObtain_DelimiterLimiters_U16,
         ::ParsingObtain_DelimiterLimiters_U16::generate_tests()
     )
 );
-using ParsingObtain_DelimiterLimiters_U8 = ::ParsingObtain<::std::u8string>;
+using ParsingObtain_DelimiterLimiters_U8 = ::ParsingObtain_Limiters<::std::u8string>;
 TEST_P(ParsingObtain_DelimiterLimiters_U8, Do) {
     using fixture = ParsingObtain_DelimiterLimiters_U8;
     const auto key = get_key();
 
     const auto key_pos = ::uns::string::parsing::find(target, target.cbegin(), key);
     const auto delimiters_pos = ::uns::string::parsing::find(target, get_value_pos(), get_delimiter());
+    const auto limiter_beg = ::uns::string::parsing::find(target, target.cbegin(), get_limiters());
 
     const auto expected_result =
-        key_pos <= target.cend()
+        key_pos <= limiter_beg
         && delimiters_pos != target.cend()
+        && delimiters_pos <= limiter_beg
+        && get_value_pos() < limiter_beg
         && get_value_pos() < delimiters_pos;
 
     auto value = fixture::string_type{};
@@ -8902,6 +8918,7 @@ TEST_P(ParsingObtain_DelimiterLimiters_U8, Do) {
             , get_seeker_pos_in_delimiter()
             , value
             , get_delimiter()
+            , get_limiters()
         )
     ) << "Target=\"" << ::testing::PrintToString(target);
 
