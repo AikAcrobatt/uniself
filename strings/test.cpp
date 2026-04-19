@@ -9007,9 +9007,9 @@ TEST_P(ParsingObtain_DelimitersLimiter_U16, Do) {
                 && delimiters_pos <= limiter_beg
                 && get_value_pos() < limiter_beg
                 && key_pos <= limiter_beg
-                )
+            )
             || limiter_beg == limiter_end
-            );
+        );
 
     auto value = fixture::string_type{};
     ASSERT_EQ(
@@ -9057,9 +9057,9 @@ TEST_P(ParsingObtain_DelimitersLimiter_U8, Do) {
                 && delimiters_pos <= limiter_beg
                 && get_value_pos() < limiter_beg
                 && key_pos <= limiter_beg
-                )
+            )
             || limiter_beg == limiter_end
-            );
+        );
 
     auto value = fixture::string_type{};
     ASSERT_EQ(
@@ -9097,14 +9097,20 @@ TEST_P(ParsingObtain_DelimiterLimiter_U32, Do) {
     const auto [limiter, limiter_beg, limiter_end] = get_limiter();
 
     const auto key_pos = ::uns::string::parsing::find(target, target.cbegin(), key);
-    const auto delimiters_pos = ::uns::string::parsing::find(target, get_value_pos(), delimiters);
+    const auto delimiters_pos = ::uns::string::parsing::find(target, get_value_pos(), get_delimiter());
 
     const auto expected_result =
-        key_pos <= limiter_beg
-        && delimiters_pos != target.cend()
-        && delimiters_pos <= limiter_beg
-        && get_value_pos() < limiter_beg
-        && get_value_pos() < delimiters_pos;
+        delimiters_pos != target.cend()
+        && get_value_pos() < delimiters_pos
+        && (
+            (
+                limiter_beg < limiter_end
+                && delimiters_pos <= limiter_beg
+                && get_value_pos() < limiter_beg
+                && key_pos <= limiter_beg
+            )
+            || limiter_beg == limiter_end
+        );
 
     auto value = fixture::string_type{};
     ASSERT_EQ(
@@ -9114,7 +9120,7 @@ TEST_P(ParsingObtain_DelimiterLimiter_U32, Do) {
             , key
             , get_seeker_pos_in_delimiter()
             , value
-            , delimiters
+            , get_delimiter()
             , limiter
         )
     ) << "Target=\"" << ::testing::PrintToString(target);
@@ -9141,14 +9147,20 @@ TEST_P(ParsingObtain_DelimiterLimiter_U16, Do) {
     const auto [limiter, limiter_beg, limiter_end] = get_limiter();
 
     const auto key_pos = ::uns::string::parsing::find(target, target.cbegin(), key);
-    const auto delimiters_pos = ::uns::string::parsing::find(target, get_value_pos(), delimiters);
+    const auto delimiters_pos = ::uns::string::parsing::find(target, get_value_pos(), get_delimiter());
 
     const auto expected_result =
-        key_pos <= limiter_beg
-        && delimiters_pos != target.cend()
-        && delimiters_pos <= limiter_beg
-        && get_value_pos() < limiter_beg
-        && get_value_pos() < delimiters_pos;
+        delimiters_pos != target.cend()
+        && get_value_pos() < delimiters_pos
+        && (
+            (
+                limiter_beg < limiter_end
+                && delimiters_pos <= limiter_beg
+                && get_value_pos() < limiter_beg
+                && key_pos <= limiter_beg
+            )
+            || limiter_beg == limiter_end
+        );
 
     auto value = fixture::string_type{};
     ASSERT_EQ(
@@ -9158,7 +9170,7 @@ TEST_P(ParsingObtain_DelimiterLimiter_U16, Do) {
             , key
             , get_seeker_pos_in_delimiter()
             , value
-            , delimiters
+            , get_delimiter()
             , limiter
         )
     ) << "Target=\"" << ::testing::PrintToString(target);
@@ -9185,14 +9197,20 @@ TEST_P(ParsingObtain_DelimiterLimiter_U8, Do) {
     const auto [limiter, limiter_beg, limiter_end] = get_limiter();
 
     const auto key_pos = ::uns::string::parsing::find(target, target.cbegin(), key);
-    const auto delimiters_pos = ::uns::string::parsing::find(target, get_value_pos(), delimiters);
+    const auto delimiters_pos = ::uns::string::parsing::find(target, get_value_pos(), get_delimiter());
 
     const auto expected_result =
-        key_pos <= limiter_beg
-        && delimiters_pos != target.cend()
-        && delimiters_pos <= limiter_beg
-        && get_value_pos() < limiter_beg
-        && get_value_pos() < delimiters_pos;
+        delimiters_pos != target.cend()
+        && get_value_pos() < delimiters_pos
+        && (
+            (
+                limiter_beg < limiter_end
+                && delimiters_pos <= limiter_beg
+                && get_value_pos() < limiter_beg
+                && key_pos <= limiter_beg
+            )
+            || limiter_beg == limiter_end
+        );
 
     auto value = fixture::string_type{};
     ASSERT_EQ(
@@ -9202,7 +9220,7 @@ TEST_P(ParsingObtain_DelimiterLimiter_U8, Do) {
             , key
             , get_seeker_pos_in_delimiter()
             , value
-            , delimiters
+            , get_delimiter()
             , limiter
         )
     ) << "Target=\"" << ::testing::PrintToString(target);
