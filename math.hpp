@@ -7,11 +7,9 @@
 #define UNS_LIB_MATH "math.hpp"
 
 #ifdef max
-#define UNS_STD_MAX max
 #undef max
 #endif
 #ifdef min
-#define UNS_STD_MIN min
 #undef min
 #endif
 

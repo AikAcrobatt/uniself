@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <vector>
+#include <limits>
 
 #include "uniself/renum.hpp"
 #include "uniself/math.hpp"
@@ -145,23 +146,64 @@ TYPED_TEST(NumericConcept, Test) {
 };
 
 
-template<::uns::math::numeric numeric_t>
-class AbsTests : public ::testing::TestWithParam<numeric_t> {
+template<::std::floating_point numeric_t>
+class AbsTestsFlt : public ::testing::TestWithParam<numeric_t> {
 public:
     static ::std::vector<numeric_t> generate_tests() {
+        constexpr auto minw = ::std::numeric_limits<numeric_t>::min();
+        constexpr auto t10 = numeric_t{ 10 };
+        constexpr auto step = numeric_t{ 0.12399 };
 
+        auto result = ::std::vector<numeric_t>{};
+
+        numeric_t current_value = 0;
+        for (; current_value < t10 * minw; current_value += minw) {
+            result.emplace_back(current_value);
+        };
+        for (; current_value < t10; current_value += step) {
+            result.emplace_back(current_value);
+        };
+
+        return result;
+    };
+};
+template<::std::integral numeric_t>
+class AbsTestsInt : public ::testing::TestWithParam<numeric_t> {
+public:
+    static ::std::vector<numeric_t> generate_tests() {
+        constexpr auto maxw = ::std::numeric_limits<numeric_t>::max() >> 10;
+
+        auto result = ::std::vector<numeric_t>{};
+
+        for (numeric_t current_value = 1; current_value < maxw; current_value *= 2) {
+            result.emplace_back(current_value);
+        };
+        for (numeric_t current_value = 1; current_value < maxw; current_value *= 3) {
+            result.emplace_back(current_value);
+        };
+        for (numeric_t current_value = 1; current_value < maxw; current_value *= 5) {
+            result.emplace_back(current_value);
+        };
+        for (numeric_t current_value = 1; current_value < maxw; current_value *= 7) {
+            result.emplace_back(current_value);
+        };
+        for (numeric_t current_value = 1; current_value < maxw; current_value *= 11) {
+            result.emplace_back(current_value);
+        };
+
+        return result;
     };
 };
 
-using AbsTests_Flt = ::AbsTests<float>;
+using AbsTests_Flt = ::AbsTestsFlt<float>;
 TEST_P(AbsTests_Flt, Do) {
     ASSERT_FLOAT_EQ(
         GetParam()
         , ::uns::math::abs(GetParam())
     );
     ASSERT_FLOAT_EQ(
-        -GetParam()
-        , ::uns::math::abs(GetParam())
+        GetParam()
+        , ::uns::math::abs(-GetParam())
     );
 };
 INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_Flt,
@@ -169,15 +211,15 @@ INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_Flt,
         ::AbsTests_Flt::generate_tests()
     )
 );
-using AbsTests_Dbl = ::AbsTests<double>;
+using AbsTests_Dbl = ::AbsTestsFlt<double>;
 TEST_P(AbsTests_Dbl, Do) {
     ASSERT_FLOAT_EQ(
         GetParam()
         , ::uns::math::abs(GetParam())
     );
     ASSERT_FLOAT_EQ(
-        -GetParam()
-        , ::uns::math::abs(GetParam())
+        GetParam()
+        , ::uns::math::abs(-GetParam())
     );
 };
 INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_Dbl,
@@ -185,15 +227,15 @@ INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_Dbl,
         ::AbsTests_Dbl::generate_tests()
     )
 );
-using AbsTests_LDbl = ::AbsTests<long double>;
+using AbsTests_LDbl = ::AbsTestsFlt<long double>;
 TEST_P(AbsTests_LDbl, Do) {
     ASSERT_FLOAT_EQ(
         GetParam()
         , ::uns::math::abs(GetParam())
     );
     ASSERT_FLOAT_EQ(
-        -GetParam()
-        , ::uns::math::abs(GetParam())
+        GetParam()
+        , ::uns::math::abs(-GetParam())
     );
 };
 INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_LDbl,
@@ -201,15 +243,15 @@ INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_LDbl,
         ::AbsTests_LDbl::generate_tests()
     )
 );
-using AbsTests_Int = ::AbsTests<int>;
+using AbsTests_Int = ::AbsTestsInt<int>;
 TEST_P(AbsTests_Int, Do) {
     ASSERT_FLOAT_EQ(
         GetParam()
         , ::uns::math::abs(GetParam())
     );
     ASSERT_FLOAT_EQ(
-        -GetParam()
-        , ::uns::math::abs(GetParam())
+        GetParam()
+        , ::uns::math::abs(-GetParam())
     );
 };
 INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_Int,
@@ -217,15 +259,15 @@ INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_Int,
         ::AbsTests_Int::generate_tests()
     )
 );
-using AbsTests_LLInt = ::AbsTests<long long int>;
+using AbsTests_LLInt = ::AbsTestsInt<long long int>;
 TEST_P(AbsTests_LLInt, Do) {
     ASSERT_FLOAT_EQ(
         GetParam()
         , ::uns::math::abs(GetParam())
     );
     ASSERT_FLOAT_EQ(
-        -GetParam()
-        , ::uns::math::abs(GetParam())
+        GetParam()
+        , ::uns::math::abs(-GetParam())
     );
 };
 INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_LLInt,
@@ -233,14 +275,10 @@ INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_LLInt,
         ::AbsTests_LLInt::generate_tests()
     )
 );
-using AbsTests_ULLInt = ::AbsTests<unsigned long long int>;
+using AbsTests_ULLInt = ::AbsTestsInt<unsigned long long int>;
 TEST_P(AbsTests_ULLInt, Do) {
     ASSERT_FLOAT_EQ(
         GetParam()
-        , ::uns::math::abs(GetParam())
-    );
-    ASSERT_FLOAT_EQ(
-        -GetParam()
         , ::uns::math::abs(GetParam())
     );
 };
