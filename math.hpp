@@ -19,7 +19,8 @@ namespace uns::math {
 
     //the most common numeric concept
     template<typename value_t>
-    concept numeric = ::std::integral<value_t> || ::std::floating_point<value_t>;
+    concept numeric = (::std::integral<value_t> || ::std::floating_point<value_t>)
+        && !::std::is_same<value_t, bool>::value;
 
 
     //absolute value
