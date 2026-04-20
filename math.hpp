@@ -26,7 +26,7 @@ namespace uns::math {
     //absolute value
     template<::uns::math::numeric value_t>
     constexpr value_t abs(value_t arg) noexcept {
-        static const auto zero = value_t{ 0 };
+        constexpr auto zero = value_t{ 0 };
         if(arg < zero) return zero - arg;
         else return arg;
     };

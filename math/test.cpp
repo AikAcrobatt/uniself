@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <vector>
 
 #include "uniself/renum.hpp"
 #include "uniself/math.hpp"
@@ -143,3 +144,108 @@ TYPED_TEST(NumericConcept, Test) {
     );
 };
 
+
+template<::uns::math::numeric numeric_t>
+class AbsTests : public ::testing::TestWithParam<numeric_t> {
+public:
+    static ::std::vector<numeric_t> generate_tests() {
+
+    };
+};
+
+using AbsTests_Flt = ::AbsTests<float>;
+TEST_P(AbsTests_Flt, Do) {
+    ASSERT_FLOAT_EQ(
+        GetParam()
+        , ::uns::math::abs(GetParam())
+    );
+    ASSERT_FLOAT_EQ(
+        -GetParam()
+        , ::uns::math::abs(GetParam())
+    );
+};
+INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_Flt,
+    ::testing::ValuesIn(
+        ::AbsTests_Flt::generate_tests()
+    )
+);
+using AbsTests_Dbl = ::AbsTests<double>;
+TEST_P(AbsTests_Dbl, Do) {
+    ASSERT_FLOAT_EQ(
+        GetParam()
+        , ::uns::math::abs(GetParam())
+    );
+    ASSERT_FLOAT_EQ(
+        -GetParam()
+        , ::uns::math::abs(GetParam())
+    );
+};
+INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_Dbl,
+    ::testing::ValuesIn(
+        ::AbsTests_Dbl::generate_tests()
+    )
+);
+using AbsTests_LDbl = ::AbsTests<long double>;
+TEST_P(AbsTests_LDbl, Do) {
+    ASSERT_FLOAT_EQ(
+        GetParam()
+        , ::uns::math::abs(GetParam())
+    );
+    ASSERT_FLOAT_EQ(
+        -GetParam()
+        , ::uns::math::abs(GetParam())
+    );
+};
+INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_LDbl,
+    ::testing::ValuesIn(
+        ::AbsTests_LDbl::generate_tests()
+    )
+);
+using AbsTests_Int = ::AbsTests<int>;
+TEST_P(AbsTests_Int, Do) {
+    ASSERT_FLOAT_EQ(
+        GetParam()
+        , ::uns::math::abs(GetParam())
+    );
+    ASSERT_FLOAT_EQ(
+        -GetParam()
+        , ::uns::math::abs(GetParam())
+    );
+};
+INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_Int,
+    ::testing::ValuesIn(
+        ::AbsTests_Int::generate_tests()
+    )
+);
+using AbsTests_LLInt = ::AbsTests<long long int>;
+TEST_P(AbsTests_LLInt, Do) {
+    ASSERT_FLOAT_EQ(
+        GetParam()
+        , ::uns::math::abs(GetParam())
+    );
+    ASSERT_FLOAT_EQ(
+        -GetParam()
+        , ::uns::math::abs(GetParam())
+    );
+};
+INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_LLInt,
+    ::testing::ValuesIn(
+        ::AbsTests_LLInt::generate_tests()
+    )
+);
+using AbsTests_ULLInt = ::AbsTests<unsigned long long int>;
+TEST_P(AbsTests_ULLInt, Do) {
+    ASSERT_FLOAT_EQ(
+        GetParam()
+        , ::uns::math::abs(GetParam())
+    );
+    ASSERT_FLOAT_EQ(
+        -GetParam()
+        , ::uns::math::abs(GetParam())
+    );
+};
+INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_ULLInt,
+    ::testing::ValuesIn(
+        ::AbsTests_ULLInt::generate_tests()
+    )
+);
