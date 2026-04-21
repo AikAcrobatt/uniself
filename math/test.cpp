@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <limits>
+#include <tuple>
 
 #include "uniself/renum.hpp"
 #include "uniself/math.hpp"
@@ -167,33 +168,6 @@ public:
         return result;
     };
 };
-template<::std::integral numeric_t>
-class AbsTestsInt : public ::testing::TestWithParam<numeric_t> {
-public:
-    static ::std::vector<numeric_t> generate_tests() {
-        constexpr auto maxw = ::std::numeric_limits<numeric_t>::max() >> 10;
-
-        auto result = ::std::vector<numeric_t>{};
-
-        for (numeric_t current_value = 1; current_value < maxw; current_value *= 2) {
-            result.emplace_back(current_value);
-        };
-        for (numeric_t current_value = 1; current_value < maxw; current_value *= 3) {
-            result.emplace_back(current_value);
-        };
-        for (numeric_t current_value = 1; current_value < maxw; current_value *= 5) {
-            result.emplace_back(current_value);
-        };
-        for (numeric_t current_value = 1; current_value < maxw; current_value *= 7) {
-            result.emplace_back(current_value);
-        };
-        for (numeric_t current_value = 1; current_value < maxw; current_value *= 11) {
-            result.emplace_back(current_value);
-        };
-
-        return result;
-    };
-};
 
 using AbsTests_Flt = ::AbsTestsFlt<float>;
 TEST_P(AbsTests_Flt, Do) {
@@ -243,6 +217,35 @@ INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_LDbl,
         ::AbsTests_LDbl::generate_tests()
     )
 );
+
+template<::std::integral numeric_t>
+class AbsTestsInt : public ::testing::TestWithParam<numeric_t> {
+public:
+    static ::std::vector<numeric_t> generate_tests() {
+        constexpr auto maxw = ::std::numeric_limits<numeric_t>::max() >> 10;
+
+        auto result = ::std::vector<numeric_t>{};
+
+        for (numeric_t current_value = 1; current_value < maxw; current_value *= 2) {
+            result.emplace_back(current_value);
+        };
+        for (numeric_t current_value = 1; current_value < maxw; current_value *= 3) {
+            result.emplace_back(current_value);
+        };
+        for (numeric_t current_value = 1; current_value < maxw; current_value *= 5) {
+            result.emplace_back(current_value);
+        };
+        for (numeric_t current_value = 1; current_value < maxw; current_value *= 7) {
+            result.emplace_back(current_value);
+        };
+        for (numeric_t current_value = 1; current_value < maxw; current_value *= 11) {
+            result.emplace_back(current_value);
+        };
+
+        return result;
+    };
+};
+
 using AbsTests_Int = ::AbsTestsInt<int>;
 TEST_P(AbsTests_Int, Do) {
     ASSERT_FLOAT_EQ(
@@ -285,5 +288,277 @@ TEST_P(AbsTests_ULLInt, Do) {
 INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_ULLInt,
     ::testing::ValuesIn(
         ::AbsTests_ULLInt::generate_tests()
+    )
+);
+
+
+template<::std::floating_point numeric_t>
+class EqualsTestsFlt : public ::testing::TestWithParam<::std::tuple<numeric_t, numeric_t>> {
+public:
+    using numeric_type = numeric_t;
+public:
+    static ::std::vector<numeric_t> generate_tests() {
+        constexpr auto minw = ::std::numeric_limits<numeric_t>::min();
+        constexpr auto t10 = numeric_t{ 10 };
+        constexpr auto step = numeric_t{ 0.12399 };
+
+        auto result = ::std::vector<numeric_t>{};
+
+        numeric_t current_value = 0;
+        for (; current_value < t10 * minw; current_value += minw) {
+            result.emplace_back(current_value);
+            result.emplace_back(-current_value);
+        };
+        for (; current_value < t10; current_value += step) {
+            result.emplace_back(current_value);
+            result.emplace_back(-current_value);
+        };
+
+        return result;
+    };
+};
+
+using EqualsTests_Flt = ::EqualsTestsFlt<float>;
+TEST_P(EqualsTests_Flt, Do) {
+    constexpr auto minw = ::std::numeric_limits<numeric_type>::min() * static_cast<numeric_type>(10);
+
+    const auto arg1 = ::std::get<0>(GetParam());
+    const auto arg2 = ::std::get<1>(GetParam());
+
+    const auto abs_arg1 = ::uns::math::abs(arg1);
+    const auto abs_arg2 = ::uns::math::abs(arg2);
+
+    bool equals_result = false;
+    if (
+        abs_arg1 > minw
+        && abs_arg2 > minw
+    ) {
+        equals_result = (
+            ::uns::math::abs(arg1 - arg2)
+            < numeric_type{ 1.0e-14 } * (
+                abs_arg1
+                + abs_arg2
+            )
+        );
+    }
+    else {
+        equals_result = (abs_arg1 <= minw && abs_arg2 <= minw);
+    };
+
+    ASSERT_EQ(
+        equals_result
+        , ::uns::math::equals(arg1, arg2)
+    );
+};
+INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_Flt,
+    ::testing::Combine(
+        ::testing::ValuesIn(
+            ::EqualsTests_Flt::generate_tests()
+        )
+        , ::testing::ValuesIn(
+            ::EqualsTests_Flt::generate_tests()
+        )
+    )
+);
+using EqualsTests_Dbl = ::EqualsTestsFlt<double>;
+TEST_P(EqualsTests_Dbl, Do) {
+    constexpr auto minw = ::std::numeric_limits<numeric_type>::min() * static_cast<numeric_type>(10);
+
+    const auto arg1 = ::std::get<0>(GetParam());
+    const auto arg2 = ::std::get<1>(GetParam());
+
+    const auto abs_arg1 = ::uns::math::abs(arg1);
+    const auto abs_arg2 = ::uns::math::abs(arg2);
+
+    bool equals_result = false;
+    if (
+        abs_arg1 > minw
+        && abs_arg2 > minw
+    ) {
+        equals_result = (
+            ::uns::math::abs(arg1 - arg2)
+            < numeric_type{ 1.0e-14 } * (
+                abs_arg1
+                + abs_arg2
+            )
+        );
+    }
+    else {
+        equals_result = (abs_arg1 <= minw && abs_arg2 <= minw);
+    };
+
+    ASSERT_EQ(
+        equals_result
+        , ::uns::math::equals(arg1, arg2)
+    );
+};
+INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_Dbl,
+    ::testing::Combine(
+        ::testing::ValuesIn(
+            ::EqualsTests_Dbl::generate_tests()
+        )
+        , ::testing::ValuesIn(
+            ::EqualsTests_Dbl::generate_tests()
+        )
+    )
+);
+using EqualsTests_LDbl = ::EqualsTestsFlt<long double>;
+TEST_P(EqualsTests_LDbl, Do) {
+    constexpr auto minw = ::std::numeric_limits<numeric_type>::min() * static_cast<numeric_type>(10);
+
+    const auto arg1 = ::std::get<0>(GetParam());
+    const auto arg2 = ::std::get<1>(GetParam());
+
+    const auto abs_arg1 = ::uns::math::abs(arg1);
+    const auto abs_arg2 = ::uns::math::abs(arg2);
+
+    bool equals_result = false;
+    if (
+        abs_arg1 > minw
+        && abs_arg2 > minw
+    ) {
+        equals_result = (
+            ::uns::math::abs(arg1 - arg2)
+            < numeric_type{ 1.0e-14 } * (
+                abs_arg1
+                + abs_arg2
+            )
+        );
+    }
+    else {
+        equals_result = (abs_arg1 <= minw && abs_arg2 <= minw);
+    };
+
+    ASSERT_EQ(
+        equals_result
+        , ::uns::math::equals(arg1, arg2)
+    );
+};
+INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_LDbl,
+    ::testing::Combine(
+        ::testing::ValuesIn(
+            ::EqualsTests_LDbl::generate_tests()
+        )
+        , ::testing::ValuesIn(
+            ::EqualsTests_LDbl::generate_tests()
+        )
+    )
+);
+
+
+
+template<::std::integral numeric_t>
+class EqualsTestsInt : public ::testing::TestWithParam<::std::tuple<numeric_t, numeric_t>> {
+public:
+    using numeric_type = numeric_t;
+public:
+    static ::std::vector<numeric_t> generate_tests() {
+        constexpr auto maxw = ::std::numeric_limits<numeric_t>::max() >> 10;
+
+        auto result = ::std::vector<numeric_t>{};
+
+        for (numeric_t current_value = 1; current_value < maxw; current_value *= 2) {
+            result.emplace_back(current_value);
+            result.emplace_back(-current_value);
+        };
+        for (numeric_t current_value = 1; current_value < maxw; current_value *= 3) {
+            result.emplace_back(current_value);
+            result.emplace_back(-current_value);
+        };
+        for (numeric_t current_value = 1; current_value < maxw; current_value *= 5) {
+            result.emplace_back(current_value);
+            result.emplace_back(-current_value);
+        };
+        for (numeric_t current_value = 1; current_value < maxw; current_value *= 7) {
+            result.emplace_back(current_value);
+            result.emplace_back(-current_value);
+        };
+        for (numeric_t current_value = 1; current_value < maxw; current_value *= 11) {
+            result.emplace_back(current_value);
+            result.emplace_back(-current_value);
+        };
+
+        return result;
+    };
+};
+
+using EqualsTests_SInt = ::EqualsTestsInt<short int>;
+TEST_P(EqualsTests_SInt, Do) {
+    const auto arg1 = ::std::get<0>(GetParam());
+    const auto arg2 = ::std::get<1>(GetParam());
+
+    ASSERT_EQ(
+        (arg1 == arg2)
+        , ::uns::math::equals(arg1, arg2)
+    );
+};
+INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_SInt,
+    ::testing::Combine(
+        ::testing::ValuesIn(
+            ::EqualsTests_SInt::generate_tests()
+        )
+        , ::testing::ValuesIn(
+            ::EqualsTests_SInt::generate_tests()
+        )
+    )
+);
+using EqualsTests_Int = ::EqualsTestsInt<int>;
+TEST_P(EqualsTests_Int, Do) {
+    const auto arg1 = ::std::get<0>(GetParam());
+    const auto arg2 = ::std::get<1>(GetParam());
+
+    ASSERT_EQ(
+        (arg1 == arg2)
+        , ::uns::math::equals(arg1, arg2)
+    );
+};
+INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_Int,
+    ::testing::Combine(
+        ::testing::ValuesIn(
+            ::EqualsTests_Int::generate_tests()
+        )
+        , ::testing::ValuesIn(
+            ::EqualsTests_Int::generate_tests()
+        )
+    )
+);
+using EqualsTests_LInt = ::EqualsTestsInt<long int>;
+TEST_P(EqualsTests_LInt, Do) {
+    const auto arg1 = ::std::get<0>(GetParam());
+    const auto arg2 = ::std::get<1>(GetParam());
+
+    ASSERT_EQ(
+        (arg1 == arg2)
+        , ::uns::math::equals(arg1, arg2)
+    );
+};
+INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_LInt,
+    ::testing::Combine(
+        ::testing::ValuesIn(
+            ::EqualsTests_LInt::generate_tests()
+        )
+        , ::testing::ValuesIn(
+            ::EqualsTests_LInt::generate_tests()
+        )
+    )
+);
+using EqualsTests_LLInt = ::EqualsTestsInt<long long int>;
+TEST_P(EqualsTests_LLInt, Do) {
+    const auto arg1 = ::std::get<0>(GetParam());
+    const auto arg2 = ::std::get<1>(GetParam());
+
+    ASSERT_EQ(
+        (arg1 == arg2)
+        , ::uns::math::equals(arg1, arg2)
+    );
+};
+INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_LLInt,
+    ::testing::Combine(
+        ::testing::ValuesIn(
+            ::EqualsTests_LLInt::generate_tests()
+        )
+        , ::testing::ValuesIn(
+            ::EqualsTests_LLInt::generate_tests()
+        )
     )
 );

@@ -23,32 +23,47 @@ namespace uns::math {
 
     //absolute value
     template<::uns::math::numeric value_t>
-    constexpr value_t abs(value_t arg) noexcept {
+    constexpr value_t abs(value_t Arg) noexcept {
         constexpr auto zero = value_t{ 0 };
-        if(arg < zero) return zero - arg;
-        else return arg;
+        if(Arg < zero) return zero - Arg;
+        else return Arg;
     };
 
 
     //correct equality checking
     template<::std::floating_point value1_t, ::std::convertible_to<value1_t> value2_t>
-    constexpr bool equals(value1_t arg1, value2_t arg2) noexcept {
-        static const auto minw = ::std::numeric_limits<value1_t>::min() * static_cast<value1_t>(10);
-        if(::uns::math::abs(arg1) > minw && ::uns::math::abs(static_cast<value1_t>(arg2)) > minw)
-            return (::uns::math::abs(arg1 - static_cast<value1_t>(arg2)) < static_cast<value1_t>(1.0e-14) * (::uns::math::abs(arg1) + ::uns::math::abs(static_cast<value1_t>(arg2))));
-        else return (::uns::math::abs(arg1) <= minw && ::uns::math::abs(static_cast<value1_t>(arg2)) <= minw);
+    constexpr bool equals(value1_t Arg1, value2_t Arg2) noexcept {
+        constexpr auto minw = ::std::numeric_limits<value1_t>::min() * static_cast<value1_t>(10);
+
+        const auto abs_arg1 = ::uns::math::abs(Arg1);
+        const auto abs_arg2 = ::uns::math::abs(static_cast<value1_t>(Arg2));
+
+        if (
+            abs_arg1 > minw
+            && abs_arg2 > minw
+        ) {
+            return ::uns::math::abs(Arg1 - static_cast<value1_t>(Arg2))
+                < value1_t{ 1.0e-14 } * (
+                    abs_arg1
+                    + abs_arg2
+                );
+        }
+        else {
+            return abs_arg1 <= minw && abs_arg2 <= minw;
+        };
     };
     template<::std::floating_point value1_t, ::std::convertible_to<value1_t> value2_t, ::std::convertible_to<value1_t> value3_t>
     constexpr bool equals(value1_t arg1, value2_t arg2, value3_t accuracy) noexcept {
-        return (::uns::math::abs(arg1 - static_cast<value1_t>(arg2)) <= ::uns::math::abs(static_cast<value1_t>(accuracy)));
+        return ::uns::math::abs(arg1 - static_cast<value1_t>(arg2))
+            <= ::uns::math::abs(static_cast<value1_t>(accuracy));
     };
     template<::std::integral value1_t, ::std::floating_point value2_t>
     constexpr bool equals(value1_t arg1, value2_t arg2) noexcept {
-        return ::uns::math::equals<value2_t>(arg2, arg1);
+        return ::uns::math::equals<value2_t, value1_t>(arg2, arg1);
     };
     template<::std::integral value1_t, ::std::integral value2_t>
     constexpr bool equals(value1_t arg1, value2_t arg2) noexcept {
-        return (arg2 == arg1);
+        return arg2 == arg1;
     };
 
 
