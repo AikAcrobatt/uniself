@@ -294,8 +294,42 @@ INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_ULLInt,
 
 template<::std::floating_point numeric_t>
 class EqualsTestsFlt : public ::testing::TestWithParam<::std::tuple<numeric_t, numeric_t>> {
+private:
+    using test = ::testing::TestWithParam<::std::tuple<numeric_t, numeric_t>>;
 public:
     using numeric_type = numeric_t;
+public:
+    numeric_type get_arg1() const {
+        return ::std::get<0>(test::GetParam());
+    };
+    numeric_type get_arg2() const {
+        return ::std::get<1>(test::GetParam());
+    };
+    bool are_equal() const {
+        constexpr auto minw = ::std::numeric_limits<numeric_type>::min() * static_cast<numeric_type>(10);
+
+        const auto arg1 = ::std::get<0>(test::GetParam());
+        const auto arg2 = ::std::get<1>(test::GetParam());
+
+        const auto abs_arg1 = ::uns::math::abs(arg1);
+        const auto abs_arg2 = ::uns::math::abs(arg2);
+
+        bool equals_result = false;
+        if (
+            abs_arg1 > minw
+            && abs_arg2 > minw
+        ) {
+            return 
+                ::uns::math::abs(arg1 - arg2)
+                < numeric_type{ 1.0e-14 } * (
+                    abs_arg1
+                    + abs_arg2
+                );
+        }
+        else {
+            return abs_arg1 <= minw && abs_arg2 <= minw;
+        };
+    };
 public:
     static ::std::vector<numeric_t> generate_tests() {
         constexpr auto minw = ::std::numeric_limits<numeric_t>::min();
@@ -320,34 +354,9 @@ public:
 
 using EqualsTests_Flt = ::EqualsTestsFlt<float>;
 TEST_P(EqualsTests_Flt, Do) {
-    constexpr auto minw = ::std::numeric_limits<numeric_type>::min() * static_cast<numeric_type>(10);
-
-    const auto arg1 = ::std::get<0>(GetParam());
-    const auto arg2 = ::std::get<1>(GetParam());
-
-    const auto abs_arg1 = ::uns::math::abs(arg1);
-    const auto abs_arg2 = ::uns::math::abs(arg2);
-
-    bool equals_result = false;
-    if (
-        abs_arg1 > minw
-        && abs_arg2 > minw
-    ) {
-        equals_result = (
-            ::uns::math::abs(arg1 - arg2)
-            < numeric_type{ 1.0e-14 } * (
-                abs_arg1
-                + abs_arg2
-            )
-        );
-    }
-    else {
-        equals_result = (abs_arg1 <= minw && abs_arg2 <= minw);
-    };
-
     ASSERT_EQ(
-        equals_result
-        , ::uns::math::equals(arg1, arg2)
+        are_equal()
+        , ::uns::math::equals(get_arg1(), get_arg2())
     );
 };
 INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_Flt,
@@ -362,34 +371,9 @@ INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_Flt,
 );
 using EqualsTests_Dbl = ::EqualsTestsFlt<double>;
 TEST_P(EqualsTests_Dbl, Do) {
-    constexpr auto minw = ::std::numeric_limits<numeric_type>::min() * static_cast<numeric_type>(10);
-
-    const auto arg1 = ::std::get<0>(GetParam());
-    const auto arg2 = ::std::get<1>(GetParam());
-
-    const auto abs_arg1 = ::uns::math::abs(arg1);
-    const auto abs_arg2 = ::uns::math::abs(arg2);
-
-    bool equals_result = false;
-    if (
-        abs_arg1 > minw
-        && abs_arg2 > minw
-    ) {
-        equals_result = (
-            ::uns::math::abs(arg1 - arg2)
-            < numeric_type{ 1.0e-14 } * (
-                abs_arg1
-                + abs_arg2
-            )
-        );
-    }
-    else {
-        equals_result = (abs_arg1 <= minw && abs_arg2 <= minw);
-    };
-
     ASSERT_EQ(
-        equals_result
-        , ::uns::math::equals(arg1, arg2)
+        are_equal()
+        , ::uns::math::equals(get_arg1(), get_arg2())
     );
 };
 INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_Dbl,
@@ -404,34 +388,9 @@ INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_Dbl,
 );
 using EqualsTests_LDbl = ::EqualsTestsFlt<long double>;
 TEST_P(EqualsTests_LDbl, Do) {
-    constexpr auto minw = ::std::numeric_limits<numeric_type>::min() * static_cast<numeric_type>(10);
-
-    const auto arg1 = ::std::get<0>(GetParam());
-    const auto arg2 = ::std::get<1>(GetParam());
-
-    const auto abs_arg1 = ::uns::math::abs(arg1);
-    const auto abs_arg2 = ::uns::math::abs(arg2);
-
-    bool equals_result = false;
-    if (
-        abs_arg1 > minw
-        && abs_arg2 > minw
-    ) {
-        equals_result = (
-            ::uns::math::abs(arg1 - arg2)
-            < numeric_type{ 1.0e-14 } * (
-                abs_arg1
-                + abs_arg2
-            )
-        );
-    }
-    else {
-        equals_result = (abs_arg1 <= minw && abs_arg2 <= minw);
-    };
-
     ASSERT_EQ(
-        equals_result
-        , ::uns::math::equals(arg1, arg2)
+        are_equal()
+        , ::uns::math::equals(get_arg1(), get_arg2())
     );
 };
 INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_LDbl,
@@ -445,12 +404,19 @@ INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_LDbl,
     )
 );
 
-
-
 template<::std::integral numeric_t>
 class EqualsTestsInt : public ::testing::TestWithParam<::std::tuple<numeric_t, numeric_t>> {
+private:
+    using test = ::testing::TestWithParam<::std::tuple<numeric_t, numeric_t>>;
 public:
     using numeric_type = numeric_t;
+public:
+    numeric_type get_arg1() const {
+        return ::std::get<0>(test::GetParam());
+    };
+    numeric_type get_arg2() const {
+        return ::std::get<1>(test::GetParam());
+    };
 public:
     static ::std::vector<numeric_t> generate_tests() {
         constexpr auto maxw = ::std::numeric_limits<numeric_t>::max() >> 10;
@@ -484,12 +450,9 @@ public:
 
 using EqualsTests_SInt = ::EqualsTestsInt<short int>;
 TEST_P(EqualsTests_SInt, Do) {
-    const auto arg1 = ::std::get<0>(GetParam());
-    const auto arg2 = ::std::get<1>(GetParam());
-
     ASSERT_EQ(
-        (arg1 == arg2)
-        , ::uns::math::equals(arg1, arg2)
+        (get_arg1() == get_arg2())
+        , ::uns::math::equals(get_arg1(), get_arg2())
     );
 };
 INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_SInt,
@@ -504,12 +467,9 @@ INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_SInt,
 );
 using EqualsTests_Int = ::EqualsTestsInt<int>;
 TEST_P(EqualsTests_Int, Do) {
-    const auto arg1 = ::std::get<0>(GetParam());
-    const auto arg2 = ::std::get<1>(GetParam());
-
     ASSERT_EQ(
-        (arg1 == arg2)
-        , ::uns::math::equals(arg1, arg2)
+        (get_arg1() == get_arg2())
+        , ::uns::math::equals(get_arg1(), get_arg2())
     );
 };
 INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_Int,
@@ -524,12 +484,9 @@ INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_Int,
 );
 using EqualsTests_LInt = ::EqualsTestsInt<long int>;
 TEST_P(EqualsTests_LInt, Do) {
-    const auto arg1 = ::std::get<0>(GetParam());
-    const auto arg2 = ::std::get<1>(GetParam());
-
     ASSERT_EQ(
-        (arg1 == arg2)
-        , ::uns::math::equals(arg1, arg2)
+        (get_arg1() == get_arg2())
+        , ::uns::math::equals(get_arg1(), get_arg2())
     );
 };
 INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_LInt,
@@ -544,12 +501,9 @@ INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_LInt,
 );
 using EqualsTests_LLInt = ::EqualsTestsInt<long long int>;
 TEST_P(EqualsTests_LLInt, Do) {
-    const auto arg1 = ::std::get<0>(GetParam());
-    const auto arg2 = ::std::get<1>(GetParam());
-
     ASSERT_EQ(
-        (arg1 == arg2)
-        , ::uns::math::equals(arg1, arg2)
+        (get_arg1() == get_arg2())
+        , ::uns::math::equals(get_arg1(), get_arg2())
     );
 };
 INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_LLInt,
@@ -560,5 +514,112 @@ INSTANTIATE_TEST_CASE_P(EqualsTesting, EqualsTests_LLInt,
         , ::testing::ValuesIn(
             ::EqualsTests_LLInt::generate_tests()
         )
+    )
+);
+
+
+template<typename numeric_t>
+class DivTests : public ::testing::TestWithParam<::std::tuple<bool, numeric_t, numeric_t>> {
+private:
+    using test = ::testing::TestWithParam<::std::tuple<bool, numeric_t, numeric_t>>;
+public:
+    using numeric_type = numeric_t;
+public:
+    numeric_type get_numerator() const {
+        return get_sign() * ::std::get<1>(test::GetParam());
+    };
+    numeric_type get_denominator() const {
+        return ::std::get<2>(test::GetParam());
+    };
+    numeric_type get_sign() const {
+        return (
+            ::std::get<0>(test::GetParam())
+            ? 1
+            : -1
+        );
+    };
+    numeric_type div_result() const {
+        return (
+            !::uns::math::equals(get_denominator(), 0)
+            ? get_numerator() / get_denominator()
+            : get_sign() * ::std::numeric_limits<numeric_type>::max()
+        );
+    };
+public:
+    static ::std::vector<::std::tuple<bool, numeric_t, numeric_t>> generate_tests() {
+        constexpr bool signs[2] = { true, false };
+
+        auto result = ::std::vector<::std::tuple<bool, numeric_t, numeric_t>>{};
+
+        constexpr auto max = static_cast<numeric_type>(100);
+        for (auto sign : signs) {
+            constexpr auto numerator_step = static_cast<numeric_type>(1.517);
+            for (numeric_type numerator = 0; numerator < max; numerator += numerator_step) {
+                constexpr auto denominator_step = static_cast<numeric_type>(2.809);
+                for (numeric_type denominator = 0; denominator < max; denominator += denominator_step) {
+                    result.emplace_back(
+                        sign
+                        , numerator
+                        , denominator
+                    );
+                    result.emplace_back(
+                        sign
+                        , numerator
+                        , -denominator
+                    );
+                };
+            };
+        };
+
+        return result;
+    };
+};
+
+using DivTests_Flt = ::DivTests<float>;
+TEST_P(DivTests_Flt, Do) {
+    ASSERT_FLOAT_EQ(
+        div_result()
+        , ::uns::math::div(get_numerator(), get_denominator())
+    );
+};
+INSTANTIATE_TEST_CASE_P(DivTesting, DivTests_Flt,
+    ::testing::ValuesIn(
+        ::DivTests_Flt::generate_tests()
+    )
+);
+using DivTests_LDbl = ::DivTests<long double>;
+TEST_P(DivTests_LDbl, Do) {
+    ASSERT_FLOAT_EQ(
+        div_result()
+        , ::uns::math::div(get_numerator(), get_denominator())
+    );
+};
+INSTANTIATE_TEST_CASE_P(DivTesting, DivTests_LDbl,
+    ::testing::ValuesIn(
+        ::DivTests_LDbl::generate_tests()
+    )
+);
+using DivTests_Int = ::DivTests<int>;
+TEST_P(DivTests_Int, Do) {
+    ASSERT_FLOAT_EQ(
+        div_result()
+        , ::uns::math::div(get_numerator(), get_denominator())
+    );
+};
+INSTANTIATE_TEST_CASE_P(DivTesting, DivTests_Int,
+    ::testing::ValuesIn(
+        ::DivTests_Int::generate_tests()
+    )
+);
+using DivTests_LInt = ::DivTests<long int>;
+TEST_P(DivTests_LInt, Do) {
+    ASSERT_FLOAT_EQ(
+        div_result()
+        , ::uns::math::div(get_numerator(), get_denominator())
+    );
+};
+INSTANTIATE_TEST_CASE_P(DivTesting, DivTests_LInt,
+    ::testing::ValuesIn(
+        ::DivTests_LInt::generate_tests()
     )
 );

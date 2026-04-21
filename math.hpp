@@ -141,13 +141,5 @@ namespace uns::math {
 
 };
 
-#ifdef UNS_STD_MAX
-#define max UNS_STD_MAX
-#undef UNS_STD_MAX
-#endif
-#ifdef UNS_STD_MIN
-#define min UNS_STD_MIN
-#undef UNS_STD_MIN
-#endif
 
 #endif
