@@ -30,6 +30,30 @@ namespace uns::math {
     };
 
 
+    namespace auxiliary {
+
+        template<::std::floating_point value_t>
+        constexpr value_t floating_point_precision() noexcept {
+            if constexpr (sizeof(value_t) >= 16) {
+                return 1.0e-28;
+            }
+            else if constexpr (sizeof(value_t) >= 8) {
+                return 1.0e-14;
+            }
+            else if constexpr (sizeof(value_t) >= 4) {
+                return 1.0e-5;
+            }
+            else if constexpr (sizeof(value_t) >= 2) {
+                return 1.0e-3;
+            }
+            else {
+                return 1.0e-2;
+            };
+        };
+
+    };
+
+
     //correct equality checking
     template<::std::floating_point value1_t, ::std::convertible_to<value1_t> value2_t>
     constexpr bool equals(value1_t Arg1, value2_t Arg2) noexcept {
@@ -43,7 +67,7 @@ namespace uns::math {
             && abs_arg2 > minw
         ) {
             return ::uns::math::abs(Arg1 - static_cast<value1_t>(Arg2))
-                < value1_t{ 1.0e-14 } * (
+                < ::uns::math::auxiliary::floating_point_precision<value1_t>() * (
                     abs_arg1
                     + abs_arg2
                 );

@@ -321,7 +321,7 @@ public:
         ) {
             return 
                 ::uns::math::abs(arg1 - arg2)
-                < numeric_type{ 1.0e-14 } * (
+                < precision() * (
                     abs_arg1
                     + abs_arg2
                 );
@@ -330,22 +330,49 @@ public:
             return abs_arg1 <= minw && abs_arg2 <= minw;
         };
     };
+private:
+    static constexpr numeric_type precision() noexcept {
+        if constexpr (sizeof(numeric_type) >= 16) {
+            return 1.0e-28;
+        }
+        else if constexpr (sizeof(numeric_type) >= 8) {
+            return 1.0e-14;
+        }
+        else if constexpr (sizeof(numeric_type) >= 4) {
+            return 1.0e-5;
+        }
+        else if constexpr (sizeof(numeric_type) >= 2) {
+            return 1.0e-3;
+        }
+        else {
+            return 1.0e-2;
+        };
+    };
 public:
-    static ::std::vector<numeric_t> generate_tests() {
-        constexpr auto minw = ::std::numeric_limits<numeric_t>::min();
-        constexpr auto t10 = numeric_t{ 10 };
-        constexpr auto step = numeric_t{ 0.12399 };
+    static ::std::vector<numeric_type> generate_tests() {
+        constexpr auto diff = ::uns::math::auxiliary::floating_point_precision<numeric_type>();
+        constexpr auto minw = ::std::numeric_limits<numeric_type>::min();
+        constexpr auto t10 = numeric_type{ 10 };
+        constexpr auto step = numeric_type{ 0.12399 };
 
-        auto result = ::std::vector<numeric_t>{};
+        auto result = ::std::vector<numeric_type>{};
 
-        numeric_t current_value = 0;
-        for (; current_value < t10 * minw; current_value += minw) {
+        numeric_type current_value = 0;
+        for (; current_value < t10 * minw; current_value += 3 * minw) {
             result.emplace_back(current_value);
             result.emplace_back(-current_value);
         };
         for (; current_value < t10; current_value += step) {
             result.emplace_back(current_value);
             result.emplace_back(-current_value);
+        };
+        current_value = -t10 * step;
+        for (; current_value < t10 * step; current_value += step) {
+            constexpr auto _1 = numeric_type{ 1 };
+            constexpr auto _3 = numeric_type{ 3 };
+            for (auto i = 0; i < _3; i += _1) {
+                result.emplace_back(current_value * (_1 + i * diff));
+            };
         };
 
         return result;
@@ -649,31 +676,38 @@ public:
     numeric_type get3() { return ::std::get<2>(test::GetParam()); };
     numeric_type get4() { return ::std::get<3>(test::GetParam()); };
     numeric_type get5() { return ::std::get<4>(test::GetParam()); };
+private:
+    static bool less(numeric_type Arg1, numeric_type Arg2) {
+        return (Arg1 < Arg2) && !::uns::math::equals<numeric_type>(Arg1, Arg2);
+    };
+    static bool more(numeric_type Arg1, numeric_type Arg2) {
+        return (Arg1 > Arg2) && !::uns::math::equals<numeric_type>(Arg1, Arg2);
+    };
 public:
     numeric_type expected_minimal() const {
         auto result = ::std::get<0>(test::GetParam());
 
         if (
             const auto val = ::std::get<1>(test::GetParam());
-            ::uns::math::less(val, result)
+            less(val, result)
         ) {
             result = val;
         };
         if (
             const auto val = ::std::get<2>(test::GetParam());
-            ::uns::math::less(val, result)
+            less(val, result)
         ) {
             result = val;
         };
         if (
             const auto val = ::std::get<3>(test::GetParam());
-            ::uns::math::less(val, result)
+            less(val, result)
         ) {
             result = val;
         };
         if (
             const auto val = ::std::get<4>(test::GetParam());
-            ::uns::math::less(val, result)
+            less(val, result)
         ) {
             result = val;
         };
@@ -685,25 +719,25 @@ public:
 
         if (
             const auto val = ::std::get<1>(test::GetParam());
-            ::uns::math::more(val, result)
+            more(val, result)
         ) {
             result = val;
         };
         if (
             const auto val = ::std::get<2>(test::GetParam());
-            ::uns::math::more(val, result)
+            more(val, result)
         ) {
             result = val;
         };
         if (
             const auto val = ::std::get<3>(test::GetParam());
-            ::uns::math::more(val, result)
+            more(val, result)
         ) {
             result = val;
         };
         if (
             const auto val = ::std::get<4>(test::GetParam());
-            ::uns::math::more(val, result)
+            more(val, result)
         ) {
             result = val;
         };
