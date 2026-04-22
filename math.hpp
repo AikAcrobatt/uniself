@@ -53,90 +53,116 @@ namespace uns::math {
         };
     };
     template<::std::floating_point value1_t, ::std::convertible_to<value1_t> value2_t, ::std::convertible_to<value1_t> value3_t>
-    constexpr bool equals(value1_t arg1, value2_t arg2, value3_t accuracy) noexcept {
-        return ::uns::math::abs(arg1 - static_cast<value1_t>(arg2))
+    constexpr bool equals(value1_t Arg1, value2_t Arg2, value3_t accuracy) noexcept {
+        return ::uns::math::abs(Arg1 - static_cast<value1_t>(Arg2))
             <= ::uns::math::abs(static_cast<value1_t>(accuracy));
     };
     template<::std::integral value1_t, ::std::floating_point value2_t>
-    constexpr bool equals(value1_t arg1, value2_t arg2) noexcept {
-        return ::uns::math::equals<value2_t, value1_t>(arg2, arg1);
+    constexpr bool equals(value1_t Arg1, value2_t Arg2) noexcept {
+        return ::uns::math::equals<value2_t, value1_t>(Arg2, Arg1);
     };
     template<::std::integral value1_t, ::std::integral value2_t>
-    constexpr bool equals(value1_t arg1, value2_t arg2) noexcept {
-        return arg2 == arg1;
+    constexpr bool equals(value1_t Arg1, value2_t Arg2) noexcept {
+        return Arg2 == Arg1;
     };
 
 
     //correct >/</>=/<= checking
     template<::uns::math::numeric value1_t, ::uns::math::numeric value2_t>
-    constexpr bool more(value1_t arg1, value2_t arg2) noexcept { return (arg1 > arg2) && !::uns::math::equals<value1_t>(arg1, arg2); };
+    constexpr bool more(value1_t Arg1, value2_t Arg2) noexcept { return (Arg1 > Arg2) && !::uns::math::equals<value1_t>(Arg1, Arg2); };
     template<::uns::math::numeric value1_t, ::uns::math::numeric value2_t>
-    constexpr bool less(value1_t arg1, value2_t arg2) noexcept { return (arg1 < arg2) && !::uns::math::equals<value1_t>(arg1, arg2); };
+    constexpr bool less(value1_t Arg1, value2_t Arg2) noexcept { return (Arg1 < Arg2) && !::uns::math::equals<value1_t>(Arg1, Arg2); };
     template<::uns::math::numeric value1_t, ::uns::math::numeric value2_t>
-    constexpr bool moreeq(value1_t arg1, value2_t arg2) noexcept { return (arg1 > arg2) || ::uns::math::equals<value1_t>(arg1, arg2); };
+    constexpr bool moreeq(value1_t Arg1, value2_t Arg2) noexcept { return (Arg1 > Arg2) || ::uns::math::equals<value1_t>(Arg1, Arg2); };
     template<::uns::math::numeric value1_t, ::uns::math::numeric value2_t>
-    constexpr bool lesseq(value1_t arg1, value2_t arg2) noexcept { return (arg1 < arg2) || ::uns::math::equals<value1_t>(arg1, arg2); };
+    constexpr bool lesseq(value1_t Arg1, value2_t Arg2) noexcept { return (Arg1 < Arg2) || ::uns::math::equals<value1_t>(Arg1, Arg2); };
 
 
     //siqn extracting function
     template<::uns::math::numeric value_t>
-    constexpr short int sign(value_t arg)  noexcept { return (::uns::math::equals<value_t>(arg, 0) ? 0 : (arg > 0 ? 1 : -1)); };
+    constexpr short int sign(value_t Arg)  noexcept { return (::uns::math::equals<value_t>(Arg, 0) ? 0 : (Arg > 0 ? 1 : -1)); };
 
 
     //division of two numbers representing correct zero divition
     template<::uns::math::numeric value1_t, ::uns::math::numeric value2_t>
-    value1_t div(value1_t numerator, value2_t denominator, value1_t divide_to_zero_result_value = ::std::numeric_limits<value1_t>::max()) noexcept {
+    value1_t div(
+        value1_t Numerator
+        , value2_t Denominator
+        , value1_t DivideToZeroValue = ::std::numeric_limits<value1_t>::max()
+    ) noexcept {
         return (
-            !::uns::math::equals<value2_t>(denominator, 0)
-            ? numerator / denominator
-            : static_cast<value1_t>(::uns::math::sign(numerator)) * divide_to_zero_result_value
+            !::uns::math::equals<value2_t>(Denominator, 0)
+            ? Numerator / Denominator
+            : static_cast<value1_t>(::uns::math::sign(Numerator)) * DivideToZeroValue
         );
     };
 
 
     //max/min funcs
     template<::uns::math::numeric value_t>
-    value_t maximal(const value_t& arg1, const value_t& arg2) noexcept {
-        if(arg1 > arg2) return arg1;
-        else return arg2;
+    value_t maximal(const value_t& Arg1, const value_t& Arg2) noexcept {
+        if (::uns::math::more(Arg1, Arg2)) {
+            return Arg1;
+        }
+        else {
+            return Arg2;
+        };
     };
     template<::uns::math::numeric value_t, typename ... args_t>
-    value_t maximal(const value_t& arg1, const args_t& ...args) noexcept {
-        if(auto arg_ = static_cast<value_t>(::uns::math::maximal(args...)); arg1 > arg_) return arg1;
-        else return arg_;
+    value_t maximal(const value_t& Arg1, const args_t& ...Args) noexcept {
+        if (
+            auto args_max = static_cast<value_t>(::uns::math::maximal(Args...));
+            ::uns::math::more(Arg1, args_max)
+        ) {
+            return Arg1;
+        }
+        else {
+            return args_max;
+        };
     };
 
     template<::uns::math::numeric value_t>
-    value_t minimal(const value_t& arg1, const value_t& arg2) noexcept {
-        if(arg1 < arg2) return arg1;
-        else return arg2;
+    value_t minimal(const value_t& Arg1, const value_t& Arg2) noexcept {
+        if (::uns::math::less(Arg1, Arg2)) {
+            return Arg1;
+        }
+        else {
+            return Arg2;
+        };
     };
     template<::uns::math::numeric value_t, typename ... args_t>
-    value_t minimal(const value_t& arg1, const args_t& ...args) noexcept {
-        if(auto arg_ = static_cast<value_t>(::uns::math::minimal(args...)); arg1 < arg_) return arg1;
-        else return arg_;
+    value_t minimal(const value_t& Arg1, const args_t& ...Args) noexcept {
+        if (
+            auto args_max = static_cast<value_t>(::uns::math::minimal(Args...));
+            ::uns::math::less(Arg1, args_max)
+        ) {
+            return Arg1;
+        }
+        else {
+            return args_max;
+        };
     };
 
 
     //exponential moving average
     template<::std::floating_point value1_t, ::std::floating_point value2_t, ::std::floating_point value3_t>
-    value2_t ema(value1_t current_value, value2_t previous_ema, value3_t modificator) noexcept {
-        return static_cast<value2_t>(modificator) * static_cast<value2_t>(current_value)
-            + static_cast<value2_t>(static_cast<value3_t>(1) - modificator) * previous_ema;
+    value2_t ema(value1_t CurrentValue, value2_t PreviousEma, value3_t Modifier) noexcept {
+        return static_cast<value2_t>(Modifier) * static_cast<value2_t>(CurrentValue)
+            + static_cast<value2_t>(static_cast<value3_t>(1) - Modifier) * PreviousEma;
     };
     template<::std::floating_point value1_t, ::std::floating_point value2_t, ::std::integral value3_t>
-    value2_t ema(value1_t current_value, value2_t previous_ema, value3_t period) noexcept  {
+    value2_t ema(value1_t CurrentValue, value2_t PreviousEma, value3_t Period) noexcept  {
         return ::uns::math::ema<value2_t>(
-            current_value,
-            previous_ema,
-            ::uns::math::div<value3_t>(2, period + static_cast<value3_t>(1), static_cast<value3_t>(1))
+            CurrentValue,
+            PreviousEma,
+            ::uns::math::div<value3_t>(2, Period + static_cast<value3_t>(1), static_cast<value3_t>(1))
         );
     };
 
 
     template<typename result_t = long double, ::uns::math::numeric value_t>
-    result_t sqrt(value_t arg) {
-        return static_cast<result_t>(::sqrt(arg));
+    result_t sqrt(value_t Arg) {
+        return static_cast<result_t>(::sqrt(Arg));
     };
 
 };

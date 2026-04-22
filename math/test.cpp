@@ -606,7 +606,7 @@ INSTANTIATE_TEST_CASE_P(DivTesting, DivTests_LDbl,
 );
 using DivTests_Int = ::DivTests<int>;
 TEST_P(DivTests_Int, Do) {
-    ASSERT_FLOAT_EQ(
+    ASSERT_EQ(
         div_result()
         , ::uns::math::div(get_numerator(), get_denominator())
     );
@@ -618,7 +618,7 @@ INSTANTIATE_TEST_CASE_P(DivTesting, DivTests_Int,
 );
 using DivTests_LInt = ::DivTests<long int>;
 TEST_P(DivTests_LInt, Do) {
-    ASSERT_FLOAT_EQ(
+    ASSERT_EQ(
         div_result()
         , ::uns::math::div(get_numerator(), get_denominator())
     );
@@ -626,5 +626,190 @@ TEST_P(DivTests_LInt, Do) {
 INSTANTIATE_TEST_CASE_P(DivTesting, DivTests_LInt,
     ::testing::ValuesIn(
         ::DivTests_LInt::generate_tests()
+    )
+);
+
+
+template<typename numeric_t>
+class MinMax :
+    public ::testing::TestWithParam<
+        ::std::tuple<numeric_t, numeric_t, numeric_t, numeric_t, numeric_t>
+    >
+{
+private:
+    using test = ::testing::TestWithParam<
+        ::std::tuple<numeric_t, numeric_t, numeric_t, numeric_t, numeric_t>
+    >;
+public:
+    using numeric_type = numeric_t;
+    using test_type = ::std::tuple<numeric_t, numeric_t, numeric_t, numeric_t, numeric_t>;
+public:
+    numeric_type get1() { return ::std::get<0>(test::GetParam()); };
+    numeric_type get2() { return ::std::get<1>(test::GetParam()); };
+    numeric_type get3() { return ::std::get<2>(test::GetParam()); };
+    numeric_type get4() { return ::std::get<3>(test::GetParam()); };
+    numeric_type get5() { return ::std::get<4>(test::GetParam()); };
+public:
+    numeric_type expected_minimal() const {
+        auto result = ::std::get<0>(test::GetParam());
+
+        if (
+            const auto val = ::std::get<1>(test::GetParam());
+            ::uns::math::less(val, result)
+        ) {
+            result = val;
+        };
+        if (
+            const auto val = ::std::get<2>(test::GetParam());
+            ::uns::math::less(val, result)
+        ) {
+            result = val;
+        };
+        if (
+            const auto val = ::std::get<3>(test::GetParam());
+            ::uns::math::less(val, result)
+        ) {
+            result = val;
+        };
+        if (
+            const auto val = ::std::get<4>(test::GetParam());
+            ::uns::math::less(val, result)
+        ) {
+            result = val;
+        };
+
+        return result;
+    };
+    numeric_type expected_maximal() const {
+        auto result = ::std::get<0>(test::GetParam());
+
+        if (
+            const auto val = ::std::get<1>(test::GetParam());
+            ::uns::math::more(val, result)
+        ) {
+            result = val;
+        };
+        if (
+            const auto val = ::std::get<2>(test::GetParam());
+            ::uns::math::more(val, result)
+        ) {
+            result = val;
+        };
+        if (
+            const auto val = ::std::get<3>(test::GetParam());
+            ::uns::math::more(val, result)
+        ) {
+            result = val;
+        };
+        if (
+            const auto val = ::std::get<4>(test::GetParam());
+            ::uns::math::more(val, result)
+        ) {
+            result = val;
+        };
+
+        return result;
+    };
+public:
+    static ::std::vector<test_type> generate_tests() {
+        auto result = ::std::vector<test_type>{};
+
+        auto tier = ::std::vector<numeric_type>{};
+        const numeric_type step = 52.734f;
+        for (::std::size_t idx = 0; idx < 3; ++idx) {
+            tier.emplace_back(static_cast<numeric_type>(idx) * step);
+            tier.emplace_back(-static_cast<numeric_type>(idx) * step);
+        };
+
+        for (auto tier1 : tier) {
+            for (auto tier2 : tier) {
+                for (auto tier3 : tier) {
+                    for (auto tier4 : tier) {
+                        for (auto tier5 : tier) {
+                            result.emplace_back(
+                                test_type{
+                                    tier1
+                                    , tier2
+                                    , tier3
+                                    , tier4
+                                    , tier5
+                                }
+                            );
+                        };
+                    };
+                };
+            };
+        };
+
+        return result;
+    };
+};
+
+using MinMax_Flt = ::MinMax<float>;
+TEST_P(MinMax_Flt, Do) {
+    ASSERT_FLOAT_EQ(
+        expected_minimal()
+        , ::uns::math::minimal(get1(), get2(), get3(), get4(), get5())
+    );
+
+    ASSERT_FLOAT_EQ(
+        expected_maximal()
+        , ::uns::math::maximal(get1(), get2(), get3(), get4(), get5())
+    );
+};
+INSTANTIATE_TEST_CASE_P(MinimalMaximalTesting, MinMax_Flt,
+    ::testing::ValuesIn(
+        ::MinMax_Flt::generate_tests()
+    )
+);
+using MinMax_LDbl = ::MinMax<long double>;
+TEST_P(MinMax_LDbl, Do) {
+    ASSERT_FLOAT_EQ(
+        expected_minimal()
+        , ::uns::math::minimal(get1(), get2(), get3(), get4(), get5())
+    );
+
+    ASSERT_FLOAT_EQ(
+        expected_maximal()
+        , ::uns::math::maximal(get1(), get2(), get3(), get4(), get5())
+    );
+};
+INSTANTIATE_TEST_CASE_P(MinimalMaximalTesting, MinMax_LDbl,
+    ::testing::ValuesIn(
+        ::MinMax_LDbl::generate_tests()
+    )
+);
+using MinMax_Int = ::MinMax<int>;
+TEST_P(MinMax_Int, Do) {
+    ASSERT_EQ(
+        expected_minimal()
+        , ::uns::math::minimal(get1(), get2(), get3(), get4(), get5())
+    );
+
+    ASSERT_EQ(
+        expected_maximal()
+        , ::uns::math::maximal(get1(), get2(), get3(), get4(), get5())
+    );
+};
+INSTANTIATE_TEST_CASE_P(MinimalMaximalTesting, MinMax_Int,
+    ::testing::ValuesIn(
+        ::MinMax_Int::generate_tests()
+    )
+);
+using MinMax_LLInt = ::MinMax<long long int>;
+TEST_P(MinMax_LLInt, Do) {
+    ASSERT_EQ(
+        expected_minimal()
+        , ::uns::math::minimal(get1(), get2(), get3(), get4(), get5())
+    );
+
+    ASSERT_EQ(
+        expected_maximal()
+        , ::uns::math::maximal(get1(), get2(), get3(), get4(), get5())
+    );
+};
+INSTANTIATE_TEST_CASE_P(MinimalMaximalTesting, MinMax_LLInt,
+    ::testing::ValuesIn(
+        ::MinMax_LLInt::generate_tests()
     )
 );
