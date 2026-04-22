@@ -532,11 +532,16 @@ public:
         return ::std::get<2>(test::GetParam());
     };
     numeric_type get_sign() const {
-        return (
-            ::std::get<0>(test::GetParam())
-            ? 1
-            : -1
-        );
+        if (::uns::math::equals(::std::get<1>(test::GetParam()), 0)) {
+            return 0;
+        }
+        else {
+            return (
+                ::std::get<0>(test::GetParam())
+                ? 1
+                : -1
+            );
+        };
     };
     numeric_type div_result() const {
         return (
