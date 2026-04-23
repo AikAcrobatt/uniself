@@ -33,7 +33,7 @@ namespace uns::math {
     namespace auxiliary {
 
         template<::std::floating_point value_t>
-        constexpr value_t floating_point_precision() noexcept {
+        constexpr value_t floating_point_equality_precision() noexcept {
             if constexpr (sizeof(value_t) >= 16) {
                 return 1.0e-28;
             }
@@ -41,7 +41,7 @@ namespace uns::math {
                 return 1.0e-14;
             }
             else if constexpr (sizeof(value_t) >= 4) {
-                return 1.0e-5;
+                return 1.0e-7;
             }
             else if constexpr (sizeof(value_t) >= 2) {
                 return 1.0e-3;
@@ -67,7 +67,7 @@ namespace uns::math {
             && abs_arg2 > minw
         ) {
             return ::uns::math::abs(Arg1 - static_cast<value1_t>(Arg2))
-                < ::uns::math::auxiliary::floating_point_precision<value1_t>() * (
+                < ::uns::math::auxiliary::floating_point_equality_precision<value1_t>() * (
                     abs_arg1
                     + abs_arg2
                 );

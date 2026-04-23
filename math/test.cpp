@@ -339,7 +339,7 @@ private:
             return 1.0e-14;
         }
         else if constexpr (sizeof(numeric_type) >= 4) {
-            return 1.0e-5;
+            return 1.0e-7;
         }
         else if constexpr (sizeof(numeric_type) >= 2) {
             return 1.0e-3;
@@ -350,7 +350,7 @@ private:
     };
 public:
     static ::std::vector<numeric_type> generate_tests() {
-        constexpr auto diff = ::uns::math::auxiliary::floating_point_precision<numeric_type>();
+        constexpr auto diff = precision();
         constexpr auto minw = ::std::numeric_limits<numeric_type>::min();
         constexpr auto t10 = numeric_type{ 10 };
         constexpr auto step = numeric_type{ 0.12399 };
