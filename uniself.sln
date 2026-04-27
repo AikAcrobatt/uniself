@@ -17,8 +17,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "strings", "strings\strings.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "math", "math\math.vcxproj", "{590886DC-0B1B-438F-9D9B-DD46A4D022CC}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "datetime", "datetime\datetime.vcxproj", "{00C0FC73-FE7E-4969-8DBB-14F3F0912E23}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "calendar", "calendar\calendar.vcxproj", "{7E498F02-34F4-4AA4-BFFB-2DF7867E131E}"
 EndProject
 Global
@@ -85,14 +83,6 @@ Global
 		{590886DC-0B1B-438F-9D9B-DD46A4D022CC}.Release|x64.Build.0 = Release|x64
 		{590886DC-0B1B-438F-9D9B-DD46A4D022CC}.Release|x86.ActiveCfg = Release|Win32
 		{590886DC-0B1B-438F-9D9B-DD46A4D022CC}.Release|x86.Build.0 = Release|Win32
-		{00C0FC73-FE7E-4969-8DBB-14F3F0912E23}.Debug|x64.ActiveCfg = Debug|x64
-		{00C0FC73-FE7E-4969-8DBB-14F3F0912E23}.Debug|x64.Build.0 = Debug|x64
-		{00C0FC73-FE7E-4969-8DBB-14F3F0912E23}.Debug|x86.ActiveCfg = Debug|Win32
-		{00C0FC73-FE7E-4969-8DBB-14F3F0912E23}.Debug|x86.Build.0 = Debug|Win32
-		{00C0FC73-FE7E-4969-8DBB-14F3F0912E23}.Release|x64.ActiveCfg = Release|x64
-		{00C0FC73-FE7E-4969-8DBB-14F3F0912E23}.Release|x64.Build.0 = Release|x64
-		{00C0FC73-FE7E-4969-8DBB-14F3F0912E23}.Release|x86.ActiveCfg = Release|Win32
-		{00C0FC73-FE7E-4969-8DBB-14F3F0912E23}.Release|x86.Build.0 = Release|Win32
 		{7E498F02-34F4-4AA4-BFFB-2DF7867E131E}.Debug|x64.ActiveCfg = Debug|x64
 		{7E498F02-34F4-4AA4-BFFB-2DF7867E131E}.Debug|x64.Build.0 = Debug|x64
 		{7E498F02-34F4-4AA4-BFFB-2DF7867E131E}.Debug|x86.ActiveCfg = Debug|Win32
