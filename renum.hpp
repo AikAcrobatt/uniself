@@ -305,3 +305,8 @@ namespace uns {
 };
 
 #endif
+
+/*TODO
+* 1) renum must throw when constructing from integral_type with invalid value
+* 2) renum's operator== must not compile with another renums enum_type
+*/
