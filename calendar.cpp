@@ -2,10 +2,12 @@
 #include "uniself/calendar.hpp"
 
 #include <exception>
+#include <tuple>
 
 namespace uns::calendar::hinnant::auxiliary {
 
     constexpr auto offset_posix_to_this_epoch = ::std::chrono::seconds{};
+
 
     ::uns::calendar::gregorian::datetime get_epoch() noexcept {
         auto gregorian_hinnant_epoch = ::uns::calendar::gregorian::datetime{};
@@ -23,16 +25,137 @@ namespace uns::calendar::hinnant::auxiliary {
         return gregorian_hinnant_epoch;
     };
 
+
+    bool is_leap_year(
+        const ::uns::calendar::hinnant::age& Age
+        , const ::uns::calendar::hinnant::fouryear& Fouryear
+        , const ::uns::calendar::hinnant::year_of_four& Year
+    ) noexcept {
+        if (Year == ::uns::calendar::hinnant::year_of_four::y3) {
+            if (Fouryear != ::uns::calendar::hinnant::fouryear::f24) {
+                return true;
+            }
+            else {
+                if (Age == ::uns::calendar::hinnant::age::a3) {
+                    return true;
+                };
+            };
+        };
+
+        return false;
+    };
+    bool is_leap_year(
+        const ::uns::calendar::hinnant::datetime& HinnantDateTime
+    ) noexcept {
+        return ::uns::calendar::hinnant::auxiliary::is_leap_year(
+            HinnantDateTime.age
+            , HinnantDateTime.fouryear
+            , HinnantDateTime.year
+        );
+    };
 };
+
 
 namespace uns::calendar::gregorian::auxiliary {
 
     constexpr int seconds_per_day = 86400;
     constexpr int days_per_year = 365;
-    constexpr int days_per_leap_year = 365;
-    constexpr int days_per_fouryear = days_per_leap_year + 3 * days_per_year;
+    constexpr int days_per_fouryear = 4 * days_per_year + 1;
     constexpr int days_per_age = 25 * days_per_fouryear - 1;
     constexpr int days_per_fourage = 4 * days_per_age + 1;
+
+
+    struct months_limits {
+        int begin = 0;
+        int end = 0;
+    };
+    constexpr months_limits months_hinnant_limits[12] = {
+        { 306, 336 }    //january
+        , { 337, 365 }  //february
+        , { 0, 30 }     //march
+        , { 31, 60 }    //april
+        , { 61, 91 }    //may
+        , { 92, 121 }   //june
+        , { 122, 152 }  //july
+        , { 153, 183 }  //august
+        , { 184, 213 }  //september
+        , { 214, 244 }  //october
+        , { 245, 274 }  //november
+        , { 275, 305 }  //december
+    };
+
+
+    ::std::tuple<
+        ::uns::calendar::gregorian::month
+        , ::uns::calendar::gregorian::day_of_month
+    > get_month_n_day(
+        ::std::size_t PivotMonthLowest
+        , int HinnantDayOfYear
+        , ::std::size_t PivotMonthHighest
+    );
+    ::std::tuple<
+        ::uns::calendar::gregorian::month
+        , ::uns::calendar::gregorian::day_of_month
+    > get_month_n_day(
+        ::std::size_t PivotMonthLowest
+        , int HinnantDayOfYear
+        , ::std::size_t PivotMonthHighest
+    ) {
+        constexpr ::uns::calendar::gregorian::month months_idxs[12] = {
+            ::uns::calendar::gregorian::month::march
+            , ::uns::calendar::gregorian::month::april
+            , ::uns::calendar::gregorian::month::may
+            , ::uns::calendar::gregorian::month::june
+            , ::uns::calendar::gregorian::month::july
+            , ::uns::calendar::gregorian::month::august
+            , ::uns::calendar::gregorian::month::september
+            , ::uns::calendar::gregorian::month::october
+            , ::uns::calendar::gregorian::month::november
+            , ::uns::calendar::gregorian::month::december
+            , ::uns::calendar::gregorian::month::january
+            , ::uns::calendar::gregorian::month::february
+        };
+
+        const auto pivot_month_idx = (PivotMonthHighest + PivotMonthLowest) / 2;
+        const auto& pivot_month = ::uns::calendar::gregorian::auxiliary::months_hinnant_limits[
+            months_idxs[pivot_month_idx]
+        ];
+        if (
+            pivot_month.begin <= HinnantDayOfYear
+            && HinnantDayOfYear <= pivot_month.end
+        ) {
+            return {
+                months_idxs[pivot_month_idx]
+                , static_cast<::uns::calendar::gregorian::day_of_month::enum_type>(
+                    HinnantDayOfYear % pivot_month.begin
+                )
+            };
+        }
+        else if (pivot_month.begin > HinnantDayOfYear) {
+            return ::uns::calendar::gregorian::auxiliary::get_month_n_day(
+                PivotMonthLowest
+                , HinnantDayOfYear
+                , pivot_month_idx - 1
+            );
+        }
+        else {
+            return ::uns::calendar::gregorian::auxiliary::get_month_n_day(
+                pivot_month_idx + 1
+                , HinnantDayOfYear
+                , PivotMonthHighest
+            );
+        };
+    };
+    ::std::tuple<
+        ::uns::calendar::gregorian::month
+        , ::uns::calendar::gregorian::day_of_month
+    > get_month_n_day(int HinnantDayOfYear) {
+        return ::uns::calendar::gregorian::auxiliary::get_month_n_day(
+            0
+            , HinnantDayOfYear
+            , 11
+        );
+    };
 
 };
 
@@ -118,17 +241,11 @@ namespace uns::calendar::gregorian::auxiliary {
 };
 
 bool ::uns::calendar::hinnant::datetime::ok() const noexcept {
-    int leap_day = 0;
-    if (year == ::uns::calendar::hinnant::year_of_four::y3) {
-        if (fourage != ::uns::calendar::hinnant::fouryear::f24) {
-            leap_day = 1;
-        }
-        else {
-            if (age == ::uns::calendar::hinnant::age::a3) {
-                leap_day = 1;
-            };
-        };
-    };
+    const int leap_day = (
+        ::uns::calendar::hinnant::auxiliary::is_leap_year(*this)
+        ? 1
+        : 0
+    );
 
     if (day < 0 || day >= ::uns::calendar::gregorian::auxiliary::days_per_year + leap_day) {
         return false;
@@ -168,35 +285,31 @@ bool ::uns::calendar::hinnant::datetime::ok() const noexcept {
             + static_cast<int>(HinnantDateTime.fouryear)
         ) * static_cast<int>(::uns::calendar::hinnant::year_of_four::size())
         + static_cast<int>(HinnantDateTime.year);
+    if (thisobj.year <= 0) {
+        thisobj.year -= 1;  //there wasn't a '0000' year of AC
+    };
 
-    constexpr int first_day_of_month[] = {
-        0       //first day of march
-        , 31    //first day of april
-        , 61    //first day of may
-        , 92    //first day of june
-        , 122   //first day of july
-        , 153   //first day of august
-        , 184   //first day of september
-        , 214   //first day of october
-        , 245   //first day of november
-        , 275   //first day of december
-        , 306   //first day of january
-        , 337   //first day of februrary
+    ::std::tie(thisobj.month, thisobj.day) = ::uns::calendar::gregorian::auxiliary::get_month_n_day(HinnantDateTime.day);
+    if (
+        thisobj.month == ::uns::calendar::gregorian::month::january
+        || thisobj.month == ::uns::calendar::gregorian::month::february
+    ) {
+        thisobj.year += 1;
     };
-    constexpr int last_day_of_month[] = {
-        30      //last day of march
-        , 60    //last day of april
-        , 91    //last day of may
-        , 121   //last day of june
-        , 152   //last day of july
-        , 183   //last day of august
-        , 213   //last day of september
-        , 244   //last day of october
-        , 274   //last day of november
-        , 305   //last day of december
-        , 336   //last day of january
-        , 354   //last day of februrary
-    };
+
+    thisobj.hours = static_cast<::uns::calendar::gregorian::hour::enum_type>(
+        HinnantDateTime.seconds
+        / ::uns::calendar::gregorian::minute::size()
+        / ::uns::calendar::gregorian::second::size()
+    );
+    thisobj.minutes = static_cast<::uns::calendar::gregorian::minute::enum_type>(
+        HinnantDateTime.seconds
+        / ::uns::calendar::gregorian::second::size()
+    );
+    thisobj.seconds = static_cast<::uns::calendar::gregorian::second::enum_type>(
+        HinnantDateTime.seconds
+        % ::uns::calendar::gregorian::second::size()
+    );
 
     thisobj.nanoseconds = HinnantDateTime.nanoseconds;
 };
@@ -205,6 +318,7 @@ bool ::uns::calendar::hinnant::datetime::ok() const noexcept {
 };
 
 ::uns::calendar::gregorian::datetime::operator time_point() const noexcept {
+    return static_cast<::uns::calendar::hinnant::datetime>(*this);
 };
 
 bool ::uns::calendar::gregorian::datetime::ok() const noexcept {
