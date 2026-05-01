@@ -401,13 +401,13 @@ bool ::uns::calendar::gregorian::datetime::ok() const noexcept {
         return false;
     };
 
-    auto hinnant_equivalent = uns::calendar::hinnant::datetime{};
+    /*auto hinnant_equivalent = uns::calendar::hinnant::datetime{};
     try {
         hinnant_equivalent = *this;//TODO !!!THIS IS AN ERROR! THIS WILL CAUSE STACK OVERFLOW!!!
     }
     catch (const ::std::runtime_error&) {
         return false;
-    };
+    };*/
 
     const bool is_leap = ::uns::calendar::hinnant::auxiliary::is_leap_year(hinnant_equivalent);
 };
