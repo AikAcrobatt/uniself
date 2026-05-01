@@ -7,85 +7,6 @@
 #ifndef UNS_LIB_CALENDAR
 #define UNS_LIB_CALENDAR
 
-namespace uns::calendar::hinnant {
-    //this is an auxiliary calendar inspired with the article of Howard Hinnant
-    //https://howardhinnant.github.io/date_algorithms.html
-
-    using clock_type = ::std::chrono::utc_clock;
-    using time_point = typename clock_type::time_point;
-
-
-    UNS_RENUM(age, uint8_t
-        , (a0, = 0)
-        , (a1, = 1)
-        , (a2, = 2)
-        , (a3, = 3)
-    );
-
-
-    UNS_RENUM(fouryear, uint8_t
-        , (f0, = 0)
-        , (f1, = 1)
-        , (f2, = 2)
-        , (f3, = 3)
-        , (f4, = 4)
-        , (f5, = 5)
-        , (f6, = 6)
-        , (f7, = 7)
-        , (f8, = 8)
-        , (f9, = 9)
-        , (f10, = 10)
-        , (f11, = 11)
-        , (f12, = 12)
-        , (f13, = 13)
-        , (f14, = 14)
-        , (f15, = 15)
-        , (f16, = 16)
-        , (f17, = 17)
-        , (f18, = 18)
-        , (f19, = 19)
-        , (f20, = 20)
-        , (f21, = 21)
-        , (f22, = 22)
-        , (f23, = 23)
-        , (f24, = 24)
-    );
-
-
-    UNS_RENUM(year_of_four, uint8_t
-        , (y0, = 0)
-        , (y1, = 1)
-        , (y2, = 2)
-        , (y3, = 3)
-    );
-
-
-    class datetime {
-    public:
-        int fourage = -1;
-        ::uns::calendar::hinnant::age age = ::uns::calendar::hinnant::age::a3;
-        ::uns::calendar::hinnant::fouryear fouryear = ::uns::calendar::hinnant::fouryear::f17;
-        ::uns::calendar::hinnant::year_of_four year = ::uns::calendar::hinnant::year_of_four::y1;
-        int day = 306;
-        int seconds = 0;
-        int nanoseconds = 0;
-    public:
-        datetime() noexcept = default;  //the default value matches POSIX epoch
-        explicit datetime(const ::uns::calendar::hinnant::time_point& TimePoint) noexcept;
-        datetime(const ::uns::calendar::hinnant::datetime&) noexcept = default;
-        ::uns::calendar::hinnant::datetime& operator=(const ::uns::calendar::hinnant::datetime&) noexcept = default;
-        datetime(::uns::calendar::hinnant::datetime&&) noexcept = default;
-        ::uns::calendar::hinnant::datetime& operator=(::uns::calendar::hinnant::datetime&&) noexcept = default;
-        ~datetime() noexcept = default;
-    public:
-        operator time_point() const;
-    public:
-        bool ok() const noexcept;
-    };
-
-};
-
-
 namespace uns::calendar::gregorian {
 
     UNS_RENUM(month, uint8_t
@@ -293,8 +214,8 @@ namespace uns::calendar::gregorian {
     );
 
 
-    using clock_type = ::uns::calendar::hinnant::clock_type;
-    using time_point = ::uns::calendar::hinnant::time_point;
+    using clock_type = ::std::chrono::system_clock;
+    using time_point = typename ::uns::calendar::gregorian::clock_type::time_point;
 
 
     class datetime {
@@ -309,14 +230,11 @@ namespace uns::calendar::gregorian {
     public:
         datetime() noexcept = default;
         explicit datetime(const ::uns::calendar::gregorian::time_point& TimePoint) noexcept;
-        explicit datetime(const ::uns::calendar::hinnant::datetime& HinnantDateTime);
         datetime(const ::uns::calendar::gregorian::datetime&) noexcept = default;
         ::uns::calendar::gregorian::datetime& operator=(const ::uns::calendar::gregorian::datetime&) noexcept = default;
         datetime(::uns::calendar::gregorian::datetime&&) noexcept = default;
         ::uns::calendar::gregorian::datetime& operator=(::uns::calendar::gregorian::datetime&&) noexcept = default;
         ~datetime() noexcept = default;
-    public:
-        operator ::uns::calendar::hinnant::datetime() const;
     public:
         operator time_point() const;
     public:
