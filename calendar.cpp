@@ -4,58 +4,6 @@
 #include <exception>
 #include <tuple>
 
-namespace uns::calendar::hinnant::auxiliary {
-
-    constexpr auto offset_posix_to_this_epoch = ::std::chrono::seconds{};
-
-
-    ::uns::calendar::gregorian::datetime get_epoch() noexcept {
-        auto gregorian_hinnant_epoch = ::uns::calendar::gregorian::datetime{};
-
-        gregorian_hinnant_epoch.year = 2000;
-        gregorian_hinnant_epoch.month = ::uns::calendar::gregorian::month::march;
-        gregorian_hinnant_epoch.day = ::uns::calendar::gregorian::day_of_month::d01;
-
-        gregorian_hinnant_epoch.hours = ::uns::calendar::gregorian::hour::h00;
-        gregorian_hinnant_epoch.minutes = ::uns::calendar::gregorian::minute::m00;
-        gregorian_hinnant_epoch.seconds = ::uns::calendar::gregorian::second::s00;
-
-        gregorian_hinnant_epoch.nanoseconds = 0;
-
-        return gregorian_hinnant_epoch;
-    };
-
-
-    bool is_leap_year(
-        const ::uns::calendar::hinnant::age& Age
-        , const ::uns::calendar::hinnant::fouryear& Fouryear
-        , const ::uns::calendar::hinnant::year_of_four& Year
-    ) noexcept {
-        if (Year == ::uns::calendar::hinnant::year_of_four::y3) {
-            if (Fouryear != ::uns::calendar::hinnant::fouryear::f24) {
-                return true;
-            }
-            else {
-                if (Age == ::uns::calendar::hinnant::age::a3) {
-                    return true;
-                };
-            };
-        };
-
-        return false;
-    };
-    bool is_leap_year(
-        const ::uns::calendar::hinnant::datetime& HinnantDateTime
-    ) noexcept {
-        return ::uns::calendar::hinnant::auxiliary::is_leap_year(
-            HinnantDateTime.age
-            , HinnantDateTime.fouryear
-            , HinnantDateTime.year
-        );
-    };
-};
-
-
 namespace uns::calendar::gregorian::auxiliary {
 
     constexpr int seconds_per_day = 86400;
@@ -123,7 +71,7 @@ namespace uns::calendar::gregorian::auxiliary {
         if (
             pivot_month.begin <= HinnantDayOfYear
             && HinnantDayOfYear <= pivot_month.end
-        ) {
+            ) {
             return {
                 months_idxs[pivot_month_idx]
                 , static_cast<::uns::calendar::gregorian::day_of_month::enum_type>(
@@ -157,6 +105,65 @@ namespace uns::calendar::gregorian::auxiliary {
         );
     };
 
+};
+
+
+namespace uns::calendar::hinnant::auxiliary {
+
+    constexpr auto offset_posix_to_this_epoch = ::std::chrono::seconds{
+        ::uns::calendar::gregorian::auxiliary::seconds_per_day
+        * (
+            7 * ::uns::calendar::gregorian::auxiliary::days_per_fouryear
+            + 2 * ::uns::calendar::gregorian::auxiliary::days_per_year
+            + 59    //january + february of 1970 year
+        )
+    };
+    constexpr int offset_posix_to_hinnant_years = 2000;
+
+    ::uns::calendar::gregorian::datetime get_epoch() noexcept {
+        auto gregorian_hinnant_epoch = ::uns::calendar::gregorian::datetime{};
+
+        gregorian_hinnant_epoch.year = ::uns::calendar::hinnant::auxiliary::offset_posix_to_hinnant_years;
+        gregorian_hinnant_epoch.month = ::uns::calendar::gregorian::month::march;
+        gregorian_hinnant_epoch.day = ::uns::calendar::gregorian::day_of_month::d01;
+
+        gregorian_hinnant_epoch.hours = ::uns::calendar::gregorian::hour::h00;
+        gregorian_hinnant_epoch.minutes = ::uns::calendar::gregorian::minute::m00;
+        gregorian_hinnant_epoch.seconds = ::uns::calendar::gregorian::second::s00;
+
+        gregorian_hinnant_epoch.nanoseconds = 0;
+
+        return gregorian_hinnant_epoch;
+    };
+
+
+    bool is_leap_year(
+        const ::uns::calendar::hinnant::age& Age
+        , const ::uns::calendar::hinnant::fouryear& Fouryear
+        , const ::uns::calendar::hinnant::year_of_four& Year
+    ) noexcept {
+        if (Year == ::uns::calendar::hinnant::year_of_four::y3) {
+            if (Fouryear != ::uns::calendar::hinnant::fouryear::f24) {
+                return true;
+            }
+            else {
+                if (Age == ::uns::calendar::hinnant::age::a3) {
+                    return true;
+                };
+            };
+        };
+
+        return false;
+    };
+    bool is_leap_year(
+        const ::uns::calendar::hinnant::datetime& HinnantDateTime
+    ) noexcept {
+        return ::uns::calendar::hinnant::auxiliary::is_leap_year(
+            HinnantDateTime.age
+            , HinnantDateTime.fouryear
+            , HinnantDateTime.year
+        );
+    };
 };
 
 
@@ -215,7 +222,11 @@ namespace uns::calendar::gregorian::auxiliary {
     seconds = seconds_since_epoch % ::uns::calendar::gregorian::auxiliary::seconds_per_day;
 };
 
-::uns::calendar::hinnant::datetime::operator ::uns::calendar::hinnant::time_point() const noexcept {
+::uns::calendar::hinnant::datetime::operator ::uns::calendar::hinnant::time_point() const {
+    if (!ok()) {
+        throw ::std::runtime_error{ "Hinnant datetime is invalid" };
+    };
+
     constexpr auto _1s = ::std::chrono::seconds{ 1 };
     constexpr auto _1d = _1s * ::uns::calendar::gregorian::auxiliary::seconds_per_day;
 
@@ -263,10 +274,10 @@ bool ::uns::calendar::hinnant::datetime::ok() const noexcept {
 };
 
 
-::uns::calendar::gregorian::datetime::datetime(const ::uns::calendar::gregorian::time_point& TimePoint) :
-    datetime(
+::uns::calendar::gregorian::datetime::datetime(const ::uns::calendar::gregorian::time_point& TimePoint) noexcept :
+    datetime{
         ::uns::calendar::hinnant::datetime{ TimePoint }
-    )
+    }
 {};
 ::uns::calendar::gregorian::datetime::datetime(const ::uns::calendar::hinnant::datetime& HinnantDateTime) {
     if (!HinnantDateTime.ok()) {
@@ -286,7 +297,7 @@ bool ::uns::calendar::hinnant::datetime::ok() const noexcept {
         ) * static_cast<int>(::uns::calendar::hinnant::year_of_four::size())
         + static_cast<int>(HinnantDateTime.year);
     if (thisobj.year <= 0) {
-        thisobj.year -= 1;  //there wasn't a '0000' year of AC
+        thisobj.year -= 1;  //there wasn't a '0000' year of AC in gregorian calendar
     };
 
     ::std::tie(thisobj.month, thisobj.day) = ::uns::calendar::gregorian::auxiliary::get_month_n_day(HinnantDateTime.day);
@@ -314,12 +325,89 @@ bool ::uns::calendar::hinnant::datetime::ok() const noexcept {
     thisobj.nanoseconds = HinnantDateTime.nanoseconds;
 };
 
-::uns::calendar::gregorian::datetime::operator ::uns::calendar::hinnant::datetime() const noexcept {
+::uns::calendar::gregorian::datetime::operator ::uns::calendar::hinnant::datetime() const {
+    if (!ok()) {
+        throw ::std::runtime_error{ "Gregorian datetime is invalid" };
+    };
+
+    auto hinnant_datetime = ::uns::calendar::hinnant::datetime{};
+
+    hinnant_datetime.nanoseconds = nanoseconds;
+
+    hinnant_datetime.seconds = seconds
+        + static_cast<int>(minutes)
+            * static_cast<int>(::uns::calendar::gregorian::second::size())
+        + static_cast<int>(hours)
+            * static_cast<int>(::uns::calendar::gregorian::minute::size())
+            * static_cast<int>(::uns::calendar::gregorian::second::size());
+
+    int hinnant_year = year;
+    if (hinnant_year < 0) {
+        hinnant_year += 1;  //because there is no 0 year in gregorian calendar
+    };
+    hinnant_year = hinnant_year - ::uns::calendar::hinnant::auxiliary::offset_posix_to_hinnant_years
+        - (month == ::uns::calendar::gregorian::month::january ? 1 : 0)
+        - (month == ::uns::calendar::gregorian::month::february ? 1 : 0);
+
+    hinnant_datetime.fourage =
+        hinnant_year
+        / static_cast<int>(::uns::calendar::hinnant::age::size())
+        / static_cast<int>(::uns::calendar::hinnant::fouryear::size())
+        / static_cast<int>(::uns::calendar::hinnant::year_of_four::size());
+    if (hinnant_year < 0) {
+        hinnant_datetime.fourage -= 1;
+    };
+
+    int hinnant_age = 
+        hinnant_year
+        / static_cast<int>(::uns::calendar::hinnant::fouryear::size())
+        / static_cast<int>(::uns::calendar::hinnant::year_of_four::size());
+    if (hinnant_year < 0) {
+        hinnant_age += static_cast<int>(::uns::calendar::hinnant::age::size() - 1);
+    };
+    hinnant_datetime.age = static_cast<::uns::calendar::hinnant::age::enum_type>(hinnant_age);
+
+    int hinnant_fouryear =
+        hinnant_year
+        / static_cast<int>(::uns::calendar::hinnant::year_of_four::size());
+    if (hinnant_year < 0) {
+        hinnant_fouryear += static_cast<int>(::uns::calendar::hinnant::fouryear::size() - 1);
+    };
+    hinnant_datetime.fouryear = static_cast<::uns::calendar::hinnant::fouryear::enum_type>(hinnant_fouryear);
+
+    hinnant_year =
+        hinnant_year
+        % static_cast<int>(::uns::calendar::hinnant::year_of_four::size());
+    if (hinnant_year < 0) {
+        hinnant_year += static_cast<int>(::uns::calendar::hinnant::year_of_four::size() - 1);
+    };
+    hinnant_datetime.year = static_cast<::uns::calendar::hinnant::year_of_four::enum_type>(hinnant_year);
 };
 
-::uns::calendar::gregorian::datetime::operator time_point() const noexcept {
+::uns::calendar::gregorian::datetime::operator time_point() const {
     return static_cast<::uns::calendar::hinnant::datetime>(*this);
 };
 
 bool ::uns::calendar::gregorian::datetime::ok() const noexcept {
+    if (year == 0) return false;    //gregorian year cannot be 0 (-1 year was followed by 1 year)
+
+    if (
+        nanoseconds < 0
+        || nanoseconds >= (
+            ::std::chrono::seconds{ 1 }
+            / ::std::chrono::nanoseconds{ 1 }
+        )
+    ) {
+        return false;
+    };
+
+    auto hinnant_equivalent = uns::calendar::hinnant::datetime{};
+    try {
+        hinnant_equivalent = *this;//TODO !!!THIS IS AN ERROR! THIS WILL CAUSE STACK OVERFLOW!!!
+    }
+    catch (const ::std::runtime_error&) {
+        return false;
+    };
+
+    const bool is_leap = ::uns::calendar::hinnant::auxiliary::is_leap_year(hinnant_equivalent);
 };

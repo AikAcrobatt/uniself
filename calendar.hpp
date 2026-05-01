@@ -8,6 +8,8 @@
 #define UNS_LIB_CALENDAR
 
 namespace uns::calendar::hinnant {
+    //this is an auxiliary calendar inspired with the article of Howard Hinnant
+    //https://howardhinnant.github.io/date_algorithms.html
 
     using clock_type = ::std::chrono::utc_clock;
     using time_point = typename clock_type::time_point;
@@ -69,14 +71,14 @@ namespace uns::calendar::hinnant {
         int nanoseconds = 0;
     public:
         datetime() noexcept = default;  //the default value matches POSIX epoch
-        explicit datetime(const ::uns::calendar::hinnant::time_point& TimePoint) ;
+        explicit datetime(const ::uns::calendar::hinnant::time_point& TimePoint) noexcept;
         datetime(const ::uns::calendar::hinnant::datetime&) noexcept = default;
         ::uns::calendar::hinnant::datetime& operator=(const ::uns::calendar::hinnant::datetime&) noexcept = default;
         datetime(::uns::calendar::hinnant::datetime&&) noexcept = default;
         ::uns::calendar::hinnant::datetime& operator=(::uns::calendar::hinnant::datetime&&) noexcept = default;
         ~datetime() noexcept = default;
     public:
-        operator time_point() const noexcept;
+        operator time_point() const;
     public:
         bool ok() const noexcept;
     };
@@ -306,7 +308,7 @@ namespace uns::calendar::gregorian {
         int nanoseconds = 0;
     public:
         datetime() noexcept = default;
-        explicit datetime(const ::uns::calendar::gregorian::time_point& TimePoint);
+        explicit datetime(const ::uns::calendar::gregorian::time_point& TimePoint) noexcept;
         explicit datetime(const ::uns::calendar::hinnant::datetime& HinnantDateTime);
         datetime(const ::uns::calendar::gregorian::datetime&) noexcept = default;
         ::uns::calendar::gregorian::datetime& operator=(const ::uns::calendar::gregorian::datetime&) noexcept = default;
@@ -314,9 +316,9 @@ namespace uns::calendar::gregorian {
         ::uns::calendar::gregorian::datetime& operator=(::uns::calendar::gregorian::datetime&&) noexcept = default;
         ~datetime() noexcept = default;
     public:
-        operator ::uns::calendar::hinnant::datetime() const noexcept;
+        operator ::uns::calendar::hinnant::datetime() const;
     public:
-        operator time_point() const noexcept;
+        operator time_point() const;
     public:
         bool ok() const noexcept;
     };
