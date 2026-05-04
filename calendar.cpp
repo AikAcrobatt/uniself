@@ -27,16 +27,16 @@
         ).count();
 };
 
-::uns::calendar::gregorian::datetime::operator time_point() const {
+::uns::calendar::gregorian::datetime::operator uns::calendar::gregorian::time_point() const {
     const auto ymd = ::std::chrono::year_month_day{
         ::std::chrono::year(year),
-        ::std::chrono::month(static_cast<::uns::calendar::gregorian::month::integral_type>(month)),
-        ::std::chrono::day(static_cast<::uns::calendar::gregorian::day_of_month::integral_type>(day))
+        ::std::chrono::month(static_cast<::uns::calendar::gregorian::month::integral_type>(month) + 1),
+        ::std::chrono::day(static_cast<::uns::calendar::gregorian::day_of_month::integral_type>(day) + 1)
     };
 
     if (!ymd.ok()) return {};
 
-    auto time = ::std::chrono::system_clock::time_point{ ::std::chrono::sys_days(ymd) };
+    auto time = ::uns::calendar::gregorian::time_point{ ::std::chrono::sys_days(ymd) };
 
     time += ::std::chrono::hours{ 1 } * static_cast<::uns::calendar::gregorian::hour::integral_type>(hours);
     time += ::std::chrono::minutes{ 1 } * static_cast<::uns::calendar::gregorian::minute::integral_type>(minutes);
@@ -50,8 +50,8 @@
 bool ::uns::calendar::gregorian::datetime::ok() const noexcept {
     const auto ymd = ::std::chrono::year_month_day{
         ::std::chrono::year(year),
-        ::std::chrono::month(static_cast<::uns::calendar::gregorian::month::integral_type>(month)),
-        ::std::chrono::day(static_cast<::uns::calendar::gregorian::day_of_month::integral_type>(day))
+        ::std::chrono::month(static_cast<::uns::calendar::gregorian::month::integral_type>(month) + 1),
+        ::std::chrono::day(static_cast<::uns::calendar::gregorian::day_of_month::integral_type>(day) + 1)
     };
 
     if (!ymd.ok()) return false;
