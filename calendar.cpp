@@ -64,9 +64,17 @@ bool ::uns::calendar::gregorian::datetime::ok() const noexcept {
     m_isok(DateTime.ok())
 {
     const auto ymd = ::std::chrono::year_month_day{
-        ::std::chrono::year(DateTime.year)
-        , ::std::chrono::month(DateTime.month)
-        , ::std::chrono::day(DateTime.day)
+        ::std::chrono::year{ DateTime.year }
+        , ::std::chrono::month{
+            static_cast<unsigned int>(
+                static_cast<::uns::calendar::gregorian::month::integral_type>(DateTime.month)
+            ) + 1
+        }
+        , ::std::chrono::day{
+            static_cast<unsigned int>(
+                static_cast<::uns::calendar::gregorian::day_of_month::integral_type>(DateTime.day)
+            ) + 1
+        }
     };
 
     const auto weekday = ::std::chrono::weekday{
@@ -76,13 +84,9 @@ bool ::uns::calendar::gregorian::datetime::ok() const noexcept {
     m_year_is_leap = ymd.year().is_leap();
     m_weekday = static_cast<::uns::calendar::gregorian::weekday::enum_type>(weekday.iso_encoding() - 1);
     m_day_of_year = (::std::chrono::sys_days(ymd) - ::std::chrono::sys_days(::std::chrono::year(DateTime.year) / 1 / 1)).count() + 1;
-    m_week_of_year = (m_day_of_year/* - static_cast<::uns::calendar::gregorian::weekday::integral_type>(m_weekday)*/) / 7 + 1;
 };
 ::uns::calendar::gregorian::weekday uns::calendar::gregorian::traits::weekday() const noexcept {
     return m_weekday;
-};
-int ::uns::calendar::gregorian::traits::week_of_year() const noexcept {
-    return m_week_of_year;
 };
 int ::uns::calendar::gregorian::traits::day_of_year() const noexcept {
     return m_day_of_year;

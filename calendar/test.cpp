@@ -5,6 +5,7 @@
 
 #include <chrono>
 #include <vector>
+#include <tuple>
 
 #include "gtest/gtest.h"
 
@@ -15,6 +16,38 @@ namespace uns::tests::calendar {
     public:
         using param_type = time_point_t;
         using clock = clock_t;
+    public:
+        static ::std::tuple<
+            ::uns::calendar::gregorian::weekday
+            , int
+            , bool
+        > get_traits_values(const param_type& TimePoint) {
+            auto traits_values = ::std::tuple<
+                ::uns::calendar::gregorian::weekday
+                , int
+                , bool
+            >{};
+
+            enum {
+                day_of_week = 0
+                , day_of_year = 1
+                , year_is_leap = 2
+            };
+
+            const auto ymd = ::std::chrono::year_month_day{
+                ::std::chrono::floor<::std::chrono::days>(TimePoint)
+            };
+
+            const auto weekday = ::std::chrono::weekday{
+                ::std::chrono::floor<::std::chrono::days>(::std::chrono::sys_days(ymd))
+            };
+
+            ::std::get<year_is_leap>(traits_values) = ymd.year().is_leap();
+            ::std::get<day_of_week>(traits_values) = static_cast<::uns::calendar::gregorian::weekday::enum_type>(weekday.iso_encoding() - 1);
+            ::std::get<day_of_year>(traits_values) = (::std::chrono::sys_days(ymd) - ::std::chrono::sys_days(ymd.year() / 1 / 1)).count() + 1;
+            
+            return traits_values;
+        };
     public:
         static ::std::vector<param_type> generate_tests() {
             auto result = ::std::vector<param_type>{};
@@ -44,6 +77,7 @@ namespace uns::tests::calendar {
     bool has_additive_nanoseconds(const ::uns::calendar::gregorian::datetime& DateTime) noexcept {
         return DateTime.nanoseconds < ::std::chrono::seconds{ 1 } / ::std::chrono::nanoseconds{ 1 } - 2000;
     };
+
 };
 
 using GregorianTrivialTests = ::uns::tests::calendar::trivial_tests<
@@ -66,7 +100,7 @@ TEST_P(GregorianTrivialTests, FwdCast) {
         , static_cast<::uns::calendar::gregorian::time_point>(datetime)
     );
 };
-TEST_P(GregorianTrivialTests, AdditiveCheck) {
+TEST_P(GregorianTrivialTests, AdditiveTest) {
     const auto time_point = GetParam();
     auto time_point1 = time_point;
 
@@ -211,7 +245,7 @@ TEST_P(GregorianTrivialTests, AdditiveCheck) {
         ASSERT_TRUE(datetime1.ok());
     };
 };
-TEST_P(GregorianTrivialTests, OkCkeck) {
+TEST_P(GregorianTrivialTests, OkTest) {
     const auto time_point = GetParam();
 
     auto datetime = ::uns::calendar::gregorian::datetime(time_point);
@@ -219,6 +253,19 @@ TEST_P(GregorianTrivialTests, OkCkeck) {
 
     datetime.nanoseconds = ::std::chrono::seconds{ 1 } / ::std::chrono::nanoseconds{ 1 };
     ASSERT_FALSE(datetime.ok());
+};
+TEST_P(GregorianTrivialTests, TraitsTest) {
+    const auto time_point = GetParam();
+
+    const auto [weekday, day_of_year, year_is_leap] = get_traits_values(time_point);
+
+    const auto datetime = ::uns::calendar::gregorian::datetime{ time_point };
+    const auto date_traits = ::uns::calendar::gregorian::traits{ datetime };
+    ASSERT_TRUE(date_traits.ok());
+
+    ASSERT_EQ(date_traits.year_is_leap(), year_is_leap);
+    ASSERT_EQ(date_traits.day_of_year(), day_of_year);
+    ASSERT_EQ(date_traits.weekday(), weekday);
 };
 INSTANTIATE_TEST_CASE_P(Calendar, GregorianTrivialTests,
     ::testing::ValuesIn(

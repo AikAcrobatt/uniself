@@ -257,7 +257,6 @@ namespace uns::calendar::gregorian {
     private:
         bool m_isok = true;
         ::uns::calendar::gregorian::weekday m_weekday = ::uns::calendar::gregorian::weekday::sunday;
-        int m_week_of_year = 0;
         int m_day_of_year = 0;
         bool m_year_is_leap = false;
     public:
@@ -265,7 +264,6 @@ namespace uns::calendar::gregorian {
         traits(const ::uns::calendar::gregorian::datetime& DateTime);
     public:
         ::uns::calendar::gregorian::weekday weekday() const noexcept;
-        int week_of_year() const noexcept;
         int day_of_year() const noexcept;
         bool year_is_leap() const noexcept;
         bool ok() const noexcept;
