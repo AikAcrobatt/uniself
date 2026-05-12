@@ -8,7 +8,7 @@
 #include <array>
 
 #include "uniself/strings.hpp"
-#include "uniself/renum.hpp"
+#include "uniself/benum.hpp"
 
 #ifndef UNS_LIB_LUA_WRAPPER
 #define UNS_LIB_LUA_WRAPPER
@@ -17,29 +17,30 @@ struct lua_State;
 
 namespace uns::lua {
 
-    UNS_RENUM(errcode, int
-        , (ok,)
-        , (yeld,)
-        , (errrun,)
-        , (errsyntax,)
-        , (errmem,)
-        , (errerr,)
-        , (errcall)
+    
+    UNS_BENUM_DECLARATOR(errcode, int,
+        ok,
+        yeld,
+        errrun,
+        errsyntax,
+        errmem,
+        errerr,
+        errcall
     );
 
 
-    UNS_RENUM(errtype, int
-        , (ok, = 0x0)
-        , (lua_specific,)
-        , (invalid,)
-        , (uncallable,)
-        , (unrepresentable,)
-        , (not_found)
+    UNS_BENUM_DECLARATOR(errtype, int,
+        ok = 0x0,
+        lua_specific,
+        invalid,
+        uncallable,
+        unrepresentable,
+        not_found
     );
 
 
     class error {
-    private:
+    protected:
         ::uns::lua::errcode m_code = ::uns::lua::errcode::ok;
         ::uns::lua::errtype m_type = ::uns::lua::errtype::ok;
         ::std::string m_text = "";
@@ -54,14 +55,15 @@ namespace uns::lua {
         error(::uns::lua::error&& obj);
         ::uns::lua::error& operator=(::uns::lua::error&& obj);
         ~error();
-    public:
+
         void swap(::uns::lua::error& obj);
-    public:
+
         bool is() const;
+
         ::uns::lua::errcode code() const;
         ::uns::lua::errtype type() const;
         ::std::string text() const;
-    public:
+
         ::std::u8string to_string() const;
     };
 
@@ -73,13 +75,12 @@ namespace uns::lua {
 
 
     namespace auxiliary {
-
         class table;
 
         class state;
 
         class state_wrapper {
-        private:
+        protected:
             ::uns::lua::alias::lua_state m_state = nullptr;
         public:
             inline state_wrapper() :
@@ -105,23 +106,23 @@ namespace uns::lua {
                 return *this;
             };
             inline ~state_wrapper() {};
-        public:
+
             inline bool valid() const { return m_state != nullptr; };
-        public:
+
             inline const ::uns::lua::alias::lua_state get() const { return m_state; };
             inline ::uns::lua::alias::lua_state get() { return m_state; };
         };
     };
 
 
-    UNS_RENUM(value_type, int,
-        , (nil, = -1)
-        , (boolean, = 0)
-        , (number, = 1)
-        , (integer, = 2)
-        , (string, = 3)
-        , (table, = 4)
-        , (userdata, = 5)
+    UNS_BENUM_DECLARATOR(value_type, int,
+        nil = -1,
+        boolean = 0,
+        number = 1,
+        integer = 2,
+        string = 3,
+        table = 4,
+        userdata = 5
     );
 
 
@@ -130,7 +131,6 @@ namespace uns::lua {
 
 
     namespace type {
-
         class nil {};
 
         using boolean = bool;
@@ -147,14 +147,14 @@ namespace uns::lua {
                 || ::std::same_as<::uns::lua::type::boolean, key_t>
                 || ::std::same_as<::uns::lua::type::string, key_t>
             using const_iterator = std::unordered_map<key_t, ::uns::lua::value>::const_iterator;
-        public:
+
             template<class key_t>
             requires ::std::same_as<::uns::lua::type::number, key_t>
                 || ::std::same_as<::uns::lua::type::integer, key_t>
                 || ::std::same_as<::uns::lua::type::boolean, key_t>
                 || ::std::same_as<::uns::lua::type::string, key_t>
             using iterator = std::unordered_map<key_t, ::uns::lua::value>::iterator;
-        private:
+        protected:
             ::std::unique_ptr<::uns::lua::auxiliary::table> m_ptr = nullptr;
         public:
             table();
@@ -163,10 +163,10 @@ namespace uns::lua {
             table(::uns::lua::type::table&&);
             ::uns::lua::type::table& operator=(::uns::lua::type::table&&);
             ~table();
-        public:
+
             bool operator==(const ::uns::lua::type::table&) const;
             bool operator!=(const ::uns::lua::type::table&) const;
-        public:
+
             template<::std::floating_point key_t>
             ::uns::lua::value operator[] (const key_t&) const;
             template<::std::floating_point key_t>
@@ -191,14 +191,14 @@ namespace uns::lua {
             ::uns::lua::value& operator[] (const char8_t*);
             ::uns::lua::value operator[] (const ::uns::lua::value&) const;
             ::uns::lua::value& operator[] (const ::uns::lua::value&);
-        public:
+
             ::std::size_t size() const;
-        public:
+
             template<class key_t>
             const_iterator<key_t> cbegin() const;
             template<class key_t>
             const_iterator<key_t> cend() const;
-        public:
+
             template<class key_t>
             iterator<key_t> begin();
             template<class key_t>
@@ -211,9 +211,8 @@ namespace uns::lua {
 
 
     class value {
-    private:
+    protected:
         using push_function_type = void(*)(::uns::lua::alias::lua_state, const ::uns::lua::value&);
-    private:
         ::uns::lua::value_type m_type = ::uns::lua::value_type::nil;
         ::uns::lua::type::boolean m_boolean = false;
         ::uns::lua::type::number m_number = static_cast<::uns::lua::type::number>(0);
@@ -256,16 +255,16 @@ namespace uns::lua {
         value(::uns::lua::value&& obj);
         ::uns::lua::value& operator=(::uns::lua::value&& obj);
         ~value();
-    public:
+
         template<typename val_t>
         ::uns::lua::value& operator=(const val_t& obj) {
             return (*this = ::uns::lua::value{ obj });
         };
-    public:
+
         bool operator==(const ::uns::lua::value& obj) const;
         bool operator!=(const ::uns::lua::value& obj) const;
-    public:
-#define UNS_LUA_VALUE_CONVERT_DECLARATOR(type_identifier)                               \
+
+#define UNS_LUA_VALUE_CONVERT_DECLARATOR(type_identifier)                                        \
         operator const ::uns::lua::type::##type_identifier&() const;                    \
         operator ::uns::lua::type::##type_identifier&();                                \
 
@@ -274,22 +273,22 @@ namespace uns::lua {
         UNS_LUA_VALUE_CONVERT_DECLARATOR(integer);
         UNS_LUA_VALUE_CONVERT_DECLARATOR(string);
         UNS_LUA_VALUE_CONVERT_DECLARATOR(table);
-    public:
+
         operator const ::uns::lua::type::userdata() const;
         operator ::uns::lua::type::userdata& ();
 #undef UNS_LUA_VALUE_CONVERT_DECLARATOR
-    public:
+
         inline ::uns::lua::value_type type() const { return m_type; };
-    public:
+
         void push_to(::uns::lua::thread& thread) const;
         void push_to(::uns::lua::auxiliary::state& thread) const;
         void push_to(::uns::lua::alias::lua_state stack) const;
-    public:
+
         ::std::u8string to_string() const;
-    public:
+
         static ::uns::lua::value make_from(::uns::lua::auxiliary::state& thread, int idx);
         static ::uns::lua::value make_from(::uns::lua::alias::lua_state stack, int idx);
-    private:
+    protected:
         static void push_nil(::uns::lua::alias::lua_state stack, const ::uns::lua::value& value);
 #define UNS_LUA_VALUE_PUSH_DECLARATOR(type_identifier)                                            \
         static void push_##type_identifier(::uns::lua::alias::lua_state stack, const ::uns::lua::value& value);                                                                                        \
@@ -306,7 +305,7 @@ namespace uns::lua {
 
     namespace auxiliary {
         class table {
-        private:
+        protected:
             ::std::unordered_map<::uns::lua::type::number, ::uns::lua::value> m_key_number;
             ::std::unordered_map<::uns::lua::type::integer, ::uns::lua::value> m_key_integer;
             ::std::unordered_map<::uns::lua::type::boolean, ::uns::lua::value> m_key_boolean;
@@ -402,7 +401,7 @@ namespace uns::lua {
     public:
         class results {
             friend ::uns::lua::function;
-        private:
+        protected:
             ::uns::lua::auxiliary::state_wrapper m_stack_wrapper;
             ::std::shared_ptr<::uns::lua::auxiliary::state> m_stack = nullptr;
             long int m_function_idx = 0;
@@ -436,20 +435,20 @@ namespace uns::lua {
             };
 
             ::uns::lua::value get() const;
-        private:
+        protected:
             ::std::array<::uns::lua::value, 2> get_2() const;
             ::std::array<::uns::lua::value, 3> get_3() const;
             ::std::array<::uns::lua::value, 4> get_4() const;
             ::std::array<::uns::lua::value, 5> get_5() const;
         };
-    private:
+    protected:
         ::uns::lua::auxiliary::state_wrapper m_stack_wrapper;
         ::std::shared_ptr<::uns::lua::auxiliary::state> m_stack = nullptr;
         ::std::string m_function_name = "";
         ::uns::lua::error m_err;
     public:
         inline function() {};
-    private:
+    protected:
         function(const ::std::shared_ptr<::uns::lua::auxiliary::state>& lua_script, const ::std::string& lua_global_function_name);
         function(::uns::lua::auxiliary::state_wrapper& lua_script, const ::std::string& lua_global_function_name);
     public:
@@ -481,14 +480,14 @@ namespace uns::lua {
     class global {
         friend ::uns::lua::script;
         friend ::uns::lua::thread;
-    private:
+    protected:
         ::uns::lua::auxiliary::state_wrapper m_stack_wrapper;
         ::std::shared_ptr<::uns::lua::auxiliary::state> m_stack = nullptr;
         ::std::string m_global_name = "";
         ::uns::lua::error m_err;
     public:
         inline global() {};
-    private:
+    protected:
         global(const ::std::shared_ptr<::uns::lua::auxiliary::state>& lua_script, const ::std::string& lua_global_variable_name);
         global(::uns::lua::auxiliary::state_wrapper& lua_script, const ::std::string& lua_global_variable_name);
     public:
@@ -520,10 +519,10 @@ namespace uns::lua {
     class thread {
         friend ::uns::lua::value;
         friend ::uns::lua::lib_entry;
-    private:
+    protected:
         mutable ::uns::lua::auxiliary::state_wrapper m_stack;
         ::uns::lua::error m_err;
-    private:
+    protected:
         thread() = delete;
     public:
         thread(::uns::lua::alias::lua_state);
@@ -1353,7 +1352,7 @@ namespace uns::lua {
 
 
     class lib_entry {
-    private:
+    protected:
         ::std::string m_name;
         ::uns::lua::alias::lua_cfunction m_function = nullptr;
     public:
@@ -1638,7 +1637,7 @@ namespace uns::lua {
 
 
     class script {
-    private:
+    protected:
         ::std::shared_ptr<::uns::lua::auxiliary::state> m_stack = nullptr;
         ::uns::lua::error m_err;
     public:
