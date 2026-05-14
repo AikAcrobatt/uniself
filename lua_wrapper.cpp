@@ -57,10 +57,10 @@ bool ::uns::lua::error::is() const { return (m_code != ::uns::lua::errcode{ ::un
 ::uns::lua::errtype uns::lua::error::type() const { return m_type; };
 ::std::string uns::lua::error::text() const { return m_text; };
 
-::std::u8string uns::lua::error::to_string() const {
-    return u8"'" + ::uns::string::cast<::std::u8string>(m_text)
-        + u8"' [err = " + ::uns::string::cast<::std::u8string>(m_code)
-        + u8", type = " + ::uns::string::cast<::std::u8string>(m_type) + u8"]";
+::std::u32string uns::lua::error::to_string() const {
+    return U"'" + ::uns::string::cast<::std::u32string>(m_text)
+        + U"' [err = " + ::uns::string::cast<::std::u32string>(m_code)
+        + U", type = " + ::uns::string::cast<::std::u32string>(m_type) + U"]";
 };
 //<= class ::uns::lua::error
 
@@ -161,8 +161,8 @@ namespace uns::lua::auxiliary {
     m_string(obj),
     m_push_function(push_string)
 {};
-::uns::lua::value::value(const ::std::u8string obj) : value(::uns::string::cast<::std::string>(obj)) {};
-::uns::lua::value::value(const char8_t* obj) : value(::std::u8string{ obj }) {};
+::uns::lua::value::value(const ::std::u32string obj) : value(::uns::string::cast<::std::string>(obj)) {};
+::uns::lua::value::value(const char32_t* obj) : value(::std::u32string{ obj }) {};
 ::uns::lua::value::value(const ::uns::lua::type::table& obj) :
     m_type(::uns::lua::value_type::table),
     m_table(obj),
@@ -339,36 +339,36 @@ void ::uns::lua::value::push_userdata(::uns::lua::alias::lua_state stack, const 
 #undef UNS_LUA_VALUE_PUSH_DESCRIPTOR
 
 
-::std::u8string uns::lua::value::to_string() const {
+::std::u32string uns::lua::value::to_string() const {
     switch(type()) {
         default:
         case ::uns::lua::value_type::nil:
         {
-            return u8"nil";
+            return U"nil";
         }
         case ::uns::lua::value_type::number:
         {
-            return ::uns::string::cast<::std::u8string>(static_cast<::uns::lua::type::number>(*this));
+            return ::uns::string::cast<::std::u32string>(static_cast<::uns::lua::type::number>(*this));
         }
         case ::uns::lua::value_type::integer:
         {
-            return ::uns::string::cast<::std::u8string>(static_cast<::uns::lua::type::integer>(*this));
+            return ::uns::string::cast<::std::u32string>(static_cast<::uns::lua::type::integer>(*this));
         }
         case ::uns::lua::value_type::boolean:
         {
-            return ::uns::string::cast<::std::u8string>(static_cast<::uns::lua::type::boolean>(*this));
+            return ::uns::string::cast<::std::u32string>(static_cast<::uns::lua::type::boolean>(*this));
         }
         case ::uns::lua::value_type::string:
         {
-            return u8"\"" + ::uns::string::cast<::std::u8string>(static_cast<::uns::lua::type::string>(*this)) + u8"\"";
+            return U"\"" + ::uns::string::cast<::std::u32string>(static_cast<::uns::lua::type::string>(*this)) + U"\"";
         }
         case ::uns::lua::value_type::table:
         {
-            return u8"table " + ::uns::string::cast<::std::u8string>(reinterpret_cast<uint64_t>(this));
+            return U"table " + ::uns::string::cast<::std::u32string>(reinterpret_cast<uint64_t>(this));
         }
         case ::uns::lua::value_type::userdata:
         {
-            return u8"userdata " + ::uns::string::cast<::std::u8string>(reinterpret_cast<uint64_t>(m_userdata));
+            return U"userdata " + ::uns::string::cast<::std::u32string>(reinterpret_cast<uint64_t>(m_userdata));
         }
     };
 };
@@ -400,10 +400,10 @@ bool ::uns::lua::type::table::operator!=(const ::uns::lua::type::table& obj) con
 ::uns::lua::value& ::uns::lua::type::table::operator[] (const ::uns::lua::type::string& key) { return m_ptr->operator[](key); };
 ::uns::lua::value uns::lua::type::table::operator[] (const char* key) const { return const_cast<const ::uns::lua::auxiliary::table&>(*m_ptr).operator[](::uns::lua::type::string{ key }); };
 ::uns::lua::value& ::uns::lua::type::table::operator[] (const char* key) { return m_ptr->operator[](::uns::lua::type::string{ key }); };
-::uns::lua::value uns::lua::type::table::operator[] (const ::std::u8string& key) const { return const_cast<const ::uns::lua::auxiliary::table&>(*m_ptr).operator[](::uns::string::cast<::uns::lua::type::string>(key)); };
-::uns::lua::value& ::uns::lua::type::table::operator[] (const ::std::u8string& key) { return m_ptr->operator[](::uns::string::cast<::uns::lua::type::string>(key)); };
-::uns::lua::value uns::lua::type::table::operator[] (const char8_t* key) const { return this->operator[](::std::u8string{ key }); };
-::uns::lua::value& ::uns::lua::type::table::operator[] (const char8_t* key) { return this->operator[](::std::u8string{ key }); };
+::uns::lua::value uns::lua::type::table::operator[] (const ::std::u32string& key) const { return const_cast<const ::uns::lua::auxiliary::table&>(*m_ptr).operator[](::uns::string::cast<::uns::lua::type::string>(key)); };
+::uns::lua::value& ::uns::lua::type::table::operator[] (const ::std::u32string& key) { return m_ptr->operator[](::uns::string::cast<::uns::lua::type::string>(key)); };
+::uns::lua::value uns::lua::type::table::operator[] (const char32_t* key) const { return this->operator[](::std::u32string{ key }); };
+::uns::lua::value& ::uns::lua::type::table::operator[] (const char32_t* key) { return this->operator[](::std::u32string{ key }); };
 ::uns::lua::value uns::lua::type::table::operator[] (const ::uns::lua::value& key) const { return const_cast<const ::uns::lua::auxiliary::table&>(*m_ptr).operator[](key); };
 ::uns::lua::value& ::uns::lua::type::table::operator[] (const ::uns::lua::value& key) { return m_ptr->operator[](key); };
 
@@ -1078,7 +1078,7 @@ namespace uns::lua::auxiliary {
         return result;
     };
 
-    ::uns::lua::error load(::uns::lua::alias::lua_state stack, const ::std::u8string& text) {
+    ::uns::lua::error load(::uns::lua::alias::lua_state stack, const ::std::u32string& text) {
         if(stack == nullptr) {
             return ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid };
         };
@@ -1099,7 +1099,7 @@ namespace uns::lua::auxiliary {
         return ::uns::lua::error{ ::uns::lua::errcode::ok, ::uns::lua::errtype::ok };
     };
     ::uns::lua::error load(::uns::lua::alias::lua_state stack, const ::std::filesystem::path& file) {
-        auto narrow_path = ::uns::string::cast<::std::string>(::uns::string::cast<::std::u8string>(file.lexically_normal().native()));
+        auto narrow_path = ::uns::string::cast<::std::string>(::uns::string::cast<::std::u32string>(file.lexically_normal().native()));
 
         if(int lua_retcode = luaL_loadfile(stack, narrow_path.c_str()); lua_retcode != LUA_OK) {
             ::std::string err_str = "";
@@ -1128,7 +1128,7 @@ namespace uns::lua::auxiliary {
             lua_pushstring(stack, "loaded");
             lua_gettable(stack, -2);
 
-            auto module_name = ::uns::string::cast<::std::string>(library.module_name + u8"_api");
+            auto module_name = ::uns::string::cast<::std::string>(library.module_name + U"_api");
             lua_pushstring(stack, module_name.c_str());
             lua_newtable(stack);
 
@@ -1238,7 +1238,7 @@ namespace uns::lua::auxiliary {
         gc();
     };
 };
-::std::u8string uns::lua::function::name() const { return ::uns::string::cast<::std::u8string>(m_function_name); };
+::std::u32string uns::lua::function::name() const { return ::uns::string::cast<::std::u32string>(m_function_name); };
 
 bool ::uns::lua::function::valid() const {
     bool result = (m_stack != nullptr || m_stack_wrapper.valid());
@@ -1562,7 +1562,7 @@ void uns::lua::function::gc() {
         gc();
     };
 };
-::std::u8string uns::lua::global::name() const { return ::uns::string::cast<::std::u8string>(m_global_name); };
+::std::u32string uns::lua::global::name() const { return ::uns::string::cast<::std::u32string>(m_global_name); };
 
 ::uns::lua::value uns::lua::global::get() {
     ::uns::lua::alias::lua_state state = nullptr;
@@ -1633,7 +1633,7 @@ void uns::lua::global::gc() {
 void ::uns::lua::thread::load(const ::uns::lua::library& library) {
     m_err = ::uns::lua::auxiliary::load(m_stack.get(), library);
 };
-void ::uns::lua::thread::load(const ::std::u8string& text) {
+void ::uns::lua::thread::load(const ::std::u32string& text) {
     m_err = ::uns::lua::auxiliary::load(m_stack.get(), text);
 };
 void ::uns::lua::thread::load(const ::std::filesystem::path& file) {
@@ -1648,7 +1648,7 @@ void ::uns::lua::thread::call(int results_expected_total) {
     );
 };
 
-::uns::lua::function uns::lua::thread::get_function(const ::std::u8string& lua_global_function_name) {
+::uns::lua::function uns::lua::thread::get_function(const ::std::u32string& lua_global_function_name) {
     if(!valid()) {
         m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid, ::uns::string::cast<::std::string>(lua_global_function_name) };
         return ::uns::lua::function{};
@@ -1657,7 +1657,7 @@ void ::uns::lua::thread::call(int results_expected_total) {
         return ::uns::lua::function{ m_stack, ::uns::string::cast<::std::string>(lua_global_function_name) };
     };
 };
-::uns::lua::global uns::lua::thread::get_global(const ::std::u8string& lua_global_variable_name) {
+::uns::lua::global uns::lua::thread::get_global(const ::std::u32string& lua_global_variable_name) {
     if(!valid()) {
         m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid, ::uns::string::cast<::std::string>(lua_global_variable_name) };
         return ::uns::lua::global{};
@@ -1688,7 +1688,7 @@ int ::uns::lua::thread::raise_error(const ::std::string& errtext) {
     luaL_error((m_stack.get()), errtext.c_str());
     return 0;
 };
-int ::uns::lua::thread::raise_error(const ::std::u8string& errtext) {
+int ::uns::lua::thread::raise_error(const ::std::u32string& errtext) {
     auto l_errtext = ::uns::string::cast<::std::string>(errtext);
     return raise_error(l_errtext);
 };
@@ -1701,7 +1701,7 @@ void ::uns::lua::thread::gc() {
 //<= ::uns::lua::thread
 
 
-::uns::lua::lib_entry::lib_entry(const ::std::u8string& name, ::uns::lua::alias::lua_cfunction lua_function) :
+::uns::lua::lib_entry::lib_entry(const ::std::u32string& name, ::uns::lua::alias::lua_cfunction lua_function) :
     m_name(::uns::string::cast<::std::string>(name)),
     m_function(lua_function)
 {};
@@ -1709,7 +1709,7 @@ void ::uns::lua::thread::gc() {
 
 //class ::uns::lua::script =>
 ::uns::lua::script::script() : m_stack(new ::uns::lua::auxiliary::state{}) {};
-::uns::lua::script::script(const ::std::u8string& text) : m_stack(new ::uns::lua::auxiliary::state{}) {
+::uns::lua::script::script(const ::std::u32string& text) : m_stack(new ::uns::lua::auxiliary::state{}) {
     load(text);
 };
 ::uns::lua::script::script(const ::std::filesystem::path& file) : m_stack(new ::uns::lua::auxiliary::state{}) {
@@ -1745,7 +1745,7 @@ void ::uns::lua::thread::gc() {
 void ::uns::lua::script::load(const ::uns::lua::library& library) {
     m_err = ::uns::lua::auxiliary::load(m_stack->get(), library);
 };
-void ::uns::lua::script::load(const ::std::u8string& text) {
+void ::uns::lua::script::load(const ::std::u32string& text) {
     m_err = ::uns::lua::auxiliary::load(m_stack->get(), text);
 };
 void ::uns::lua::script::load(const ::std::filesystem::path& file) {
@@ -1753,7 +1753,7 @@ void ::uns::lua::script::load(const ::std::filesystem::path& file) {
 };
 
 
-::uns::lua::function uns::lua::script::get_function(const ::std::u8string& lua_global_function_name) {
+::uns::lua::function uns::lua::script::get_function(const ::std::u32string& lua_global_function_name) {
     if(!valid()) {
         m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid, ::uns::string::cast<::std::string>(lua_global_function_name) };
         return ::uns::lua::function{};
@@ -1762,7 +1762,7 @@ void ::uns::lua::script::load(const ::std::filesystem::path& file) {
         return ::uns::lua::function{ m_stack, ::uns::string::cast<::std::string>(lua_global_function_name) };
     };
 };
-::uns::lua::global uns::lua::script::get_global(const ::std::u8string& lua_global_variable_name) {
+::uns::lua::global uns::lua::script::get_global(const ::std::u32string& lua_global_variable_name) {
     if(!valid()) {
         m_err = ::uns::lua::error{ ::uns::lua::errcode::errcall, ::uns::lua::errtype::invalid, ::uns::string::cast<::std::string>(lua_global_variable_name) };
         return ::uns::lua::global{};

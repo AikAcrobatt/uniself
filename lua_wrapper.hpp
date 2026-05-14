@@ -62,7 +62,7 @@ namespace uns::lua {
         ::uns::lua::errtype type() const;
         ::std::string text() const;
     public:
-        ::std::u8string to_string() const;
+        ::std::u32string to_string() const;
     };
 
 
@@ -185,10 +185,10 @@ namespace uns::lua {
             ::uns::lua::value& operator[] (const ::uns::lua::type::string&);
             ::uns::lua::value operator[] (const char*) const;
             ::uns::lua::value& operator[] (const char*);
-            ::uns::lua::value operator[] (const ::std::u8string&) const;
-            ::uns::lua::value& operator[] (const ::std::u8string&);
-            ::uns::lua::value operator[] (const char8_t*) const;
-            ::uns::lua::value& operator[] (const char8_t*);
+            ::uns::lua::value operator[] (const ::std::u32string&) const;
+            ::uns::lua::value& operator[] (const ::std::u32string&);
+            ::uns::lua::value operator[] (const char32_t*) const;
+            ::uns::lua::value& operator[] (const char32_t*);
             ::uns::lua::value operator[] (const ::uns::lua::value&) const;
             ::uns::lua::value& operator[] (const ::uns::lua::value&);
         public:
@@ -246,8 +246,8 @@ namespace uns::lua {
         value(const ::std::string obj);
         value(const char* obj);
         value(const ::std::string_view obj);
-        value(const ::std::u8string obj);
-        value(const char8_t* obj);
+        value(const ::std::u32string obj);
+        value(const char32_t* obj);
         value(const ::uns::lua::type::table& obj);
         value(::uns::lua::type::userdata obj);
         value(const ::uns::lua::type::nil& obj);
@@ -285,7 +285,7 @@ namespace uns::lua {
         void push_to(::uns::lua::auxiliary::state& thread) const;
         void push_to(::uns::lua::alias::lua_state stack) const;
     public:
-        ::std::u8string to_string() const;
+        ::std::u32string to_string() const;
     public:
         static ::uns::lua::value make_from(::uns::lua::auxiliary::state& thread, int idx);
         static ::uns::lua::value make_from(::uns::lua::alias::lua_state stack, int idx);
@@ -462,7 +462,7 @@ namespace uns::lua {
         inline const ::uns::lua::error& error() const { return m_err; };
         inline ::uns::lua::error& error() { return m_err; };
 
-        ::std::u8string name() const;
+        ::std::u32string name() const;
 
         bool valid() const;
 
@@ -502,7 +502,7 @@ namespace uns::lua {
         inline const ::uns::lua::error& error() const { return m_err; };
         inline ::uns::lua::error& error() { return m_err; };
 
-        ::std::u8string name() const;
+        ::std::u32string name() const;
 
         inline bool valid() const { return m_stack != nullptr || m_stack_wrapper.valid(); };
 
@@ -539,19 +539,19 @@ namespace uns::lua {
         inline ::uns::lua::error& error() { return m_err; };
 
         void load(const ::uns::lua::library& library);
-        void load(const ::std::u8string& text);
+        void load(const ::std::u32string& text);
         void load(const ::std::filesystem::path& file);
 
         void call(int results_expected_total);
 
-        ::uns::lua::function get_function(const ::std::u8string& lua_global_function_name);
-        ::uns::lua::global get_global(const ::std::u8string& lua_global_variable_name);
+        ::uns::lua::function get_function(const ::std::u32string& lua_global_function_name);
+        ::uns::lua::global get_global(const ::std::u32string& lua_global_variable_name);
 
         ::std::size_t size() const;
         ::uns::lua::value get_value(int input_index);
 
         int raise_error(const ::std::string& errtext);
-        int raise_error(const ::std::u8string& errtext);
+        int raise_error(const ::std::u32string& errtext);
 
         void gc();
     };
@@ -1358,7 +1358,7 @@ namespace uns::lua {
         ::uns::lua::alias::lua_cfunction m_function = nullptr;
     public:
         inline lib_entry() {};
-        lib_entry(const ::std::u8string& name, ::uns::lua::alias::lua_cfunction lua_function);
+        lib_entry(const ::std::u32string& name, ::uns::lua::alias::lua_cfunction lua_function);
         lib_entry(const ::uns::lua::lib_entry&) = default;
         ::uns::lua::lib_entry& operator=(const ::uns::lua::lib_entry&) = default;
         lib_entry(::uns::lua::lib_entry&&) = default;
@@ -1369,7 +1369,7 @@ namespace uns::lua {
         inline ::uns::lua::alias::lua_cfunction func() const { return m_function; };
 
         template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = name;
@@ -1378,7 +1378,7 @@ namespace uns::lua {
             return res;
         };
         template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1387,7 +1387,7 @@ namespace uns::lua {
             return res;
         };
         template<::uns::lua::value(*wrapped)(::uns::lua::thread&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1396,7 +1396,7 @@ namespace uns::lua {
             return res;
         };
         template<void(*wrapped)(::uns::lua::thread&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1406,7 +1406,7 @@ namespace uns::lua {
         };
 
         template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = name;
@@ -1415,7 +1415,7 @@ namespace uns::lua {
             return res;
         };
         template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1424,7 +1424,7 @@ namespace uns::lua {
             return res;
         };
         template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1433,7 +1433,7 @@ namespace uns::lua {
             return res;
         };
         template<void(*wrapped)(::uns::lua::thread&, const ::std::vector<::uns::lua::value>&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1443,7 +1443,7 @@ namespace uns::lua {
         };
 
         template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = name;
@@ -1452,7 +1452,7 @@ namespace uns::lua {
             return res;
         };
         template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1461,7 +1461,7 @@ namespace uns::lua {
             return res;
         };
         template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1470,7 +1470,7 @@ namespace uns::lua {
             return res;
         };
         template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1480,7 +1480,7 @@ namespace uns::lua {
         };
 
         template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = name;
@@ -1489,7 +1489,7 @@ namespace uns::lua {
             return res;
         };
         template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1498,7 +1498,7 @@ namespace uns::lua {
             return res;
         };
         template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1507,7 +1507,7 @@ namespace uns::lua {
             return res;
         };
         template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1517,7 +1517,7 @@ namespace uns::lua {
         };
 
         template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = name;
@@ -1526,7 +1526,7 @@ namespace uns::lua {
             return res;
         };
         template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1535,7 +1535,7 @@ namespace uns::lua {
             return res;
         };
         template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1544,7 +1544,7 @@ namespace uns::lua {
             return res;
         };
         template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1554,7 +1554,7 @@ namespace uns::lua {
         };
 
         template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = name;
@@ -1563,7 +1563,7 @@ namespace uns::lua {
             return res;
         };
         template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1572,7 +1572,7 @@ namespace uns::lua {
             return res;
         };
         template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1581,7 +1581,7 @@ namespace uns::lua {
             return res;
         };
         template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1591,7 +1591,7 @@ namespace uns::lua {
         };
 
         template<::std::vector<::uns::lua::value>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = name;
@@ -1600,7 +1600,7 @@ namespace uns::lua {
             return res;
         };
         template<::std::size_t result_values_number, ::std::array<::uns::lua::value, result_values_number>(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1609,7 +1609,7 @@ namespace uns::lua {
             return res;
         };
         template<::uns::lua::value(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1618,7 +1618,7 @@ namespace uns::lua {
             return res;
         };
         template<void(*wrapped)(::uns::lua::thread&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&, const ::uns::lua::value&)>
-        static ::uns::lua::lib_entry make(const ::std::u8string& name) {
+        static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
             res.m_name = ::uns::string::u8_cast<::std::string>(name);
@@ -1631,9 +1631,9 @@ namespace uns::lua {
 
     class library {
     public:
-        ::std::u8string module_name = u8"";
+        ::std::u32string module_name = U"";
         ::std::vector<::uns::lua::lib_entry> api;
-        ::std::u8string text = u8"";
+        ::std::u32string text = U"";
     };
 
 
@@ -1643,7 +1643,7 @@ namespace uns::lua {
         ::uns::lua::error m_err;
     public:
         script();
-        script(const ::std::u8string& text);
+        script(const ::std::u32string& text);
         script(const ::std::filesystem::path& file);
         script(const ::uns::lua::library& library);
         script(const ::uns::lua::script& obj);
@@ -1653,7 +1653,7 @@ namespace uns::lua {
         ~script();
 
         void load(const ::uns::lua::library& library);
-        void load(const ::std::u8string& text);
+        void load(const ::std::u32string& text);
         void load(const ::std::filesystem::path& file);
 
         bool valid() const { return m_stack != nullptr; };
@@ -1661,8 +1661,8 @@ namespace uns::lua {
         inline const ::uns::lua::error& error() const { return m_err; };
         inline ::uns::lua::error& error() { return m_err; };
 
-        ::uns::lua::function get_function(const ::std::u8string& lua_global_function_name);
-        ::uns::lua::global get_global(const ::std::u8string& lua_global_variable_name);
+        ::uns::lua::function get_function(const ::std::u32string& lua_global_function_name);
+        ::uns::lua::global get_global(const ::std::u32string& lua_global_variable_name);
 
         void run();
         
