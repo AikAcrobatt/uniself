@@ -364,7 +364,7 @@ void ::uns::lua::value::push_userdata(::uns::lua::alias::lua_state stack, const 
         }
         case ::uns::lua::value_type::table:
         {
-            return U"table " + ::uns::string::cast<::std::u32string>(reinterpret_cast<uint64_t>(this));
+            return static_cast<const ::uns::lua::type::table&>(*this).to_string();
         }
         case ::uns::lua::value_type::userdata:
         {
@@ -392,6 +392,10 @@ void ::uns::lua::value::push_userdata(::uns::lua::alias::lua_state stack, const 
     return *this;
 };
 ::uns::lua::type::table::~table() {};
+
+::std::u32string uns::lua::type::table::to_string() const {
+    return m_ptr->to_string();
+};
 
 bool ::uns::lua::type::table::operator==(const ::uns::lua::type::table& obj) const { return *m_ptr == *obj.m_ptr; };
 bool ::uns::lua::type::table::operator!=(const ::uns::lua::type::table& obj) const { return !(*this == obj); };
@@ -445,6 +449,10 @@ bool ::uns::lua::type::table::operator!=(const ::uns::lua::type::table& obj) con
     return *this;
 };
 ::uns::lua::auxiliary::table::~table() {}
+
+::std::u32string uns::lua::auxiliary::table::to_string() const {
+    return U"table " + ::uns::string::cast<::std::u32string>(reinterpret_cast<uint64_t>(this)); //TODO
+};
 
 bool ::uns::lua::auxiliary::table::operator==(const ::uns::lua::auxiliary::table& obj) const {
     return m_key_number == obj.m_key_number

@@ -24,7 +24,7 @@ namespace uns::lua {
         , (errsyntax,)
         , (errmem,)
         , (errerr,)
-        , (errcall)
+        , (errcall,)
     );
 
 
@@ -34,7 +34,7 @@ namespace uns::lua {
         , (invalid,)
         , (uncallable,)
         , (unrepresentable,)
-        , (not_found)
+        , (not_found,)
     );
 
 
@@ -114,7 +114,7 @@ namespace uns::lua {
     };
 
 
-    UNS_RENUM(value_type, int,
+    UNS_RENUM(value_type, int
         , (nil, = -1)
         , (boolean, = 0)
         , (number, = 1)
@@ -163,6 +163,8 @@ namespace uns::lua {
             table(::uns::lua::type::table&&);
             ::uns::lua::type::table& operator=(::uns::lua::type::table&&);
             ~table();
+        public:
+            ::std::u32string to_string() const;
         public:
             bool operator==(const ::uns::lua::type::table&) const;
             bool operator!=(const ::uns::lua::type::table&) const;
@@ -318,10 +320,12 @@ namespace uns::lua {
             table(::uns::lua::auxiliary::table&& obj);
             ::uns::lua::auxiliary::table& operator=(::uns::lua::auxiliary::table&& obj);
             ~table();
-
+        public:
+            ::std::u32string to_string() const;
+        public:
             bool operator==(const ::uns::lua::auxiliary::table&) const;
             bool operator!=(const ::uns::lua::auxiliary::table&) const;
-
+        public:
 #define UNS_LUA_TABLE_IDX_DECLARATOR(type_identifier)                                            \
             ::uns::lua::value operator[] (const ::uns::lua::type::##type_identifier& key) const;\
             ::uns::lua::value& operator[] (const ::uns::lua::type::##type_identifier& key);\
@@ -331,12 +335,12 @@ namespace uns::lua {
             UNS_LUA_TABLE_IDX_DECLARATOR(boolean);
             UNS_LUA_TABLE_IDX_DECLARATOR(string);
 #undef UNS_LUA_TABLE_IDX_DECLARATOR
-
+        public:
             ::uns::lua::value operator[] (const ::uns::lua::value& key) const;
             ::uns::lua::value& operator[] (const ::uns::lua::value& key);
-
+        public:
             ::std::size_t size() const;
-
+        public:
             template<class key_t>
             ::uns::lua::type::table::const_iterator<key_t> cbegin() const { return ::uns::lua::type::table::const_iterator<key_t>{}; };
             template<class key_t>
@@ -345,7 +349,7 @@ namespace uns::lua {
             ::uns::lua::type::table::iterator<key_t> begin() { return ::uns::lua::type::table::iterator<key_t>{}; };
             template<class key_t>
             ::uns::lua::type::table::iterator<key_t> end() { return ::uns::lua::type::table::iterator<key_t>{}; };
-
+        public:
 #define UNS_LUA_TABLE_ITERATION_METHODS_DECLARATOR(type_identifier)                                \
             template<>                                                                            \
             ::uns::lua::type::table::const_iterator<::uns::lua::type::##type_identifier> cbegin<::uns::lua::type::##type_identifier>() const { return m_key_##type_identifier.cbegin(); };\
@@ -1381,7 +1385,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_some::wrap<result_values_number, wrapped>;
 
             return res;
@@ -1390,7 +1394,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_one::wrap<wrapped>;
 
             return res;
@@ -1399,7 +1403,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_none::wrap<wrapped>;
 
             return res;
@@ -1418,7 +1422,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_some::wrap<result_values_number, wrapped>;
 
             return res;
@@ -1427,7 +1431,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_one::wrap<wrapped>;
 
             return res;
@@ -1436,7 +1440,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_none::wrap<wrapped>;
 
             return res;
@@ -1455,7 +1459,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_some::wrap<result_values_number, wrapped>;
 
             return res;
@@ -1464,7 +1468,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_one::wrap<wrapped>;
 
             return res;
@@ -1473,7 +1477,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_none::wrap<wrapped>;
 
             return res;
@@ -1492,7 +1496,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_some::wrap<result_values_number, wrapped>;
 
             return res;
@@ -1501,7 +1505,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_one::wrap<wrapped>;
 
             return res;
@@ -1510,7 +1514,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_none::wrap<wrapped>;
 
             return res;
@@ -1529,7 +1533,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_some::wrap<result_values_number, wrapped>;
 
             return res;
@@ -1538,7 +1542,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_one::wrap<wrapped>;
 
             return res;
@@ -1547,7 +1551,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_none::wrap<wrapped>;
 
             return res;
@@ -1566,7 +1570,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_some::wrap<result_values_number, wrapped>;
 
             return res;
@@ -1575,7 +1579,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_one::wrap<wrapped>;
 
             return res;
@@ -1584,7 +1588,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_none::wrap<wrapped>;
 
             return res;
@@ -1603,7 +1607,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_some::wrap<result_values_number, wrapped>;
 
             return res;
@@ -1612,7 +1616,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_one::wrap<wrapped>;
 
             return res;
@@ -1621,7 +1625,7 @@ namespace uns::lua {
         static ::uns::lua::lib_entry make(const ::std::u32string& name) {
             auto res = ::uns::lua::lib_entry{};
 
-            res.m_name = ::uns::string::u8_cast<::std::string>(name);
+            res.m_name = ::uns::string::cast<::std::string>(name);
             res.m_function = ::uns::lua::auxiliary::wrappers::returning_none::wrap<wrapped>;
 
             return res;
