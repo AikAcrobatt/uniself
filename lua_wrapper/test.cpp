@@ -205,3 +205,102 @@ UR"^^(
     ASSERT_EQ(returned_values[2], arg3);
     ASSERT_EQ(returned_values[3], arg4);
 };
+
+
+using LuaGlobals = ::uns::tests::lua_script_fixture;
+TEST_F(LuaGlobals, CompareWithExtracted) {
+    {
+        const auto loading_error = set_script(
+UR"^^(
+    global = {}
+    global[0.0045006] = true
+    global["What?"] = "It's working!"
+
+    global["Some subtable"] = {}
+    global["Some subtable"][123] = "Yeah baby!"
+)^^"
+        );
+        ASSERT_FALSE(loading_error.is()) << ::uns::string::cast<::std::string>(loading_error.to_string());
+    };
+
+    auto lua_global = script.get_global(U"global");
+    ASSERT_FALSE(lua_global.error().is()) << ::uns::string::cast<::std::string>(lua_global.error().to_string());
+
+    auto global = ::uns::lua::make_table();
+    const auto some_numeric_key = ::uns::lua::value{ 0.0045006 };
+    const auto some_boolean_value = ::uns::lua::value{ true };
+    const auto some_string_value = ::uns::lua::value{ U"It's working!" };
+
+    static_cast<::uns::lua::type::table&>(global)[some_numeric_key] = some_boolean_value;
+    static_cast<::uns::lua::type::table&>(global)[::uns::lua::value{ "What?" }] = some_string_value;
+    static_cast<::uns::lua::type::table&>(global)[U"Some subtable"] = ::uns::lua::make_table();
+    static_cast<::uns::lua::type::table&>(static_cast<::uns::lua::type::table&>(global)["Some subtable"])[123] = "Yeah baby!";
+
+    ASSERT_EQ(lua_global.get(), global) << ::uns::string::cast<::std::string>(lua_global.error().to_string());
+};
+using LuaGlobals = ::uns::tests::lua_script_fixture;
+TEST_F(LuaGlobals, CompareWithPushed) {
+    {
+        const auto loading_error = set_script(
+UR"^^(
+    global1 = {}
+    global1[0.0045006] = true
+    global1["What?"] = "It's working!"
+
+    global1["Some subtable"] = {}
+    global1["Some subtable"][123] = "Yeah baby!"
+
+    function compare_globals()
+        local function one_side_cmp(this, that)
+            for key, value in pairs(this) do
+                if that[key] == nil then
+                    return false        --TODO to place an error message here
+                end
+                if type(this[key]) == "table" and type(that[key]) == "table" then
+                    if not one_side_cmp(this[key], that[key]) then
+                        return false    --TODO to place an error message here
+                    end
+                else
+                    if this[key] ~= that[key] then
+                        return false    --TODO to place an error message here
+                    end
+                end
+            end
+
+            return true
+        end
+
+        return one_side_cmp(global1, global2) and one_side_cmp(global2, global1)
+    end
+)^^"
+        );
+        ASSERT_FALSE(loading_error.is()) << ::uns::string::cast<::std::string>(loading_error.to_string());
+    };
+
+    auto lua_global = script.get_global(U"global2");
+    ASSERT_FALSE(lua_global.error().is()) << ::uns::string::cast<::std::string>(lua_global.error().to_string());
+
+    auto global = ::uns::lua::make_table();
+    const auto some_numeric_key = ::uns::lua::value{ 0.0045006 };
+    const auto some_boolean_value = ::uns::lua::value{ true };
+    const auto some_string_value = ::uns::lua::value{ U"It's working!" };
+
+    static_cast<::uns::lua::type::table&>(global)[some_numeric_key] = some_boolean_value;
+    static_cast<::uns::lua::type::table&>(global)[::uns::lua::value{ "What?" }] = some_string_value;
+    static_cast<::uns::lua::type::table&>(global)[U"Some subtable"] = ::uns::lua::make_table();
+    static_cast<::uns::lua::type::table&>(static_cast<::uns::lua::type::table&>(global)["Some subtable"])[123] = "Yeah baby!";
+
+    lua_global.set(global);
+
+    auto compare_globals = script.get_function(U"compare_globals");
+    ASSERT_FALSE(compare_globals.error().is()) << ::uns::string::cast<::std::string>(compare_globals.error().to_string());
+
+    const auto results = compare_globals(1);
+    ASSERT_FALSE(compare_globals.error().is()) << ::uns::string::cast<::std::string>(compare_globals.error().to_string());
+
+    const auto returned_values = results.get_all();
+    ASSERT_EQ(returned_values.size(), 1);
+
+    const auto expected_comparison_tables_result = ::uns::lua::value{ true };
+    ASSERT_EQ(returned_values[0], expected_comparison_tables_result);
+};
