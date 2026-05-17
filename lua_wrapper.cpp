@@ -1159,6 +1159,11 @@ namespace uns::lua::auxiliary {
             if(err.is()) {
                 return err;
             };
+
+            err = ::uns::lua::auxiliary::execute(stack, lua_gettop((stack)), 0);
+            if (err.is()) {
+                return err;
+            };
         };
 
         return ::uns::lua::error{ ::uns::lua::errcode::ok, ::uns::lua::errtype::ok };
@@ -1234,13 +1239,31 @@ namespace uns::lua::auxiliary {
 {
     if(lua_script != nullptr) {
         *m_stack = *lua_script;
+
+        int function_idx = 0;
+
+        ::std::tie(m_err, function_idx) = ::uns::lua::auxiliary::prepare(
+            m_stack->get()
+            , ::uns::string::cast<::std::string>(lua_global_function_name)
+        );
+
+        lua_pop(m_stack->get(), function_idx);
     };
 };
 ::uns::lua::function::function(::uns::lua::auxiliary::state_wrapper& lua_script, const ::std::string& lua_global_function_name) :
     m_function_name(lua_global_function_name),
     m_stack_wrapper(lua_script),
     m_stack(nullptr) 
-{};
+{
+    int function_idx = 0;
+
+    ::std::tie(m_err, function_idx) = ::uns::lua::auxiliary::prepare(
+        m_stack_wrapper.get()
+        , ::uns::string::cast<::std::string>(lua_global_function_name)
+    );
+
+    lua_pop(m_stack->get(), function_idx);
+};
 ::uns::lua::function::~function() {
     if(valid()) {
         gc();
@@ -1788,17 +1811,7 @@ void uns::lua::script::run() {
         return;
     };
 
-    if(int lua_retcode = lua_pcall((m_stack->get()), 0, 0, 0); lua_retcode != LUA_OK) {
-        std::string err_str = "";
-        if(lua_isstring((m_stack->get()), -1)) {
-            err_str = lua_tostring((m_stack->get()), -1);
-        };
-
-        lua_pop((m_stack->get()), -1);
-
-        m_err = { static_cast<::uns::lua::errcode::enum_type>(lua_retcode), ::uns::lua::errtype::lua_specific, err_str };
-        return;
-    };
+    m_err = ::uns::lua::auxiliary::execute(m_stack->get(), lua_gettop(m_stack->get()), 0);
 
     return;
 };
