@@ -13,7 +13,7 @@
 * declaration:
 UNS_RENUM(<renum name>, <underlying integer type>,
     (<renum member name>, [= <renum member integer value>]) , //both: paranthesis and separative comma - are required! (Even if there is no need to define integer value
-    ... //up to 125 members total
+    ... //up to 124 members total
 );
 
 constexpr static ::std::size_t size();
@@ -174,15 +174,15 @@ constexpr static renum_name from_string(const ::std::u32string_view& Str); //thr
 #define UNS_RENUM_DELIMITER_COMMA() ,
 
 #define UNS_RENUM_SEGMENT(renum_pair) UNS_RENUM_EXPAND(UNS_RENUM_MAKE_EQUALITY)renum_pair
-#define UNS_RENUM_VALUE(renum_pair) UNS_RENUM_EXPAND(UNS_RENUM_OBTAIN_FIRST)renum_pair
+#define UNS_RENUM_VALUE(renum_pair) enum_type::UNS_RENUM_EXPAND(UNS_RENUM_OBTAIN_FIRST)renum_pair
 
 #define UNS_RENUM_TOSTRING_SEGMENT_INNER(arg)\
-    case arg: { return UNS_U32LITERAL(arg); }
+    case enum_type::arg: { return UNS_U32LITERAL(arg); }
 #define UNS_RENUM_TOSTRING_SEGMENT(renum_pair)\
     UNS_RENUM_TOSTRING_SEGMENT_INNER(UNS_RENUM_EXPAND(UNS_RENUM_OBTAIN_FIRST)renum_pair)
 
 #define UNS_RENUM_FROMSTRING_SEGMENT_INNER(arg)\
-    if (Str == UNS_U32LITERAL(arg)) { return arg; } else
+    if (Str == UNS_U32LITERAL(arg)) { return enum_type::arg; } else
 #define UNS_RENUM_FROMSTRING_SEGMENT(renum_pair)\
     UNS_RENUM_FROMSTRING_SEGMENT_INNER(UNS_RENUM_EXPAND(UNS_RENUM_OBTAIN_FIRST)renum_pair)
 
@@ -203,13 +203,13 @@ private:\
     inline static constexpr ::std::size_t s_size = UNS_RENUM_COUNTER(\
         __VA_ARGS__\
     );\
-    enum_type m_value = UNS_RENUM_FOR_FIRST(\
+    enum_type m_value = enum_type::UNS_RENUM_FOR_FIRST(\
         UNS_RENUM_OBTAIN_FIRST,\
         __VA_ARGS__\
     );\
 public:\
     inline constexpr renum_name() noexcept {};\
-    inline constexpr renum_name(enum_type EnumVal) noexcept : m_value{ EnumVal } {};\
+    inline constexpr renum_name(const enum_type EnumVal) noexcept : m_value{ EnumVal } {};\
     inline constexpr renum_name(const renum_name& Obj) noexcept : m_value{ Obj.m_value } {};\
     inline constexpr renum_name& operator=(const renum_name& Obj) noexcept {\
         if (this == &Obj) return *this;\
@@ -224,11 +224,13 @@ public:\
     };\
     inline constexpr ~renum_name() noexcept {};\
 public:\
-    /*inline constexpr bool operator==(const renum_name& arg) const noexcept { return m_value == arg.m_value; };*/\
+    inline constexpr bool operator==(const renum_name& arg) const noexcept { return m_value == arg.m_value; };\
     /*inline constexpr bool operator!=(const renum_name& arg) const noexcept { return !(m_value == arg.m_value); };*/\
+    inline constexpr bool operator==(const enum_type arg) const noexcept { return m_value == arg; };\
+    /*inline constexpr bool operator!=(const enum_type arg) const noexcept { return !(m_value == arg); };*/\
 public:\
     inline constexpr operator enum_type() const noexcept { return m_value; };\
-    inline explicit constexpr operator integral_type() const noexcept { return m_value; };\
+    inline constexpr explicit operator integral_type() const noexcept { return static_cast<integral_type>(m_value); };\
 public:\
     inline constexpr static ::std::size_t size() noexcept { return s_size; };\
     inline constexpr static ::std::vector<renum_name> values() {\
@@ -305,8 +307,3 @@ namespace uns {
 };
 
 #endif
-
-/*TODO
-* 1) renum must throw when constructing from integral_type with invalid value
-* 2) renum's operator== must not compile with another renums enum_type
-*/

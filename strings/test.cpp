@@ -380,8 +380,8 @@ INSTANTIATE_TEST_CASE_P(UpperLetterCasts, WideLetterCasts,
 );
 
 
-UNS_RENUM(correct, int,
-    (yes,)
+UNS_RENUM(correct, int
+    , (yes,)
     , (no,)
 );
 

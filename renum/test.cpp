@@ -10,8 +10,8 @@
 
 namespace abyss {
 
-    UNS_RENUM(layers, int,
-        (l0, = 0)
+    UNS_RENUM(layers, int
+        , (l0, = 0)
         , (l1, = 1)
         , (l2, = 2)
         , (l3, = 3)
@@ -43,6 +43,12 @@ TYPED_TEST(RenumTyped, TraitsTest) {
 class ComparationChecks : public ::testing::TestWithParam<
         ::std::tuple<::abyss::layers::integral_type, ::abyss::layers::integral_type>
     > {};
+
+
+UNS_RENUM(fake_layers, int
+    , (l0, = 0)
+    , (l1, = 1)
+);
 
 TEST_P(ComparationChecks, EqualityCheckRenumEnum) {
     const ::abyss::layers renum_obj = ::abyss::layers::enum_type{ ::std::get<0>(GetParam()) };
@@ -96,8 +102,8 @@ INSTANTIATE_TEST_CASE_P(RenumGeneral, ComparationChecks,
 );
 
 
-UNS_RENUM(renum_test, int,
-    (t1, = 0)
+UNS_RENUM(renum_test, int
+    , (t1, = 0)
     , (t2, = 10)
     , (t3,)
 );

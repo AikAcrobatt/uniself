@@ -113,7 +113,7 @@ TEST_P(GregorianTrivialTests, AdditiveTest) {
 
         if (::uns::tests::calendar::has_additive_days(datetime)) {
             datetime1.day = static_cast<::uns::calendar::gregorian::day_of_month::enum_type>(
-                static_cast<::uns::calendar::gregorian::day_of_month::integral_type>(
+                static_cast<::uns::calendar::gregorian::day_of_month::enum_type>(
                     datetime1.day
                 ) + 1
             );
@@ -122,7 +122,7 @@ TEST_P(GregorianTrivialTests, AdditiveTest) {
         }
         else {
             datetime1.day = static_cast<::uns::calendar::gregorian::day_of_month::enum_type>(
-                static_cast<::uns::calendar::gregorian::day_of_month::integral_type>(
+                static_cast<::uns::calendar::gregorian::day_of_month::enum_type>(
                     datetime1.day
                 ) - 1
             );
@@ -142,7 +142,7 @@ TEST_P(GregorianTrivialTests, AdditiveTest) {
 
         if (::uns::tests::calendar::has_additive_hours(datetime)) {
             datetime1.hours = static_cast<::uns::calendar::gregorian::hour::enum_type>(
-                static_cast<::uns::calendar::gregorian::hour::integral_type>(
+                static_cast<::uns::calendar::gregorian::hour::enum_type>(
                     datetime1.hours
                 ) + 1
             );
@@ -151,7 +151,7 @@ TEST_P(GregorianTrivialTests, AdditiveTest) {
         }
         else {
             datetime1.hours = static_cast<::uns::calendar::gregorian::hour::enum_type>(
-                static_cast<::uns::calendar::gregorian::hour::integral_type>(
+                static_cast<::uns::calendar::gregorian::hour::enum_type>(
                     datetime1.hours
                 ) - 1
             );
@@ -171,7 +171,7 @@ TEST_P(GregorianTrivialTests, AdditiveTest) {
 
         if (::uns::tests::calendar::has_additive_minutes(datetime)) {
             datetime1.minutes = static_cast<::uns::calendar::gregorian::minute::enum_type>(
-                static_cast<::uns::calendar::gregorian::minute::integral_type>(
+                static_cast<::uns::calendar::gregorian::minute::enum_type>(
                     datetime1.minutes
                 ) + 1
             );
@@ -180,7 +180,7 @@ TEST_P(GregorianTrivialTests, AdditiveTest) {
         }
         else {
             datetime1.minutes = static_cast<::uns::calendar::gregorian::minute::enum_type>(
-                static_cast<::uns::calendar::gregorian::minute::integral_type>(
+                static_cast<::uns::calendar::gregorian::minute::enum_type>(
                     datetime1.minutes
                 ) - 1
             );
@@ -200,7 +200,7 @@ TEST_P(GregorianTrivialTests, AdditiveTest) {
 
         if (::uns::tests::calendar::has_additive_seconds(datetime)) {
             datetime1.seconds = static_cast<::uns::calendar::gregorian::second::enum_type>(
-                static_cast<::uns::calendar::gregorian::second::integral_type>(
+                static_cast<::uns::calendar::gregorian::second::enum_type>(
                     datetime1.seconds
                 ) + 1
             );
@@ -209,7 +209,7 @@ TEST_P(GregorianTrivialTests, AdditiveTest) {
         }
         else {
             datetime1.seconds = static_cast<::uns::calendar::gregorian::second::enum_type>(
-                static_cast<::uns::calendar::gregorian::second::integral_type>(
+                static_cast<::uns::calendar::gregorian::second::enum_type>(
                     datetime1.seconds
                 ) - 1
             );
