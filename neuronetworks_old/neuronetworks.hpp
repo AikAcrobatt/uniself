@@ -166,11 +166,11 @@ namespace uns::nn {
         template<typename signal_traitset_t>
             /*requires ::std::derived_from<
                 signal_traitset_t,
-                ::uns::nn::traitset::signal<
+                    ::uns::nn::traitset::signal<
                     typename signal_traitset_t::signal_type,
                     typename signal_traitset_t::weight_type,
                     typename signal_traitset_t::params_type
-                >
+                    >
             >*/
         class activator {
         public:
@@ -381,54 +381,32 @@ namespace uns::nn {
 
                 return *this;
             };
-            activator(const typename signal_traitset::signal_type value) :
-                m_value(obj.value) {
-            };
-            ::uns::nn::general::activator<signal_traitset>& operator=(const typename signal_traitset::signal_type value) {
+            ::uns::nn::general::activator<signal_traitset>& operator=(typename signal_traitset::signal_type value) {
                 m_value = value;
                 return *this;
             };
-            virtual ~activator() noexcept {};
-        public:
+            virtual ~activator() {};
+
             virtual ::std::size_t capacity() const { return sizeof(*this); };
-            virtual ::uns::nn::description::activator<signal_traitset> type() const {
-                return ::uns::nn::description::activator<signal_traitset>{};
-            };
-        public:
+
             const typename signal_traitset::signal_type& value() const { return m_value; };
             typename signal_traitset::signal_type& value() { return m_value; };
-            virtual typename signal_traitset::signal_type operator()(
-                typename signal_traitset::signal_type
-                , const ::std::vector<typename signal_traitset::params_type>&
-                , const ::std::vector<typename signal_traitset::params_type>&
-            ) {
-                return m_value = typename signal_traitset::signal_type{ 0 };
-            };
-            virtual typename signal_traitset::signal_type _dS(
-                typename signal_traitset::signal_type
-                , const ::std::vector<typename signal_traitset::params_type>&
-                , const ::std::vector<typename signal_traitset::params_type>&
-            ) const {
-                return typename signal_traitset::signal_type{ 0 };
-            };
-            virtual typename signal_traitset::signal_type _dp(
-                int
-                , typename signal_traitset::signal_type
-                , const ::std::vector<typename signal_traitset::params_type>&
-                , const ::std::vector<typename signal_traitset::params_type>&
-            ) const {
-                return typename signal_traitset::signal_type{ 0 };
-            };
-        public:
+
+            virtual ::uns::nn::description::activator<signal_traitset> type() const { return ::uns::nn::description::activator<signal_traitset>{}; };
+
+            virtual typename signal_traitset::signal_type operator()(typename signal_traitset::signal_type, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) { return m_value = typename signal_traitset::signal_type{ 0 }; };
+
+            virtual typename signal_traitset::signal_type _dS(typename signal_traitset::signal_type, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) const { return typename signal_traitset::signal_type{ 0 }; };
+
+            virtual typename signal_traitset::signal_type _dp(int, typename signal_traitset::signal_type, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) const { return typename signal_traitset::signal_type{ 0 }; };
+
             //basic auxiliary class supposed to create activators from string
             //    actually it's a map from string to activator
             class caster {
             public:
                 using signal_traitset = signal_traitset_t;
-            public:
-                virtual ::std::unique_ptr<::uns::nn::general::activator<signal_traitset>> operator()(
-                    const ::uns::nn::description::activator<signal_traitset>&
-                ) const = 0;
+
+                virtual ::std::unique_ptr<::uns::nn::general::activator<signal_traitset>> operator()(const ::uns::nn::description::activator<signal_traitset>&) const = 0;
             };
         };
 
@@ -468,84 +446,34 @@ namespace uns::nn {
 
                 return *this;
             };
-            collector(const typename signal_traitset::signal_type value) :
-                m_value(value) {
-            };
-            ::uns::nn::general::collector<signal_traitset>& operator=(const typename signal_traitset::signal_type value) {
+            ::uns::nn::general::collector<signal_traitset>& operator=(typename signal_traitset::signal_type value) {
                 m_value = value;
                 return *this;
             };
-            virtual ~collector() noexcept {};
-        public:
+            virtual ~collector() {};
+
             virtual ::std::size_t capacity() const { return sizeof(*this); };
-            virtual ::uns::nn::description::collector<signal_traitset> type() const {
-                return ::uns::nn::description::collector<signal_traitset>{};
-            };
-        public:
+
             const typename signal_traitset::signal_type& value() const { return m_value; };
             typename signal_traitset::signal_type& value() { return m_value; };
-        public:
-            virtual typename signal_traitset::signal_type operator()(
-                const ::std::vector<
-                    ::std::pair<
-                        ::uns::nn::general::neuron_view<signal_traitset>*
-                        , typename signal_traitset::weight_type
-                    >
-                >&
-                , const ::std::vector<typename signal_traitset::params_type>&
-                , const ::std::vector<typename signal_traitset::params_type>&
-            ) {
-                return m_value = typename signal_traitset::signal_type{ 0 };
-            };
-            virtual typename signal_traitset::signal_type _dr(
-                int
-                , const ::std::vector<
-                    ::std::pair<
-                        ::uns::nn::general::neuron_view<signal_traitset>*
-                        , typename signal_traitset::weight_type
-                    >
-                >&
-                , const ::std::vector<typename signal_traitset::params_type>&
-                , const ::std::vector<typename signal_traitset::params_type>&
-            ) const {
-                return typename signal_traitset::signal_type{ 0 };
-            };
-            virtual typename signal_traitset::signal_type _dw(
-                int
-                , const ::std::vector<
-                    ::std::pair<
-                        ::uns::nn::general::neuron_view<signal_traitset>*
-                        , typename signal_traitset::weight_type
-                    >
-                >&
-                , const ::std::vector<typename signal_traitset::params_type>&
-                , const ::std::vector<typename signal_traitset::params_type>&
-            ) const {
-                return typename signal_traitset::signal_type{ 0 };
-            };
-            virtual typename signal_traitset::signal_type _dp(
-                int
-                , const ::std::vector<
-                    ::std::pair<
-                        ::uns::nn::general::neuron_view<signal_traitset>*
-                        , typename signal_traitset::weight_type
-                    >
-                >&
-                , const ::std::vector<typename signal_traitset::params_type>&
-                , const ::std::vector<typename signal_traitset::params_type>&
-            ) const {
-                return typename signal_traitset::signal_type{ 0 };
-            };
-        public:
+
+            virtual ::uns::nn::description::collector<signal_traitset> type() const { return ::uns::nn::description::collector<signal_traitset>{}; };
+
+            virtual typename signal_traitset::signal_type operator()(const ::std::vector<::std::pair<::uns::nn::general::neuron_view<signal_traitset>*, typename signal_traitset::weight_type>>&, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) { return m_value = typename signal_traitset::signal_type{ 0 }; };
+
+            virtual typename signal_traitset::signal_type _dr(int, const ::std::vector<::std::pair<::uns::nn::general::neuron_view<signal_traitset>*, typename signal_traitset::weight_type>>&, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) const { return typename signal_traitset::signal_type{ 0 }; };
+
+            virtual typename signal_traitset::signal_type _dw(int, const ::std::vector<::std::pair<::uns::nn::general::neuron_view<signal_traitset>*, typename signal_traitset::weight_type>>&, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) const { return typename signal_traitset::signal_type{ 0 }; };
+
+            virtual typename signal_traitset::signal_type _dp(int, const ::std::vector<::std::pair<::uns::nn::general::neuron_view<signal_traitset>*, typename signal_traitset::weight_type>>&, const ::std::vector<typename signal_traitset::params_type>&, const ::std::vector<typename signal_traitset::params_type>&) const { return typename signal_traitset::signal_type{ 0 }; };
+
             //basic auxiliary class supposed to create collector from string
             //    actually it's a map from string to collector
             class caster {
             public:
                 using signal_traitset = signal_traitset_t;
-            public:
-                virtual ::std::unique_ptr<::uns::nn::general::collector<signal_traitset>> operator()(
-                    const ::uns::nn::description::collector<signal_traitset>&
-                ) const = 0;
+
+                virtual ::std::unique_ptr<::uns::nn::general::collector<signal_traitset>> operator()(const ::uns::nn::description::collector<signal_traitset>&) const = 0;
             };
         };
 
@@ -566,7 +494,7 @@ namespace uns::nn {
             using base = ::uns::nn::general::neuron_view<typename neuron_traitset_t::signal_traitset>;
         public:
             using neuron_traitset = neuron_traitset_t;
-        public:
+
             virtual typename neuron_traitset::description_type descript() const = 0;
             virtual void set(
                 const typename neuron_traitset::description_type&,
@@ -576,22 +504,22 @@ namespace uns::nn {
                 ::std::vector<::std::vector<::uns::nn::general::neuron<neuron_traitset>*>>&,
                 ::std::unordered_map<::uns::nn::address, ::uns::nn::general::neuron<neuron_traitset>*, ::uns::nn::address::hash>&
             ) = 0;
-        public:
+
             virtual ::std::size_t capacity() const override {
                 return base::capacity();
             };
-        public:
+
             virtual ::std::size_t subneurons_total() const override { return 0; };
             virtual const ::uns::nn::general::neuron<neuron_traitset>* subneuron(::std::size_t connection_idx) const override { return nullptr; };
             virtual ::uns::nn::general::neuron<neuron_traitset>* subneuron(::std::size_t connection_idx) override { return nullptr; };
-        public:
+
             virtual ::std::size_t params_total() const override { return 0; };
-        public:
+
             virtual const typename neuron_traitset::signal_traitset::signal_type& R() const override { return typename neuron_traitset::signal_traitset::signal_type{ 0 }; };
             virtual const typename neuron_traitset::signal_traitset::signal_type& C() const override { return typename neuron_traitset::signal_traitset::signal_type{ 0 }; };
-        public:
+
             virtual bool is_reversible() const override { return false; };
-        public:
+
             virtual void react(const ::std::vector<typename neuron_traitset::signal_traitset::params_type>& common_params) override {};
             virtual void collect(const ::std::vector<typename neuron_traitset::signal_traitset::params_type>& common_params) override {};
         };

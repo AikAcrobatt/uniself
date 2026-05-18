@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.3.11527.330
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "neuronetworks", "neuronetworks\neuronetworks.vcxproj", "{044F70B6-C9DF-4AD9-AE2B-760AFC30A52B}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "population", "population\population.vcxproj", "{FDE1FDD3-1C8D-49BD-B8B6-EABD3D24B271}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "renum", "renum\renum.vcxproj", "{0401A51E-47D5-4F43-8DB7-AAAD3A935421}"
@@ -19,6 +17,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "calendar", "calendar\calend
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lua_wrapper", "lua_wrapper\lua_wrapper.vcxproj", "{4D0E24AB-D437-4E89-B0F3-F6F0AADDA44C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "neuronetworks", "neuronetworks\neuronetworks.vcxproj", "{20B9ACC4-6F6A-4C9D-ADCA-BFABA28DA1A3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -27,14 +27,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{044F70B6-C9DF-4AD9-AE2B-760AFC30A52B}.Debug|x64.ActiveCfg = Debug|x64
-		{044F70B6-C9DF-4AD9-AE2B-760AFC30A52B}.Debug|x64.Build.0 = Debug|x64
-		{044F70B6-C9DF-4AD9-AE2B-760AFC30A52B}.Debug|x86.ActiveCfg = Debug|Win32
-		{044F70B6-C9DF-4AD9-AE2B-760AFC30A52B}.Debug|x86.Build.0 = Debug|Win32
-		{044F70B6-C9DF-4AD9-AE2B-760AFC30A52B}.Release|x64.ActiveCfg = Release|x64
-		{044F70B6-C9DF-4AD9-AE2B-760AFC30A52B}.Release|x64.Build.0 = Release|x64
-		{044F70B6-C9DF-4AD9-AE2B-760AFC30A52B}.Release|x86.ActiveCfg = Release|Win32
-		{044F70B6-C9DF-4AD9-AE2B-760AFC30A52B}.Release|x86.Build.0 = Release|Win32
 		{FDE1FDD3-1C8D-49BD-B8B6-EABD3D24B271}.Debug|x64.ActiveCfg = Debug|x64
 		{FDE1FDD3-1C8D-49BD-B8B6-EABD3D24B271}.Debug|x64.Build.0 = Debug|x64
 		{FDE1FDD3-1C8D-49BD-B8B6-EABD3D24B271}.Debug|x86.ActiveCfg = Debug|Win32
@@ -91,6 +83,14 @@ Global
 		{4D0E24AB-D437-4E89-B0F3-F6F0AADDA44C}.Release|x64.Build.0 = Release|x64
 		{4D0E24AB-D437-4E89-B0F3-F6F0AADDA44C}.Release|x86.ActiveCfg = Release|Win32
 		{4D0E24AB-D437-4E89-B0F3-F6F0AADDA44C}.Release|x86.Build.0 = Release|Win32
+		{20B9ACC4-6F6A-4C9D-ADCA-BFABA28DA1A3}.Debug|x64.ActiveCfg = Debug|x64
+		{20B9ACC4-6F6A-4C9D-ADCA-BFABA28DA1A3}.Debug|x64.Build.0 = Debug|x64
+		{20B9ACC4-6F6A-4C9D-ADCA-BFABA28DA1A3}.Debug|x86.ActiveCfg = Debug|Win32
+		{20B9ACC4-6F6A-4C9D-ADCA-BFABA28DA1A3}.Debug|x86.Build.0 = Debug|Win32
+		{20B9ACC4-6F6A-4C9D-ADCA-BFABA28DA1A3}.Release|x64.ActiveCfg = Release|x64
+		{20B9ACC4-6F6A-4C9D-ADCA-BFABA28DA1A3}.Release|x64.Build.0 = Release|x64
+		{20B9ACC4-6F6A-4C9D-ADCA-BFABA28DA1A3}.Release|x86.ActiveCfg = Release|Win32
+		{20B9ACC4-6F6A-4C9D-ADCA-BFABA28DA1A3}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
