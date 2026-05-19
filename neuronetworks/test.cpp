@@ -13,14 +13,20 @@ namespace uns::tests {
 
     using signal = ::uns::nn::traitset::signal<long double, float, float>;
 
+
     namespace hashsum {
         constexpr uint64_t line_activator = 117;
         constexpr uint64_t perc_collector = 13;
     };
 
+
     class line_activator : public ::uns::nn::general::activator<::uns::tests::signal> {
     protected:
         using base = ::uns::nn::general::activator<::uns::tests::signal>;
+    public:
+        line_activator(const typename signal_traitset::signal_type value) :
+            base{ value }
+        {};
     public:
         virtual ::uns::nn::description::activator<::uns::tests::signal> type() const override {
             auto descriptor = ::uns::nn::description::activator<::uns::tests::signal>{};
@@ -74,6 +80,10 @@ namespace uns::tests {
     class perc_collector : public ::uns::nn::general::collector<::uns::tests::signal> {
     protected:
         using base = ::uns::nn::general::collector<::uns::tests::signal>;
+    public:
+        perc_collector(const typename signal_traitset::signal_type value) :
+            base{ value }
+        {};
     public:
         virtual ::uns::nn::description::collector<::uns::tests::signal> type() const override {
             auto descriptor = ::uns::nn::description::collector<::uns::tests::signal>{};
@@ -212,9 +222,9 @@ namespace uns::tests {
 
 
     template<typename neuron_traitset_t>
-    class input_neuron : public ::uns::nn::general::neuron_view<typename neuron_traitset_t::signal_traitset> {
+    class input_neuron : public ::uns::nn::general::neuron<typename neuron_traitset_t> {
     public:
-        using base = ::uns::nn::general::neuron_view<typename neuron_traitset_t::signal_traitset>;
+        using base = ::uns::nn::general::neuron<typename neuron_traitset_t>;
         using neuron_traitset = neuron_traitset_t;
     protected:
         using buffer_wrapper = ::uns::tests::buffer_handler<typename neuron_traitset::signal_traitset::signal_type>;
@@ -224,7 +234,7 @@ namespace uns::tests {
     public:
         input_neuron() noexcept {};
         input_neuron(const ::uns::nn::address& address, const typename neuron_traitset::signal_traitset::signal_type& input_buffer) noexcept :
-            base(address),
+            ::uns::nn::general::neuron<neuron_traitset_t>{ address },
             m_buffer(new buffer_wrapper{ input_buffer })
         {
         };
@@ -248,6 +258,17 @@ namespace uns::tests {
             };
         };
         virtual void collect(const ::std::vector<typename neuron_traitset::signal_traitset::params_type>& common_params) override {};
+        virtual typename neuron_traitset::description_type descript() const override {
+            return {};
+        };
+        virtual void set(
+            const typename neuron_traitset::description_type&,
+            const ::uns::nn::address&
+        ) override {};
+        virtual void link(
+            ::std::vector<::std::vector<::uns::nn::general::neuron<neuron_traitset>*>>&,
+            ::std::unordered_map<::uns::nn::address, ::uns::nn::general::neuron<neuron_traitset>*, ::uns::nn::address::hash>&
+        ) override {};
     };
 
 
@@ -416,30 +437,64 @@ namespace uns::tests {
     };
 
 
-    template<typename odo_t>
-        /*requires ::std::derived_from<
-            odo_t,
-                typename ::uns::nn::general::input_data_object<
-                typename odo_t::input_traitset
+    using traitset_network = ::uns::nn::traitset::network<
+        ::uns::nn::sequential_neuron<::uns::tests::traitset_neuron>
+        , ::uns::nn::description::network<
+            ::uns::nn::description::neuron<
+                ::uns::tests::signal
             >
-        >*/
-    class traitset_reversive_network :
-        public ::uns::nn::traitset::network<
-            ::uns::nn::nonrecursive_reversive_neuron<::uns::tests::traitset_neuron>
-            , ::uns::nn::description::network<::uns::tests::traitset_neuron>
-            , ::uns::tests::object
         >
+        , ::uns::tests::object
+    >;
+
+
+    class nn_environment: public ::testing::Test
     {
     public:
-        using output_data_object_type = odo_t;
-    };
-
-
-    class nn_environment: public ::testing::Test {
+        using ido_buffer = ::std::vector<
+            typename ::uns::tests::signal::signal_type
+        >;
     public:
         ::uns::tests::object ido;
         ::uns::tests::activator_caster activator_caster;
         ::uns::tests::collector_caster collector_caster;
+    public:
+        typename ::uns::tests::signal::signal_type n00 = 0;
+        typename ::uns::tests::signal::signal_type n01 = 0;
+        typename ::uns::tests::signal::signal_type n10 = 0;
+    public:
+        const ::std::vector<::uns::tests::signal::weight_type> n00_weights = {
+                1.0
+                , 0.5
+                , -1.0
+                , -2.0
+        };
+        const ::std::vector<::uns::tests::signal::weight_type> n01_weights = {
+                1.0
+                , 3.0
+                , -1.0
+                , -1.0
+        };
+        const ::std::vector<::uns::tests::signal::weight_type> n10_weights = {
+                1.0
+                , 2.0
+        };
+    public:
+        const ::std::vector<::uns::tests::signal::params_type> n00_params = {
+                1.0
+                , 0.0
+                , 0.0
+        };
+        const ::std::vector<::uns::tests::signal::params_type> n01_params = {
+                -1.0
+                , 0.0
+                , 0.0
+        };
+        const ::std::vector<::uns::tests::signal::params_type> n10_params = {
+                1.0
+                , -1.0
+                , 0.0
+        };
     public:
         ::uns::nn::description::network<
             ::uns::nn::description::neuron<
@@ -460,12 +515,12 @@ namespace uns::tests {
             repr.layers.back().back().r = 0;
             repr.layers.back().back().c = 0;
             repr.layers.back().back().links = {
-                { { -1, 0 }, 1.0 }
-                , { { -1, 1 }, 0.5 }
-                , { { -2, 0 }, -1.0 }
-                , { { -2, 1 }, -2.0 }
+                { { -1, 0 }, n00_weights[0] }
+                , { { -1, 1 }, n00_weights[1] }
+                , { { -1, 2 }, n00_weights[2] }
+                , { { -1, 3 }, n00_weights[3] }
             };
-            repr.layers.back().back().params = { 1, 0, 0 };
+            repr.layers.back().back().params = n00_params;
 
             repr.layers.back().push_back(::uns::nn::description::neuron<::uns::tests::signal>{});
             repr.layers.back().back().activator.hashsum = ::uns::tests::hashsum::line_activator;
@@ -473,12 +528,14 @@ namespace uns::tests {
             repr.layers.back().back().r = 0;
             repr.layers.back().back().c = 0;
             repr.layers.back().back().links = {
-                { { -1, 0 }, 1.0 }
-                , { { -1, 1 }, 3.0 }
-                , { { -2, 0 }, -1.0 }
-                , { { -2, 1 }, -1.0 }
+                { { -1, 0 }, n01_weights[0] }
+                , { { -1, 1 }, n01_weights[1] }
+                , { { -1, 2 }, n01_weights[2] }
+                , { { -1, 3 }, n01_weights[3] }
             };
-            repr.layers.back().back().params = { -1, 0, 0 };
+            repr.layers.back().back().params = n01_params;
+
+            repr.layers.push_back(::std::vector<::uns::nn::description::neuron<::uns::tests::signal>>{});
 
             repr.layers.back().push_back(::uns::nn::description::neuron<::uns::tests::signal>{});
             repr.layers.back().back().activator.hashsum = ::uns::tests::hashsum::line_activator;
@@ -486,12 +543,47 @@ namespace uns::tests {
             repr.layers.back().back().r = 0;
             repr.layers.back().back().c = 0;
             repr.layers.back().back().links = {
-                { { 0, 0 }, 1 }
-                , { { 0, 1 }, 2 }
+                { { 0, 0 }, n10_weights[0] }
+                , { { 0, 1 }, n10_weights[1] }
             };
-            repr.layers.back().back().params = { 1, -1, 0 };
+            repr.layers.back().back().params = n10_params;
 
             repr.outputs.push_back(::uns::nn::address{ 1, 0 });
+
+            return repr;
+        };
+    public:
+        typename ::uns::tests::signal::signal_type predict_output(const ido_buffer& Buffer) {
+            n00 = 0;
+            n01 = 0;
+            for (::std::size_t buffer_cell_idx = 0; buffer_cell_idx < Buffer.size(); ++buffer_cell_idx) {
+                n00 += n00_weights[buffer_cell_idx] * Buffer[buffer_cell_idx];
+                n01 += n01_weights[buffer_cell_idx] * Buffer[buffer_cell_idx];
+            };
+            n00 = n00_params[0] * n00 + n00_params[1] + n00_params[2];
+            n01 = n01_params[0] * n01 + n01_params[1] + n01_params[2];
+
+            n10 = 0;
+            n10 += n10_weights[0] * n00;
+            n10 += n10_weights[1] * n01;
+            n10 = n10_params[0] * n10 + n10_params[1] + n10_params[2];
+
+            return n10;
+        };
+        void set_ido(const ido_buffer& Buffer) {
+            auto buffer_cell_addres = ::uns::nn::address{
+                .layer = -1
+                , .index = 0
+            };
+
+            for (const auto& buffer_cell_value : Buffer) {
+                ido.set(
+                    buffer_cell_addres
+                    , buffer_cell_value
+                );
+
+                ++buffer_cell_addres.index;
+            };
         };
     };
 
@@ -499,8 +591,294 @@ namespace uns::tests {
 };
 
 
+class DirectPropagation :
+    public ::uns::tests::nn_environment
+    , public ::testing::WithParamInterface<::uns::tests::nn_environment::ido_buffer>
+{
+private:
+    using base = ::uns::tests::nn_environment;
+    using param_set = ::uns::tests::nn_environment::ido_buffer;
+public:
+    static ::std::vector<base::ido_buffer> generate_tests() {
+        auto single_cell_data_flow = ::std::array<
+            typename ::uns::tests::signal::signal_type
+            , ::uns::tests::data_buffer_capacity
+        >{};
+        typename ::uns::tests::signal::signal_type single_cell = -1.8;
+        for (auto& single_cell_data : single_cell_data_flow) {
+            single_cell += 0.3;
+            single_cell_data = single_cell;
+        };
 
-TEST(TestCaseName, TestName) {
-    EXPECT_EQ(1, 1);
-    EXPECT_TRUE(true);
-}
+        auto result = ::std::vector<base::ido_buffer>{};
+        for (const auto& single_cell_data0 : single_cell_data_flow) {
+            for (const auto& single_cell_data1 : single_cell_data_flow) {
+                for (const auto& single_cell_data2 : single_cell_data_flow) {
+                    for (const auto& single_cell_data3 : single_cell_data_flow) {
+                        const auto single_test_data = base::ido_buffer{
+                            single_cell_data0
+                            , single_cell_data1
+                            , single_cell_data2
+                            , single_cell_data3
+                        };
+
+                        result.push_back(single_test_data);
+                    };
+                };
+            };
+        };
+
+        return result;
+    };
+
+};
+
+
+template<>
+::std::string testing::PrintToString(const ::DirectPropagation::param_set& Params) {
+    ::std::string result = "[ ";
+
+    for (const auto& ido_cell_value : Params) {
+        result += testing::PrintToString(ido_cell_value);
+        result += ", ";
+    };
+    result += "]";
+
+    return result;
+};
+
+
+TEST_P(DirectPropagation, SequentialNetwork) {
+    auto network = ::uns::nn::sequential_network<
+        ::uns::nn::traitset::network<
+            ::uns::nn::sequential_neuron<::uns::tests::traitset_neuron>
+            , ::uns::nn::description::network<
+                ::uns::nn::description::neuron<
+                    ::uns::tests::signal
+                >
+            >
+            , ::uns::tests::object
+        >
+    >{};
+
+    network.set(
+        make_nn_description()
+        , ido
+    );
+
+    set_ido(GetParam());
+
+    network.react({});
+    ASSERT_FLOAT_EQ(
+        predict_output(GetParam())
+        , network.O(0)
+    );
+};
+TEST_P(DirectPropagation, NonrecursiveReversiveNetwork) {
+    auto network = ::uns::nn::nonrecursive_reversive_network<
+        ::uns::nn::traitset::network<
+            ::uns::nn::nonrecursive_reversive_neuron<::uns::tests::traitset_neuron>
+            , ::uns::nn::description::network<
+                ::uns::nn::description::neuron<
+                    ::uns::tests::signal
+                >
+            >
+            , ::uns::tests::object
+        >
+    >{};
+
+    network.set(
+        make_nn_description()
+        , ido
+    );
+    network._link();
+
+    set_ido(GetParam());
+
+    network.react({});
+    ASSERT_FLOAT_EQ(
+        predict_output(GetParam())
+        , network.O(0)
+    );
+};
+INSTANTIATE_TEST_CASE_P(NnBaseTests, DirectPropagation,
+    ::testing::ValuesIn(
+        ::DirectPropagation::generate_tests()
+    )
+);
+
+
+namespace uns::tests::param_set {
+
+    struct RevertPropagation {
+        ::uns::tests::signal::signal_type reversive_input = 0;
+        ::uns::tests::nn_environment::ido_buffer ido_buffer;
+    };
+
+};
+
+
+class RevertPropagation :
+    public ::uns::tests::nn_environment
+    , public ::testing::WithParamInterface<::uns::tests::param_set::RevertPropagation>
+{
+private:
+    using base = ::uns::tests::nn_environment;
+    using param_set = ::uns::tests::param_set::RevertPropagation;
+public:
+    struct neuron_predicted_values {
+        ::uns::tests::signal::signal_type _C = 0;
+        ::uns::tests::signal::signal_type _R = 0;
+    };
+public:
+    ::std::vector<neuron_predicted_values> predict_reversive_values() const {
+        typename ::uns::tests::signal::signal_type n00 = 0;
+        typename ::uns::tests::signal::signal_type n01 = 0;
+        for (::std::size_t buffer_cell_idx = 0; buffer_cell_idx < Buffer.size(); ++buffer_cell_idx) {
+            n00 += n00_weights[buffer_cell_idx] * Buffer[buffer_cell_idx];
+            n01 += n01_weights[buffer_cell_idx] * Buffer[buffer_cell_idx];
+        };
+        n00 = n00_params[0] * n00 + n00_params[1] + n00_params[2];
+        n01 = n01_params[0] * n01 + n01_params[1] + n01_params[2];
+
+        typename ::uns::tests::signal::signal_type n10 = 0;
+        n10 += n10_weights[0] * n00;
+        n10 += n10_weights[1] * n01;
+        n10 = n10_params[0] * n10 + n10_params[1] + n10_params[2];
+
+        return n10;
+    };
+    template<typename network_t>
+    void set_odo(
+        network_t& Network
+        , const param_set& Params
+    ) const {
+        Network.access(Network.O(0))._C() = Params.reversive_input;
+    };
+public:
+    static ::std::vector<param_set> generate_tests() {
+        auto test_ido_buffers = ::DirectPropagation::generate_tests();
+
+        auto result = ::std::vector<param_set>{};
+
+        int phase_marker = 0;
+        for (const auto& test_ido_buffer : test_ido_buffers) {
+            result.push_back(
+                param_set{
+                    .reversive_input = phase_marker * 0.1L
+                    , .ido_buffer = test_ido_buffer
+                }
+            );
+
+            ++phase_marker;
+            phase_marker %= 7;
+        };
+
+        return result;
+    };
+};
+
+
+template<>
+::std::string testing::PrintToString(const ::RevertPropagation::param_set& Params) {
+    ::std::string result = "{ ";
+
+    result += testing::PrintToString(Params.reversive_input);
+    result += ", ";
+    result += testing::PrintToString(Params.ido_buffer);
+
+    result += " }";
+
+    return result;
+};
+
+
+TEST_P(RevertPropagation, NonrecursiveReversiveNetwork) {
+    auto network = ::uns::nn::nonrecursive_reversive_network<
+        ::uns::nn::traitset::network<
+            ::uns::nn::nonrecursive_reversive_neuron<::uns::tests::traitset_neuron>
+            , ::uns::nn::description::network<
+                ::uns::nn::description::neuron<
+                    ::uns::tests::signal
+                >
+            >
+            , ::uns::tests::object
+        >
+    >{};
+
+    network.set(
+        make_nn_description()
+        , ido
+    );
+    network._link();
+
+    set_ido(GetParam().ido_buffer);
+
+    network.react({});
+    EXPECT_FLOAT_EQ(
+        predict_output(GetParam().ido_buffer)
+        , network.O(0)
+    );
+
+    set_odo(network, GetParam());
+    auto neurons_reversive_values = predict_reversive_values();
+    ASSERT_FLOAT_EQ(
+        neurons_reversive_values[0]._C
+        , network.access(
+            {
+                .layer = 0
+                , .index = 0
+            }
+        )._C()
+    );
+    ASSERT_FLOAT_EQ(
+        neurons_reversive_values[0]._R
+        , network.access(
+            {
+                .layer = 0
+                , .index = 0
+            }
+        )._R()
+    );
+    ASSERT_FLOAT_EQ(
+        neurons_reversive_values[1]._C
+        , network.access(
+            {
+                .layer = 0
+                , .index = 1
+            }
+        )._C()
+    );
+    ASSERT_FLOAT_EQ(
+        neurons_reversive_values[1]._R
+        , network.access(
+            {
+                .layer = 0
+                , .index = 1
+            }
+        )._R()
+    );
+    ASSERT_FLOAT_EQ(
+        neurons_reversive_values[2]._C
+        , network.access(
+            {
+                .layer = 1
+                , .index = 0
+            }
+        )._C()
+    );
+    ASSERT_FLOAT_EQ(
+        neurons_reversive_values[2]._R
+        , network.access(
+            {
+                .layer = 1
+                , .index = 0
+            }
+        )._R()
+    );
+};
+INSTANTIATE_TEST_CASE_P(NnBaseTests, RevertPropagation,
+    ::testing::ValuesIn(
+        ::RevertPropagation::generate_tests()
+    )
+);
