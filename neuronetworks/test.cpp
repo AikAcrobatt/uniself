@@ -731,29 +731,30 @@ public:
         ::uns::tests::signal::signal_type _R = 0;
     };
 public:
-    ::std::vector<neuron_predicted_values> predict_reversive_values() const {
-        typename ::uns::tests::signal::signal_type n00 = 0;
-        typename ::uns::tests::signal::signal_type n01 = 0;
-        for (::std::size_t buffer_cell_idx = 0; buffer_cell_idx < Buffer.size(); ++buffer_cell_idx) {
-            n00 += n00_weights[buffer_cell_idx] * Buffer[buffer_cell_idx];
-            n01 += n01_weights[buffer_cell_idx] * Buffer[buffer_cell_idx];
-        };
-        n00 = n00_params[0] * n00 + n00_params[1] + n00_params[2];
-        n01 = n01_params[0] * n01 + n01_params[1] + n01_params[2];
+    ::std::vector<neuron_predicted_values> predict_reversive_values(
+        const ::uns::tests::signal::signal_type& ReversiveInput
+    ) const {
+        neuron_predicted_values _n00;
+        neuron_predicted_values _n01;
+        neuron_predicted_values _n10;
 
-        typename ::uns::tests::signal::signal_type n10 = 0;
-        n10 += n10_weights[0] * n00;
-        n10 += n10_weights[1] * n01;
-        n10 = n10_params[0] * n10 + n10_params[1] + n10_params[2];
+        _n10._C = ReversiveInput;
+        _n10._R = _n10._C * n10_params[0];
 
-        return n10;
+        _n00._C = n10_weights[0] * _n10._R;
+        _n00._R = _n00._C * n00_params[0];
+
+        _n01._C = n10_weights[1] * _n10._R;
+        _n01._R = _n01._C * n01_params[0];
+
+        return { _n00, _n01, _n10 };
     };
     template<typename network_t>
     void set_odo(
         network_t& Network
         , const param_set& Params
     ) const {
-        Network.access(Network.O(0))._C() = Params.reversive_input;
+        Network.access(Network.output(0))._C() = Params.reversive_input;
     };
 public:
     static ::std::vector<param_set> generate_tests() {
@@ -821,7 +822,9 @@ TEST_P(RevertPropagation, NonrecursiveReversiveNetwork) {
     );
 
     set_odo(network, GetParam());
-    auto neurons_reversive_values = predict_reversive_values();
+    network._react({});
+
+    auto neurons_reversive_values = predict_reversive_values(GetParam().reversive_input);
     ASSERT_FLOAT_EQ(
         neurons_reversive_values[0]._C
         , network.access(
