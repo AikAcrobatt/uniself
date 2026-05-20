@@ -209,11 +209,11 @@ namespace uns::tests {
     public:
         buffer_handler() noexcept = default;
         buffer_handler(const value_type& signal_buffer) noexcept : m_buffer(signal_buffer) {};
-        buffer_handler(const ::uns::tests::buffer_handler<value_type>&) noexcept = default;
-        ::uns::tests::buffer_handler<value_type>& operator=(const ::uns::tests::buffer_handler<value_type>&) noexcept = default;
-        buffer_handler(::uns::tests::buffer_handler<value_type>&&) noexcept = default;
-        ::uns::tests::buffer_handler<value_type>& operator=(::uns::tests::buffer_handler<value_type>&&) noexcept = default;
-        ~buffer_handler() noexcept = default;
+        buffer_handler(const ::uns::tests::buffer_handler<value_type>&) noexcept = delete;
+        ::uns::tests::buffer_handler<value_type>& operator=(const ::uns::tests::buffer_handler<value_type>&) noexcept = delete;
+        buffer_handler(::uns::tests::buffer_handler<value_type>&&) noexcept = delete;
+        ::uns::tests::buffer_handler<value_type>& operator=(::uns::tests::buffer_handler<value_type>&&) noexcept = delete;
+        ~buffer_handler() noexcept {};
     public:
         ::std::size_t capacity() const noexcept { return sizeof(&m_buffer); };
     public:
@@ -235,9 +235,8 @@ namespace uns::tests {
         input_neuron() noexcept {};
         input_neuron(const ::uns::nn::address& address, const typename neuron_traitset::signal_traitset::signal_type& input_buffer) noexcept :
             ::uns::nn::general::neuron<neuron_traitset_t>{ address },
-            m_buffer(new buffer_wrapper{ input_buffer })
-        {
-        };
+            m_buffer(::std::make_unique<buffer_wrapper>(input_buffer))
+        {};
         input_neuron(const ::uns::tests::input_neuron<neuron_traitset>&) = delete;
         ::uns::tests::input_neuron<neuron_traitset>& operator=(const ::uns::tests::input_neuron<neuron_traitset>&) = delete;
         input_neuron(::uns::tests::input_neuron<neuron_traitset>&&) = delete;
