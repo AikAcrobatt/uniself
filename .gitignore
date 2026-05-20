@@ -71,3 +71,4 @@ _ReSharper*/
 obj/
 [Tt]est[Rr]esult*
 *.ods#
+/population_old

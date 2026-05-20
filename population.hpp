@@ -16,13 +16,10 @@ namespace uns::population {
     public:
         using points_type = points_t;
         using health_type = health_t;
-
+    public:
         virtual void add_points(const points_type&) { /*pregnancy += points_gain;*/ };
-
         virtual void set_damage(const health_type&) { /*health -= health_decrease;*/ };
-
         virtual bool is_alive() const { return false; /*return ::uns::math::more(health, 0.0F);*/ };
-
         virtual points_type points() const { return points_type{ 0 }; };
     };
 
@@ -326,7 +323,14 @@ namespace uns::population {
     };
 
 
-    template<typename order_t, typename ration_source_t, typename breed_manager_t, typename fatal_act_operator_t, typename size_control_t>
+    template<
+        typename order_t
+        , typename ration_source_t
+        , typename breed_manager_t
+        , typename fatal_act_operator_t
+        , typename size_control_t
+    >
+    //TODO to put here some concept restrictions
     class machine {
     public:
         using order_type = typename order_t;
@@ -347,7 +351,13 @@ namespace uns::population {
         size_control_type barrier;
         health_type life_decrement = 0.0F;//life_decrement
     public:
-        machine(int random_seed, health_type life_decrease_per_iteration) : units(random_seed), life_decrement(life_decrease_per_iteration) {};
+        machine(
+            int random_seed
+            , health_type life_decrease_per_iteration
+        ) :
+            units(random_seed)
+            , life_decrement(life_decrease_per_iteration)
+        {};
     protected:
         void sanitation() {
             OnSanitationStart();
@@ -378,15 +388,15 @@ namespace uns::population {
 
             OnSanitationFinish();
         };
-
+    protected:
         virtual void OnConditionStart() {};
-        virtual void OnConditionUnitStart(order_element_type& elem) {};
-        virtual void OnConditionUnitFinish(order_element_type& elem) {};
+        virtual void OnConditionUnitStart(order_element_type& Unit) {};
+        virtual void OnConditionUnitFinish(order_element_type& Unit) {};
         virtual void OnBeforeBreed() {};
         virtual void OnConditionFinish() {};
         virtual void OnSanitationStart() {};
-        virtual void OnSanitationUnitStart(order_element_type& elem) {};
-        virtual void OnSanitationUnitFinish(order_element_type& elem, bool survive) {};
+        virtual void OnSanitationUnitStart(order_element_type& Unit) {};
+        virtual void OnSanitationUnitFinish(order_element_type& Unit, bool UnitDoesSurvive) {};
         virtual void OnSanitationFinish() { units.indexate(); };
     public:
         void condition() {
