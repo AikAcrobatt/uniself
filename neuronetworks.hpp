@@ -845,7 +845,9 @@ namespace uns::nn {
             return result;
         };
     public:
-        virtual ::std::size_t subneurons_total() const override { return m_links.size(); };
+        virtual ::std::size_t links_total() const override { return m_links.size(); };
+        virtual ::std::size_t params_total() const override { return m_params.size(); };
+    public:
         virtual const ::uns::nn::general::neuron<typename base::neuron_traitset>* subneuron(::std::size_t LinkIdx) const override {
             if(LinkIdx >= 0 && LinkIdx < m_links.size()) {
                 return static_cast<::uns::nn::general::neuron<typename base::neuron_traitset>*>(::std::get<part::_neuron_>(m_links[LinkIdx]));
@@ -862,8 +864,6 @@ namespace uns::nn {
                 return nullptr;
             };
         };
-    public:
-        virtual ::std::size_t params_total() const override { return m_params.size(); };
     public:
         virtual const typename base::neuron_traitset::signal_traitset::signal_type& R() const override { return m_F->value(); };
         virtual typename base::neuron_traitset::signal_traitset::signal_type& R() { return m_F->value(); };
@@ -1170,7 +1170,7 @@ namespace uns::nn {
         virtual typename base::network_traitset::neuron_type::neuron_traitset::signal_traitset::signal_type I(::std::size_t index) const { return base::m_inputs[index]->R(); };
     public:
         virtual ::std::size_t layers_total() const { return m_layers.size(); };
-        virtual ::std::size_t neurons_total(size_t LayerIdx) const { return m_layers[LayerIdx].size(); };
+        virtual ::std::size_t neurons_total(size_t LayerIdx) const { return m_layers.at(LayerIdx).size(); };
         virtual ::std::size_t outputs_total() const { return base::m_outputs.size(); };
         virtual ::std::size_t inputs_total() const { return base::m_inputs.size(); };
         virtual const ::uns::nn::address& output(::std::size_t OutputIdx) const { return base::m_outputs.at(OutputIdx)->address(); };
@@ -1241,3 +1241,5 @@ namespace uns::nn {
 };
 
 #endif
+
+//TODO to make a macro to alter performing array-bounds-check optionally
