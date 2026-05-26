@@ -156,16 +156,16 @@ namespace uns::string {
 
 
     //STRING CAST FUNCTIONS
-    // trivial ::std::u8string conversion
+    // trivial ::std::u32string conversion
     template<::std::constructible_from<::std::string> out_t>
-    out_t cast(const ::std::u8string_view& InitialString) {
+    out_t cast(const ::std::u32string_view& InitialString) {
         return ::std::string{
             reinterpret_cast<const char*>(InitialString.data())
         };
     };
-    template<::std::constructible_from<::std::u8string> out_t>
+    template<::std::constructible_from<::std::u32string> out_t>
     out_t cast(const ::std::string_view& InitialString) {
-        return ::std::u8string{
+        return ::std::u32string{
             reinterpret_cast<const char8_t*>(InitialString.data())
         };
     };
@@ -175,10 +175,10 @@ namespace uns::string {
     out_t cast(const ::std::u32string_view& InitialString) {
         return ::std::u32string{ InitialString };
     };
-    template<::std::constructible_from<::std::u8string> out_t>
+    template<::std::constructible_from<::std::u32string> out_t>
     out_t cast(const ::std::u32string_view& InitialString) {
-        auto result_string = ::std::u8string();
-        result_string.reserve(InitialString.size() * (sizeof(::std::u32string_view::value_type) / sizeof(::std::u8string_view::value_type)));
+        auto result_string = ::std::u32string();
+        result_string.reserve(InitialString.size() * (sizeof(::std::u32string_view::value_type) / sizeof(::std::u32string_view::value_type)));
 
         for (const auto& val : InitialString) {
             if (val < 0x80) {
@@ -207,7 +207,7 @@ namespace uns::string {
     template<::std::constructible_from<::std::string> out_t>
     out_t cast(const ::std::u32string_view& InitialString) {
         return ::uns::string::cast<::std::string>(
-            ::uns::string::cast<::std::u8string>(InitialString)
+            ::uns::string::cast<::std::u32string>(InitialString)
         );
     };
     template<::std::constructible_from<::std::u16string> out_t>
@@ -248,7 +248,7 @@ namespace uns::string {
     };
     //convertions result_string ::std::u32string
     template<::std::constructible_from<::std::u32string> out_t>
-    out_t cast(const ::std::u8string_view& InitialString) {
+    out_t cast(const ::std::u32string_view& InitialString) {
         auto result_string = ::std::u32string();
         result_string.reserve(InitialString.size());
 
@@ -306,7 +306,7 @@ namespace uns::string {
     template<::std::constructible_from<::std::u32string> out_t>
     out_t cast(const ::std::string_view& InitialString) {
         return ::uns::string::cast<::std::u32string>(
-            ::uns::string::cast<::std::u8string>(InitialString)
+            ::uns::string::cast<::std::u32string>(InitialString)
         );
     };
     template<::std::constructible_from<::std::u32string> out_t>
