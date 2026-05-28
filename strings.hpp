@@ -10,6 +10,7 @@
 #include <concepts>
 #include <exception>
 #include <stdexcept>
+#include <string_view>
 
 #include "uniself/renum.hpp"
 #include "uniself/concepts.hpp"
@@ -113,7 +114,7 @@ namespace uns::string {
                 && *new_begin != U'\r'
                 && *new_begin != U'\f'
                 && *new_begin != U'\a'
-            ) {
+                ) {
                 break;
             };
 
@@ -131,7 +132,7 @@ namespace uns::string {
                 && *new_rend != U'\r'
                 && *new_rend != U'\f'
                 && *new_rend != U'\a'
-            ) {
+                ) {
                 new_end = TrimmingString.cend() - (new_rend - TrimmingString.crbegin());
                 break;
             };
@@ -156,16 +157,16 @@ namespace uns::string {
 
 
     //STRING CAST FUNCTIONS
-    // trivial ::std::u32string conversion
+    // trivial ::std::u8string conversions
     template<::std::constructible_from<::std::string> out_t>
-    out_t cast(const ::std::u32string_view& InitialString) {
+    out_t cast(const ::std::u8string_view& InitialString) {
         return ::std::string{
             reinterpret_cast<const char*>(InitialString.data())
         };
     };
-    template<::std::constructible_from<::std::u32string> out_t>
+    template<::std::constructible_from<::std::u8string> out_t>
     out_t cast(const ::std::string_view& InitialString) {
-        return ::std::u32string{
+        return ::std::u8string{
             reinterpret_cast<const char8_t*>(InitialString.data())
         };
     };
@@ -175,10 +176,10 @@ namespace uns::string {
     out_t cast(const ::std::u32string_view& InitialString) {
         return ::std::u32string{ InitialString };
     };
-    template<::std::constructible_from<::std::u32string> out_t>
+    template<::std::constructible_from<::std::u8string> out_t>
     out_t cast(const ::std::u32string_view& InitialString) {
-        auto result_string = ::std::u32string();
-        result_string.reserve(InitialString.size() * (sizeof(::std::u32string_view::value_type) / sizeof(::std::u32string_view::value_type)));
+        auto result_string = ::std::u8string();
+        result_string.reserve(InitialString.size() * (sizeof(::std::u32string_view::value_type) / sizeof(::std::u8string_view::value_type)));
 
         for (const auto& val : InitialString) {
             if (val < 0x80) {
@@ -207,7 +208,7 @@ namespace uns::string {
     template<::std::constructible_from<::std::string> out_t>
     out_t cast(const ::std::u32string_view& InitialString) {
         return ::uns::string::cast<::std::string>(
-            ::uns::string::cast<::std::u32string>(InitialString)
+            ::uns::string::cast<::std::u8string>(InitialString)
         );
     };
     template<::std::constructible_from<::std::u16string> out_t>
@@ -248,7 +249,7 @@ namespace uns::string {
     };
     //convertions result_string ::std::u32string
     template<::std::constructible_from<::std::u32string> out_t>
-    out_t cast(const ::std::u32string_view& InitialString) {
+    out_t cast(const ::std::u8string_view& InitialString) {
         auto result_string = ::std::u32string();
         result_string.reserve(InitialString.size());
 
@@ -306,7 +307,7 @@ namespace uns::string {
     template<::std::constructible_from<::std::u32string> out_t>
     out_t cast(const ::std::string_view& InitialString) {
         return ::uns::string::cast<::std::u32string>(
-            ::uns::string::cast<::std::u32string>(InitialString)
+            ::uns::string::cast<::std::u8string>(InitialString)
         );
     };
     template<::std::constructible_from<::std::u32string> out_t>
@@ -423,7 +424,7 @@ namespace uns::string {
                 const auto prefix = ::std::u32string_view{ iter, iter + 2 };
                 prefix == U"0x"
                 || prefix == U"0X"
-            ) {
+                ) {
                 const out_t base = 0x10;
 
                 iter += 2;
@@ -439,7 +440,7 @@ namespace uns::string {
             else if (
                 prefix == U"0b"
                 || prefix == U"0B"
-            ) {
+                ) {
                 const out_t base = 0b10;
 
                 iter += 2;
@@ -453,7 +454,7 @@ namespace uns::string {
                 is_dec = false;
             };
         };
-        if(is_dec) {
+        if (is_dec) {
             const out_t base = 10;
             while (iter < InitialString.cend()) {
                 result *= base;
@@ -476,7 +477,7 @@ namespace uns::string {
             };
         };
 
-        return { ::uns::string::auxiliary::integer_to_string<in_t>(10, InitialNumericValue)};
+        return { ::uns::string::auxiliary::integer_to_string<in_t>(10, InitialNumericValue) };
     };
     template<::std::floating_point out_t>
     out_t cast(const ::std::u32string_view& InitialString) {
@@ -489,7 +490,7 @@ namespace uns::string {
                 ::std::chars_format::general,
                 ::std::chars_format::fixed
             }
-        ) {
+            ) {
             auto conv = ::std::from_chars(
                 narrow_string.c_str()
                 , narrow_string.c_str() + narrow_string.size()
@@ -633,7 +634,7 @@ namespace uns::string {
                     auto sample_offset = Source.find(Sample, SeekerOffset);
                     sample_offset != string_t::npos
                     && sample_offset >= SeekerOffset
-                ) {
+                    ) {
                     return sample_offset + Source.cbegin();
                 };
 
@@ -669,7 +670,7 @@ namespace uns::string {
                     );
                     sample_seeker != Source.cend()
                     && sample_seeker < found
-                ) {
+                    ) {
                     found = sample_seeker;
                     FoundSample = sample;
                 };
@@ -904,7 +905,7 @@ namespace uns::string {
                     , Limiter
                 );
                 limiter_beg != Source.cend()
-            ) {
+                ) {
                 return ::uns::string::parsing::seek<string_t>(
                     Source
                     , Seeker
@@ -938,7 +939,7 @@ namespace uns::string {
                     , Limiter
                 );
                 limiter_beg != Source.cend()
-            ) {
+                ) {
                 return ::uns::string::parsing::seek<string_t>(
                     Source
                     , Seeker
@@ -998,7 +999,7 @@ namespace uns::string {
                     , LimiterBegin
                     , LimiterEnd
                 )
-            ) {
+                ) {
                 Fragment.clear();
                 return false;
             }
@@ -1032,7 +1033,7 @@ namespace uns::string {
                     , LimiterBegin
                     , LimiterEnd
                 )
-            ) {
+                ) {
                 Fragment.clear();
                 return false;
             }
@@ -1262,7 +1263,7 @@ namespace uns::string {
                     , LimiterBegin
                     , Target.cend()
                 )
-            ) {
+                ) {
                 return false;
             };
 
@@ -1299,7 +1300,7 @@ namespace uns::string {
                     , LimiterBegin
                     , Target.cend()
                 )
-            ) {
+                ) {
                 return false;
             };
 
