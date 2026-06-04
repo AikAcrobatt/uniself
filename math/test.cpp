@@ -187,11 +187,11 @@ INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_Flt,
 );
 using AbsTests_Dbl = ::AbsTestsFlt<double>;
 TEST_P(AbsTests_Dbl, Do) {
-    ASSERT_FLOAT_EQ(
+    ASSERT_DOUBLE_EQ(
         GetParam()
         , ::uns::math::abs(GetParam())
     );
-    ASSERT_FLOAT_EQ(
+    ASSERT_DOUBLE_EQ(
         GetParam()
         , ::uns::math::abs(-GetParam())
     );
@@ -203,11 +203,11 @@ INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_Dbl,
 );
 using AbsTests_LDbl = ::AbsTestsFlt<long double>;
 TEST_P(AbsTests_LDbl, Do) {
-    ASSERT_FLOAT_EQ(
+    ASSERT_DOUBLE_EQ(
         GetParam()
         , ::uns::math::abs(GetParam())
     );
-    ASSERT_FLOAT_EQ(
+    ASSERT_DOUBLE_EQ(
         GetParam()
         , ::uns::math::abs(-GetParam())
     );
@@ -248,11 +248,11 @@ public:
 
 using AbsTests_Int = ::AbsTestsInt<int>;
 TEST_P(AbsTests_Int, Do) {
-    ASSERT_FLOAT_EQ(
+    ASSERT_EQ(
         GetParam()
         , ::uns::math::abs(GetParam())
     );
-    ASSERT_FLOAT_EQ(
+    ASSERT_EQ(
         GetParam()
         , ::uns::math::abs(-GetParam())
     );
@@ -264,11 +264,11 @@ INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_Int,
 );
 using AbsTests_LLInt = ::AbsTestsInt<long long int>;
 TEST_P(AbsTests_LLInt, Do) {
-    ASSERT_FLOAT_EQ(
+    ASSERT_EQ(
         GetParam()
         , ::uns::math::abs(GetParam())
     );
-    ASSERT_FLOAT_EQ(
+    ASSERT_EQ(
         GetParam()
         , ::uns::math::abs(-GetParam())
     );
@@ -280,7 +280,7 @@ INSTANTIATE_TEST_CASE_P(AbsTesting, AbsTests_LLInt,
 );
 using AbsTests_ULLInt = ::AbsTestsInt<unsigned long long int>;
 TEST_P(AbsTests_ULLInt, Do) {
-    ASSERT_FLOAT_EQ(
+    ASSERT_EQ(
         GetParam()
         , ::uns::math::abs(GetParam())
     );
@@ -621,7 +621,7 @@ INSTANTIATE_TEST_CASE_P(DivTesting, DivTests_Flt,
 );
 using DivTests_LDbl = ::DivTests<long double>;
 TEST_P(DivTests_LDbl, Do) {
-    ASSERT_FLOAT_EQ(
+    ASSERT_DOUBLE_EQ(
         div_result()
         , ::uns::math::div(get_numerator(), get_denominator())
     );
@@ -798,12 +798,12 @@ INSTANTIATE_TEST_CASE_P(MinimalMaximalTesting, MinMax_Flt,
 );
 using MinMax_LDbl = ::MinMax<long double>;
 TEST_P(MinMax_LDbl, Do) {
-    ASSERT_FLOAT_EQ(
+    ASSERT_DOUBLE_EQ(
         expected_minimal()
         , ::uns::math::minimal(get1(), get2(), get3(), get4(), get5())
     );
 
-    ASSERT_FLOAT_EQ(
+    ASSERT_DOUBLE_EQ(
         expected_maximal()
         , ::uns::math::maximal(get1(), get2(), get3(), get4(), get5())
     );
