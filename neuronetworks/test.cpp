@@ -668,7 +668,7 @@ TEST_P(DirectPropagation, SequentialNetwork) {
     set_ido(GetParam());
 
     network.react({});
-    ASSERT_FLOAT_EQ(
+    ASSERT_DOUBLE_EQ(
         predict_output(GetParam())
         , network.O(0)
     );
@@ -695,7 +695,7 @@ TEST_P(DirectPropagation, NonrecursiveReversiveNetwork) {
     set_ido(GetParam());
 
     network.react({});
-    ASSERT_FLOAT_EQ(
+    ASSERT_DOUBLE_EQ(
         predict_output(GetParam())
         , network.O(0)
     );
@@ -815,7 +815,7 @@ TEST_P(RevertPropagation, NonrecursiveReversiveNetwork) {
     set_ido(GetParam().ido_buffer);
 
     network.react({});
-    EXPECT_FLOAT_EQ(
+    EXPECT_DOUBLE_EQ(
         predict_output(GetParam().ido_buffer)
         , network.O(0)
     );
@@ -823,8 +823,8 @@ TEST_P(RevertPropagation, NonrecursiveReversiveNetwork) {
     set_odo(network, GetParam());
     network._react({});
 
-    auto neurons_reversive_values = predict_reversive_values(GetParam().reversive_input);
-    ASSERT_FLOAT_EQ(
+    const auto neurons_reversive_values = predict_reversive_values(GetParam().reversive_input);
+    EXPECT_DOUBLE_EQ(
         neurons_reversive_values[0]._C
         , network.access(
             {
@@ -833,7 +833,7 @@ TEST_P(RevertPropagation, NonrecursiveReversiveNetwork) {
             }
         )._C()
     );
-    ASSERT_FLOAT_EQ(
+    EXPECT_DOUBLE_EQ(
         neurons_reversive_values[0]._R
         , network.access(
             {
@@ -842,7 +842,7 @@ TEST_P(RevertPropagation, NonrecursiveReversiveNetwork) {
             }
         )._R()
     );
-    ASSERT_FLOAT_EQ(
+    EXPECT_DOUBLE_EQ(
         neurons_reversive_values[1]._C
         , network.access(
             {
@@ -851,7 +851,7 @@ TEST_P(RevertPropagation, NonrecursiveReversiveNetwork) {
             }
         )._C()
     );
-    ASSERT_FLOAT_EQ(
+    EXPECT_DOUBLE_EQ(
         neurons_reversive_values[1]._R
         , network.access(
             {
@@ -860,7 +860,7 @@ TEST_P(RevertPropagation, NonrecursiveReversiveNetwork) {
             }
         )._R()
     );
-    ASSERT_FLOAT_EQ(
+    EXPECT_DOUBLE_EQ(
         neurons_reversive_values[2]._C
         , network.access(
             {
@@ -869,7 +869,7 @@ TEST_P(RevertPropagation, NonrecursiveReversiveNetwork) {
             }
         )._C()
     );
-    ASSERT_FLOAT_EQ(
+    EXPECT_DOUBLE_EQ(
         neurons_reversive_values[2]._R
         , network.access(
             {
