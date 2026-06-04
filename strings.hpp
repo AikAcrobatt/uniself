@@ -632,9 +632,11 @@ namespace uns::string {
             ) {
                 if (
                     auto sample_offset = Source.find(Sample, SeekerOffset);
-                    sample_offset != string_t::npos
+                    static_cast<typename ::std::iterator_traits<typename string_t::const_iterator>::difference_type>(
+                        sample_offset
+                    ) != string_t::npos
                     && sample_offset >= SeekerOffset
-                    ) {
+                ) {
                     return sample_offset + Source.cbegin();
                 };
 
