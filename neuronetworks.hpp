@@ -845,9 +845,7 @@ namespace uns::nn {
             return result;
         };
     public:
-        virtual ::std::size_t links_total() const override { return m_links.size(); };
-        virtual ::std::size_t params_total() const override { return m_params.size(); };
-    public:
+        virtual ::std::size_t subneurons_total() const override { return m_links.size(); };
         virtual const ::uns::nn::general::neuron<typename base::neuron_traitset>* subneuron(::std::size_t LinkIdx) const override {
             if(LinkIdx >= 0 && LinkIdx < m_links.size()) {
                 return static_cast<::uns::nn::general::neuron<typename base::neuron_traitset>*>(::std::get<part::_neuron_>(m_links[LinkIdx]));
@@ -864,6 +862,8 @@ namespace uns::nn {
                 return nullptr;
             };
         };
+    public:
+        virtual ::std::size_t params_total() const override { return m_params.size(); };
     public:
         virtual const typename base::neuron_traitset::signal_traitset::signal_type& R() const override { return m_F->value(); };
         virtual typename base::neuron_traitset::signal_traitset::signal_type& R() { return m_F->value(); };
