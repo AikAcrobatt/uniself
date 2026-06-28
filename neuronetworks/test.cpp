@@ -346,7 +346,7 @@ namespace uns::tests {
         using traitset = ::uns::tests::input;
         using base = ::uns::nn::general::input_data_object<traitset>;
     protected:
-        ::std::array<typename traitset::signal_traitset::signal_type, ::uns::tests::data_buffer_capacity> m_buffer;
+        mutable ::std::array<typename traitset::signal_traitset::signal_type, ::uns::tests::data_buffer_capacity> m_buffer;
         ::std::size_t m_page_size = m_buffer.size();
         ::std::size_t m_actual_size = m_buffer.size();
     public:
@@ -385,7 +385,7 @@ namespace uns::tests {
             };
         };
     public:
-        inline virtual typename traitset::input_neuron_type* get(const ::uns::nn::address& address) override {
+        inline virtual typename traitset::input_neuron_type* get(const ::uns::nn::address& address) const override {
             auto buffer_cell = find(address);
 
             if (buffer_cell != m_buffer.cend()) {

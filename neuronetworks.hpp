@@ -638,7 +638,7 @@ namespace uns::nn {
             using iterator_type = typename input_data_object_traitset_t::iterator_type;
             using input_allocator_type = typename input_data_object_traitset_t::input_allocator_type;
 
-            virtual typename input_traitset::input_neuron_type* get(const ::uns::nn::address& RequestedInputNeuronsAddress) = 0;
+            virtual typename input_traitset::input_neuron_type* get(const ::uns::nn::address& RequestedInputNeuronsAddress) const = 0;
             virtual iterator_type begin() const = 0;
             virtual iterator_type end() const = 0;
         };
@@ -664,7 +664,7 @@ namespace uns::nn {
             virtual typename network_traitset::description_type descript() const = 0;
             virtual void set(
                 const typename network_traitset::description_type& NetworkDescription
-                , typename network_traitset::input_data_object_type& InputDataObject
+                , const typename network_traitset::input_data_object_type& InputDataObject
             ) = 0;
             virtual void react(const ::std::vector<typename network_traitset::neuron_type::neuron_traitset::signal_traitset::params_type>& CommonParams) {};
 
@@ -1070,7 +1070,7 @@ namespace uns::nn {
         };
         virtual void set(
             const typename base::network_traitset::description_type& NetworkDescription
-            , typename base::network_traitset::input_data_object_type& InputDataObject
+            , const typename base::network_traitset::input_data_object_type& InputDataObject
         ) override {
             clear();
 
