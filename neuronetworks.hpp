@@ -43,6 +43,14 @@ namespace uns::nn {
         };
     };
 
+
+    template<typename input_allocator_t>
+    concept input_neuron_allocator = requires(
+        input_allocator_t Alloc
+        , typename input_allocator_t::value_type InputNeuron
+    ) {
+        Alloc.deallocate(&InputNeuron, static_cast<::std::size_t>(1));
+    };
 };
 
 namespace uns::nn::traitset {
@@ -65,7 +73,7 @@ namespace uns::nn::traitset {
                 , typename signal_traitset_t::params_type
             >
         >
-        && ::std::derived_from<input_allocator_t, ::std::allocator<typename input_allocator_t::value_type>>
+        && ::uns::nn::input_neuron_allocator<input_allocator_t>
         && ::std::same_as<typename input_allocator_t::value_type::neuron_traitset::signal_traitset, signal_traitset_t>
         && ::uns::legacy_iterator<iterator_t, ::uns::nn::address>
     class input {
