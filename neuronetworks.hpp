@@ -108,18 +108,17 @@ namespace uns::nn::traitset {
     };
 
 
-    template<typename neuron_t, typename description_network_t, typename neuron_allocator_t, typename input_data_object_t>
-        requires ::std::derived_from<
-            typename neuron_t::neuron_traitset
+    template<typename neuron_allocator_t, typename description_network_t, typename input_data_object_t>
+        requires ::uns::nn::is_neuron_allocator<neuron_allocator_t>
+        && ::std::derived_from<
+            typename neuron_allocator_t::value_type::neuron_traitset
             , ::uns::nn::traitset::neuron<
-                typename neuron_t::neuron_traitset::signal_traitset
-                , typename neuron_t::neuron_traitset::description_type
-                , typename neuron_t::neuron_traitset::activator_caster_type
-                , typename neuron_t::neuron_traitset::collector_caster_type
+                typename neuron_allocator_t::value_type::neuron_traitset::signal_traitset
+                , typename neuron_allocator_t::value_type::neuron_traitset::description_type
+                , typename neuron_allocator_t::value_type::neuron_traitset::activator_caster_type
+                , typename neuron_allocator_t::value_type::neuron_traitset::collector_caster_type
             >
         >
-        && ::uns::nn::is_neuron_allocator<neuron_allocator_t>
-            && ::std::same_as<typename neuron_allocator_t::value_type, neuron_t>
         && ::std::derived_from<
             typename input_data_object_t::input_traitset
             , ::uns::nn::traitset::input<
@@ -129,12 +128,12 @@ namespace uns::nn::traitset {
             >
         >
         && ::std::same_as<
-            typename neuron_t::neuron_traitset::description_type
+            typename neuron_allocator_t::value_type::neuron_traitset::description_type
             , typename description_network_t::neuron_description_type
         >
     class network {
     public:
-        using neuron_type = neuron_t;
+        using neuron_type = typename neuron_allocator_t::value_type;
         using neuron_allocator_type = neuron_allocator_t;
         using description_type = description_network_t;
         using input_data_object_type = input_data_object_t;
@@ -655,9 +654,8 @@ namespace uns::nn {
             requires ::std::derived_from<
                 network_traitset_t
                 , ::uns::nn::traitset::network<
-                    typename network_traitset_t::neuron_type
+                    typename network_traitset_t::neuron_allocator_type
                     , typename network_traitset_t::description_type
-                    , typename network_traitset_t::neuron_allocator_type
                     , typename network_traitset_t::input_data_object_type
                 >
             >
@@ -1213,9 +1211,8 @@ namespace uns::nn {
         requires ::std::derived_from<
             network_traitset_t
             , ::uns::nn::traitset::network<
-                typename network_traitset_t::neuron_type
+                typename network_traitset_t::neuron_allocator_type
                 , typename network_traitset_t::description_type
-                , typename network_traitset_t::neuron_allocator_type
                 , typename network_traitset_t::input_data_object_type
             >
         >

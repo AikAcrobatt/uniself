@@ -443,23 +443,21 @@ namespace uns::tests {
 
 
     using traitset_network = ::uns::nn::traitset::network<
-        ::uns::nn::sequential_neuron<::uns::tests::traitset_neuron>
+        ::std::allocator<::uns::nn::sequential_neuron<::uns::tests::traitset_neuron>>
         , ::uns::nn::description::network<
             ::uns::nn::description::neuron<
                 ::uns::tests::signal
             >
         >
-        , ::std::allocator<::uns::nn::sequential_neuron<::uns::tests::traitset_neuron>>
         , ::uns::tests::object
     >;
     using traitset_rnetwork = ::uns::nn::traitset::network<
-        ::uns::nn::nonrecursive_reversive_neuron<::uns::tests::traitset_neuron>
+        ::std::allocator<::uns::nn::nonrecursive_reversive_neuron<::uns::tests::traitset_neuron>>
         , ::uns::nn::description::network<
             ::uns::nn::description::neuron<
                 ::uns::tests::signal
             >
         >
-        , ::std::allocator<::uns::nn::nonrecursive_reversive_neuron<::uns::tests::traitset_neuron>>
         , ::uns::tests::object
     >;
 
