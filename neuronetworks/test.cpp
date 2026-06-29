@@ -213,7 +213,7 @@ namespace uns::tests {
         ::uns::tests::buffer_handler<value_type>& operator=(const ::uns::tests::buffer_handler<value_type>&) noexcept = delete;
         buffer_handler(::uns::tests::buffer_handler<value_type>&&) noexcept = delete;
         ::uns::tests::buffer_handler<value_type>& operator=(::uns::tests::buffer_handler<value_type>&&) noexcept = delete;
-        ~buffer_handler() noexcept {};
+        virtual ~buffer_handler() noexcept {};
     public:
         ::std::size_t capacity() const noexcept { return sizeof(&m_buffer); };
     public:
@@ -241,7 +241,7 @@ namespace uns::tests {
         ::uns::tests::input_neuron<neuron_traitset>& operator=(const ::uns::tests::input_neuron<neuron_traitset>&) = delete;
         input_neuron(::uns::tests::input_neuron<neuron_traitset>&&) = delete;
         ::uns::tests::input_neuron<neuron_traitset>& operator=(::uns::tests::input_neuron<neuron_traitset>&&) = delete;
-        ~input_neuron() noexcept {};
+        virtual ~input_neuron() noexcept override {};
     public:
         virtual ::std::size_t capacity() const override { return base::capacity() + sizeof(m_value) + sizeof(m_buffer) + (m_buffer != nullptr ? m_buffer->capacity() : 0); };
     public:
@@ -629,7 +629,6 @@ public:
 
         return result;
     };
-
 };
 
 

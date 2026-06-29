@@ -583,6 +583,7 @@ namespace uns::nn {
             neuron(const ::uns::nn::address& Address) :
                 base{ Address }
             {};
+            virtual ~neuron() noexcept = default;
         public:
             virtual typename neuron_traitset::description_type descript() const = 0;
             virtual void set(
@@ -661,6 +662,8 @@ namespace uns::nn {
             ::std::vector<typename network_traitset::neuron_type*> m_outputs;
             ::std::vector<typename network_traitset::input_data_object_type::input_traitset::input_neuron_type*> m_inputs;
         public:
+            virtual ~network() noexcept = default;
+        public:
             virtual typename network_traitset::description_type descript() const = 0;
             virtual void set(
                 const typename network_traitset::description_type& NetworkDescription
@@ -724,7 +727,7 @@ namespace uns::nn {
         ::uns::nn::sequential_neuron<typename base::neuron_traitset>& operator=(const ::uns::nn::sequential_neuron<typename base::neuron_traitset>&) = delete;
         sequential_neuron(::uns::nn::sequential_neuron<typename base::neuron_traitset>&&) = delete;
         ::uns::nn::sequential_neuron<typename base::neuron_traitset>& operator=(::uns::nn::sequential_neuron<typename base::neuron_traitset>&&) = delete;
-        virtual ~sequential_neuron() {};
+        virtual ~sequential_neuron() noexcept {};
     protected:
         void clear() {
             m_F = nullptr;
@@ -906,7 +909,7 @@ namespace uns::nn {
         ::uns::nn::nonrecursive_reversive_neuron<typename base::neuron_traitset>& operator=(const ::uns::nn::nonrecursive_reversive_neuron<typename base::neuron_traitset>&) = delete;
         nonrecursive_reversive_neuron(::uns::nn::nonrecursive_reversive_neuron<typename base::neuron_traitset>&&) = delete;
         ::uns::nn::nonrecursive_reversive_neuron<typename base::neuron_traitset>& operator=(::uns::nn::nonrecursive_reversive_neuron<typename base::neuron_traitset>&&) = delete;
-        virtual ~nonrecursive_reversive_neuron() {};
+        virtual ~nonrecursive_reversive_neuron() noexcept {};
     protected:
         void clear() {
             base::clear();
@@ -1033,9 +1036,11 @@ namespace uns::nn {
         ::uns::nn::sequential_network<typename base::network_traitset>& operator=(const ::uns::nn::sequential_network<typename base::network_traitset>& net) = delete;
         sequential_network(::uns::nn::sequential_network<typename base::network_traitset>&& net) = delete;
         ::uns::nn::sequential_network<typename base::network_traitset>& operator=(::uns::nn::sequential_network<typename base::network_traitset>&& net) = delete;
-        virtual ~sequential_network() { clear(); };
+        virtual ~sequential_network() noexcept {
+            clear();
+        };
     public:
-        void clear() {
+        void clear() noexcept {
             for(auto& layer : m_layers) {
                 for(auto neuron : layer) {
                     delete neuron;
@@ -1044,7 +1049,9 @@ namespace uns::nn {
             m_layers.clear();
 
             auto inputs_allocator = typename base::network_traitset::input_data_object_type::input_allocator_type{};
-            for(auto input : base::m_inputs) {
+            for(auto& input : base::m_inputs) {
+                using input_neuron_type = typename base::network_traitset::input_data_object_type::input_allocator_type::value_type;
+                input->~input_neuron_type();
                 inputs_allocator.deallocate(input, 1);
             };
             base::m_inputs.clear();
@@ -1219,7 +1226,9 @@ namespace uns::nn {
         ::uns::nn::nonrecursive_reversive_network<typename base::network_traitset>& operator=(const ::uns::nn::nonrecursive_reversive_network<typename base::network_traitset>&) = delete;
         nonrecursive_reversive_network(::uns::nn::nonrecursive_reversive_network<typename base::network_traitset>&&) = delete;
         ::uns::nn::nonrecursive_reversive_network<typename base::network_traitset>& operator=(::uns::nn::nonrecursive_reversive_network<typename base::network_traitset>&&) = delete;
-        virtual ~nonrecursive_reversive_network() { clear(); };
+        virtual ~nonrecursive_reversive_network() noexcept {
+            clear();
+        };
     public:
         void clear() {
             base::clear();
