@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <memory>
 #include <string>
 #include <tuple>
 #include <concepts>
@@ -44,12 +45,13 @@ namespace uns::nn {
     };
 
 
-    template<typename input_allocator_t>
-    concept input_neuron_allocator = requires(
-        input_allocator_t Alloc
-        , typename input_allocator_t::value_type InputNeuron
+    template<typename neuron_allocator_t>
+    concept is_neuron_allocator = requires(
+        neuron_allocator_t Alloc
+        , typename neuron_allocator_t::value_type* NeuronPtr
     ) {
-        Alloc.deallocate(&InputNeuron, static_cast<::std::size_t>(1));
+        NeuronPtr = Alloc.allocate(static_cast<std::size_t>(1));
+        Alloc.deallocate(NeuronPtr, static_cast<std::size_t>(1));
     };
 };
 
@@ -73,14 +75,14 @@ namespace uns::nn::traitset {
                 , typename signal_traitset_t::params_type
             >
         >
-        && ::uns::nn::input_neuron_allocator<input_allocator_t>
+        && ::uns::nn::is_neuron_allocator<input_allocator_t>
         && ::std::same_as<typename input_allocator_t::value_type::neuron_traitset::signal_traitset, signal_traitset_t>
         && ::uns::legacy_iterator<iterator_t, ::uns::nn::address>
     class input {
     public:
         using signal_traitset = signal_traitset_t;
         using iterator_type = iterator_t;
-        using input_neuron_type = input_allocator_t::value_type;
+        using input_neuron_type = typename input_allocator_t::value_type;
         using input_allocator_type = input_allocator_t;
     };
 
@@ -106,7 +108,7 @@ namespace uns::nn::traitset {
     };
 
 
-    template<typename neuron_t, typename description_network_t, typename input_data_object_t>
+    template<typename neuron_t, typename description_network_t, typename neuron_allocator_t, typename input_data_object_t>
         requires ::std::derived_from<
             typename neuron_t::neuron_traitset
             , ::uns::nn::traitset::neuron<
@@ -116,6 +118,8 @@ namespace uns::nn::traitset {
                 , typename neuron_t::neuron_traitset::collector_caster_type
             >
         >
+        && ::uns::nn::is_neuron_allocator<neuron_allocator_t>
+            && ::std::same_as<typename neuron_allocator_t::value_type, neuron_t>
         && ::std::derived_from<
             typename input_data_object_t::input_traitset
             , ::uns::nn::traitset::input<
@@ -131,6 +135,7 @@ namespace uns::nn::traitset {
     class network {
     public:
         using neuron_type = neuron_t;
+        using neuron_allocator_type = neuron_allocator_t;
         using description_type = description_network_t;
         using input_data_object_type = input_data_object_t;
     };
@@ -638,7 +643,7 @@ namespace uns::nn {
             using input_traitset = input_data_object_traitset_t;
             using iterator_type = typename input_data_object_traitset_t::iterator_type;
             using input_allocator_type = typename input_data_object_traitset_t::input_allocator_type;
-
+        public:
             virtual typename input_traitset::input_neuron_type* get(const ::uns::nn::address& RequestedInputNeuronsAddress) const = 0;
             virtual iterator_type begin() const = 0;
             virtual iterator_type end() const = 0;
@@ -652,6 +657,7 @@ namespace uns::nn {
                 , ::uns::nn::traitset::network<
                     typename network_traitset_t::neuron_type
                     , typename network_traitset_t::description_type
+                    , typename network_traitset_t::neuron_allocator_type
                     , typename network_traitset_t::input_data_object_type
                 >
             >
@@ -670,7 +676,7 @@ namespace uns::nn {
                 , const typename network_traitset::input_data_object_type& InputDataObject
             ) = 0;
             virtual void react(const ::std::vector<typename network_traitset::neuron_type::neuron_traitset::signal_traitset::params_type>& CommonParams) {};
-
+        public:
             virtual ::std::size_t capacity() const {
                 ::std::size_t result = sizeof(*this)
                     + sizeof(m_outputs)
@@ -1041,18 +1047,19 @@ namespace uns::nn {
         };
     public:
         void clear() noexcept {
+            auto neurons_alloc = typename base::network_traitset::neuron_allocator_type{};
             for(auto& layer : m_layers) {
-                for(auto neuron : layer) {
-                    delete neuron;
+                for(auto& neuron : layer) {
+                    ::std::allocator_traits<decltype(neurons_alloc)>::destroy(neurons_alloc, neuron);
+                    neurons_alloc.deallocate(neuron, 1);
                 };
             };
             m_layers.clear();
 
-            auto inputs_allocator = typename base::network_traitset::input_data_object_type::input_allocator_type{};
+            auto inputs_alloc = typename base::network_traitset::input_data_object_type::input_allocator_type{};
             for(auto& input : base::m_inputs) {
-                using input_neuron_type = typename base::network_traitset::input_data_object_type::input_allocator_type::value_type;
-                input->~input_neuron_type();
-                inputs_allocator.deallocate(input, 1);
+                ::std::allocator_traits<decltype(inputs_alloc)>::destroy(inputs_alloc, input);
+                inputs_alloc.deallocate(input, 1);
             };
             base::m_inputs.clear();
 
@@ -1081,10 +1088,12 @@ namespace uns::nn {
         ) override {
             clear();
 
+            auto neurons_alloc = typename base::network_traitset::neuron_allocator_type{};
             for(const auto& layer : NetworkDescription.layers) {
                 m_layers.push_back(::std::vector<typename base::network_traitset::neuron_type*>{});
                 for(const auto& neuron : layer) {
-                    auto neuron_ptr = new typename base::network_traitset::neuron_type{};
+                    auto neuron_ptr = neurons_alloc.allocate(1);
+                    ::std::allocator_traits<decltype(neurons_alloc)>::construct(neurons_alloc, neuron_ptr);
                     m_layers.back().push_back(neuron_ptr);
                 };
             };
@@ -1206,6 +1215,7 @@ namespace uns::nn {
             , ::uns::nn::traitset::network<
                 typename network_traitset_t::neuron_type
                 , typename network_traitset_t::description_type
+                , typename network_traitset_t::neuron_allocator_type
                 , typename network_traitset_t::input_data_object_type
             >
         >

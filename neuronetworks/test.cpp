@@ -2,6 +2,7 @@
 #include <iostream>
 #include <array>
 #include <optional>
+#include <memory>
 
 #include "uniself/strings.hpp"
 #include "uniself/neuronetworks.hpp"
@@ -271,7 +272,6 @@ namespace uns::tests {
     };
 
 
-
     class const_iterator {
     protected:
         ::std::size_t m_end_pointer = 1;
@@ -389,10 +389,16 @@ namespace uns::tests {
             auto buffer_cell = find(address);
 
             if (buffer_cell != m_buffer.cend()) {
-                return new typename traitset::input_neuron_type{
-                    address,
-                    *buffer_cell
-                };
+                auto input_alloc = typename traitset::input_allocator_type{};
+                auto input_neuron_ptr = input_alloc.allocate(1);
+                ::std::allocator_traits<decltype(input_alloc)>::construct(
+                    input_alloc
+                    , input_neuron_ptr
+                    , address
+                    , *buffer_cell
+                );
+
+                return input_neuron_ptr;
             }
             else {
                 return nullptr;
@@ -443,6 +449,17 @@ namespace uns::tests {
                 ::uns::tests::signal
             >
         >
+        , ::std::allocator<::uns::nn::sequential_neuron<::uns::tests::traitset_neuron>>
+        , ::uns::tests::object
+    >;
+    using traitset_rnetwork = ::uns::nn::traitset::network<
+        ::uns::nn::nonrecursive_reversive_neuron<::uns::tests::traitset_neuron>
+        , ::uns::nn::description::network<
+            ::uns::nn::description::neuron<
+                ::uns::tests::signal
+            >
+        >
+        , ::std::allocator<::uns::nn::nonrecursive_reversive_neuron<::uns::tests::traitset_neuron>>
         , ::uns::tests::object
     >;
 
@@ -647,17 +664,7 @@ template<>
 
 
 TEST_P(DirectPropagation, SequentialNetwork) {
-    auto network = ::uns::nn::sequential_network<
-        ::uns::nn::traitset::network<
-            ::uns::nn::sequential_neuron<::uns::tests::traitset_neuron>
-            , ::uns::nn::description::network<
-                ::uns::nn::description::neuron<
-                    ::uns::tests::signal
-                >
-            >
-            , ::uns::tests::object
-        >
-    >{};
+    auto network = ::uns::nn::sequential_network<::uns::tests::traitset_network>{};
 
     network.set(
         make_nn_description()
@@ -673,17 +680,7 @@ TEST_P(DirectPropagation, SequentialNetwork) {
     );
 };
 TEST_P(DirectPropagation, NonrecursiveReversiveNetwork) {
-    auto network = ::uns::nn::nonrecursive_reversive_network<
-        ::uns::nn::traitset::network<
-            ::uns::nn::nonrecursive_reversive_neuron<::uns::tests::traitset_neuron>
-            , ::uns::nn::description::network<
-                ::uns::nn::description::neuron<
-                    ::uns::tests::signal
-                >
-            >
-            , ::uns::tests::object
-        >
-    >{};
+    auto network = ::uns::nn::nonrecursive_reversive_network<::uns::tests::traitset_rnetwork>{};
 
     network.set(
         make_nn_description()
@@ -793,17 +790,7 @@ template<>
 
 
 TEST_P(RevertPropagation, NonrecursiveReversiveNetwork) {
-    auto network = ::uns::nn::nonrecursive_reversive_network<
-        ::uns::nn::traitset::network<
-            ::uns::nn::nonrecursive_reversive_neuron<::uns::tests::traitset_neuron>
-            , ::uns::nn::description::network<
-                ::uns::nn::description::neuron<
-                    ::uns::tests::signal
-                >
-            >
-            , ::uns::tests::object
-        >
-    >{};
+    auto network = ::uns::nn::nonrecursive_reversive_network<::uns::tests::traitset_rnetwork>{};
 
     network.set(
         make_nn_description()
