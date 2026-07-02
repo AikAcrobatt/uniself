@@ -266,8 +266,8 @@ namespace uns::tests {
             const ::uns::nn::address&
         ) override {};
         virtual void link(
-            ::std::vector<::std::vector<::uns::nn::general::neuron<neuron_traitset>*>>&,
-            ::std::unordered_map<::uns::nn::address, ::uns::nn::general::neuron<neuron_traitset>*, ::uns::nn::address::hash>&
+            const ::std::vector<::std::vector<::uns::nn::general::neuron<neuron_traitset>*>>&
+            , const ::std::unordered_map<::uns::nn::address, ::uns::nn::general::neuron<neuron_traitset>*, ::uns::nn::address::hash>&
         ) override {};
     };
 

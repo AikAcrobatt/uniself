@@ -595,12 +595,12 @@ namespace uns::nn {
                 , const ::uns::nn::address& ThisNeuronAddress
             ) = 0;
             virtual void link(
-                ::std::vector<
+                const ::std::vector<
                     ::std::vector<
                         ::uns::nn::general::neuron<neuron_traitset>*
                     >
                 >& NetworkBody
-                , ::std::unordered_map<
+                , const ::std::unordered_map<
                     ::uns::nn::address
                     , ::uns::nn::general::neuron<neuron_traitset>*
                     , ::uns::nn::address::hash
@@ -799,14 +799,14 @@ namespace uns::nn {
             *m_addressses = NeuronDescription.links;
         };
         virtual void link(
-            ::std::vector<
+            const ::std::vector<
                 ::std::vector<
                     ::uns::nn::general::neuron<
                         typename base::neuron_traitset
                     >*
                 >
             >& NetworkBody
-            , ::std::unordered_map<
+            , const ::std::unordered_map<
                 ::uns::nn::address
                 , ::uns::nn::general::neuron<typename base::neuron_traitset>*
                 , ::uns::nn::address::hash
@@ -825,7 +825,7 @@ namespace uns::nn {
                 >{};
 
                 if(
-                    auto iter = InputNeuronsAddressMap.find(address);
+                    const auto iter = InputNeuronsAddressMap.find(address);
                     iter != InputNeuronsAddressMap.end()
                 ) {
                     ::std::get<part::_neuron_>(link) = iter->second;
@@ -923,7 +923,7 @@ namespace uns::nn {
         };
     public:
         virtual void _link(
-            ::std::vector<
+            const ::std::vector<
                 ::std::vector<
                     ::uns::nn::nonrecursive_reversive_neuron<
                         typename base::neuron_traitset
