@@ -756,7 +756,7 @@ namespace uns::nn {
 
             res.params = m_params;
 
-            for(auto link : m_links) {
+            for(const auto& link : m_links) {
                 res.links.emplace_back(
                     ::std::pair<::uns::nn::address, typename base::neuron_traitset::signal_traitset::weight_type>{
                         ::std::get<part::_neuron_>(link)->address(),
@@ -793,9 +793,7 @@ namespace uns::nn {
 
             m_params = NeuronDescription.params;
 
-            m_addressses = ::std::unique_ptr<::std::vector<::std::pair<::uns::nn::address, typename base::neuron_traitset::signal_traitset::weight_type>>>{
-                new ::std::vector<::std::pair<::uns::nn::address, typename base::neuron_traitset::signal_traitset::weight_type>>{}
-            };
+            m_addressses = ::std::make_unique<::std::vector<::std::pair<::uns::nn::address, typename base::neuron_traitset::signal_traitset::weight_type>>>();
             *m_addressses = NeuronDescription.links;
         };
         virtual void link(
