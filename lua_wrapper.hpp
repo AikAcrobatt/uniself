@@ -450,7 +450,7 @@ namespace uns::lua {
         ::uns::lua::auxiliary::state_wrapper m_stack_wrapper;
         ::std::shared_ptr<::uns::lua::auxiliary::state> m_stack = nullptr;
         ::std::string m_function_name = "";
-        ::uns::lua::error m_err;
+        mutable ::uns::lua::error m_err;
     public:
         inline function() {};
     private:
@@ -462,14 +462,14 @@ namespace uns::lua {
         function(::uns::lua::function&& obj) = default;
         ::uns::lua::function& operator=(::uns::lua::function&& obj) = default;
         ~function();
-
+    public:
         inline const ::uns::lua::error& error() const { return m_err; };
         inline ::uns::lua::error& error() { return m_err; };
-
+    public:
         ::std::u32string name() const;
-
+    public:
         bool valid() const;
-
+    public:
         ::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::std::vector<::uns::lua::value>& args);
         ::uns::lua::function::results operator() (const ::std::size_t expected_results);
         ::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::uns::lua::value& arg1);
@@ -477,7 +477,7 @@ namespace uns::lua {
         ::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2, const ::uns::lua::value& arg3);
         ::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2, const ::uns::lua::value& arg3, const ::uns::lua::value& arg4);
         ::uns::lua::function::results operator() (const ::std::size_t expected_results, const ::uns::lua::value& arg1, const ::uns::lua::value& arg2, const ::uns::lua::value& arg3, const ::uns::lua::value& arg4, const ::uns::lua::value& arg5);
-
+    public:
         void gc();
     };
 
@@ -489,7 +489,7 @@ namespace uns::lua {
         ::uns::lua::auxiliary::state_wrapper m_stack_wrapper;
         ::std::shared_ptr<::uns::lua::auxiliary::state> m_stack = nullptr;
         ::std::string m_global_name = "";
-        ::uns::lua::error m_err;
+        mutable ::uns::lua::error m_err;
     public:
         inline global() {};
     private:
@@ -502,17 +502,17 @@ namespace uns::lua {
         ::uns::lua::global& operator=(::uns::lua::global&& obj) = default;
         ::uns::lua::global& operator=(const ::uns::lua::value& value);
         ~global();
-
+    public:
         inline const ::uns::lua::error& error() const { return m_err; };
         inline ::uns::lua::error& error() { return m_err; };
-
+    public:
         ::std::u32string name() const;
-
+    public:
         inline bool valid() const { return m_stack != nullptr || m_stack_wrapper.valid(); };
-
-        ::uns::lua::value get();
+    public:
+        ::uns::lua::value get() const;
         void set(const ::uns::lua::value& value);
-
+    public:
         void gc();
     };
 
@@ -526,7 +526,7 @@ namespace uns::lua {
         friend ::uns::lua::lib_entry;
     private:
         mutable ::uns::lua::auxiliary::state_wrapper m_stack;
-        ::uns::lua::error m_err;
+        mutable ::uns::lua::error m_err;
     private:
         thread() = delete;
     public:
@@ -536,27 +536,27 @@ namespace uns::lua {
         thread(::uns::lua::thread&&);
         ::uns::lua::thread& operator=(::uns::lua::thread&&);
         ~thread() = default;
-
+    public:
         inline bool valid() const { return m_stack.valid(); };
-
+    public:
         inline const ::uns::lua::error& error() const { return m_err; };
         inline ::uns::lua::error& error() { return m_err; };
-
+    public:
         void load(const ::uns::lua::library& library);
         void load(const ::std::u32string& text);
         void load(const ::std::filesystem::path& file);
-
+    public:
         void call(int results_expected_total);
-
+    public:
         ::uns::lua::function get_function(const ::std::u32string& lua_global_function_name);
         ::uns::lua::global get_global(const ::std::u32string& lua_global_variable_name);
-
+    public:
         ::std::size_t size() const;
         ::uns::lua::value get_value(int input_index);
-
+    public:
         int raise_error(const ::std::string& errtext);
         int raise_error(const ::std::u32string& errtext);
-
+    public:
         void gc();
     };
 
@@ -1644,7 +1644,7 @@ namespace uns::lua {
     class script {
     private:
         ::std::shared_ptr<::uns::lua::auxiliary::state> m_stack = nullptr;
-        ::uns::lua::error m_err;
+        mutable ::uns::lua::error m_err;
     public:
         script();
         script(const ::std::u32string& text);
@@ -1655,21 +1655,21 @@ namespace uns::lua {
         script(::uns::lua::script&& obj);
         ::uns::lua::script& operator=(::uns::lua::script&& obj);
         ~script();
-
+    public:
         void load(const ::uns::lua::library& library);
         void load(const ::std::u32string& text);
         void load(const ::std::filesystem::path& file);
-
+    public:
         bool valid() const { return m_stack != nullptr; };
-
+    public:
         inline const ::uns::lua::error& error() const { return m_err; };
         inline ::uns::lua::error& error() { return m_err; };
-
+    public:
         ::uns::lua::function get_function(const ::std::u32string& lua_global_function_name);
         ::uns::lua::global get_global(const ::std::u32string& lua_global_variable_name);
-
+    public:
         void run();
-        
+    public:
         void gc();
         long double total_memory() const;
     };

@@ -1595,7 +1595,7 @@ void uns::lua::function::gc() {
 };
 ::std::u32string uns::lua::global::name() const { return ::uns::string::cast<::std::u32string>(m_global_name); };
 
-::uns::lua::value uns::lua::global::get() {
+::uns::lua::value uns::lua::global::get() const {
     ::uns::lua::alias::lua_state state = nullptr;
     if(m_stack != nullptr) {
         state = m_stack->get();
