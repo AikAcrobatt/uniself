@@ -1047,7 +1047,7 @@ namespace uns::nn {
             for(auto& layer : m_layers) {
                 for(auto& neuron : layer) {
                     ::std::allocator_traits<decltype(neurons_alloc)>::destroy(neurons_alloc, neuron);
-                    neurons_alloc.deallocate(neuron, 1);
+                    ::std::allocator_traits<decltype(neurons_alloc)>::deallocate(neurons_alloc, neuron, 1);
                 };
             };
             m_layers.clear();
@@ -1055,7 +1055,7 @@ namespace uns::nn {
             auto inputs_alloc = typename base::network_traitset::input_data_object_type::input_allocator_type{};
             for(auto& input : base::m_inputs) {
                 ::std::allocator_traits<decltype(inputs_alloc)>::destroy(inputs_alloc, input);
-                inputs_alloc.deallocate(input, 1);
+                ::std::allocator_traits<decltype(inputs_alloc)>::deallocate(inputs_alloc, input, 1);
             };
             base::m_inputs.clear();
 
@@ -1088,7 +1088,7 @@ namespace uns::nn {
             for(const auto& layer : NetworkDescription.layers) {
                 m_layers.push_back(::std::vector<typename base::network_traitset::neuron_type*>{});
                 for(const auto& neuron : layer) {
-                    auto neuron_ptr = neurons_alloc.allocate(1);
+                    auto neuron_ptr = ::std::allocator_traits<decltype(neurons_alloc)>::allocate(neurons_alloc, 1);
                     ::std::allocator_traits<decltype(neurons_alloc)>::construct(neurons_alloc, neuron_ptr);
                     m_layers.back().push_back(neuron_ptr);
                 };
