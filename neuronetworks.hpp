@@ -1047,7 +1047,9 @@ namespace uns::nn {
             for(auto& layer : m_layers) {
                 for(auto& neuron : layer) {
                     ::std::allocator_traits<decltype(neurons_alloc)>::destroy(neurons_alloc, neuron);
-                    ::std::allocator_traits<decltype(neurons_alloc)>::deallocate(neurons_alloc, neuron, 1);
+                };
+                if (layer.size() > 0) {
+                    ::std::allocator_traits<decltype(neurons_alloc)>::deallocate(neurons_alloc, *(layer.data()), layer.size());
                 };
             };
             m_layers.clear();
@@ -1066,7 +1068,7 @@ namespace uns::nn {
             auto res = typename base::network_traitset::description_type{};
 
             for(const auto& layer : m_layers) {
-                res.layers.push_back(::std::vector<typename base::network_traitset::neuron_type::neuron_traitset::description_type>{});
+                res.layers.emplace_back();
                 for(auto neuron_ptr : layer) {
                     res.layers.back().emplace_back(neuron_ptr->descript());
                 };
@@ -1086,11 +1088,12 @@ namespace uns::nn {
 
             auto neurons_alloc = typename base::network_traitset::neuron_allocator_type{};
             for(const auto& layer : NetworkDescription.layers) {
-                m_layers.push_back(::std::vector<typename base::network_traitset::neuron_type*>{});
-                for(const auto& neuron : layer) {
-                    auto neuron_ptr = ::std::allocator_traits<decltype(neurons_alloc)>::allocate(neurons_alloc, 1);
-                    ::std::allocator_traits<decltype(neurons_alloc)>::construct(neurons_alloc, neuron_ptr);
-                    m_layers.back().push_back(neuron_ptr);
+                m_layers.emplace_back();
+                auto neuron_ptr = ::std::allocator_traits<decltype(neurons_alloc)>::allocate(neurons_alloc, layer.size());
+
+                for (::std::size_t neuron_idx = 0; neuron_idx < layer.size(); ++neuron_idx) {
+                    ::std::allocator_traits<decltype(neurons_alloc)>::construct(neurons_alloc, neuron_ptr + neuron_idx);
+                    m_layers.back().emplace_back(neuron_ptr + neuron_idx);
                 };
             };
 
