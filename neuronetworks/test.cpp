@@ -526,8 +526,8 @@ namespace uns::tests {
             repr.layers.back().push_back(::uns::nn::description::neuron<::uns::tests::signal>{});
             repr.layers.back().back().activator.hashsum = ::uns::tests::hashsum::line_activator;
             repr.layers.back().back().collector.hashsum = ::uns::tests::hashsum::perc_collector;
-            repr.layers.back().back().r = 0;
-            repr.layers.back().back().c = 0;
+            repr.layers.back().back().activator.value = 0;
+            repr.layers.back().back().collector.value = 0;
             repr.layers.back().back().links = {
                 { { -1, 0 }, n00_weights[0] }
                 , { { -1, 1 }, n00_weights[1] }
@@ -539,8 +539,8 @@ namespace uns::tests {
             repr.layers.back().push_back(::uns::nn::description::neuron<::uns::tests::signal>{});
             repr.layers.back().back().activator.hashsum = ::uns::tests::hashsum::line_activator;
             repr.layers.back().back().collector.hashsum = ::uns::tests::hashsum::perc_collector;
-            repr.layers.back().back().r = 0;
-            repr.layers.back().back().c = 0;
+            repr.layers.back().back().activator.value = 0;
+            repr.layers.back().back().collector.value = 0;
             repr.layers.back().back().links = {
                 { { -1, 0 }, n01_weights[0] }
                 , { { -1, 1 }, n01_weights[1] }
@@ -554,8 +554,8 @@ namespace uns::tests {
             repr.layers.back().push_back(::uns::nn::description::neuron<::uns::tests::signal>{});
             repr.layers.back().back().activator.hashsum = ::uns::tests::hashsum::line_activator;
             repr.layers.back().back().collector.hashsum = ::uns::tests::hashsum::perc_collector;
-            repr.layers.back().back().r = 0;
-            repr.layers.back().back().c = 0;
+            repr.layers.back().back().activator.value = 0;
+            repr.layers.back().back().collector.value = 0;
             repr.layers.back().back().links = {
                 { { 0, 0 }, n10_weights[0] }
                 , { { 0, 1 }, n10_weights[1] }

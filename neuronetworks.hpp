@@ -208,20 +208,17 @@ namespace uns::nn {
             using signal_traitset = signal_traitset_t;
         public:
             ::uns::nn::description::activator<signal_traitset> activator;
-            signal_traitset::signal_type r = typename signal_traitset::signal_type{ 0 };
             ::uns::nn::description::collector<signal_traitset> collector;
-            signal_traitset::signal_type c = typename signal_traitset::signal_type{ 0 };
             ::std::vector<::std::pair<::uns::nn::address, typename signal_traitset::weight_type>> links;
             ::std::vector<typename signal_traitset::params_type> params;
         public:
             neuron() {};
             neuron(const ::uns::nn::description::neuron<signal_traitset>& Neuron) :
-                activator(Neuron.activator),
-                collector(Neuron.collector),
-                links(Neuron.links),
-                params(Neuron.params),
-                r(Neuron.r),
-                c(Neuron.c) {};
+                activator(Neuron.activator)
+                , collector(Neuron.collector)
+                , links(Neuron.links)
+                , params(Neuron.params)
+            {};
             ::uns::nn::description::neuron<signal_traitset>& operator=(const ::uns::nn::description::neuron<signal_traitset>& Neuron) {
                 if(this == &Neuron) return *this;
 
@@ -229,18 +226,15 @@ namespace uns::nn {
                 collector = Neuron.collector;
                 links = Neuron.links;
                 params = Neuron.params;
-                r = Neuron.r;
-                c = Neuron.c;
 
                 return *this;
             };
             neuron(::uns::nn::description::neuron<signal_traitset>&& Neuron) :
-                activator(::std::move(Neuron.activator)),
-                collector(::std::move(Neuron.collector)),
-                links(::std::move(Neuron.links)),
-                params(::std::move(Neuron.params)),
-                r(::std::move(Neuron.r)),
-                c(::std::move(Neuron.c)) {};
+                activator(::std::move(Neuron.activator))
+                , collector(::std::move(Neuron.collector))
+                , links(::std::move(Neuron.links))
+                , params(::std::move(Neuron.params))
+            {};
             ::uns::nn::description::neuron<signal_traitset>& operator=(::uns::nn::description::neuron<signal_traitset>&& Neuron) {
                 if(this == &Neuron) return *this;
 
@@ -248,8 +242,6 @@ namespace uns::nn {
                 collector = ::std::move(Neuron.collector);
                 links = ::std::move(Neuron.links);
                 params = ::std::move(Neuron.params);
-                r = ::std::move(Neuron.r);
-                c = ::std::move(Neuron.c);
 
                 return *this;
             };
@@ -787,9 +779,6 @@ namespace uns::nn {
                 clear();
                 throw ::std::runtime_error(UNS_DEV_EXCEPTION_MSG);
             };
-
-            *m_F = NeuronDescription.r;
-            *m_S = NeuronDescription.c;
 
             m_params = NeuronDescription.params;
 
