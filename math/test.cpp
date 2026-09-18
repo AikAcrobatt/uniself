@@ -61,30 +61,6 @@ namespace uns::tests::math {
     constexpr bool is_this_type_numeric<uint8_t>() noexcept {
         return true;
     };
-    //template<>
-    //constexpr bool is_this_type_numeric<int16_t>() noexcept {
-    //    return true;
-    //};
-    //template<>
-    //constexpr bool is_this_type_numeric<uint16_t>() noexcept {
-    //    return true;
-    //};
-    //template<>
-    //constexpr bool is_this_type_numeric<int32_t>() noexcept {
-    //    return true;
-    //};
-    //template<>
-    //constexpr bool is_this_type_numeric<uint32_t>() noexcept {
-    //    return true;
-    //};
-    //template<>
-    //constexpr bool is_this_type_numeric<int64_t>() noexcept {
-    //    return true;
-    //};
-    //template<>
-    //constexpr bool is_this_type_numeric<uint64_t>() noexcept {
-    //    return true;
-    //};
     template<>
     constexpr bool is_this_type_numeric<float>() noexcept {
         return true;
