@@ -6,6 +6,12 @@
 #ifndef UNS_LIB_MATH
 #define UNS_LIB_MATH "math.hpp"
 
+#ifdef max
+#undef max
+#endif
+#ifdef min
+#undef min
+#endif
 
 namespace uns::math {
 

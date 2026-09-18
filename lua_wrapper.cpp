@@ -451,7 +451,7 @@ bool ::uns::lua::type::table::operator!=(const ::uns::lua::type::table& obj) con
 ::uns::lua::auxiliary::table::~table() {}
 
 ::std::u32string uns::lua::auxiliary::table::to_string() const {
-    return U"table " + ::uns::string::cast<::std::u32string>(reinterpret_cast<uint64_t>(this)); //TODO this convertation Lua-unlike (more human-readable)
+    return U"table " + ::uns::string::cast<::std::u32string>(reinterpret_cast<uint64_t>(this)); //TODO
 };
 
 bool ::uns::lua::auxiliary::table::operator==(const ::uns::lua::auxiliary::table& obj) const {
