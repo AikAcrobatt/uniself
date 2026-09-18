@@ -17,7 +17,6 @@
 
 namespace uns::string {
 
-    //conversions from non-::std::u32string to non-::std::u32string
     namespace auxiliary {
 
         template<typename testing_t>
@@ -114,7 +113,7 @@ namespace uns::string {
                 && *new_begin != U'\r'
                 && *new_begin != U'\f'
                 && *new_begin != U'\a'
-                ) {
+            ) {
                 break;
             };
 
@@ -424,7 +423,7 @@ namespace uns::string {
                 const auto prefix = ::std::u32string_view{ iter, iter + 2 };
                 prefix == U"0x"
                 || prefix == U"0X"
-                ) {
+            ) {
                 const out_t base = 0x10;
 
                 iter += 2;
@@ -440,7 +439,7 @@ namespace uns::string {
             else if (
                 prefix == U"0b"
                 || prefix == U"0B"
-                ) {
+            ) {
                 const out_t base = 0b10;
 
                 iter += 2;
@@ -490,7 +489,7 @@ namespace uns::string {
                 ::std::chars_format::general,
                 ::std::chars_format::fixed
             }
-            ) {
+        ) {
             auto conv = ::std::from_chars(
                 narrow_string.c_str()
                 , narrow_string.c_str() + narrow_string.size()
