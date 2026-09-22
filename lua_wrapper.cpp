@@ -505,16 +505,22 @@ UNS_LUA_TABLE_IDX_DESCRIPTOR(string);
         }
     };
 };
-#pragma warning(push)
-#pragma warning(disable: 4172)
+
+
+namespace uns::lua::auxiliary {
+
+    static thread_local auto nil_replacer = ::uns::lua::value{ ::uns::lua::nil };
+
+};
+
+
 ::uns::lua::value& ::uns::lua::auxiliary::table::operator[] (const ::uns::lua::value& key) {
-    auto nil_replacer = ::uns::lua::value{ ::uns::lua::nil };
 
     switch(key.type()) {
         default:
         case ::uns::lua::value_type::nil:
         {
-            return nil_replacer;
+            return ::uns::lua::auxiliary::nil_replacer;
         }
         case ::uns::lua::value_type::number:
         {
@@ -534,7 +540,6 @@ UNS_LUA_TABLE_IDX_DESCRIPTOR(string);
         }
     };
 };
-#pragma warning(pop)
 
 ::std::size_t uns::lua::auxiliary::table::size() const {
     return m_key_number.size() + m_key_integer.size() + m_key_boolean.size() + m_key_string.size();
