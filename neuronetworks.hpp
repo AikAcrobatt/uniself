@@ -144,12 +144,6 @@ namespace uns::nn::traitset {
 namespace uns::nn {
 
 
-    template<typename description_t>
-    concept is_description = requires (description_t Description) {
-        Description.is_description();
-    };
-
-
     namespace description {
 
         template<typename signal_traitset_t>
@@ -168,8 +162,6 @@ namespace uns::nn {
         public:
             hashsum_type hashsum = 0;
             signal_type value = 0;
-        public:
-            virtual void is_description() const noexcept {};
         };
 
 
@@ -189,8 +181,6 @@ namespace uns::nn {
         public:
             hashsum_type hashsum = 0;
             signal_type value = 0;
-        public:
-            virtual void is_description() const noexcept {};
         };
 
 
@@ -246,12 +236,16 @@ namespace uns::nn {
                 return *this;
             };
             virtual ~neuron() {};
-        public:
-            virtual void is_description() const noexcept {};
         };
 
 
-        template<::uns::nn::is_description neuron_description_t>
+        template<typename neuron_description_t>
+            requires ::std::derived_from<
+                neuron_description_t
+                , ::uns::nn::description::neuron<
+                    typename neuron_description_t::signal_traitset
+                >
+            >
         class network {
         public:
             using neuron_description_type = neuron_description_t;
@@ -285,8 +279,6 @@ namespace uns::nn {
                 return *this;
             };
             virtual ~network() {};
-        public:
-            virtual void is_description() const noexcept {};
         };
 
     };

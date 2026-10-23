@@ -443,7 +443,11 @@ namespace uns::tests {
 
 
     using traitset_network = ::uns::nn::traitset::network<
-        ::std::allocator<::uns::nn::sequential_neuron<::uns::tests::traitset_neuron>>
+        ::std::allocator<
+            ::uns::nn::sequential_neuron<
+                ::uns::tests::traitset_neuron
+            >
+        >
         , ::uns::nn::description::network<
             ::uns::nn::description::neuron<
                 ::uns::tests::signal
